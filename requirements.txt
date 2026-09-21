@@ -3,3 +3,4 @@ pandas
 pysam
 cfin-hpc-tools
 log_tools
+git+https://gitlab.com/SchmidtAF/biomed-api.git@dev

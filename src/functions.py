@@ -9,11 +9,13 @@ lipid_adem helper functions
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
 import requests
+from biomed_api.readers.reader_gwascat import GwasCatalogReader
 from log_tools.emitter import log_debug, log_info
 
 from project_constants import ColumnNames, Constants
@@ -296,11 +298,16 @@ def discover_studies(efo_id: str) -> list[str]:
     accessions : `list[str]`
         Study accession IDs (e.g. "GCST######").
     """
-    url = f"{Constants.GWAS_CATALOG_REST_URL}/studies/search/findByEfoTrait"
-    response = requests.get(url, params={"efoTrait": efo_id}, timeout=30)
-    response.raise_for_status()
-    studies = response.json().get("_embedded", {}).get("studies", [])
-    accessions = [s["accessionId"] for s in studies if "accessionId" in s]
+    reader = GwasCatalogReader()
+    with warnings.catch_warnings():
+        # biomed-api warns (rather than raising) on zero matches; an
+        # empty accession list is a normal outcome for callers here.
+        warnings.simplefilter("ignore", UserWarning)
+        result = reader.read(profile="studies", efo_id=efo_id)
+
+    accessions = [
+        row["accession_id"] for row in result.records if "accession_id" in row
+    ]
     log_info(f"{efo_id} -> {len(accessions)} studies")
     return accessions
 
@@ -324,27 +331,78 @@ def curated_associations(
     -------
     associations : `pd.DataFrame`
         Curated associations, region- and MAF-filtered. Empty if none.
+
+    Notes
+    -----
+    Sourced via biomed-api's `GwasCatalogReader` (GWAS Catalog REST v2).
     """
-    url = f"{Constants.GWAS_CATALOG_REST_URL}/efoTraits/{efo_id}/associations"
-    response = requests.get(url, timeout=30)
-    response.raise_for_status()
-    rows = response.json().get("_embedded", {}).get("associations", [])
+    reader = GwasCatalogReader()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        result = reader.read(profile="associations", efo_id=efo_id)
 
     records = []
-    for row in rows:
-        locus = row.get("chromosomeName")
-        pos = row.get("chromosomePosition")
-        maf = row.get("riskFrequency")
-        if locus is None or pos is None:
+    for row in result.records:
+        if not _location_in_region(row.get("locations"), region):
             continue
-        if str(locus) != region.chrom or not (region.start <= pos <= region.end):
-            continue
-        if maf is not None and float(maf) >= maf_threshold:
+        if _maf_at_or_above_threshold(row.get("risk_frequency"), maf_threshold):
             continue
         records.append(row)
 
     log_info(f"{efo_id} -> {len(records)} curated associations in region")
     return pd.DataFrame.from_records(records)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _location_in_region(locations: list[str] | None, region: GeneRegion) -> bool:
+    """Check whether any GWAS Catalog v2 `"chrom:pos"` location is in `region`.
+
+    Parameters
+    ----------
+    locations : `list[str]` or `NoneType`
+        Values of an association record's `locations` field.
+    region : `GeneRegion`
+        Region to test against.
+
+    Returns
+    -------
+    `bool`
+        `True` if at least one location falls within `region`.
+    """
+    for location in locations or []:
+        chrom, _, pos = str(location).partition(":")
+        if chrom != region.chrom or not pos.isdigit():
+            continue
+        if region.start <= int(pos) <= region.end:
+            return True
+    return False
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _maf_at_or_above_threshold(maf: str | None, maf_threshold: float) -> bool:
+    """Check whether a GWAS Catalog v2 `risk_frequency` clears `maf_threshold`.
+
+    Parameters
+    ----------
+    maf : `str` or `NoneType`
+        Value of an association record's `risk_frequency` field. Not
+        always numeric (e.g. blank or "NR").
+    maf_threshold : `float`
+        Threshold to compare against.
+
+    Returns
+    -------
+    `bool`
+        `True` only if `maf` parses to a float that is `>= maf_threshold`.
+        Missing or unparseable values are treated as not excluding the
+        record.
+    """
+    if maf is None:
+        return False
+    try:
+        return float(maf) >= maf_threshold
+    except ValueError:
+        return False
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

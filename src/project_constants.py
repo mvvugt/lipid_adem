@@ -33,7 +33,6 @@ class Constants:
     GRCH_BUILD: str = "GRCh38"
     EBI_OLS_SEARCH_URL: str = "https://www.ebi.ac.uk/ols/api/search"
     ENSEMBL_REST_URL: str = "https://rest.ensembl.org"
-    GWAS_CATALOG_REST_URL: str = "https://www.ebi.ac.uk/gwas/rest/api"
     GWAS_CATALOG_SUMSTATS_FTP: str = (
         "https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics"
     )
