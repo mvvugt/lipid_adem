@@ -1,0 +1,25 @@
+# pyjasub config -- filters each gene x study pair's GWAS Catalog harmonised
+# summary stats to MAF < 0.01 in the gene's flanked region
+
+[qsub]
+step=1
+batch=50
+mem=3G
+shell=/bin/bash
+time=01:00:00
+nodes=None
+tmp_size=2G
+tmp_dir=/home/rmgpmva/Scratch/lipid_adem/filter_task_tmp
+
+[logs]
+log_dir=/myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/filter_task_job_logs
+
+[job_array]
+ja_file=/myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/tasks.tsv
+task_script=/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.sh
+
+# inputs are remote GWAS Catalog URLs, so there is no `infiles` column to verify.
+outfiles=outfile
+
+[script]
+verbose=true
