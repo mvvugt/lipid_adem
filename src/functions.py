@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pandas as pd
 import requests
+from biomed_api.readers.reader_ensembl import EnsemblReader
 from biomed_api.readers.reader_gwascat import GwasCatalogReader
 from log_tools.emitter import log_debug, log_info
 
@@ -262,18 +263,12 @@ def gene_coordinates(symbol: str) -> GeneRegion:
 
     Raises
     ------
-    ValueError
-        If Ensembl has no record for `symbol`.
+    biomed_api.readers.utils.base.ReaderError
+        If Ensembl has no record for `symbol`, or the lookup fails.
     """
-    url = f"{Constants.ENSEMBL_REST_URL}/lookup/symbol/human/{symbol}"
-    response = requests.get(
-        url, params={"expand": 0}, headers={"Content-Type": "application/json"},
-        timeout=30,
-    )
-    if response.status_code == 404:
-        raise ValueError(f"Ensembl has no record for gene: {symbol}")
-    response.raise_for_status()
-    data = response.json()
+    reader = EnsemblReader()
+    result = reader.read(profile="gene_lookup", symbol=symbol)
+    data = result.records[0]
 
     region = GeneRegion(
         chrom=str(data["seq_region_name"]),
