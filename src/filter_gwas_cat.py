@@ -14,7 +14,9 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from log_tools.emitter import log_info
+import pandas as pd
+
+from log_tools.emitter import log_info, log_warn
 from log_tools.setup import runlog_setup
 
 import functions
@@ -24,11 +26,14 @@ from project_constants import Constants
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # helpers
 
-def study_tabix_path(study_accession: str) -> str:
+def study_tabix_path(location: str, study_accession: str) -> str:
     """Build the harmonised-summary-stats tabix URL for a study.
 
     Parameters
     ----------
+    location : `str`
+        The study's summary-stats FTP directory (from
+        `functions.study_summary_stats_location`).
     study_accession : `str`
         GWAS Catalog study accession (e.g. "GCST######").
 
@@ -37,19 +42,7 @@ def study_tabix_path(study_accession: str) -> str:
     url : `str`
         URL of the study's bgzip-compressed, tabix-indexed harmonised
         summary statistics file.
-
-    Raises
-    ------
-    ValueError
-        If the study has no full summary statistics available on GWAS
-        Catalog.
     """
-    location = functions.study_summary_stats_location(study_accession)
-    if location is None:
-        raise ValueError(
-            f"{study_accession} has no full summary statistics available "
-            "on GWAS Catalog (full_summary_stats_available=False)"
-        )
     return f"{location}/harmonised/{study_accession}.h.tsv.gz"
 
 
@@ -82,10 +75,28 @@ def run_filter(
     Returns
     -------
     `None`
+
+    Notes
+    -----
+    If the study has no full summary statistics available on GWAS
+    Catalog, a header-only (0-row) result is written instead of raising,
+    so the pyjasub job-array row is marked done and never retried.
     """
     region = functions.GeneRegion(chrom=chrom, start=start, end=end)
-    tabix_source = study_tabix_path(study_accession)
+    outfile.parent.mkdir(parents=True, exist_ok=True)
 
+    location = functions.study_summary_stats_location(study_accession)
+    if location is None:
+        log_warn(
+            f"{study_accession} has no full summary statistics available "
+            f"on GWAS Catalog; writing empty result for {gene}"
+        )
+        pd.DataFrame(columns=["gene", "study_accession"]).to_csv(
+            outfile, sep="\t", index=False
+        )
+        return
+
+    tabix_source = study_tabix_path(location, study_accession)
     filtered = functions.filter_sumstats_region(
         tabix_source=tabix_source,
         region=region,
@@ -95,7 +106,6 @@ def run_filter(
     filtered.insert(0, "study_accession", study_accession)
     filtered.insert(0, "gene", gene)
 
-    outfile.parent.mkdir(parents=True, exist_ok=True)
     filtered.to_csv(outfile, sep="\t", index=False)
     log_info(f"{gene} x {study_accession}: {len(filtered)} rows -> {outfile}")
 
