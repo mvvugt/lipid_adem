@@ -38,18 +38,19 @@ def study_tabix_path(study_accession: str) -> str:
         URL of the study's bgzip-compressed, tabix-indexed harmonised
         summary statistics file.
 
-    Notes
-    -----
-    GWAS Catalog buckets harmonised files by accession-number range
-    (`GCSTXXXXXX-GCSTYYYYYY`); this placeholder omits that bucketing --
-    fill in the real path convention before running on Myriad, or replace
-    with a lookup against the study's `ftpLocation` from the GWAS Catalog
-    studies API.
+    Raises
+    ------
+    ValueError
+        If the study has no full summary statistics available on GWAS
+        Catalog.
     """
-    return (
-        f"{Constants.GWAS_CATALOG_SUMSTATS_FTP}/{study_accession}/"
-        f"harmonised/{study_accession}.h.tsv.gz"
-    )
+    location = functions.study_summary_stats_location(study_accession)
+    if location is None:
+        raise ValueError(
+            f"{study_accession} has no full summary statistics available "
+            "on GWAS Catalog (full_summary_stats_available=False)"
+        )
+    return f"{location}/harmonised/{study_accession}.h.tsv.gz"
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

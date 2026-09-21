@@ -32,9 +32,7 @@ class Constants:
     GENE_COORD_FLANK_BP: int = 10_000
     GRCH_BUILD: str = "GRCh38"
     EBI_OLS_SEARCH_URL: str = "https://www.ebi.ac.uk/ols/api/search"
-    GWAS_CATALOG_SUMSTATS_FTP: str = (
-        "https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics"
-    )
+    GWAS_CATALOG_API_V2: str = "https://www.ebi.ac.uk/gwas/rest/api/v2"
     OPEN_TARGETS_GRAPHQL_URL: str = (
         "https://api.platform.opentargets.org/api/v4/graphql"
     )

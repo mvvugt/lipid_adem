@@ -304,6 +304,38 @@ def discover_studies(efo_id: str) -> list[str]:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def study_summary_stats_location(study_accession: str) -> str | None:
+    """Look up a study's harmonised summary-stats FTP directory.
+
+    Parameters
+    ----------
+    study_accession : `str`
+        GWAS Catalog study accession (e.g. "GCST######").
+
+    Returns
+    -------
+    location : `str` or `NoneType`
+        URL of the study's summary-stats directory (accession-bucketed,
+        e.g. ".../GCST90004001-GCST90005000/GCST90004758"), or `None` if
+        the study has no full summary statistics available.
+
+    Raises
+    ------
+    requests.HTTPError
+        If the study accession is not found or the API call fails.
+    """
+    response = requests.get(
+        f"{Constants.GWAS_CATALOG_API_V2}/studies/{study_accession}",
+        timeout=30,
+    )
+    response.raise_for_status()
+    data = response.json()
+    if not data.get("full_summary_stats_available"):
+        return None
+    return data["full_summary_stats"]
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def curated_associations(
     efo_id: str, region: GeneRegion, maf_threshold: float
 ) -> pd.DataFrame:
