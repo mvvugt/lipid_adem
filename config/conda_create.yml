@@ -1,0 +1,15 @@
+name: lipid_adem
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.13
+  - pandas
+  - requests
+  - pysam
+  - pip
+  - pip:
+      - cfin-hpc-tools
+      - log_tools
+      - git+https://gitlab.com/SchmidtAF/biomed-api.git@dev
