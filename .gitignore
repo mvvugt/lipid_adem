@@ -1,0 +1,55 @@
+# hidden files
+.*
+!.gitignore
+!.gitkeep
+
+# vim files
+*~
+
+# outputs
+*.*sv
+*.p
+*.ods
+*.pdf
+*.png
+*.xls*
+*.html
+*.doc*
+*.out
+*.log
+*.errors
+*.txt
+*.fam
+*.ppt*
+*job/
+
+# old stuf
+*archive*/
+old*
+
+# python
+venv/
+*.egg-info/*
+__pycache__
+
+# R filtes
+*.Rdata
+.Rproj.user
+*.Rhistory
+*.Ruserdata
+*.Rmd
+*.rds
+
+# potentially large files
+*.tar
+*.gz
+
+# directories
+docs/
+data/
+*cache*/
+bin/
+
+# personal helpers
+TODO.md
+graphify*
