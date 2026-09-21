@@ -18,9 +18,12 @@ set -Euo pipefail
 # -----------------------------------------------------------------------
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+echo "$REPO_ROOT"
 # shellcheck source=/dev/null
 . "${REPO_ROOT}/src/functions.sh"
+# shellcheck disable=SC1090
+source "$(runlog-setup-path)"
 
 echo "=== $0 ==="
 log_info "started at $(date)"
@@ -58,7 +61,7 @@ fi
 
 log_info "gene=$GENE study_accession=$STUDY_ACCESSION outfile=$OUTFILE"
 
-run_mamba lipid_adem "${REPO_ROOT}/src/filter_gwas_cat.py" \
+run_mamba biomed-api "${REPO_ROOT}/src/filter_gwas_cat.py" \
     --gene "$GENE" \
     --study-accession "$STUDY_ACCESSION" \
     --chrom "$CHROM" \

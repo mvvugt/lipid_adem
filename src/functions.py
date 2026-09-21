@@ -17,7 +17,7 @@ import pandas as pd
 import requests
 from biomed_api.readers.reader_ensembl import EnsemblReader
 from biomed_api.readers.reader_gwascat import GwasCatalogReader
-from log_tools.emitter import log_debug, log_info
+from log_tools.emitter import log_debug, log_info, log_warn
 
 from project_constants import ColumnNames, Constants
 
@@ -223,11 +223,6 @@ def icd_to_efo(term: str) -> str:
     -------
     efo_id : `str`
         The first matching EFO term's short OBO ID (e.g. "EFO_0001645").
-
-    Raises
-    ------
-    ValueError
-        If no EFO term is found for `term`.
     """
     response = requests.get(
         Constants.EBI_OLS_SEARCH_URL,
@@ -237,11 +232,12 @@ def icd_to_efo(term: str) -> str:
     response.raise_for_status()
     docs = response.json().get("response", {}).get("docs", [])
     if not docs:
-        raise ValueError(f"No EFO term found for: {term}")
+        log_warn(f"No EFO term found for: {term}")
+        return "NA"
 
     obo_id = docs[0].get("obo_id")
     if not obo_id:
-        raise ValueError(f"EFO match for {term!r} has no obo_id: {docs[0]}")
+        log_warn(f"EFO match for {term!r} has no obo_id: {docs[0]}")
     log_info(f"mapped {term} -> {obo_id}")
     return obo_id.replace(":", "_")
 

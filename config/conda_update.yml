@@ -2,12 +2,14 @@ channels:
   - conda-forge
   - bioconda
   - defaults
+  - cfin
 dependencies:
+  - python=3.13.9
   - pandas
   - requests
   - pysam
+  - cfin-hpc-tools
   - pip
   - pip:
-      - cfin-hpc-tools
-      - log_tools
+      # - git+https://gitlab.com/mvanvugt/log_tools.git@dev
       - git+https://gitlab.com/SchmidtAF/biomed-api.git@dev
