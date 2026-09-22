@@ -26,24 +26,32 @@ from project_constants import Constants
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # helpers
 
-def study_tabix_path(location: str, study_accession: str) -> str:
-    """Build the harmonised-summary-stats tabix URL for a study.
+def _write_empty_result(outfile: Path, gene: str, study_accession: str) -> None:
+    """Write a header-only (0-row) result for an unusable study.
 
     Parameters
     ----------
-    location : `str`
-        The study's summary-stats FTP directory (from
-        `functions.study_summary_stats_location`).
+    outfile : `Path`
+        Path to write the empty TSV to.
+    gene : `str`
+        HGNC gene symbol.
     study_accession : `str`
-        GWAS Catalog study accession (e.g. "GCST######").
+        GWAS Catalog study accession.
 
     Returns
     -------
-    url : `str`
-        URL of the study's bgzip-compressed, tabix-indexed harmonised
-        summary statistics file.
+    `None`
+
+    Notes
+    -----
+    Deliberately not a 0-byte file: `merge_associations.py`'s
+    `pd.read_csv` raises `EmptyDataError` on a truly empty file, but
+    parses a header-only file fine as a 0-row frame. Satisfies pyjasub's
+    outfile-existence check so the row is never retried.
     """
-    return f"{location}/harmonised/{study_accession}.h.tsv.gz"
+    pd.DataFrame(columns=["gene", "study_accession"]).to_csv(
+        outfile, sep="\t", index=False
+    )
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -78,9 +86,13 @@ def run_filter(
 
     Notes
     -----
-    If the study has no full summary statistics available on GWAS
-    Catalog, a header-only (0-row) result is written instead of raising,
-    so the pyjasub job-array row is marked done and never retried.
+    If the study has no full summary statistics available, or its
+    available statistics can't be resolved to a usable file (ambiguous/
+    missing raw file, unexpected column layout), a header-only (0-row)
+    result is written instead of raising, so the pyjasub job-array row
+    is marked done and never retried. Transient failures (network
+    errors, a `.tbi`-missing `OSError` on the tabix path) are not
+    caught here and still propagate, so pyjasub retries those.
     """
     region = functions.GeneRegion(chrom=chrom, start=start, end=end)
     outfile.parent.mkdir(parents=True, exist_ok=True)
@@ -91,18 +103,38 @@ def run_filter(
             f"{study_accession} has no full summary statistics available "
             f"on GWAS Catalog; writing empty result for {gene}"
         )
-        pd.DataFrame(columns=["gene", "study_accession"]).to_csv(
-            outfile, sep="\t", index=False
-        )
+        _write_empty_result(outfile, gene, study_accession)
         return
 
-    tabix_source = study_tabix_path(location, study_accession)
-    filtered = functions.filter_sumstats_region(
-        tabix_source=tabix_source,
-        region=region,
-        maf_col="effect_allele_frequency",
-        maf_threshold=Constants.MAF_THRESHOLD,
-    )
+    try:
+        source_url, is_indexed = functions.resolve_sumstats_source(
+            location, study_accession
+        )
+    except ValueError as exc:
+        log_warn(f"{exc}; writing empty result for {gene}")
+        _write_empty_result(outfile, gene, study_accession)
+        return
+
+    if is_indexed:
+        filtered = functions.filter_sumstats_region(
+            tabix_source=source_url,
+            region=region,
+            maf_col="effect_allele_frequency",
+            maf_threshold=Constants.MAF_THRESHOLD,
+        )
+    else:
+        try:
+            filtered = functions.filter_raw_sumstats_region(
+                url=source_url,
+                region=region,
+                maf_col="effect_allele_frequency",
+                maf_threshold=Constants.MAF_THRESHOLD,
+            )
+        except ValueError as exc:
+            log_warn(f"{exc}; writing empty result for {gene}")
+            _write_empty_result(outfile, gene, study_accession)
+            return
+
     filtered.insert(0, "study_accession", study_accession)
     filtered.insert(0, "gene", gene)
 

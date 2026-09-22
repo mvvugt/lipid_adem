@@ -9,6 +9,9 @@ lipid_adem helper functions
 
 from __future__ import annotations
 
+import gzip
+import io
+import re
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
@@ -336,6 +339,63 @@ def study_summary_stats_location(study_accession: str) -> str | None:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def resolve_sumstats_source(
+    location: str, study_accession: str
+) -> tuple[str, bool]:
+    """Determine the queryable summary-stats URL for a study.
+
+    GWAS Catalog studies with full summary statistics available are not
+    all harmonised (bgzip+tabix-indexed) -- some only have a raw,
+    author-submitted file at the top level of their FTP directory. This
+    checks the study's directory listing to tell the two cases apart.
+
+    Parameters
+    ----------
+    location : `str`
+        The study's summary-stats FTP directory (from
+        `study_summary_stats_location`).
+    study_accession : `str`
+        GWAS Catalog study accession (e.g. "GCST######").
+
+    Returns
+    -------
+    url : `str`
+        URL of the sumstats file to use.
+    is_tabix_indexed : `bool`
+        `True` if `url` is the harmonised, tabix-indexed file (query via
+        `filter_sumstats_region`); `False` if `url` is a raw, non-indexed
+        file (query via `filter_raw_sumstats_region`).
+
+    Raises
+    ------
+    ValueError
+        If no `harmonised/` folder exists and the directory listing does
+        not contain exactly one identifiable raw data file.
+    """
+    response = requests.get(f"{location}/", timeout=30)
+    response.raise_for_status()
+    entries = re.findall(r'href="([^"]+)"', response.text)
+
+    if "harmonised/" in entries:
+        return f"{location}/harmonised/{study_accession}.h.tsv.gz", True
+
+    exclude = {"README.txt", "md5sum.txt"}
+    candidates = [
+        entry
+        for entry in entries
+        if not entry.endswith("/")
+        and entry not in exclude
+        and not entry.endswith("-meta.yaml")
+    ]
+    if len(candidates) != 1:
+        raise ValueError(
+            f"{study_accession}: could not identify a single raw sumstats "
+            f"file in {location} (candidates: {candidates})"
+        )
+    return f"{location}/{candidates[0]}", False
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def curated_associations(
     efo_id: str, region: GeneRegion, maf_threshold: float
 ) -> pd.DataFrame:
@@ -487,6 +547,79 @@ def filter_sumstats_region(
     log_info(
         f"{tabix_source} @ {region.chrom}:{region.start}-{region.end} -> "
         f"{len(records)} rows with MAF < {maf_threshold}"
+    )
+    return pd.DataFrame.from_records(records, columns=header)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def filter_raw_sumstats_region(
+    url: str,
+    region: GeneRegion,
+    maf_col: str,
+    maf_threshold: float,
+    chrom_col: str = "chromosome",
+    pos_col: str = "base_pair_location",
+) -> pd.DataFrame:
+    """Stream-filter a non-indexed sumstats file to one region and MAF cutoff.
+
+    No tabix index is available for raw (non-harmonised) sumstats files,
+    so the file is scanned sequentially via HTTP streaming, decompressed
+    on the fly if gzip-compressed; only matching rows are held in memory.
+    Rows are not assumed sorted, so the full file is always scanned.
+
+    Parameters
+    ----------
+    url : `str`
+        URL of the raw (non-tabix-indexed) sumstats file.
+    region : `GeneRegion`
+        Region to filter to.
+    maf_col : `str`
+        Name of the minor-allele-frequency column.
+    maf_threshold : `float`
+        Only rows with MAF below this are kept.
+    chrom_col : `str`, optional, default: `"chromosome"`
+        Name of the chromosome column in the file header.
+    pos_col : `str`, optional, default: `"base_pair_location"`
+        Name of the position column in the file header.
+
+    Returns
+    -------
+    filtered : `pd.DataFrame`
+        Rows in `region` with `maf_col` < `maf_threshold`.
+
+    Raises
+    ------
+    ValueError
+        If `chrom_col`, `pos_col`, or `maf_col` are not in the file's
+        header.
+    """
+    with requests.get(url, stream=True, timeout=60) as response:
+        response.raise_for_status()
+        raw_stream = response.raw
+        if url.endswith(".gz"):
+            raw_stream = gzip.GzipFile(fileobj=raw_stream)
+        text_stream = io.TextIOWrapper(raw_stream, encoding="utf-8")
+
+        header = next(text_stream).rstrip("\n").split("\t")
+        chrom_idx = header.index(chrom_col)
+        pos_idx = header.index(pos_col)
+        maf_idx = header.index(maf_col)
+        log_debug(f"header columns: chrom={chrom_idx} pos={pos_idx} maf={maf_idx}")
+
+        records = []
+        for line in text_stream:
+            fields = line.rstrip("\n").split("\t")
+            if fields[chrom_idx] != region.chrom:
+                continue
+            pos = fields[pos_idx]
+            if not pos.isdigit() or not (region.start <= int(pos) <= region.end):
+                continue
+            if float(fields[maf_idx]) < maf_threshold:
+                records.append(fields)
+
+    log_info(
+        f"{url} @ {region.chrom}:{region.start}-{region.end} -> "
+        f"{len(records)} rows with MAF < {maf_threshold} (raw scan)"
     )
     return pd.DataFrame.from_records(records, columns=header)
 
