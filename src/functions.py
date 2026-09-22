@@ -367,18 +367,30 @@ def gene_coordinates(symbol: str) -> GeneRegion:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def discover_studies(efo_id: str) -> list[str]:
+def discover_studies(
+    efo_id: str, cap: int = Constants.MAX_STUDIES_PER_OUTCOME
+) -> list[str]:
     """Discover GWAS Catalog study accessions for an EFO trait.
+
+    Well-studied traits (e.g. common diseases, lipid biomarkers) can have
+    hundreds of associated studies; only those with full summary
+    statistics available are usable downstream, and pulling all of them
+    is expensive (one HTTP call per accession, then a sumstats download
+    and filter per gene). Results are therefore filtered to studies with
+    full summary statistics available and capped to the `cap` most
+    recently published, via `filter_and_cap_studies`.
 
     Parameters
     ----------
     efo_id : `str`
         EFO ID (underscore form, e.g. "EFO_0001645").
+    cap : `int`, optional, default: `Constants.MAX_STUDIES_PER_OUTCOME`
+        Maximum number of studies to keep, most recent first.
 
     Returns
     -------
     accessions : `list[str]`
-        Study accession IDs (e.g. "GCST######").
+        Study accession IDs (e.g. "GCST######"), filtered and capped.
     """
     reader = GwasCatalogReader()
     with warnings.catch_warnings():
@@ -391,7 +403,102 @@ def discover_studies(efo_id: str) -> list[str]:
         row["accession_id"] for row in result.records if "accession_id" in row
     ]
     log_info(f"{efo_id} -> {len(accessions)} studies")
-    return accessions
+    return filter_and_cap_studies(accessions, cap=cap)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _study_metadata(study_accession: str) -> dict:
+    """Fetch a study's raw metadata from the GWAS Catalog v2 API.
+
+    Parameters
+    ----------
+    study_accession : `str`
+        GWAS Catalog study accession (e.g. "GCST######").
+
+    Returns
+    -------
+    data : `dict`
+        Parsed JSON response for the study.
+
+    Raises
+    ------
+    requests.HTTPError
+        If the study accession is not found or the API call fails.
+    """
+    response = requests.get(
+        f"{Constants.GWAS_CATALOG_API_V2}/studies/{study_accession}",
+        timeout=30,
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _publication_date(data: dict) -> str:
+    """Extract a study's publication date from its raw metadata.
+
+    Notes
+    -----
+    The exact field name has not been confirmed against a live API
+    response in this environment (sandboxed, no network access to
+    ebi.ac.uk) -- `publication_date` and the nested
+    `publication_info.publication_date` are both tried since the
+    confirmed-working `full_summary_stats_available`/`full_summary_stats`
+    fields on this same endpoint use snake_case. Verify this against a
+    real response on first live run; if both are wrong, ranking silently
+    degrades to input order (empty dates sort last, ties keep discovery
+    order) rather than failing.
+
+    Parameters
+    ----------
+    data : `dict`
+        Raw study metadata, as returned by `_study_metadata`.
+
+    Returns
+    -------
+    date : `str`
+        ISO-ish date string, or `""` if not found.
+    """
+    return (
+        data.get("publication_date")
+        or data.get("publication_info", {}).get("publication_date", "")
+        or ""
+    )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def filter_and_cap_studies(
+    accessions: list[str], cap: int = Constants.MAX_STUDIES_PER_OUTCOME
+) -> list[str]:
+    """Keep studies with full summary stats, capped to the N most recent.
+
+    Parameters
+    ----------
+    accessions : `list[str]`
+        Candidate study accession IDs.
+    cap : `int`, optional, default: `Constants.MAX_STUDIES_PER_OUTCOME`
+        Maximum number of studies to return, most recent first.
+
+    Returns
+    -------
+    capped : `list[str]`
+        At most `cap` study accessions, all with full summary statistics
+        available, ordered most-recent-publication-date first.
+    """
+    eligible: list[tuple[str, str]] = []
+    for accession in accessions:
+        data = _study_metadata(accession)
+        if not data.get("full_summary_stats_available"):
+            continue
+        eligible.append((accession, _publication_date(data)))
+
+    eligible.sort(key=lambda item: item[1], reverse=True)
+    capped = [accession for accession, _ in eligible[:cap]]
+    log_info(
+        f"{len(accessions)} studies -> {len(eligible)} with full sumstats "
+        f"-> {len(capped)} after cap={cap}"
+    )
+    return capped
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
