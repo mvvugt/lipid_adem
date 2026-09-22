@@ -44,7 +44,8 @@ if [[ -z "$JA" ]] || [[ ! -r "$JA" ]]; then
     exit 1
 fi
 
-# tasks.tsv columns: rowidx gene study_accession efo_id outcome chrom start end outfile
+# tasks.tsv columns: rowidx gene study_accession efo_id outcome chrom
+# start end outfile source
 PULL_LINE=$(( IDX + 1 ))
 LINE=$(sed -n "${PULL_LINE}p" "$JA")
 
@@ -53,14 +54,15 @@ if [[ -z "$LINE" ]]; then
     exit 1
 fi
 
-IFS=$'\t' read -r ROW_IDX GENE STUDY_ACCESSION EFO_ID OUTCOME CHROM START END OUTFILE <<< "$LINE"
+IFS=$'\t' read -r ROW_IDX GENE STUDY_ACCESSION EFO_ID OUTCOME CHROM START END \
+    OUTFILE SOURCE <<< "$LINE"
 
 if [[ "$IDX" -ne "$ROW_IDX" ]]; then
     log_error "idx (task_id) [${IDX}] != rowidx [${ROW_IDX}]"
     exit 1
 fi
 
-log_info "gene=$GENE study_accession=$STUDY_ACCESSION outfile=$OUTFILE"
+log_info "gene=$GENE study_accession=$STUDY_ACCESSION outfile=$OUTFILE source=$SOURCE"
 
 run_mamba biomed-api "${REPO_ROOT}/src/filter_gwas_cat.py" \
     --gene "$GENE" \
@@ -68,7 +70,8 @@ run_mamba biomed-api "${REPO_ROOT}/src/filter_gwas_cat.py" \
     --chrom "$CHROM" \
     --start "$START" \
     --end "$END" \
-    --outfile "$OUTFILE"
+    --outfile "$OUTFILE" \
+    --source "$SOURCE"
 
 log_info "ended at $(date)"
 log_info "*** END ***"

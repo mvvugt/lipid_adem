@@ -159,13 +159,14 @@ def load_icd_table(path: Path) -> pd.DataFrame:
     ----------
     path : `Path`
         CSV file with `outcome`, `code`, `code_type`, `description`
-        columns. Adds an empty `efo_id` column if the file doesn't have
-        one yet (one-time migration).
+        columns. Adds empty `efo_id`/`finngen_phenocode` columns if the
+        file doesn't have them yet (one-time migration).
 
     Returns
     -------
     icd_codes : `pd.DataFrame`
-        The ICD-code table, with `efo_id` guaranteed present.
+        The ICD-code table, with `efo_id` and `finngen_phenocode`
+        guaranteed present.
 
     Raises
     ------
@@ -177,6 +178,8 @@ def load_icd_table(path: Path) -> pd.DataFrame:
     df = pd.read_csv(path, dtype=str).fillna("")
     if ColumnNames.EFO_ID not in df.columns:
         df[ColumnNames.EFO_ID] = ""
+    if ColumnNames.FINNGEN_PHENOCODE not in df.columns:
+        df[ColumnNames.FINNGEN_PHENOCODE] = ""
     return df
 
 
@@ -499,6 +502,108 @@ def filter_and_cap_studies(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def load_finngen_manifest(path: Path = FileNames.FINNGEN_MANIFEST) -> pd.DataFrame:
+    """Load the vendored FinnGen R13 summary-stats manifest.
+
+    Parameters
+    ----------
+    path : `Path`, optional, default: `FileNames.FINNGEN_MANIFEST`
+        TSV file with `phenocode`, `phenotype`, `category`, `num_cases`,
+        `num_controls`, `path_bucket`, `path_https` columns, as published
+        at the FinnGen R13 manifest URL.
+
+    Returns
+    -------
+    manifest : `pd.DataFrame`
+        The manifest table, all columns as strings.
+
+    Raises
+    ------
+    FileNotFoundError
+        If `path` does not exist.
+    """
+    if not path.exists():
+        raise FileNotFoundError(f"FinnGen manifest not found: {path}")
+    return pd.read_csv(path, sep="\t", dtype=str).fillna("")
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def finngen_studies_for_phenocode(
+    phenocode: str, manifest_df: pd.DataFrame
+) -> list[str]:
+    """Validate a curated FinnGen phenocode against the manifest.
+
+    FinnGen phenocode curation is manual (one phenocode per outcome, set
+    by hand in `icd_codes.txt`), unlike GWAS Catalog's `discover_studies`
+    which searches an API -- this only confirms the curated value is a
+    real, current phenocode. Kept list-returning (rather than
+    `str | None`) so callers can treat both sources identically.
+
+    Parameters
+    ----------
+    phenocode : `str`
+        Curated FinnGen phenocode (e.g. "G6_ALZHEIMER").
+    manifest_df : `pd.DataFrame`
+        Manifest table from `load_finngen_manifest`.
+
+    Returns
+    -------
+    accessions : `list[str]`
+        `[phenocode]` if present in the manifest, else `[]`.
+    """
+    if phenocode in set(manifest_df["phenocode"]):
+        return [phenocode]
+    log_warn(f"{phenocode} not found in FinnGen manifest")
+    return []
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def finngen_sumstats_url(phenocode: str, manifest_df: pd.DataFrame) -> str | None:
+    """Look up a FinnGen phenocode's summary-stats file URL.
+
+    Parameters
+    ----------
+    phenocode : `str`
+        FinnGen phenocode (e.g. "G6_ALZHEIMER").
+    manifest_df : `pd.DataFrame`
+        Manifest table from `load_finngen_manifest`.
+
+    Returns
+    -------
+    url : `str` or `NoneType`
+        The `path_https` URL of the bgzip+tabix-indexed sumstats file
+        (with a `.tbi` index at `url + ".tbi"`), or `None` if the
+        phenocode is not in the manifest.
+    """
+    matches = manifest_df.loc[manifest_df["phenocode"] == phenocode, "path_https"]
+    if matches.empty:
+        return None
+    return matches.iloc[0]
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def finngen_phenocodes_in_cell(cell: str) -> list[str]:
+    """Split a possibly comma-separated `finngen_phenocode` cell.
+
+    A single outcome can be curated against more than one FinnGen
+    endpoint (e.g. several definitional variants of the same disease,
+    each with different case criteria/exclusions); `icd_codes.txt`
+    stores these as a comma-separated list in one cell.
+
+    Parameters
+    ----------
+    cell : `str`
+        Raw cell value, e.g. "F5_DEMENTIA,F5_DEMENTIA_INCLAVO" or "".
+
+    Returns
+    -------
+    phenocodes : `list[str]`
+        Individual phenocodes, whitespace-trimmed, blanks dropped.
+    """
+    return [p.strip() for p in cell.split(",") if p.strip()]
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def study_summary_stats_location(study_accession: str) -> str | None:
     """Look up a study's harmonised summary-stats FTP directory.
 
@@ -689,6 +794,7 @@ def filter_sumstats_region(
     maf_threshold: float,
     chrom_col: str = "chromosome",
     pos_col: str = "base_pair_location",
+    transform_to_maf: bool = False,
 ) -> pd.DataFrame:
     """Filter a tabix-indexed sumstats file to one region and a MAF cutoff.
 
@@ -702,18 +808,22 @@ def filter_sumstats_region(
     region : `GeneRegion`
         Region to query.
     maf_col : `str`
-        Name of the minor-allele-frequency column.
+        Name of the allele-frequency column.
     maf_threshold : `float`
         Only rows with MAF below this are kept.
     chrom_col : `str`, optional, default: `"chromosome"`
         Name of the chromosome column in the file header.
     pos_col : `str`, optional, default: `"base_pair_location"`
         Name of the position column in the file header.
+    transform_to_maf : `bool`, optional, default: `False`
+        If `True`, `maf_col` is treated as a single-allele frequency
+        (which may exceed 0.5) rather than a true minor-allele frequency,
+        and `min(af, 1 - af)` is applied before the threshold comparison.
 
     Returns
     -------
     filtered : `pd.DataFrame`
-        Rows in `region` with `maf_col` < `maf_threshold`.
+        Rows in `region` with MAF < `maf_threshold`.
 
     Raises
     ------
@@ -734,7 +844,10 @@ def filter_sumstats_region(
         records = []
         for line in tabix_file.fetch(region.chrom, region.start, region.end):
             fields = line.split("\t")
-            if float(fields[maf_idx]) < maf_threshold:
+            maf = float(fields[maf_idx])
+            if transform_to_maf:
+                maf = min(maf, 1.0 - maf)
+            if maf < maf_threshold:
                 records.append(fields)
 
     log_info(
@@ -752,6 +865,7 @@ def filter_raw_sumstats_region(
     maf_threshold: float,
     chrom_col: str = "chromosome",
     pos_col: str = "base_pair_location",
+    transform_to_maf: bool = False,
 ) -> pd.DataFrame:
     """Stream-filter a non-indexed sumstats file to one region and MAF cutoff.
 
@@ -767,18 +881,22 @@ def filter_raw_sumstats_region(
     region : `GeneRegion`
         Region to filter to.
     maf_col : `str`
-        Name of the minor-allele-frequency column.
+        Name of the allele-frequency column.
     maf_threshold : `float`
         Only rows with MAF below this are kept.
     chrom_col : `str`, optional, default: `"chromosome"`
         Name of the chromosome column in the file header.
     pos_col : `str`, optional, default: `"base_pair_location"`
         Name of the position column in the file header.
+    transform_to_maf : `bool`, optional, default: `False`
+        If `True`, `maf_col` is treated as a single-allele frequency
+        (which may exceed 0.5) rather than a true minor-allele frequency,
+        and `min(af, 1 - af)` is applied before the threshold comparison.
 
     Returns
     -------
     filtered : `pd.DataFrame`
-        Rows in `region` with `maf_col` < `maf_threshold`.
+        Rows in `region` with MAF < `maf_threshold`.
 
     Raises
     ------
@@ -807,7 +925,10 @@ def filter_raw_sumstats_region(
             pos = fields[pos_idx]
             if not pos.isdigit() or not (region.start <= int(pos) <= region.end):
                 continue
-            if float(fields[maf_idx]) < maf_threshold:
+            maf = float(fields[maf_idx])
+            if transform_to_maf:
+                maf = min(maf, 1.0 - maf)
+            if maf < maf_threshold:
                 records.append(fields)
 
     log_info(

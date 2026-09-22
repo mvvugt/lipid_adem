@@ -1,5 +1,5 @@
-# pyjasub config -- filters each gene x study pair's GWAS Catalog harmonised
-# summary stats to MAF < 0.01 in the gene's flanked region
+# pyjasub config -- filters each gene x study pair's summary stats (GWAS
+# Catalog harmonised, or FinnGen) to MAF < 0.01 in the gene's flanked region
 
 [qsub]
 step=1
@@ -18,7 +18,8 @@ log_dir=/myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/filter_task_job_logs
 ja_file=/myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/tasks.tsv
 task_script=/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.sh
 
-# inputs are remote GWAS Catalog URLs, so there is no `infiles` column to verify.
+# inputs are remote GWAS Catalog/FinnGen URLs, so there is no `infiles`
+# column to verify.
 outfiles=outfile
 
 [script]

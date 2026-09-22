@@ -2,8 +2,8 @@
 """
 Resolves gene coordinates and outcome-to-EFO mappings (persisting any new
 lookups back to data/raw/gene_list.txt and data/raw/icd_codes.txt),
-discovers GWAS Catalog studies per outcome, and writes the pyjasub
-job-array file that src/filter_gwas_cat.sh consumes.
+discovers GWAS Catalog studies and curated FinnGen phenocodes per outcome,
+and writes the pyjasub job-array file that src/filter_gwas_cat.sh consumes.
 """
 
 
@@ -30,9 +30,10 @@ def build_tasks() -> None:
     coordinates and outcome/code-to-EFO mappings (persisting the results
     back to those files so reruns skip already-resolved rows), discovers
     GWAS Catalog studies per outcome (grouped by the distinct EFO IDs
-    under that outcome), and writes `FileNames.TASKS_FILE` with columns:
-    rowidx, gene, study_accession, efo_id, outcome, chrom, start, end,
-    outfile.
+    under that outcome) and validates each outcome's curated FinnGen
+    phenocode (if set) against the vendored manifest, and writes
+    `FileNames.TASKS_FILE` with columns: rowidx, gene, study_accession,
+    efo_id, outcome, chrom, start, end, outfile, source.
 
     Returns
     -------
@@ -72,6 +73,25 @@ def build_tasks() -> None:
         efo_id: functions.discover_studies(efo_id) for efo_id in distinct_efo_ids
     }
 
+    # Same dedupe/union pattern for FinnGen, keyed by curated phenocode(s)
+    # instead of a live-discovered EFO ID. A cell may list more than one
+    # phenocode (comma-separated) when an outcome is curated against
+    # several definitional variants of the same disease.
+    finngen_manifest_df = functions.load_finngen_manifest()
+    distinct_phenocodes = sorted(
+        {
+            phenocode
+            for cell in icd_df[ColumnNames.FINNGEN_PHENOCODE]
+            for phenocode in functions.finngen_phenocodes_in_cell(cell)
+        }
+    )
+    studies_by_phenocode = {
+        phenocode: functions.finngen_studies_for_phenocode(
+            phenocode, finngen_manifest_df
+        )
+        for phenocode in distinct_phenocodes
+    }
+
     rows: list[dict[str, str]] = []
     for outcome, group in icd_df.groupby(ColumnNames.OUTCOME):
         outcome_efo_ids = sorted({e for e in group[ColumnNames.EFO_ID] if e})
@@ -79,6 +99,17 @@ def build_tasks() -> None:
         for efo_id in outcome_efo_ids:
             for accession in studies_by_efo[efo_id]:
                 accession_to_efo.setdefault(accession, efo_id)
+
+        outcome_phenocodes = sorted(
+            {
+                phenocode
+                for cell in group[ColumnNames.FINNGEN_PHENOCODE]
+                for phenocode in functions.finngen_phenocodes_in_cell(cell)
+            }
+        )
+        finngen_accessions: list[str] = []
+        for phenocode in outcome_phenocodes:
+            finngen_accessions.extend(studies_by_phenocode[phenocode])
 
         for _, gene_row in genes_df.iterrows():
             gene = gene_row[ColumnNames.GENE]
@@ -99,6 +130,24 @@ def build_tasks() -> None:
                         ColumnNames.START: str(region.start),
                         ColumnNames.END: str(region.end),
                         ColumnNames.OUTFILE: str(outfile),
+                        ColumnNames.SOURCE: "gwas_catalog",
+                    }
+                )
+            for accession in finngen_accessions:
+                outfile = (
+                    Paths.GWAS_FILTERED / f"{gene}_{accession}_result.tsv.gz"
+                )
+                rows.append(
+                    {
+                        ColumnNames.GENE: gene,
+                        ColumnNames.STUDY_ACCESSION: accession,
+                        ColumnNames.EFO_ID: "",
+                        ColumnNames.OUTCOME: outcome,
+                        ColumnNames.CHROM: region.chrom,
+                        ColumnNames.START: str(region.start),
+                        ColumnNames.END: str(region.end),
+                        ColumnNames.OUTFILE: str(outfile),
+                        ColumnNames.SOURCE: "finngen",
                     }
                 )
 
@@ -112,6 +161,7 @@ def build_tasks() -> None:
         ColumnNames.START,
         ColumnNames.END,
         ColumnNames.OUTFILE,
+        ColumnNames.SOURCE,
     ]
     with FileNames.TASKS_FILE.with_suffix(".tmp").open("w") as handle:
         handle.write("\t".join(header) + "\n")

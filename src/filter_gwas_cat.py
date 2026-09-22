@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
 Runs once per row of the pyjasub job-array file (data/temp/tasks.tsv).
-Remote-tabix-queries one gene x study pair's GWAS Catalog harmonised summary
-stats, filters to MAF < Constants.MAF_THRESHOLD, and writes the row's output
-file.
+Remote-tabix-queries one gene x study pair's summary stats (GWAS Catalog
+harmonised, or FinnGen, per the row's `source`), filters to
+MAF < Constants.MAF_THRESHOLD, and writes the row's output file.
 """
 
 
@@ -36,7 +36,7 @@ def _write_empty_result(outfile: Path, gene: str, study_accession: str) -> None:
     gene : `str`
         HGNC gene symbol.
     study_accession : `str`
-        GWAS Catalog study accession.
+        GWAS Catalog study accession or FinnGen phenocode.
 
     Returns
     -------
@@ -49,8 +49,93 @@ def _write_empty_result(outfile: Path, gene: str, study_accession: str) -> None:
     parses a header-only file fine as a 0-row frame. Satisfies pyjasub's
     outfile-existence check so the row is never retried.
     """
-    pd.DataFrame(columns=["gene", "study_accession"]).to_csv(
+    pd.DataFrame(columns=["gene", "study_accession", "source_db"]).to_csv(
         outfile, sep="\t", index=False
+    )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _run_filter_gwas_catalog(
+    gene: str, study_accession: str, region: functions.GeneRegion, outfile: Path
+) -> pd.DataFrame | None:
+    """Resolve and filter one gene x study pair from GWAS Catalog.
+
+    Returns
+    -------
+    filtered : `pd.DataFrame` or `NoneType`
+        The filtered sumstats, or `None` if an empty result was already
+        written for an unusable study (caller should return without
+        further writes).
+    """
+    location = functions.study_summary_stats_location(study_accession)
+    if location is None:
+        log_warn(
+            f"{study_accession} has no full summary statistics available "
+            f"on GWAS Catalog; writing empty result for {gene}"
+        )
+        _write_empty_result(outfile, gene, study_accession)
+        return None
+
+    try:
+        source_url, is_indexed = functions.resolve_sumstats_source(
+            location, study_accession
+        )
+    except ValueError as exc:
+        log_warn(f"{exc}; writing empty result for {gene}")
+        _write_empty_result(outfile, gene, study_accession)
+        return None
+
+    if is_indexed:
+        return functions.filter_sumstats_region(
+            tabix_source=source_url,
+            region=region,
+            maf_col="effect_allele_frequency",
+            maf_threshold=Constants.MAF_THRESHOLD,
+        )
+    try:
+        return functions.filter_raw_sumstats_region(
+            url=source_url,
+            region=region,
+            maf_col="effect_allele_frequency",
+            maf_threshold=Constants.MAF_THRESHOLD,
+        )
+    except ValueError as exc:
+        log_warn(f"{exc}; writing empty result for {gene}")
+        _write_empty_result(outfile, gene, study_accession)
+        return None
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _run_filter_finngen(
+    gene: str, phenocode: str, region: functions.GeneRegion, outfile: Path
+) -> pd.DataFrame | None:
+    """Resolve and filter one gene x phenocode pair from FinnGen.
+
+    Returns
+    -------
+    filtered : `pd.DataFrame` or `NoneType`
+        The filtered sumstats, or `None` if an empty result was already
+        written for an unusable phenocode (caller should return without
+        further writes).
+    """
+    manifest_df = functions.load_finngen_manifest()
+    url = functions.finngen_sumstats_url(phenocode, manifest_df)
+    if url is None:
+        log_warn(
+            f"{phenocode} not found in FinnGen manifest; writing empty "
+            f"result for {gene}"
+        )
+        _write_empty_result(outfile, gene, phenocode)
+        return None
+
+    return functions.filter_sumstats_region(
+        tabix_source=url,
+        region=region,
+        maf_col="af_alt",
+        maf_threshold=Constants.MAF_THRESHOLD,
+        chrom_col="chrom",
+        pos_col="pos",
+        transform_to_maf=True,
     )
 
 
@@ -62,6 +147,7 @@ def run_filter(
     start: int,
     end: int,
     outfile: Path,
+    source: str = "gwas_catalog",
 ) -> None:
     """Filter one gene x study pair's sumstats and write the result.
 
@@ -70,7 +156,8 @@ def run_filter(
     gene : `str`
         HGNC gene symbol (for logging/traceability only).
     study_accession : `str`
-        GWAS Catalog study accession.
+        GWAS Catalog study accession, or FinnGen phenocode if
+        `source == "finngen"`.
     chrom : `str`
         Chromosome of the (already-flanked) gene region.
     start : `int`
@@ -79,6 +166,9 @@ def run_filter(
         Region end.
     outfile : `Path`
         Path to write the filtered TSV to.
+    source : `str`, optional, default: `"gwas_catalog"`
+        Which sumstats source `study_accession` refers to: `"gwas_catalog"`
+        or `"finngen"`.
 
     Returns
     -------
@@ -86,55 +176,25 @@ def run_filter(
 
     Notes
     -----
-    If the study has no full summary statistics available, or its
-    available statistics can't be resolved to a usable file (ambiguous/
-    missing raw file, unexpected column layout), a header-only (0-row)
-    result is written instead of raising, so the pyjasub job-array row
-    is marked done and never retried. Transient failures (network
-    errors, a `.tbi`-missing `OSError` on the tabix path) are not
-    caught here and still propagate, so pyjasub retries those.
+    If the study/phenocode has no usable summary statistics (not
+    available, ambiguous/missing raw file, unexpected column layout, or
+    absent from the FinnGen manifest), a header-only (0-row) result is
+    written instead of raising, so the pyjasub job-array row is marked
+    done and never retried. Transient failures (network errors, a
+    `.tbi`-missing `OSError` on the tabix path) are not caught here and
+    still propagate, so pyjasub retries those.
     """
     region = functions.GeneRegion(chrom=chrom, start=start, end=end)
     outfile.parent.mkdir(parents=True, exist_ok=True)
 
-    location = functions.study_summary_stats_location(study_accession)
-    if location is None:
-        log_warn(
-            f"{study_accession} has no full summary statistics available "
-            f"on GWAS Catalog; writing empty result for {gene}"
-        )
-        _write_empty_result(outfile, gene, study_accession)
-        return
-
-    try:
-        source_url, is_indexed = functions.resolve_sumstats_source(
-            location, study_accession
-        )
-    except ValueError as exc:
-        log_warn(f"{exc}; writing empty result for {gene}")
-        _write_empty_result(outfile, gene, study_accession)
-        return
-
-    if is_indexed:
-        filtered = functions.filter_sumstats_region(
-            tabix_source=source_url,
-            region=region,
-            maf_col="effect_allele_frequency",
-            maf_threshold=Constants.MAF_THRESHOLD,
-        )
+    if source == "finngen":
+        filtered = _run_filter_finngen(gene, study_accession, region, outfile)
     else:
-        try:
-            filtered = functions.filter_raw_sumstats_region(
-                url=source_url,
-                region=region,
-                maf_col="effect_allele_frequency",
-                maf_threshold=Constants.MAF_THRESHOLD,
-            )
-        except ValueError as exc:
-            log_warn(f"{exc}; writing empty result for {gene}")
-            _write_empty_result(outfile, gene, study_accession)
-            return
+        filtered = _run_filter_gwas_catalog(gene, study_accession, region, outfile)
+    if filtered is None:
+        return
 
+    filtered.insert(0, "source_db", source)
     filtered.insert(0, "study_accession", study_accession)
     filtered.insert(0, "gene", gene)
 
@@ -156,6 +216,9 @@ def _init_cmd_args() -> argparse.ArgumentParser:
     parser.add_argument("--start", type=int, required=True)
     parser.add_argument("--end", type=int, required=True)
     parser.add_argument("--outfile", type=Path, required=True)
+    parser.add_argument(
+        "--source", required=True, choices=["gwas_catalog", "finngen"]
+    )
     return parser
 
 
@@ -181,6 +244,7 @@ def main() -> None:
             start=args.start,
             end=args.end,
             outfile=args.outfile,
+            source=args.source,
         )
 
 

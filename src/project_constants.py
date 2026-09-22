@@ -65,6 +65,8 @@ class ColumnNames:
     P_VALUE: str = "p_value"
     EFFECT_SIZE: str = "effect_size"
     MAF: str = "maf"
+    FINNGEN_PHENOCODE: str = "finngen_phenocode"
+    SOURCE_DB: str = "source_db"
 
 
 class FileNames:
@@ -72,5 +74,6 @@ class FileNames:
     GENE_LIST: Path = Paths.DATA_RAW / "gene_list.txt"
     ICD_CODE_LIST: Path = Paths.DATA_RAW / "icd_codes.txt"
     EFO_UKB_MAPPING: Path = Paths.DATA_RAW / "efo_ukb_master_mapping.tsv"
+    FINNGEN_MANIFEST: Path = Paths.DATA_RAW / "finngen_r13_manifest.tsv"
     TASKS_FILE: Path = Paths.DATA_TEMP / "tasks.tsv"
     FINAL_RESULTS: Path = Paths.RESULTS_OUTPUT / "final_results.tsv"
