@@ -4,7 +4,9 @@ Resolves gene coordinates and outcome-to-EFO mappings (persisting any new
 lookups back to data/raw/gene_list.txt and data/raw/icd_codes.txt),
 discovers GWAS Catalog studies, curated FinnGen phenocodes, and curated
 not-yet-API-indexed GWAS Catalog studies per outcome, and writes the
-pyjasub job-array file that src/filter_gwas_cat.sh consumes.
+pyjasub job-array file that src/filter_gwas_cat.sh consumes, plus a
+study-discovery audit log listing every discovered study across all
+sources with its inclusion status and reason.
 """
 
 
@@ -38,6 +40,12 @@ def build_tasks() -> None:
     manifest, and writes
     `FileNames.TASKS_FILE` with columns: rowidx, gene, study_accession,
     efo_id, outcome, chrom, start, end, outfile, source.
+
+    Also writes `FileNames.STUDY_DISCOVERY_LOG`, an audit trail of every
+    study discovered across all three sources (GWAS Catalog, FinnGen,
+    manual), one row each, with its inclusion status and reason (e.g.
+    "no_full_sumstats", "over_cap", "not_found_in_manifest") -- unlike
+    `TASKS_FILE`, which only contains the surviving, capped set.
 
     Returns
     -------
@@ -73,8 +81,9 @@ def build_tasks() -> None:
     distinct_efo_ids = sorted(
         {efo_id for efo_id in icd_df[ColumnNames.EFO_ID] if efo_id}
     )
-    studies_by_efo = {
-        efo_id: functions.discover_studies(efo_id) for efo_id in distinct_efo_ids
+    classified_by_efo = {
+        efo_id: functions.discover_studies_with_reasons(efo_id)
+        for efo_id in distinct_efo_ids
     }
 
     # Same dedupe/union pattern for FinnGen, keyed by curated phenocode(s)
@@ -98,12 +107,35 @@ def build_tasks() -> None:
     }
 
     rows: list[dict[str, str]] = []
+    audit_rows: list[dict[str, str]] = []
     for outcome, group in icd_df.groupby(ColumnNames.OUTCOME):
         outcome_efo_ids = sorted({e for e in group[ColumnNames.EFO_ID] if e})
         accession_to_efo: dict[str, str] = {}
         for efo_id in outcome_efo_ids:
-            for accession in studies_by_efo[efo_id]:
-                accession_to_efo.setdefault(accession, efo_id)
+            for record in classified_by_efo[efo_id]:
+                status = (
+                    "included"
+                    if record["reason"] == "included"
+                    else "excluded"
+                )
+                audit_rows.append(
+                    {
+                        ColumnNames.OUTCOME: outcome,
+                        ColumnNames.SOURCE: "gwas_catalog",
+                        ColumnNames.STUDY_ACCESSION: record["accession_id"],
+                        ColumnNames.EFO_ID: efo_id,
+                        ColumnNames.STATUS: status,
+                        ColumnNames.REASON: record["reason"],
+                        ColumnNames.PUBMED_ID: str(
+                            record.get("pubmed_id") or ""
+                        ),
+                        ColumnNames.NOTE: "",
+                    }
+                )
+                if record["reason"] == "included":
+                    accession_to_efo.setdefault(
+                        record["accession_id"], efo_id
+                    )
 
         # Curated accessions deposited on the FTP server but not yet
         # searchable via the API -- see gwas_catalog_manual_studies.SOURCE.md.
@@ -114,6 +146,27 @@ def build_tasks() -> None:
         ):
             accession_to_efo.setdefault(accession, "")
 
+        outcome_manual_rows = manual_studies_df.loc[
+            manual_studies_df[ColumnNames.OUTCOME] == outcome
+        ]
+        for _, manual_row in outcome_manual_rows.iterrows():
+            audit_rows.append(
+                {
+                    ColumnNames.OUTCOME: outcome,
+                    ColumnNames.SOURCE: "manual",
+                    ColumnNames.STUDY_ACCESSION: manual_row["accession_id"],
+                    ColumnNames.EFO_ID: "",
+                    ColumnNames.STATUS: "included",
+                    ColumnNames.REASON: "included",
+                    ColumnNames.PUBMED_ID: str(
+                        manual_row.get(ColumnNames.PUBMED_ID, "")
+                    ),
+                    ColumnNames.NOTE: str(
+                        manual_row.get(ColumnNames.NOTE, "")
+                    ),
+                }
+            )
+
         outcome_phenocodes = sorted(
             {
                 phenocode
@@ -123,7 +176,22 @@ def build_tasks() -> None:
         )
         finngen_accessions: list[str] = []
         for phenocode in outcome_phenocodes:
-            finngen_accessions.extend(studies_by_phenocode[phenocode])
+            found = studies_by_phenocode[phenocode]
+            finngen_accessions.extend(found)
+            audit_rows.append(
+                {
+                    ColumnNames.OUTCOME: outcome,
+                    ColumnNames.SOURCE: "finngen",
+                    ColumnNames.STUDY_ACCESSION: phenocode,
+                    ColumnNames.EFO_ID: "",
+                    ColumnNames.STATUS: "included" if found else "excluded",
+                    ColumnNames.REASON: (
+                        "included" if found else "not_found_in_manifest"
+                    ),
+                    ColumnNames.PUBMED_ID: "",
+                    ColumnNames.NOTE: "",
+                }
+            )
 
         for _, gene_row in genes_df.iterrows():
             gene = gene_row[ColumnNames.GENE]
@@ -186,6 +254,30 @@ def build_tasks() -> None:
     FileNames.TASKS_FILE.with_suffix(".tmp").replace(FileNames.TASKS_FILE)
 
     log_info(f"wrote {len(rows)} tasks to {FileNames.TASKS_FILE}")
+
+    audit_header = [
+        ColumnNames.OUTCOME,
+        ColumnNames.SOURCE,
+        ColumnNames.STUDY_ACCESSION,
+        ColumnNames.EFO_ID,
+        ColumnNames.STATUS,
+        ColumnNames.REASON,
+        ColumnNames.PUBMED_ID,
+        ColumnNames.NOTE,
+    ]
+    audit_tmp = FileNames.STUDY_DISCOVERY_LOG.with_suffix(".tmp")
+    with audit_tmp.open("w") as handle:
+        handle.write("\t".join(audit_header) + "\n")
+        for row in audit_rows:
+            handle.write(
+                "\t".join(str(row[col]) for col in audit_header) + "\n"
+            )
+    audit_tmp.replace(FileNames.STUDY_DISCOVERY_LOG)
+
+    log_info(
+        f"wrote {len(audit_rows)} study-discovery rows to "
+        f"{FileNames.STUDY_DISCOVERY_LOG}"
+    )
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

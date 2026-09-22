@@ -370,6 +370,42 @@ def gene_coordinates(symbol: str) -> GeneRegion:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _fetch_gwas_catalog_study_records(efo_id: str) -> list[dict]:
+    """Fetch raw GWAS Catalog study records for an EFO trait.
+
+    Parameters
+    ----------
+    efo_id : `str`
+        EFO ID (underscore form, e.g. "EFO_0001645").
+
+    Returns
+    -------
+    records : `list[dict]`
+        One dict per study with `accession_id`,
+        `full_summary_stats_available`, and `pubmed_id`, as returned by
+        the GWAS Catalog studies-list search.
+    """
+    reader = GwasCatalogReader()
+    with warnings.catch_warnings():
+        # biomed-api warns (rather than raising) on zero matches; an
+        # empty accession list is a normal outcome for callers here.
+        warnings.simplefilter("ignore", UserWarning)
+        result = reader.read(profile="studies", efo_id=efo_id)
+
+    return [
+        {
+            "accession_id": row["accession_id"],
+            "full_summary_stats_available": row.get(
+                "full_summary_stats_available", False
+            ),
+            "pubmed_id": row.get("pubmed_id"),
+        }
+        for row in result.records
+        if "accession_id" in row
+    ]
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def discover_studies(
     efo_id: str, cap: int = Constants.MAX_STUDIES_PER_OUTCOME
 ) -> list[str]:
@@ -395,26 +431,37 @@ def discover_studies(
     accessions : `list[str]`
         Study accession IDs (e.g. "GCST######"), filtered and capped.
     """
-    reader = GwasCatalogReader()
-    with warnings.catch_warnings():
-        # biomed-api warns (rather than raising) on zero matches; an
-        # empty accession list is a normal outcome for callers here.
-        warnings.simplefilter("ignore", UserWarning)
-        result = reader.read(profile="studies", efo_id=efo_id)
+    classified = discover_studies_with_reasons(efo_id, cap=cap)
+    return [r["accession_id"] for r in classified if r["reason"] == "included"]
 
-    records = [
-        {
-            "accession_id": row["accession_id"],
-            "full_summary_stats_available": row.get(
-                "full_summary_stats_available", False
-            ),
-            "pubmed_id": row.get("pubmed_id"),
-        }
-        for row in result.records
-        if "accession_id" in row
-    ]
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def discover_studies_with_reasons(
+    efo_id: str, cap: int = Constants.MAX_STUDIES_PER_OUTCOME
+) -> list[dict]:
+    """Discover and classify GWAS Catalog studies for an EFO trait.
+
+    Like `discover_studies`, but returns every discovered study annotated
+    with why it was or wasn't kept, for the study-discovery audit log
+    written by `gwas_cat_prep.build_tasks`.
+
+    Parameters
+    ----------
+    efo_id : `str`
+        EFO ID (underscore form, e.g. "EFO_0001645").
+    cap : `int`, optional, default: `Constants.MAX_STUDIES_PER_OUTCOME`
+        Maximum number of studies to mark `"included"`, most recent
+        first.
+
+    Returns
+    -------
+    classified : `list[dict]`
+        As returned by `classify_studies` -- `accession_id`, `pubmed_id`,
+        `reason`.
+    """
+    records = _fetch_gwas_catalog_study_records(efo_id)
     log_info(f"{efo_id} -> {len(records)} studies")
-    return filter_and_cap_studies(records, cap=cap)
+    return classify_studies(records, cap=cap)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -464,6 +511,69 @@ def _pubmed_dates(pubmed_ids: list[int]) -> dict[int, pd.Timestamp]:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def classify_studies(
+    records: list[dict], cap: int = Constants.MAX_STUDIES_PER_OUTCOME
+) -> list[dict]:
+    """Classify candidate GWAS Catalog studies as included or excluded.
+
+    Same eligibility filter (full summary stats available) and recency
+    cap as `filter_and_cap_studies`, but returns every input record
+    annotated with the reason it was kept or dropped, rather than only
+    the surviving accessions -- the basis for the study-discovery audit
+    log (see `gwas_cat_prep.build_tasks`).
+
+    Parameters
+    ----------
+    records : `list[dict]`
+        Candidate study records, each with `accession_id`,
+        `full_summary_stats_available`, and `pubmed_id` (as returned by
+        the GWAS Catalog studies-list search).
+    cap : `int`, optional, default: `Constants.MAX_STUDIES_PER_OUTCOME`
+        Maximum number of eligible studies to mark `"included"`, most
+        recent first.
+
+    Returns
+    -------
+    classified : `list[dict]`
+        One dict per input record, each with `accession_id`, `pubmed_id`,
+        and `reason` -- one of `"included"`, `"over_cap"` (eligible but
+        beyond `cap`), or `"no_full_sumstats"`. `"included"` and
+        `"over_cap"` records appear first, most-recent-publication-date
+        first (unresolved dates sort last), followed by
+        `"no_full_sumstats"` records in their original input order.
+    """
+    eligible = [r for r in records if r.get("full_summary_stats_available")]
+    ineligible = [
+        r for r in records if not r.get("full_summary_stats_available")
+    ]
+    dates = _pubmed_dates([r.get("pubmed_id") for r in eligible])
+
+    def sort_key(record: dict) -> tuple[bool, pd.Timestamp]:
+        date = dates.get(record.get("pubmed_id"))
+        return (date is not None, date or pd.Timestamp.min)
+
+    eligible.sort(key=sort_key, reverse=True)
+
+    def _row(record: dict, reason: str) -> dict:
+        return {
+            "accession_id": record["accession_id"],
+            "pubmed_id": record.get("pubmed_id"),
+            "reason": reason,
+        }
+
+    classified = (
+        [_row(r, "included") for r in eligible[:cap]]
+        + [_row(r, "over_cap") for r in eligible[cap:]]
+        + [_row(r, "no_full_sumstats") for r in ineligible]
+    )
+    log_info(
+        f"{len(records)} studies -> {len(eligible)} with full sumstats "
+        f"-> {len(eligible[:cap])} included after cap={cap}"
+    )
+    return classified
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def filter_and_cap_studies(
     records: list[dict], cap: int = Constants.MAX_STUDIES_PER_OUTCOME
 ) -> list[str]:
@@ -485,20 +595,8 @@ def filter_and_cap_studies(
         available, ordered most-recent-publication-date first (studies
         whose date could not be resolved from PubMed sort last).
     """
-    eligible = [r for r in records if r.get("full_summary_stats_available")]
-    dates = _pubmed_dates([r.get("pubmed_id") for r in eligible])
-
-    def sort_key(record: dict) -> tuple[bool, pd.Timestamp]:
-        date = dates.get(record.get("pubmed_id"))
-        return (date is not None, date or pd.Timestamp.min)
-
-    eligible.sort(key=sort_key, reverse=True)
-    capped = [r["accession_id"] for r in eligible[:cap]]
-    log_info(
-        f"{len(records)} studies -> {len(eligible)} with full sumstats "
-        f"-> {len(capped)} after cap={cap}"
-    )
-    return capped
+    classified = classify_studies(records, cap=cap)
+    return [r["accession_id"] for r in classified if r["reason"] == "included"]
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

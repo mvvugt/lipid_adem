@@ -70,6 +70,10 @@ class ColumnNames:
     MAF: str = "maf"
     FINNGEN_PHENOCODE: str = "finngen_phenocode"
     SOURCE_DB: str = "source_db"
+    STATUS: str = "status"
+    REASON: str = "reason"
+    PUBMED_ID: str = "pubmed_id"
+    NOTE: str = "note"
 
 
 class FileNames:
@@ -82,4 +86,5 @@ class FileNames:
         Paths.DATA_RAW / "gwas_catalog_manual_studies.tsv"
     )
     TASKS_FILE: Path = Paths.DATA_TEMP / "tasks.tsv"
+    STUDY_DISCOVERY_LOG: Path = Paths.DATA_TEMP / "study_discovery_log.tsv"
     FINAL_RESULTS: Path = Paths.RESULTS_OUTPUT / "final_results.tsv"
