@@ -55,8 +55,26 @@ if [[ -z "$LINE" ]]; then
     exit 1
 fi
 
-IFS=$'\t' read -r ROW_IDX GENE STUDY_ACCESSION EFO_ID OUTCOME CHROM START END \
-    OUTFILE SOURCE <<< "$LINE"
+mapfile -t FIELDS < <(awk -F'\t' '{for (i = 1; i <= NF; i++) print $i}' <<< "$LINE")
+
+if [[ "${#FIELDS[@]}" -ne 10 ]]; then
+    log_error "row $IDX (line $PULL_LINE) has ${#FIELDS[@]} fields," \
+        "expected 10: $LINE"
+    exit 1
+fi
+
+ROW_IDX="${FIELDS[0]}"
+GENE="${FIELDS[1]}"
+STUDY_ACCESSION="${FIELDS[2]}"
+# shellcheck disable=SC2034  # kept for column alignment, unused downstream
+EFO_ID="${FIELDS[3]}"
+# shellcheck disable=SC2034  # kept for column alignment, unused downstream
+OUTCOME="${FIELDS[4]}"
+CHROM="${FIELDS[5]}"
+START="${FIELDS[6]}"
+END="${FIELDS[7]}"
+OUTFILE="${FIELDS[8]}"
+SOURCE="${FIELDS[9]}"
 
 if [[ "$IDX" -ne "$ROW_IDX" ]]; then
     log_error "idx (task_id) [${IDX}] != rowidx [${ROW_IDX}]"
