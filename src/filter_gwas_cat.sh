@@ -19,6 +19,7 @@ set -Euo pipefail
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export RUNLOG_ROOT="${REPO_ROOT}"
 # shellcheck source=/dev/null
 . "${REPO_ROOT}/src/functions.sh"
 # shellcheck disable=SC1090
