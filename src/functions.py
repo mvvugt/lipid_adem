@@ -558,6 +558,58 @@ def finngen_studies_for_phenocode(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def load_manual_gwas_catalog_studies(
+    path: Path = FileNames.GWAS_CATALOG_MANUAL_STUDIES,
+) -> pd.DataFrame:
+    """Load the curated entry-point table of manually-added GWAS studies.
+
+    A GWAS Catalog study can have summary statistics deposited on the
+    FTP server before the REST API has indexed it, which makes it
+    unreachable via `discover_studies` (EFO search) no matter its
+    outcome mapping. This table is a hand-curated list of such studies,
+    added by outcome from a paper's own Data Availability section -- see
+    `data/raw/gwas_catalog_manual_studies.SOURCE.md`.
+
+    Parameters
+    ----------
+    path : `Path`, optional, default: `FileNames.GWAS_CATALOG_MANUAL_STUDIES`
+        TSV file with `accession_id`, `outcome`, `pubmed_id`,
+        `disease_trait`, `note` columns.
+
+    Returns
+    -------
+    manual_studies : `pd.DataFrame`
+        The table, all columns as strings. Empty (but correctly
+        columned) if `path` does not exist yet -- unlike the vendored
+        FinnGen manifest, this file is expected to grow over time rather
+        than always being present.
+    """
+    columns = ["accession_id", "outcome", "pubmed_id", "disease_trait", "note"]
+    if not path.exists():
+        return pd.DataFrame(columns=columns)
+    return pd.read_csv(path, sep="\t", dtype=str).fillna("")
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def manual_studies_for_outcome(outcome: str, manual_df: pd.DataFrame) -> list[str]:
+    """Look up curated GWAS Catalog accessions for an outcome.
+
+    Parameters
+    ----------
+    outcome : `str`
+        Outcome name, as used in `icd_codes.txt`'s `outcome` column.
+    manual_df : `pd.DataFrame`
+        Table from `load_manual_gwas_catalog_studies`.
+
+    Returns
+    -------
+    accessions : `list[str]`
+        `accession_id` values curated for `outcome`. `[]` if none.
+    """
+    return manual_df.loc[manual_df["outcome"] == outcome, "accession_id"].tolist()
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def finngen_sumstats_url(phenocode: str, manifest_df: pd.DataFrame) -> str | None:
     """Look up a FinnGen phenocode's summary-stats file URL.
 
@@ -604,6 +656,54 @@ def finngen_phenocodes_in_cell(cell: str) -> list[str]:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _accession_bucket_location(study_accession: str) -> str | None:
+    """Derive and verify a study's FTP directory from its accession alone.
+
+    GWAS Catalog buckets its FTP summary-stats directories in
+    consecutive, non-overlapping ranges of 1000 accessions (e.g.
+    "GCST90004001-GCST90005000"). A study can be deposited there before
+    the REST API has indexed it (`study_summary_stats_location`'s `GET
+    /studies/{accession}` 404s in that window), so this derives the same
+    bucket the API would eventually report and confirms it by actually
+    requesting it -- a malformed or nonexistent accession still safely
+    returns `None` rather than a guessed-wrong URL.
+
+    Parameters
+    ----------
+    study_accession : `str`
+        GWAS Catalog study accession (e.g. "GCST90861026").
+
+    Returns
+    -------
+    location : `str` or `NoneType`
+        URL of the study's bucketed FTP directory if it responds `200`,
+        else `None` (including when `study_accession` isn't in the
+        expected "GCST" + digits shape).
+    """
+    match = re.fullmatch(r"GCST(\d+)", study_accession)
+    if not match:
+        return None
+
+    digits = match.group(1)
+    width = len(digits)
+    accession_num = int(digits)
+    bucket_start = ((accession_num - 1) // 1000) * 1000 + 1
+    bucket_end = bucket_start + 999
+    bucket_name = (
+        f"GCST{bucket_start:0{width}d}-GCST{bucket_end:0{width}d}"
+    )
+    location = (
+        f"{Constants.GWAS_CATALOG_FTP_BASE}/{bucket_name}/{study_accession}"
+    )
+
+    response = requests.head(f"{location}/", timeout=30)
+    if response.status_code != 200:
+        log_warn(f"{study_accession}: derived FTP bucket {location} not found")
+        return None
+    return location
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def study_summary_stats_location(study_accession: str) -> str | None:
     """Look up a study's harmonised summary-stats FTP directory.
 
@@ -617,17 +717,22 @@ def study_summary_stats_location(study_accession: str) -> str | None:
     location : `str` or `NoneType`
         URL of the study's summary-stats directory (accession-bucketed,
         e.g. ".../GCST90004001-GCST90005000/GCST90004758"), or `None` if
-        the study has no full summary statistics available.
+        the study has no full summary statistics available. If the study
+        isn't found via the API (`404` -- can happen for a study whose
+        sumstats are already deposited on the FTP server but not yet
+        indexed by the API), falls back to `_accession_bucket_location`.
 
     Raises
     ------
     requests.HTTPError
-        If the study accession is not found or the API call fails.
+        If the API call fails for a reason other than "not found".
     """
     response = requests.get(
         f"{Constants.GWAS_CATALOG_API_V2}/studies/{study_accession}",
         timeout=30,
     )
+    if response.status_code == 404:
+        return _accession_bucket_location(study_accession)
     response.raise_for_status()
     data = response.json()
     if not data.get("full_summary_stats_available"):

@@ -41,6 +41,9 @@ class Constants:
     ICD10_CODE_PATTERN: str = r"^[A-Z]\d{2}$"
     EFO_ID_PATTERN: str = r"^EFO[:_]\d+$"
     GWAS_CATALOG_API_V2: str = "https://www.ebi.ac.uk/gwas/rest/api/v2"
+    GWAS_CATALOG_FTP_BASE: str = (
+        "https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics"
+    )
     OPEN_TARGETS_GRAPHQL_URL: str = (
         "https://api.platform.opentargets.org/api/v4/graphql"
     )
@@ -75,5 +78,8 @@ class FileNames:
     ICD_CODE_LIST: Path = Paths.DATA_RAW / "icd_codes.txt"
     EFO_UKB_MAPPING: Path = Paths.DATA_RAW / "efo_ukb_master_mapping.tsv"
     FINNGEN_MANIFEST: Path = Paths.DATA_RAW / "finngen_r13_manifest.tsv"
+    GWAS_CATALOG_MANUAL_STUDIES: Path = (
+        Paths.DATA_RAW / "gwas_catalog_manual_studies.tsv"
+    )
     TASKS_FILE: Path = Paths.DATA_TEMP / "tasks.tsv"
     FINAL_RESULTS: Path = Paths.RESULTS_OUTPUT / "final_results.tsv"

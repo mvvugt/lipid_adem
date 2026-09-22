@@ -2,8 +2,9 @@
 """
 Resolves gene coordinates and outcome-to-EFO mappings (persisting any new
 lookups back to data/raw/gene_list.txt and data/raw/icd_codes.txt),
-discovers GWAS Catalog studies and curated FinnGen phenocodes per outcome,
-and writes the pyjasub job-array file that src/filter_gwas_cat.sh consumes.
+discovers GWAS Catalog studies, curated FinnGen phenocodes, and curated
+not-yet-API-indexed GWAS Catalog studies per outcome, and writes the
+pyjasub job-array file that src/filter_gwas_cat.sh consumes.
 """
 
 
@@ -30,8 +31,11 @@ def build_tasks() -> None:
     coordinates and outcome/code-to-EFO mappings (persisting the results
     back to those files so reruns skip already-resolved rows), discovers
     GWAS Catalog studies per outcome (grouped by the distinct EFO IDs
-    under that outcome) and validates each outcome's curated FinnGen
-    phenocode (if set) against the vendored manifest, and writes
+    under that outcome), unions in any curated not-yet-API-indexed GWAS
+    Catalog accessions for that outcome (see
+    data/raw/gwas_catalog_manual_studies.SOURCE.md), validates each
+    outcome's curated FinnGen phenocode (if set) against the vendored
+    manifest, and writes
     `FileNames.TASKS_FILE` with columns: rowidx, gene, study_accession,
     efo_id, outcome, chrom, start, end, outfile, source.
 
@@ -78,6 +82,7 @@ def build_tasks() -> None:
     # phenocode (comma-separated) when an outcome is curated against
     # several definitional variants of the same disease.
     finngen_manifest_df = functions.load_finngen_manifest()
+    manual_studies_df = functions.load_manual_gwas_catalog_studies()
     distinct_phenocodes = sorted(
         {
             phenocode
@@ -99,6 +104,15 @@ def build_tasks() -> None:
         for efo_id in outcome_efo_ids:
             for accession in studies_by_efo[efo_id]:
                 accession_to_efo.setdefault(accession, efo_id)
+
+        # Curated accessions deposited on the FTP server but not yet
+        # searchable via the API -- see gwas_catalog_manual_studies.SOURCE.md.
+        # setdefault: an accession the API *can* already discover keeps
+        # its real efo_id rather than being overwritten with "".
+        for accession in functions.manual_studies_for_outcome(
+            outcome, manual_studies_df
+        ):
+            accession_to_efo.setdefault(accession, "")
 
         outcome_phenocodes = sorted(
             {
