@@ -2,12 +2,12 @@ outcome,code,code_type,description,finngen_phenocode,efo_id
 all_cause_dementia,F00,icd10,Dementia in Alzheimer disease,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",EFO_0000249
 all_cause_dementia,F01,icd10,Vascular dementia,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",MONDO_0004648
 all_cause_dementia,F02.0,icd10,Dementia in Pick disease,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",MONDO_0008243
-all_cause_dementia,F02.0A,icd10,,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",
-all_cause_dementia,F03,icd10,Unspecified dementia,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",
-all_cause_dementia,F05.1,icd10,Delirium superimposed on dementia,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",
+all_cause_dementia,F02.0A,icd10,,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",NA
+all_cause_dementia,F03,icd10,Unspecified dementia,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",NA
+all_cause_dementia,F05.1,icd10,Delirium superimposed on dementia,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",NA
 all_cause_dementia,G30,icd10,Alzheimer disease,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",EFO_0000249
-all_cause_dementia,G31.0,icd10,Circumscribed brain atrophy,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",
-all_cause_dementia,G31.09,icd10,,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",
+all_cause_dementia,G31.0,icd10,Circumscribed brain atrophy,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",NA
+all_cause_dementia,G31.09,icd10,,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",NA
 all_cause_dementia,I67.3,icd10,Progressive vascular leukoencephalopathy,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",EFO_0003763
 alzheimers_dementia,F00.0,icd10,Dementia in Alzheimer disease with early onset,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",EFO_0000249
 alzheimers_dementia,F00.0A,icd10,,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",EFO_0000249
@@ -33,19 +33,19 @@ cardiovascular_disease,I73,icd10,Other peripheral vascular diseases,FG_CVD,EFO_0
 coronary_heart_disease,I20,icd10,Angina pectoris,I9_CHD,EFO_0003913
 coronary_heart_disease,I21,icd10,Acute myocardial infarction,I9_CHD,EFO_0008583
 coronary_heart_disease,I22,icd10,Subsequent myocardial infarction,I9_CHD,EFO_0008584
-coronary_heart_disease,I23,icd10,Certain current complications following acute myocardial infarction,I9_CHD,
+coronary_heart_disease,I23,icd10,Certain current complications following acute myocardial infarction,I9_CHD,NA
 coronary_heart_disease,I24,icd10,Other acute ischaemic heart diseases,I9_CHD,EFO_0003777
 coronary_heart_disease,I25,icd10,Chronic ischaemic heart disease,I9_CHD,EFO_0001645
 frontotemporal_dementia,F02.0,icd10,Dementia in Pick disease,FTD,MONDO_0008243
-frontotemporal_dementia,G31.0,icd10,Circumscribed brain atrophy,FTD,
+frontotemporal_dementia,G31.0,icd10,Circumscribed brain atrophy,FTD,NA
 hdl_cholesterol,,quantitative_trait,HDL cholesterol measurement,,EFO_0022264
 ldl_cholesterol,,quantitative_trait,LDL cholesterol measurement,,EFO_0022266
 lewy_body_dementia,G31.83,icd10cm,Dementia with Lewy bodies,,EFO_0006799
 parkinsons_disease_dementia,F02.3,icd10,Dementia in Parkinson disease,PD_DEMENTIA_EXMORE,EFO_0011057
 vascular_dementia,F01,icd10,Vascular dementia,F5_VASCDEM,MONDO_0004648
-vascular_dementia,F01.0,icd10,Vascular dementia of acute onset,F5_VASCDEM,
+vascular_dementia,F01.0,icd10,Vascular dementia of acute onset,F5_VASCDEM,NA
 vascular_dementia,F01.1,icd10,Multi-infarct dementia,F5_VASCDEM,MONDO_0043224
 vascular_dementia,F01.2,icd10,Subcortical vascular dementia,F5_VASCDEM,MONDO_0000914
-vascular_dementia,F01.3,icd10,Mixed cortical and subcortical vascular dementia,F5_VASCDEM,
+vascular_dementia,F01.3,icd10,Mixed cortical and subcortical vascular dementia,F5_VASCDEM,NA
 vascular_dementia,F01.8,icd10,Other vascular dementia,F5_VASCDEM,MONDO_0004648
-vascular_dementia,F01.9,icd10,"Vascular dementia, unspecified",F5_VASCDEM,
+vascular_dementia,F01.9,icd10,"Vascular dementia, unspecified",F5_VASCDEM,NA
