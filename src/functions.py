@@ -22,7 +22,7 @@ from biomed_api.readers.reader_ensembl import EnsemblReader
 from biomed_api.readers.reader_gwascat import GwasCatalogReader
 from log_tools.emitter import log_debug, log_info, log_warn
 
-from project_constants import ColumnNames, Constants
+from project_constants import ColumnNames, Constants, FileNames
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -181,18 +181,94 @@ def load_icd_table(path: Path) -> pd.DataFrame:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def resolve_efo_ids(df: pd.DataFrame) -> pd.DataFrame:
-    """Fill in blank `efo_id` cells via the EBI OLS API, in place.
+def normalize_icd10_code(code: str) -> str:
+    """Normalize an ICD-10 code to its 3-character category form.
 
-    Search term is `description` when non-blank, else `code`. Identical
-    search terms are deduped so a repeated description/code is only
-    queried once. Rows that already have an `efo_id` are left untouched,
-    so `icd_codes.txt` doubles as a persisted cache across reruns.
+    Strips any decimal subdivision and non-standard suffix, e.g.
+    "F02.0A" -> "F02", "G31.09" -> "G31". Codes with no "." are
+    returned unchanged apart from trimming/upper-casing, e.g. "I20"
+    stays "I20".
+
+    Parameters
+    ----------
+    code : `str`
+        Raw ICD-10 code, e.g. "F02.0A", "I20".
+
+    Returns
+    -------
+    normalized : `str`
+        Category-level code, upper-cased.
+    """
+    return code.strip().upper().split(".", 1)[0]
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def load_efo_ukb_mapping(path: Path) -> dict[str, str]:
+    """Parse the vendored EFO-UKB master file into an ICD10->EFO dict.
+
+    Keeps only rows whose code column is ICD10-shaped (matches
+    `Constants.ICD10_CODE_PATTERN`), discarding UK Biobank
+    self-reported field codes (numeric, or `number_number`). Within
+    `MAPPED_TERM_URI`, which may list several comma-separated ontology
+    term IDs (not always EFO), the first EFO-shaped candidate
+    (`Constants.EFO_ID_PATTERN`) is used; rows with no EFO-shaped
+    candidate are skipped. Later rows win on a duplicate normalized
+    code.
+
+    Parameters
+    ----------
+    path : `Path`
+        Path to the vendored master TSV
+        (`FileNames.EFO_UKB_MAPPING`).
+
+    Returns
+    -------
+    mapping : `dict[str, str]`
+        `{normalized_icd10_code: efo_id}`, e.g. `{"K55": "EFO_0009431"}`.
+    """
+    code_col = "ICD10_CODE/SELF_REPORTED_TRAIT_FIELD_CODE"
+    uri_col = "MAPPED_TERM_URI"
+    df = pd.read_csv(path, sep="\t", dtype=str).fillna("")
+
+    mapping: dict[str, str] = {}
+    for _, row in df.iterrows():
+        code = row[code_col].strip()
+        if not re.fullmatch(Constants.ICD10_CODE_PATTERN, code):
+            continue
+
+        efo_id = None
+        for candidate in row[uri_col].split(","):
+            candidate = candidate.strip().upper()
+            if re.fullmatch(Constants.EFO_ID_PATTERN, candidate):
+                efo_id = candidate.replace(":", "_")
+                break
+        if efo_id is None:
+            continue
+
+        mapping[normalize_icd10_code(code)] = efo_id
+    return mapping
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def resolve_efo_ids(
+    df: pd.DataFrame, mapping_path: Path = FileNames.EFO_UKB_MAPPING
+) -> pd.DataFrame:
+    """Fill in blank `efo_id` cells, in place.
+
+    Precedence per blank-`efo_id` row: (1) the vendored EFO-UKB
+    master-file lookup, keyed on the row's normalized ICD-10 category
+    code; (2) for rows still unresolved, the EBI OLS free-text search,
+    keyed on `description` when non-blank else raw `code`, with
+    identical search terms deduped so a repeated one is only queried
+    once. Rows that already have an `efo_id` are left untouched, so
+    `icd_codes.txt` doubles as a persisted cache across reruns.
 
     Parameters
     ----------
     df : `pd.DataFrame`
         ICD-code table (as returned by `load_icd_table`).
+    mapping_path : `Path`, optional, default: `FileNames.EFO_UKB_MAPPING`
+        Path to the vendored EFO-UKB master mapping file.
 
     Returns
     -------
@@ -203,13 +279,25 @@ def resolve_efo_ids(df: pd.DataFrame) -> pd.DataFrame:
     if not mask.any():
         return df
 
-    search_terms = df.loc[mask].apply(
+    master_mapping = load_efo_ukb_mapping(mapping_path)
+    normalized_codes = df.loc[mask, ColumnNames.ICD_CODE].map(
+        normalize_icd10_code
+    )
+    df.loc[mask, ColumnNames.EFO_ID] = normalized_codes.map(
+        master_mapping
+    ).fillna("")
+
+    still_blank = df[ColumnNames.EFO_ID].str.strip() == ""
+    if not still_blank.any():
+        return df
+
+    search_terms = df.loc[still_blank].apply(
         lambda row: row[ColumnNames.DESCRIPTION].strip()
         or row[ColumnNames.ICD_CODE].strip(),
         axis=1,
     )
     term_to_efo = {term: icd_to_efo(term) for term in search_terms.unique()}
-    df.loc[mask, ColumnNames.EFO_ID] = search_terms.map(term_to_efo)
+    df.loc[still_blank, ColumnNames.EFO_ID] = search_terms.map(term_to_efo)
     return df
 
 

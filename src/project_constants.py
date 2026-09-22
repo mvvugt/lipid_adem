@@ -33,6 +33,8 @@ class Constants:
     GENE_COORD_FLANK_BP: int = 10_000
     GRCH_BUILD: str = "GRCh38"
     EBI_OLS_SEARCH_URL: str = "https://www.ebi.ac.uk/ols/api/search"
+    ICD10_CODE_PATTERN: str = r"^[A-Z]\d{2}$"
+    EFO_ID_PATTERN: str = r"^EFO[:_]\d+$"
     GWAS_CATALOG_API_V2: str = "https://www.ebi.ac.uk/gwas/rest/api/v2"
     OPEN_TARGETS_GRAPHQL_URL: str = (
         "https://api.platform.opentargets.org/api/v4/graphql"
@@ -64,5 +66,6 @@ class FileNames:
     """File paths, built from `Paths` so they move together."""
     GENE_LIST: Path = Paths.DATA_RAW / "gene_list.txt"
     ICD_CODE_LIST: Path = Paths.DATA_RAW / "icd_codes.txt"
+    EFO_UKB_MAPPING: Path = Paths.DATA_RAW / "efo_ukb_master_mapping.tsv"
     TASKS_FILE: Path = Paths.DATA_TEMP / "tasks.tsv"
     FINAL_RESULTS: Path = Paths.RESULTS_OUTPUT / "final_results.tsv"
