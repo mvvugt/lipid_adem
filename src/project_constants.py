@@ -32,6 +32,10 @@ class Constants:
     MAF_THRESHOLD: float = 0.01
     GENE_COORD_FLANK_BP: int = 10_000
     MAX_STUDIES_PER_OUTCOME: int = 10
+    NCBI_ESUMMARY_URL: str = (
+        "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
+    )
+    PUBMED_BATCH_SIZE: int = 200
     GRCH_BUILD: str = "GRCh38"
     EBI_OLS_SEARCH_URL: str = "https://www.ebi.ac.uk/ols/api/search"
     ICD10_CODE_PATTERN: str = r"^[A-Z]\d{2}$"

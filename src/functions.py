@@ -375,10 +375,10 @@ def discover_studies(
     Well-studied traits (e.g. common diseases, lipid biomarkers) can have
     hundreds of associated studies; only those with full summary
     statistics available are usable downstream, and pulling all of them
-    is expensive (one HTTP call per accession, then a sumstats download
-    and filter per gene). Results are therefore filtered to studies with
-    full summary statistics available and capped to the `cap` most
-    recently published, via `filter_and_cap_studies`.
+    is expensive (a sumstats download and filter per gene). Results are
+    therefore filtered to studies with full summary statistics available
+    and capped to the `cap` most recently published, via
+    `filter_and_cap_studies`.
 
     Parameters
     ----------
@@ -399,83 +399,79 @@ def discover_studies(
         warnings.simplefilter("ignore", UserWarning)
         result = reader.read(profile="studies", efo_id=efo_id)
 
-    accessions = [
-        row["accession_id"] for row in result.records if "accession_id" in row
+    records = [
+        {
+            "accession_id": row["accession_id"],
+            "full_summary_stats_available": row.get(
+                "full_summary_stats_available", False
+            ),
+            "pubmed_id": row.get("pubmed_id"),
+        }
+        for row in result.records
+        if "accession_id" in row
     ]
-    log_info(f"{efo_id} -> {len(accessions)} studies")
-    return filter_and_cap_studies(accessions, cap=cap)
+    log_info(f"{efo_id} -> {len(records)} studies")
+    return filter_and_cap_studies(records, cap=cap)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _study_metadata(study_accession: str) -> dict:
-    """Fetch a study's raw metadata from the GWAS Catalog v2 API.
+def _pubmed_dates(pubmed_ids: list[int]) -> dict[int, pd.Timestamp]:
+    """Batch-fetch publication dates from PubMed via NCBI E-utils.
+
+    GWAS Catalog study records carry a `pubmed_id` but no publication
+    date of their own; PubMed's `esummary` endpoint is the source of
+    truth for when a study was actually published. IDs are deduplicated
+    and fetched in chunks of `Constants.PUBMED_BATCH_SIZE` (one request
+    per chunk), not one request per ID.
 
     Parameters
     ----------
-    study_accession : `str`
-        GWAS Catalog study accession (e.g. "GCST######").
+    pubmed_ids : `list[int]`
+        PubMed IDs to look up (`None`/falsy entries are ignored).
 
     Returns
     -------
-    data : `dict`
-        Parsed JSON response for the study.
-
-    Raises
-    ------
-    requests.HTTPError
-        If the study accession is not found or the API call fails.
+    dates : `dict[int, pd.Timestamp]`
+        `{pubmed_id: parsed_date}`. IDs whose `pubdate` could not be
+        parsed are omitted, so callers should use `.get(...)` with a
+        fallback.
     """
-    response = requests.get(
-        f"{Constants.GWAS_CATALOG_API_V2}/studies/{study_accession}",
-        timeout=30,
-    )
-    response.raise_for_status()
-    return response.json()
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _publication_date(data: dict) -> str:
-    """Extract a study's publication date from its raw metadata.
-
-    Notes
-    -----
-    The exact field name has not been confirmed against a live API
-    response in this environment (sandboxed, no network access to
-    ebi.ac.uk) -- `publication_date` and the nested
-    `publication_info.publication_date` are both tried since the
-    confirmed-working `full_summary_stats_available`/`full_summary_stats`
-    fields on this same endpoint use snake_case. Verify this against a
-    real response on first live run; if both are wrong, ranking silently
-    degrades to input order (empty dates sort last, ties keep discovery
-    order) rather than failing.
-
-    Parameters
-    ----------
-    data : `dict`
-        Raw study metadata, as returned by `_study_metadata`.
-
-    Returns
-    -------
-    date : `str`
-        ISO-ish date string, or `""` if not found.
-    """
-    return (
-        data.get("publication_date")
-        or data.get("publication_info", {}).get("publication_date", "")
-        or ""
-    )
+    unique_ids = sorted({pid for pid in pubmed_ids if pid})
+    dates: dict[int, pd.Timestamp] = {}
+    for start in range(0, len(unique_ids), Constants.PUBMED_BATCH_SIZE):
+        chunk = unique_ids[start : start + Constants.PUBMED_BATCH_SIZE]
+        response = requests.get(
+            Constants.NCBI_ESUMMARY_URL,
+            params={
+                "db": "pubmed",
+                "id": ",".join(str(pid) for pid in chunk),
+                "retmode": "json",
+            },
+            timeout=30,
+        )
+        response.raise_for_status()
+        result = response.json().get("result", {})
+        for uid in result.get("uids", []):
+            parsed = pd.to_datetime(
+                result.get(uid, {}).get("pubdate", ""), errors="coerce"
+            )
+            if pd.notna(parsed):
+                dates[int(uid)] = parsed
+    return dates
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def filter_and_cap_studies(
-    accessions: list[str], cap: int = Constants.MAX_STUDIES_PER_OUTCOME
+    records: list[dict], cap: int = Constants.MAX_STUDIES_PER_OUTCOME
 ) -> list[str]:
     """Keep studies with full summary stats, capped to the N most recent.
 
     Parameters
     ----------
-    accessions : `list[str]`
-        Candidate study accession IDs.
+    records : `list[dict]`
+        Candidate study records, each with `accession_id`,
+        `full_summary_stats_available`, and `pubmed_id` (as returned by
+        the GWAS Catalog studies-list search).
     cap : `int`, optional, default: `Constants.MAX_STUDIES_PER_OUTCOME`
         Maximum number of studies to return, most recent first.
 
@@ -483,19 +479,20 @@ def filter_and_cap_studies(
     -------
     capped : `list[str]`
         At most `cap` study accessions, all with full summary statistics
-        available, ordered most-recent-publication-date first.
+        available, ordered most-recent-publication-date first (studies
+        whose date could not be resolved from PubMed sort last).
     """
-    eligible: list[tuple[str, str]] = []
-    for accession in accessions:
-        data = _study_metadata(accession)
-        if not data.get("full_summary_stats_available"):
-            continue
-        eligible.append((accession, _publication_date(data)))
+    eligible = [r for r in records if r.get("full_summary_stats_available")]
+    dates = _pubmed_dates([r.get("pubmed_id") for r in eligible])
 
-    eligible.sort(key=lambda item: item[1], reverse=True)
-    capped = [accession for accession, _ in eligible[:cap]]
+    def sort_key(record: dict) -> tuple[bool, pd.Timestamp]:
+        date = dates.get(record.get("pubmed_id"))
+        return (date is not None, date or pd.Timestamp.min)
+
+    eligible.sort(key=sort_key, reverse=True)
+    capped = [r["accession_id"] for r in eligible[:cap]]
     log_info(
-        f"{len(accessions)} studies -> {len(eligible)} with full sumstats "
+        f"{len(records)} studies -> {len(eligible)} with full sumstats "
         f"-> {len(capped)} after cap={cap}"
     )
     return capped
