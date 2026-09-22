@@ -61,6 +61,7 @@ def build_tasks() -> None:
         log_info(f"wrote resolved efo_ids to {FileNames.ICD_CODE_LIST}")
 
     Paths.DATA_TEMP.mkdir(parents=True, exist_ok=True)
+    Paths.GWAS_FILTERED.mkdir(parents=True, exist_ok=True)
 
     # Discover studies once per distinct efo_id (global dedupe), then
     # union each outcome's accessions from its own distinct efo_ids.
@@ -85,7 +86,9 @@ def build_tasks() -> None:
                 gene_row, Constants.GENE_COORD_FLANK_BP
             )
             for accession, efo_id in accession_to_efo.items():
-                outfile = Paths.DATA_TEMP / f"{gene}_{accession}_result.tsv"
+                outfile = (
+                    Paths.GWAS_FILTERED / f"{gene}_{accession}_result.tsv.gz"
+                )
                 rows.append(
                     {
                         ColumnNames.GENE: gene,

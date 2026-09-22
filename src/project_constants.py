@@ -19,6 +19,7 @@ class Paths:
     HERE: Path = Path(__file__).resolve().parent.parent
     DATA_RAW: Path = HERE / "data" / "raw"
     DATA_TEMP: Path = HERE / "data" / "temp"
+    GWAS_FILTERED: Path = DATA_TEMP / "gwas_filtered"
     RESULTS_OUTPUT: Path = HERE / "results" / "output"
     LOGS: Path = HERE / "logs"
 

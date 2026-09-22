@@ -32,7 +32,7 @@ def load_filter_results() -> pd.DataFrame:
         `"summary-stats"`. Empty if no filtered output files exist yet.
     """
     frames = []
-    for result_path in sorted(Paths.DATA_TEMP.glob("*_result.tsv")):
+    for result_path in sorted(Paths.GWAS_FILTERED.glob("*_result.tsv.gz")):
         frame = pd.read_csv(result_path, sep="\t")
         frame[ColumnNames.SOURCE] = "summary-stats"
         frames.append(frame)
