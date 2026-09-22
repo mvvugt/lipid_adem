@@ -384,6 +384,7 @@ def resolve_sumstats_source(
         entry
         for entry in entries
         if not entry.endswith("/")
+        and not entry.startswith("?")
         and entry not in exclude
         and not entry.endswith("-meta.yaml")
     ]
