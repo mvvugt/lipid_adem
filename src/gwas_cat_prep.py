@@ -151,7 +151,7 @@ def main() -> None:
     parser = _init_cmd_args()
     _parse_cmd_args(parser)
 
-    with runlog_setup():
+    with runlog_setup(root=Paths.HERE):
         build_tasks()
 
 

@@ -20,7 +20,7 @@ from log_tools.emitter import log_info, log_warn
 from log_tools.setup import runlog_setup
 
 import functions
-from project_constants import Constants
+from project_constants import Constants, Paths
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -173,7 +173,7 @@ def main() -> None:
     parser = _init_cmd_args()
     args = _parse_cmd_args(parser)
 
-    with runlog_setup():
+    with runlog_setup(root=Paths.HERE):
         run_filter(
             gene=args.gene,
             study_accession=args.study_accession,

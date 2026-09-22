@@ -12,7 +12,8 @@
 #
 # Returns
 # -------
-#   The wrapped command's exit code.
+#   The wrapped command's exit code. Logs via `log_error` on failure
+#   (non-zero exit).
 #
 # Example
 # -------
@@ -21,5 +22,10 @@
 run_mamba() {
     local mamba_env="${1:?Error: mamba env required}"
     shift
-    mamba run --no-capture-output -n "$mamba_env" "$@"
+    local exit_code=0
+    mamba run --no-capture-output -n "$mamba_env" "$@" || exit_code="$?"
+    if [[ "$exit_code" -ne 0 ]]; then
+        log_error "run_mamba: '$*' failed in env '$mamba_env' (exit ${exit_code})"
+    fi
+    return "$exit_code"
 }

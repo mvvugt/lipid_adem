@@ -19,13 +19,14 @@ set -Euo pipefail
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-echo "$REPO_ROOT"
 # shellcheck source=/dev/null
 . "${REPO_ROOT}/src/functions.sh"
 # shellcheck disable=SC1090
 source "$(runlog-setup-path)"
+runlog_setup
 
-echo "=== $0 ==="
+log_info "repo root=$REPO_ROOT"
+log_info "=== $0 ==="
 log_info "started at $(date)"
 log_info "hostname=${HOSTNAME:-$(hostname)}"
 
@@ -70,4 +71,4 @@ run_mamba biomed-api "${REPO_ROOT}/src/filter_gwas_cat.py" \
     --outfile "$OUTFILE"
 
 log_info "ended at $(date)"
-echo "*** END ***"
+log_info "*** END ***"
