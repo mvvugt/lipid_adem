@@ -892,6 +892,36 @@ def _maf_at_or_above_threshold(maf: str | None, maf_threshold: float) -> bool:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _plain_header(tabix_source: str) -> list[str]:
+    """Read a sumstats file's first line as its header.
+
+    Fallback for when a tabix index has no comment-prefixed header line
+    (e.g. GWAS Catalog harmonised files, whose header row is excluded
+    from the `.tbi` index via a skip-lines count rather than a `#`
+    comment character, so `pysam.TabixFile.header` returns `[]`).
+
+    Parameters
+    ----------
+    tabix_source : `str`
+        Path or URL to the bgzip-compressed sumstats file.
+
+    Returns
+    -------
+    header : `list[str]`
+        The first line's tab-separated fields.
+    """
+    if tabix_source.startswith(("http://", "https://", "ftp://")):
+        with requests.get(tabix_source, stream=True, timeout=30) as response:
+            response.raise_for_status()
+            with gzip.GzipFile(fileobj=response.raw) as gz:
+                line = gz.readline().decode("utf-8")
+    else:
+        with gzip.open(tabix_source, "rt") as fh:
+            line = fh.readline()
+    return line.rstrip("\n").split("\t")
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def filter_sumstats_region(
     tabix_source: str,
     region: GeneRegion,
@@ -940,7 +970,12 @@ def filter_sumstats_region(
     import pysam
 
     with pysam.TabixFile(tabix_source) as tabix_file:
-        header = tabix_file.header[0].lstrip("#").split("\t")
+        header_lines = tabix_file.header
+        header = (
+            header_lines[0].lstrip("#").split("\t")
+            if header_lines
+            else _plain_header(tabix_source)
+        )
         chrom_idx = header.index(chrom_col)
         pos_idx = header.index(pos_col)
         maf_idx = header.index(maf_col)
