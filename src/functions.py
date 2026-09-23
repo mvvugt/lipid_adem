@@ -19,8 +19,10 @@ from pathlib import Path
 
 import pandas as pd
 import requests
+from biomed_api.errors import ReaderError
 from biomed_api.readers.reader_ensembl import EnsemblReader
 from biomed_api.readers.reader_gwascat import GwasCatalogReader
+from biomed_api.readers.reader_uniprot import UniProtIdMappingReader
 from log_tools.emitter import log_debug, log_info, log_warn
 
 from project_constants import ColumnNames, Constants, FileNames
@@ -45,6 +47,28 @@ class GeneRegion:
     chrom: str
     start: int
     end: int
+
+
+@dataclass
+class GeneRecord:
+    """A gene's Ensembl identity and (unflanked) region.
+
+    Attributes
+    ----------
+    symbol : `str`
+        Gene symbol as Ensembl reports it (`display_name`).
+    ensembl_id : `str`
+        Ensembl stable gene ID (ENSG...).
+    region : `GeneRegion`
+        The gene body's region.
+    """
+    symbol: str
+    ensembl_id: str
+    region: GeneRegion
+
+
+class GeneTableError(ValueError):
+    """A gene-table row cannot be resolved or its identifiers disagree."""
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -142,37 +166,95 @@ def load_task_outfiles(path: Path) -> list[Path]:
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def load_gene_table(path: Path) -> pd.DataFrame:
-    """Load the gene reference table.
+    """Load the gene reference table, adding any missing standard column.
 
     Parameters
     ----------
     path : `Path`
-        Tab-separated file with (at least) `gene`, `chr`, `start`, `end`
-        columns. `chr`/`start`/`end` may be blank for a gene not yet
-        resolved.
+        Tab-separated file with at least one identifier column from
+        `ColumnNames.GENE_ID_COLUMNS` (`gene`, `ensemblid`, `uniprot`).
+        Every other standard column (`ColumnNames.GENE_TABLE_COLUMNS`)
+        is optional, and any cell may be blank; `resolve_gene_table`
+        fills them in.
 
     Returns
     -------
     genes : `pd.DataFrame`
-        The gene table, as-is.
+        The gene table as strings, with blank cells as "" and a literal
+        "NA" kept as-is. Standard columns come first, in standard order,
+        followed by any extra columns.
 
     Raises
     ------
     FileNotFoundError
         If `path` does not exist.
+    GeneTableError
+        If the file has no identifier column, or a row has no usable
+        identifier (all blank or "NA").
     """
     if not path.exists():
         raise FileNotFoundError(f"Gene list not found: {path}")
-    return pd.read_csv(path, sep="\t", dtype=str).fillna("")
+    # keep_default_na=False so a literal "NA" (looked up, not found) is not
+    # read back as blank and re-resolved on every run
+    df = pd.read_csv(path, sep="\t", dtype=str, keep_default_na=False)
+    df.columns = [c.strip() for c in df.columns]
+    if not any(c in df.columns for c in ColumnNames.GENE_ID_COLUMNS):
+        raise GeneTableError(
+            f"{path} needs at least one identifier column out of "
+            f"{', '.join(ColumnNames.GENE_ID_COLUMNS)}; got "
+            f"{', '.join(df.columns)}"
+        )
+    for col in ColumnNames.GENE_TABLE_COLUMNS:
+        if col not in df.columns:
+            df[col] = ""
+    df = df.apply(lambda col: col.str.strip())
+    extra = [c for c in df.columns if c not in ColumnNames.GENE_TABLE_COLUMNS]
+    df = df[list(ColumnNames.GENE_TABLE_COLUMNS) + extra]
+    for idx in df.index:
+        if not _given_gene_ids(df.loc[idx]):
+            raise GeneTableError(
+                f"{path} row {idx + 2} has no identifier: set one of "
+                f"{', '.join(ColumnNames.GENE_ID_COLUMNS)}"
+            )
+    return df
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def resolve_gene_regions(df: pd.DataFrame) -> pd.DataFrame:
-    """Fill in blank gene coordinates via Ensembl, in place.
+def _given_gene_ids(row: pd.Series) -> dict[str, str]:
+    """Return a gene-table row's usable identifiers.
 
-    Rows that already have `chr`/`start`/`end` are left untouched -- only
-    blank rows trigger an Ensembl lookup, so `gene_list.txt` doubles as a
-    persisted cache across reruns.
+    Parameters
+    ----------
+    row : `pd.Series`
+        A row from `load_gene_table`.
+
+    Returns
+    -------
+    given : `dict` [`str`, `str`]
+        Identifier column -> value, for each of
+        `ColumnNames.GENE_ID_COLUMNS` that is neither blank nor "NA".
+    """
+    return {
+        col: row[col]
+        for col in ColumnNames.GENE_ID_COLUMNS
+        if row[col] not in ("", Constants.NA_STRING)
+    }
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def resolve_gene_table(df: pd.DataFrame) -> pd.DataFrame:
+    """Fill in every blank gene-table cell via Ensembl and UniProt, in place.
+
+    Each row is resolved from one anchor identifier, picked in this order:
+    `ensemblid`, `gene`, `uniprot` (via its primary gene name). The anchor
+    gives the Ensembl record, which fills blank `gene`, `ensemblid`,
+    `chr`, `start` and `end`. A blank `uniprot` is filled with the gene's
+    single reviewed human UniProt accession.
+
+    Only blank ("") cells are filled; given values are never overwritten.
+    "NA" means "looked up before, not found" and is left alone, so rows
+    with no blank cell cost no API calls and `gene_list.txt` doubles as a
+    persisted cache across reruns (clear a cell by hand to retry it).
 
     Parameters
     ----------
@@ -182,16 +264,119 @@ def resolve_gene_regions(df: pd.DataFrame) -> pd.DataFrame:
     Returns
     -------
     df : `pd.DataFrame`
-        The same table, with blank coordinate cells filled in.
+        The same table, with blank cells filled in.
+
+    Raises
+    ------
+    GeneTableError
+        If a row's anchor identifier is not found (so it would have no
+        coordinates), or if a row being resolved has identifiers that
+        disagree: a given `gene` that differs from the Ensembl symbol,
+        or a given `uniprot` that differs from the gene's reviewed
+        accession.
     """
-    mask = df[ColumnNames.GENE_CHR].str.strip() == ""
-    for idx in df.index[mask]:
-        gene = df.at[idx, ColumnNames.GENE]
-        region = gene_coordinates(gene)
-        df.at[idx, ColumnNames.GENE_CHR] = region.chrom
-        df.at[idx, ColumnNames.START] = str(region.start)
-        df.at[idx, ColumnNames.END] = str(region.end)
+    for idx in df.index:
+        row = df.loc[idx]
+        if not (row[list(ColumnNames.GENE_TABLE_COLUMNS)] == "").any():
+            continue
+        given = _given_gene_ids(row)
+        label = f"gene table row {idx + 2} {given}"
+        record = _anchor_gene_record(given)
+        if record is None:
+            raise GeneTableError(f"{label}: not found in Ensembl/UniProt")
+        gene = given.get(ColumnNames.GENE)
+        if gene is not None and gene.upper() != record.symbol.upper():
+            raise GeneTableError(
+                f"{label}: gene {gene!r} does not match Ensembl symbol "
+                f"{record.symbol!r} ({record.ensembl_id})"
+            )
+        resolved = {
+            ColumnNames.GENE: record.symbol,
+            ColumnNames.ENSEMBL_ID: record.ensembl_id,
+            ColumnNames.GENE_CHR: record.region.chrom,
+            ColumnNames.START: str(record.region.start),
+            ColumnNames.END: str(record.region.end),
+        }
+        for col, value in resolved.items():
+            if row[col] == "":
+                df.at[idx, col] = value
+        _resolve_uniprot_cell(df, idx, given, record, label)
     return df
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _anchor_gene_record(given: dict[str, str]) -> GeneRecord | None:
+    """Look up a gene's Ensembl record from its best given identifier.
+
+    Parameters
+    ----------
+    given : `dict` [`str`, `str`]
+        A row's usable identifiers (see `_given_gene_ids`).
+
+    Returns
+    -------
+    record : `GeneRecord` or `None`
+        The Ensembl record, from `ensemblid` if given, else `gene`, else
+        `uniprot`. `None` if that identifier is not found.
+    """
+    if ColumnNames.ENSEMBL_ID in given:
+        return ensembl_by_id(given[ColumnNames.ENSEMBL_ID])
+    if ColumnNames.GENE in given:
+        return ensembl_by_symbol(given[ColumnNames.GENE])
+    symbol = symbol_by_uniprot(given[ColumnNames.UNIPROT])
+    if symbol is None:
+        return None
+    return ensembl_by_symbol(symbol)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _resolve_uniprot_cell(
+    df: pd.DataFrame,
+    idx: int,
+    given: dict[str, str],
+    record: GeneRecord,
+    label: str,
+) -> None:
+    """Fill a blank `uniprot` cell, or check a given one, in place.
+
+    Parameters
+    ----------
+    df : `pd.DataFrame`
+        Gene table being resolved.
+    idx : `int`
+        Row index in `df`.
+    given : `dict` [`str`, `str`]
+        The row's usable identifiers (see `_given_gene_ids`).
+    record : `GeneRecord`
+        The row's resolved Ensembl record.
+    label : `str`
+        Row description for log/error messages.
+
+    Raises
+    ------
+    GeneTableError
+        If a given `uniprot` (not used as the anchor) differs from the
+        gene's single reviewed accession.
+    """
+    cell = df.at[idx, ColumnNames.UNIPROT]
+    if cell == Constants.NA_STRING:
+        return
+    uniprot_is_anchor = set(given) == {ColumnNames.UNIPROT}
+    if cell != "" and uniprot_is_anchor:
+        return
+    accession = uniprot_by_symbol(record.symbol)
+    if cell == "":
+        if accession is None:
+            log_warn(f"{label}: no single reviewed UniProt entry, set NA")
+            accession = Constants.NA_STRING
+        df.at[idx, ColumnNames.UNIPROT] = accession
+    elif accession is None:
+        log_warn(f"{label}: cannot check uniprot {cell!r}, no single entry")
+    elif accession != cell:
+        raise GeneTableError(
+            f"{label}: uniprot {cell!r} does not match the reviewed "
+            f"accession {accession!r} for {record.symbol}"
+        )
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -403,8 +588,75 @@ def icd_to_efo(term: str) -> str:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def gene_coordinates(symbol: str) -> GeneRegion:
-    """Look up a gene's coordinates via Ensembl.
+def _is_not_found(err: ReaderError) -> bool:
+    """Tell whether a biomed-api `ReaderError` is an HTTP "not found".
+
+    Parameters
+    ----------
+    err : `ReaderError`
+        Error raised by a biomed-api reader.
+
+    Returns
+    -------
+    not_found : `bool`
+        `True` if it wraps an HTTP 400/404 response (Ensembl answers an
+        unknown symbol or ID with 400), `False` for any other failure
+        (network, server error, bad JSON).
+    """
+    cause = err.__cause__
+    response = getattr(cause, "response", None)
+    return response is not None and response.status_code in (400, 404)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _ensembl_gene_record(profile: str, **params: str) -> GeneRecord | None:
+    """Run one Ensembl lookup profile and pack it as a `GeneRecord`.
+
+    Parameters
+    ----------
+    profile : `str`
+        `EnsemblReader` profile: "gene_lookup" or "lookup_id".
+    **params : `str`
+        The profile's endpoint parameter (`symbol=` or `id=`).
+
+    Returns
+    -------
+    record : `GeneRecord` or `None`
+        The gene's record, or `None` if Ensembl does not know it.
+
+    Raises
+    ------
+    ReaderError
+        If the lookup fails for any reason other than "not found".
+    """
+    try:
+        result = EnsemblReader().read(profile=profile, **params)
+    except ReaderError as err:
+        if _is_not_found(err):
+            log_warn(f"Ensembl {profile} found nothing for {params}")
+            return None
+        raise
+    data = result.records[0]
+    record = GeneRecord(
+        symbol=str(data["display_name"]),
+        ensembl_id=str(data["id"]),
+        region=GeneRegion(
+            chrom=str(data["seq_region_name"]),
+            start=int(data["start"]),
+            end=int(data["end"]),
+        ),
+    )
+    region = record.region
+    log_info(
+        f"{params} -> {record.symbol} {record.ensembl_id} "
+        f"{region.chrom}:{region.start}-{region.end}"
+    )
+    return record
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def ensembl_by_symbol(symbol: str) -> GeneRecord | None:
+    """Look up a gene's Ensembl ID and coordinates from its symbol.
 
     Parameters
     ----------
@@ -413,26 +665,137 @@ def gene_coordinates(symbol: str) -> GeneRegion:
 
     Returns
     -------
-    region : `GeneRegion`
-        The gene's (unflanked) region. Use `gene_row_region` /
-        equivalent flanking at the point of use.
+    record : `GeneRecord` or `None`
+        The gene's (unflanked) record; use `gene_row_region` for
+        flanking. `None` if Ensembl has no record for `symbol`.
 
     Raises
     ------
-    biomed_api.readers.utils.base.ReaderError
-        If Ensembl has no record for `symbol`, or the lookup fails.
+    ReaderError
+        If the lookup fails for any reason other than "not found".
     """
-    reader = EnsemblReader()
-    result = reader.read(profile="gene_lookup", symbol=symbol)
-    data = result.records[0]
+    return _ensembl_gene_record("gene_lookup", symbol=symbol)
 
-    region = GeneRegion(
-        chrom=str(data["seq_region_name"]),
-        start=int(data["start"]),
-        end=int(data["end"]),
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def ensembl_by_id(ensembl_id: str) -> GeneRecord | None:
+    """Look up a gene's symbol and coordinates from its Ensembl ID.
+
+    Parameters
+    ----------
+    ensembl_id : `str`
+        Ensembl stable gene ID (ENSG...).
+
+    Returns
+    -------
+    record : `GeneRecord` or `None`
+        The gene's (unflanked) record. `None` if Ensembl has no record
+        for `ensembl_id`.
+
+    Raises
+    ------
+    ReaderError
+        If the lookup fails for any reason other than "not found".
+    """
+    return _ensembl_gene_record("lookup_id", id=ensembl_id)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _uniprot_search(query: str) -> list[dict]:
+    """Run a UniProtKB search through biomed-api.
+
+    Parameters
+    ----------
+    query : `str`
+        UniProtKB query string.
+
+    Returns
+    -------
+    entries : `list` [`dict`]
+        Matching UniProtKB entries (raw JSON), possibly empty. Also empty
+        when UniProt rejects the query (HTTP 400, e.g. a malformed
+        accession).
+
+    Raises
+    ------
+    ReaderError
+        If the search request fails for any other reason.
+    """
+    reader = UniProtIdMappingReader()
+    try:
+        return reader.read(profile="entry_lookup", query=query).records
+    except ReaderError as err:
+        # entry_lookup raises its own ReaderError (no HTTP cause attached),
+        # so the status code can only be read from the message
+        if "HTTP 400" in str(err):
+            log_warn(f"UniProt rejected query {query!r}: {err}")
+            return []
+        raise
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def uniprot_by_symbol(symbol: str) -> str | None:
+    """Look up a gene's reviewed (Swiss-Prot) human UniProt accession.
+
+    Parameters
+    ----------
+    symbol : `str`
+        HGNC gene symbol.
+
+    Returns
+    -------
+    accession : `str` or `None`
+        The single reviewed human accession for `symbol`, or `None` if
+        there are zero or several.
+
+    Raises
+    ------
+    ReaderError
+        If the search request fails.
+    """
+    query = (
+        f"gene_exact:{symbol} AND "
+        f"organism_id:{Constants.UNIPROT_HUMAN_TAXON} AND reviewed:true"
     )
-    log_info(f"{symbol} -> {region.chrom}:{region.start}-{region.end}")
-    return region
+    accessions = [e["primaryAccession"] for e in _uniprot_search(query)]
+    if len(accessions) != 1:
+        log_warn(f"{symbol}: {len(accessions)} reviewed UniProt entries")
+        return None
+    log_info(f"{symbol} -> UniProt {accessions[0]}")
+    return accessions[0]
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def symbol_by_uniprot(accession: str) -> str | None:
+    """Look up the primary gene symbol of a UniProt accession.
+
+    Parameters
+    ----------
+    accession : `str`
+        UniProt accession (e.g. "P02649").
+
+    Returns
+    -------
+    symbol : `str` or `None`
+        The entry's primary gene name, or `None` if the accession is not
+        found or has no gene name.
+
+    Raises
+    ------
+    ReaderError
+        If the search request fails.
+    """
+    entries = _uniprot_search(f"accession:{accession}")
+    if len(entries) != 1:
+        log_warn(f"UniProt {accession}: {len(entries)} entries found")
+        return None
+    genes = entries[0].get("genes") or [{}]
+    symbol = genes[0].get("geneName", {}).get("value")
+    if symbol is None:
+        log_warn(f"UniProt {accession}: entry has no primary gene name")
+        return None
+    log_info(f"UniProt {accession} -> {symbol}")
+    return symbol
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

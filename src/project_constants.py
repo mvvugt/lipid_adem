@@ -49,6 +49,10 @@ class Constants:
     OPEN_TARGETS_GRAPHQL_URL: str = (
         "https://api.platform.opentargets.org/api/v4/graphql"
     )
+    # written to a gene-table cell that was looked up but not found;
+    # treated as resolved on reruns (clear the cell by hand to retry)
+    NA_STRING: str = "NA"
+    UNIPROT_HUMAN_TAXON: int = 9606
 
 
 class ColumnNames:
@@ -56,6 +60,8 @@ class ColumnNames:
     ROWIDX: str = "rowidx"
     GENE: str = "gene"
     GENE_CHR: str = "chr"
+    ENSEMBL_ID: str = "ensemblid"
+    UNIPROT: str = "uniprot"
     STUDY_ACCESSION: str = "study_accession"
     EFO_ID: str = "efo_id"
     CHROM: str = "chrom"
@@ -85,6 +91,17 @@ class ColumnNames:
     ANCESTRY: str = "ancestry"
     COHORT: str = "cohort"
     NOTE: str = "note"
+    # gene_list.txt: any one of GENE_ID_COLUMNS is enough as input, the
+    # rest of GENE_TABLE_COLUMNS is resolved (see resolve_gene_table)
+    GENE_ID_COLUMNS: tuple[str, ...] = (GENE, ENSEMBL_ID, UNIPROT)
+    GENE_TABLE_COLUMNS: tuple[str, ...] = (
+        GENE,
+        GENE_CHR,
+        START,
+        END,
+        ENSEMBL_ID,
+        UNIPROT,
+    )
 
 
 class FileNames:

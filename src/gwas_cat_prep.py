@@ -123,8 +123,10 @@ def _finngen_meta(
 def build_tasks() -> None:
     """Resolve lookups, discover studies, and write the job-array file.
 
-    Loads `FileNames.GENE_LIST`/`ICD_CODE_LIST`, fills in any blank gene
-    coordinates and outcome/code-to-EFO mappings (persisting the results
+    Loads `FileNames.GENE_LIST`/`ICD_CODE_LIST`, fills in any missing gene
+    columns/cells (symbol, coordinates, Ensembl ID, UniProt; see
+    `functions.resolve_gene_table`) and outcome/code-to-EFO mappings
+    (persisting the results
     back to those files so reruns skip already-resolved rows), discovers
     GWAS Catalog studies per outcome (grouped by the distinct EFO IDs
     under that outcome), unions in any curated not-yet-API-indexed GWAS
@@ -156,16 +158,18 @@ def build_tasks() -> None:
     FileNotFoundError
         If the gene or ICD/outcome placeholder files have not been filled
         in.
+    functions.GeneTableError
+        If a gene row cannot be resolved, or its identifiers disagree.
     """
     genes_df = functions.load_gene_table(FileNames.GENE_LIST)
     icd_df = functions.load_icd_table(FileNames.ICD_CODE_LIST)
     log_info(f"{len(genes_df)} genes, {len(icd_df)} icd codes")
 
     genes_before = genes_df.copy()
-    genes_df = functions.resolve_gene_regions(genes_df)
+    genes_df = functions.resolve_gene_table(genes_df)
     if not genes_df.equals(genes_before):
         functions.write_table_atomic(genes_df, FileNames.GENE_LIST)
-        log_info(f"wrote resolved gene coordinates to {FileNames.GENE_LIST}")
+        log_info(f"wrote resolved gene annotations to {FileNames.GENE_LIST}")
 
     icd_before = icd_df.copy()
     icd_df = functions.resolve_efo_ids(icd_df)
