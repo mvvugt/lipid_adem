@@ -22,6 +22,8 @@ class Paths:
     GWAS_FILTERED: Path = DATA_TEMP / "gwas_filtered"
     RESULTS_OUTPUT: Path = HERE / "results" / "output"
     LOGS: Path = HERE / "logs"
+    # must match `log_dir` in config/filter_task.cnf
+    FILTER_TASK_LOGS: Path = HERE / "src" / "logs" / "filter_task_logs"
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -73,6 +75,15 @@ class ColumnNames:
     STATUS: str = "status"
     REASON: str = "reason"
     PUBMED_ID: str = "pubmed_id"
+    PUB_DATE: str = "pub_date"
+    FIRST_AUTHOR: str = "first_author"
+    JOURNAL: str = "journal"
+    TITLE: str = "title"
+    TRAIT: str = "trait"
+    DISEASE_TRAIT: str = "disease_trait"
+    SAMPLE_SIZE: str = "sample_size"
+    ANCESTRY: str = "ancestry"
+    COHORT: str = "cohort"
     NOTE: str = "note"
 
 

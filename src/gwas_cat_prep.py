@@ -16,15 +16,109 @@ sources with its inclusion status and reason.
 from __future__ import annotations
 import argparse
 
+import pandas as pd
 from log_tools.emitter import log_info
 from log_tools.setup import runlog_setup
 
 import functions
 from project_constants import ColumnNames, Constants, FileNames, Paths
 
+# Display-only per-study metadata columns in the study-discovery audit log,
+# between `pubmed_id` and `note`.
+META_COLUMNS: list[str] = [
+    ColumnNames.PUB_DATE,
+    ColumnNames.FIRST_AUTHOR,
+    ColumnNames.JOURNAL,
+    ColumnNames.TITLE,
+    ColumnNames.TRAIT,
+    ColumnNames.SAMPLE_SIZE,
+    ColumnNames.ANCESTRY,
+    ColumnNames.COHORT,
+]
+FINNGEN_COHORT: str = "FinnGen R13"
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # helpers
+
+def _manual_meta(
+    manual_row: pd.Series, pubmed: dict[int, dict]
+) -> dict[str, str]:
+    """Build audit metadata for a curated (manual) GWAS Catalog study.
+
+    Values curated in the manual table win; blanks in the publication
+    columns are filled from PubMed.
+
+    Parameters
+    ----------
+    manual_row : `pd.Series`
+        One row of `functions.load_manual_gwas_catalog_studies()`.
+    pubmed : `dict[int, dict]`
+        As returned by `functions.pubmed_summaries`.
+
+    Returns
+    -------
+    meta : `dict[str, str]`
+        One value per column in `META_COLUMNS`.
+    """
+    pid = str(manual_row.get(ColumnNames.PUBMED_ID, ""))
+    summary = pubmed.get(int(pid), {}) if pid.isdigit() else {}
+    date = summary.get("date")
+    fetched = {
+        ColumnNames.PUB_DATE: (
+            date.strftime("%Y-%m-%d") if date is not None else ""
+        ),
+        ColumnNames.FIRST_AUTHOR: summary.get("first_author", ""),
+        ColumnNames.JOURNAL: summary.get("journal", ""),
+        ColumnNames.TITLE: summary.get("title", ""),
+    }
+    curated = {
+        col: functions.clean_cell(manual_row.get(col, ""))
+        for col in META_COLUMNS
+        if col != ColumnNames.TRAIT
+    }
+    curated[ColumnNames.TRAIT] = functions.clean_cell(
+        manual_row.get(ColumnNames.DISEASE_TRAIT, "")
+    )
+    return {
+        col: curated.get(col) or fetched.get(col, "") for col in META_COLUMNS
+    }
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _finngen_meta(
+    phenocode: str, manifest_df: pd.DataFrame
+) -> dict[str, str]:
+    """Build audit metadata for a FinnGen phenocode from the manifest.
+
+    Parameters
+    ----------
+    phenocode : `str`
+        Curated FinnGen phenocode (e.g. "G6_ALZHEIMER").
+    manifest_df : `pd.DataFrame`
+        Manifest table from `functions.load_finngen_manifest`.
+
+    Returns
+    -------
+    meta : `dict[str, str]`
+        One value per column in `META_COLUMNS`; all `""` if `phenocode`
+        is not in the manifest.
+    """
+    meta = {col: "" for col in META_COLUMNS}
+    matches = manifest_df.loc[manifest_df["phenocode"] == phenocode]
+    if matches.empty:
+        return meta
+    row = matches.iloc[0]
+    meta[ColumnNames.TRAIT] = functions.clean_cell(row.get("phenotype", ""))
+    meta[ColumnNames.SAMPLE_SIZE] = (
+        f"{row.get('num_cases', '')} cases, "
+        f"{row.get('num_controls', '')} controls"
+    )
+    meta[ColumnNames.COHORT] = FINNGEN_COHORT
+    return meta
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def build_tasks() -> None:
     """Resolve lookups, discover studies, and write the job-array file.
@@ -39,13 +133,19 @@ def build_tasks() -> None:
     outcome's curated FinnGen phenocode (if set) against the vendored
     manifest, and writes
     `FileNames.TASKS_FILE` with columns: rowidx, gene, study_accession,
-    efo_id, outcome, chrom, start, end, outfile, source.
+    efo_id, outcome, chrom, start, end, outfile, source. Then archives any
+    existing pyjasub log dir (`Paths.FILTER_TASK_LOGS`) via
+    `functions.archive_dir`, since pyjasub refuses a newer array file.
 
     Also writes `FileNames.STUDY_DISCOVERY_LOG`, an audit trail of every
     study discovered across all three sources (GWAS Catalog, FinnGen,
     manual), one row each, with its inclusion status and reason (e.g.
     "no_full_sumstats", "over_cap", "not_found_in_manifest") -- unlike
-    `TASKS_FILE`, which only contains the surviving, capped set.
+    `TASKS_FILE`, which only contains the surviving, capped set. Each
+    row also carries display-only metadata (`META_COLUMNS`): publication
+    date/first author/journal/title from PubMed, and trait, sample size,
+    ancestry and cohort from the GWAS Catalog record, the manual table,
+    or the FinnGen manifest, so the recency cap can be checked by eye.
 
     Returns
     -------
@@ -92,6 +192,11 @@ def build_tasks() -> None:
     # several definitional variants of the same disease.
     finngen_manifest_df = functions.load_finngen_manifest()
     manual_studies_df = functions.load_manual_gwas_catalog_studies()
+    # One batched PubMed lookup for all curated studies (their GWAS
+    # Catalog records 404 until indexed, so PubMed is all we can fetch).
+    manual_pubmed = functions.pubmed_summaries(
+        manual_studies_df[ColumnNames.PUBMED_ID].tolist()
+    )
     distinct_phenocodes = sorted(
         {
             phenocode
@@ -129,6 +234,7 @@ def build_tasks() -> None:
                         ColumnNames.PUBMED_ID: str(
                             record.get("pubmed_id") or ""
                         ),
+                        **{col: record[col] for col in META_COLUMNS},
                         ColumnNames.NOTE: "",
                     }
                 )
@@ -161,7 +267,8 @@ def build_tasks() -> None:
                     ColumnNames.PUBMED_ID: str(
                         manual_row.get(ColumnNames.PUBMED_ID, "")
                     ),
-                    ColumnNames.NOTE: str(
+                    **_manual_meta(manual_row, manual_pubmed),
+                    ColumnNames.NOTE: functions.clean_cell(
                         manual_row.get(ColumnNames.NOTE, "")
                     ),
                 }
@@ -189,6 +296,7 @@ def build_tasks() -> None:
                         "included" if found else "not_found_in_manifest"
                     ),
                     ColumnNames.PUBMED_ID: "",
+                    **_finngen_meta(phenocode, finngen_manifest_df),
                     ColumnNames.NOTE: "",
                 }
             )
@@ -255,6 +363,9 @@ def build_tasks() -> None:
 
     log_info(f"wrote {len(rows)} tasks to {FileNames.TASKS_FILE}")
 
+    # pyjasub errors if the job-array file is newer than an existing log dir
+    functions.archive_dir(Paths.FILTER_TASK_LOGS)
+
     audit_header = [
         ColumnNames.OUTCOME,
         ColumnNames.SOURCE,
@@ -263,6 +374,7 @@ def build_tasks() -> None:
         ColumnNames.STATUS,
         ColumnNames.REASON,
         ColumnNames.PUBMED_ID,
+        *META_COLUMNS,
         ColumnNames.NOTE,
     ]
     audit_tmp = FileNames.STUDY_DISCOVERY_LOG.with_suffix(".tmp")

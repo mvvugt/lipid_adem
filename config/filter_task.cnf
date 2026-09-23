@@ -12,15 +12,16 @@ tmp_size=2G
 tmp_dir=/home/rmgpmva/Scratch/lipid_adem/filter_task_tmp
 
 [logs]
-log_dir=/myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/filter_task_job_logs
+# must match `Paths.FILTER_TASK_LOGS` in src/project_constants.py
+log_dir=/myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/filter_task_logs
 
 [job_array]
 ja_file=/myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/tasks.tsv
 task_script=/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.sh
 
-# inputs are remote GWAS Catalog/FinnGen URLs, so there is no `infiles`
 # column to verify.
 outfiles=outfile
+# inputs are remote GWAS Catalog/FinnGen URLs, so only check outfiles
 
 [script]
 verbose=true

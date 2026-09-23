@@ -12,6 +12,7 @@ from __future__ import annotations
 import gzip
 import io
 import re
+import time
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
@@ -72,6 +73,71 @@ def write_table_atomic(df: pd.DataFrame, path: Path, sep: str = "\t") -> None:
     tmp_path = path.with_suffix(path.suffix + ".tmp")
     df.to_csv(tmp_path, sep=sep, index=False)
     tmp_path.replace(path)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def archive_dir(path: Path) -> Path | None:
+    """Rename an existing directory aside, stamped with its mtime.
+
+    The new name is `<name>_<mtime %Y%m%d_%H%M%S>` in the same parent
+    directory, with `_1`, `_2`, ... appended if that name is taken, so
+    nothing is ever overwritten.
+
+    Parameters
+    ----------
+    path : `Path`
+        Directory to archive.
+
+    Returns
+    -------
+    archived : `Path` or `None`
+        The directory's new path, or `None` if `path` did not exist.
+
+    Notes
+    -----
+    Used to move an old pyjasub log directory out of the way: pyjasub
+    errors when the job-array file is newer than an existing log dir. The
+    mtime (not "now") is used so the name reflects the run the logs
+    belong to. A same-directory rename is atomic.
+    """
+    if not path.exists():
+        return None
+    stamp = time.strftime(
+        "%Y%m%d_%H%M%S", time.localtime(path.stat().st_mtime)
+    )
+    archived = path.with_name(f"{path.name}_{stamp}")
+    suffix = 1
+    while archived.exists():
+        archived = path.with_name(f"{path.name}_{stamp}_{suffix}")
+        suffix += 1
+    path.rename(archived)
+    log_info(f"archived {path} -> {archived}")
+    return archived
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def load_task_outfiles(path: Path) -> list[Path]:
+    """Load the unique `outfile` paths from the job-array file.
+
+    Parameters
+    ----------
+    path : `Path`
+        The job-array file (`tasks.tsv`) written by `gwas_cat_prep.py`.
+
+    Returns
+    -------
+    outfiles : `list[Path]`
+        Unique `outfile` paths, in file order.
+
+    Raises
+    ------
+    FileNotFoundError
+        If `path` does not exist.
+    """
+    if not path.exists():
+        raise FileNotFoundError(f"Tasks file not found: {path}")
+    tasks = pd.read_csv(path, sep="\t", dtype=str)
+    return [Path(p) for p in tasks[ColumnNames.OUTFILE].dropna().unique()]
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -382,8 +448,10 @@ def _fetch_gwas_catalog_study_records(efo_id: str) -> list[dict]:
     -------
     records : `list[dict]`
         One dict per study with `accession_id`,
-        `full_summary_stats_available`, and `pubmed_id`, as returned by
-        the GWAS Catalog studies-list search.
+        `full_summary_stats_available`, `pubmed_id`, `disease_trait`,
+        `initial_sample_size`, `discovery_ancestry`, and `cohort`, as
+        returned by the GWAS Catalog studies-list search (absent fields
+        are `None`).
     """
     reader = GwasCatalogReader()
     with warnings.catch_warnings():
@@ -399,6 +467,10 @@ def _fetch_gwas_catalog_study_records(efo_id: str) -> list[dict]:
                 "full_summary_stats_available", False
             ),
             "pubmed_id": row.get("pubmed_id"),
+            "disease_trait": row.get("disease_trait"),
+            "initial_sample_size": row.get("initial_sample_size"),
+            "discovery_ancestry": row.get("discovery_ancestry"),
+            "cohort": row.get("cohort"),
         }
         for row in result.records
         if "accession_id" in row
@@ -457,7 +529,7 @@ def discover_studies_with_reasons(
     -------
     classified : `list[dict]`
         As returned by `classify_studies` -- `accession_id`, `pubmed_id`,
-        `reason`.
+        `reason`, plus publication/trait/sample metadata.
     """
     records = _fetch_gwas_catalog_study_records(efo_id)
     log_info(f"{efo_id} -> {len(records)} studies")
@@ -465,8 +537,33 @@ def discover_studies_with_reasons(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _pubmed_dates(pubmed_ids: list[int]) -> dict[int, pd.Timestamp]:
-    """Batch-fetch publication dates from PubMed via NCBI E-utils.
+def clean_cell(value: object) -> str:
+    """Render a value as a single TSV-safe cell.
+
+    Parameters
+    ----------
+    value : `object`
+        Scalar, list, or `None` (e.g. a GWAS Catalog field such as
+        `discovery_ancestry`, which is a list of strings).
+
+    Returns
+    -------
+    cell : `str`
+        `""` for `None`/NaN, list items joined with `"; "`, and any
+        tabs/newlines replaced by a single space.
+    """
+    if value is None:
+        return ""
+    if isinstance(value, (list, tuple)):
+        value = "; ".join(clean_cell(v) for v in value if v is not None)
+    elif isinstance(value, float) and pd.isna(value):
+        return ""
+    return re.sub(r"[\t\r\n]+", " ", str(value)).strip()
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def pubmed_summaries(pubmed_ids: list) -> dict[int, dict]:
+    """Batch-fetch publication metadata from PubMed via NCBI E-utils.
 
     GWAS Catalog study records carry a `pubmed_id` but no publication
     date of their own; PubMed's `esummary` endpoint is the source of
@@ -476,18 +573,22 @@ def _pubmed_dates(pubmed_ids: list[int]) -> dict[int, pd.Timestamp]:
 
     Parameters
     ----------
-    pubmed_ids : `list[int]`
-        PubMed IDs to look up (`None`/falsy entries are ignored).
+    pubmed_ids : `list`
+        PubMed IDs to look up, as `int` or numeric `str` (`None`/falsy/
+        non-numeric entries are ignored).
 
     Returns
     -------
-    dates : `dict[int, pd.Timestamp]`
-        `{pubmed_id: parsed_date}`. IDs whose `pubdate` could not be
-        parsed are omitted, so callers should use `.get(...)` with a
-        fallback.
+    summaries : `dict[int, dict]`
+        `{pubmed_id: {"date", "first_author", "journal", "title"}}`,
+        where `date` is a `pd.Timestamp` or `None` if `pubdate` could not
+        be parsed. IDs PubMed does not return are omitted, so callers
+        should use `.get(...)` with a fallback.
     """
-    unique_ids = sorted({pid for pid in pubmed_ids if pid})
-    dates: dict[int, pd.Timestamp] = {}
+    unique_ids = sorted(
+        {int(pid) for pid in pubmed_ids if pid and str(pid).isdigit()}
+    )
+    summaries: dict[int, dict] = {}
     for start in range(0, len(unique_ids), Constants.PUBMED_BATCH_SIZE):
         chunk = unique_ids[start : start + Constants.PUBMED_BATCH_SIZE]
         response = requests.get(
@@ -502,12 +603,15 @@ def _pubmed_dates(pubmed_ids: list[int]) -> dict[int, pd.Timestamp]:
         response.raise_for_status()
         result = response.json().get("result", {})
         for uid in result.get("uids", []):
-            parsed = pd.to_datetime(
-                result.get(uid, {}).get("pubdate", ""), errors="coerce"
-            )
-            if pd.notna(parsed):
-                dates[int(uid)] = parsed
-    return dates
+            entry = result.get(uid, {})
+            parsed = pd.to_datetime(entry.get("pubdate", ""), errors="coerce")
+            summaries[int(uid)] = {
+                "date": parsed if pd.notna(parsed) else None,
+                "first_author": clean_cell(entry.get("sortfirstauthor")),
+                "journal": clean_cell(entry.get("fulljournalname")),
+                "title": clean_cell(entry.get("title")),
+            }
+    return summaries
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -536,7 +640,11 @@ def classify_studies(
     -------
     classified : `list[dict]`
         One dict per input record, each with `accession_id`, `pubmed_id`,
-        and `reason` -- one of `"included"`, `"over_cap"` (eligible but
+        `reason`, plus display-only metadata (all `str`, `""` if
+        unknown): `pub_date` (YYYY-MM-DD), `first_author`, `journal`,
+        `title` (from PubMed), and `trait`, `sample_size`, `ancestry`,
+        `cohort` (from the GWAS Catalog record). `reason` is one of
+        `"included"`, `"over_cap"` (eligible but
         beyond `cap`), or `"no_full_sumstats"`. `"included"` and
         `"over_cap"` records appear first, most-recent-publication-date
         first (unresolved dates sort last), followed by
@@ -546,19 +654,37 @@ def classify_studies(
     ineligible = [
         r for r in records if not r.get("full_summary_stats_available")
     ]
-    dates = _pubmed_dates([r.get("pubmed_id") for r in eligible])
+    # Fetched for every record (not just eligible ones) so the audit log
+    # shows dates for no_full_sumstats studies too.
+    summaries = pubmed_summaries([r.get("pubmed_id") for r in records])
+
+    def _summary(record: dict) -> dict:
+        pid = record.get("pubmed_id")
+        if pid and str(pid).isdigit():
+            return summaries.get(int(pid), {})
+        return {}
 
     def sort_key(record: dict) -> tuple[bool, pd.Timestamp]:
-        date = dates.get(record.get("pubmed_id"))
+        date = _summary(record).get("date")
         return (date is not None, date or pd.Timestamp.min)
 
     eligible.sort(key=sort_key, reverse=True)
 
     def _row(record: dict, reason: str) -> dict:
+        summary = _summary(record)
+        date = summary.get("date")
         return {
             "accession_id": record["accession_id"],
             "pubmed_id": record.get("pubmed_id"),
             "reason": reason,
+            "pub_date": date.strftime("%Y-%m-%d") if date is not None else "",
+            "first_author": summary.get("first_author", ""),
+            "journal": summary.get("journal", ""),
+            "title": summary.get("title", ""),
+            "trait": clean_cell(record.get("disease_trait")),
+            "sample_size": clean_cell(record.get("initial_sample_size")),
+            "ancestry": clean_cell(record.get("discovery_ancestry")),
+            "cohort": clean_cell(record.get("cohort")),
         }
 
     classified = (
@@ -671,8 +797,12 @@ def load_manual_gwas_catalog_studies(
     Parameters
     ----------
     path : `Path`, optional, default: `FileNames.GWAS_CATALOG_MANUAL_STUDIES`
-        TSV file with `accession_id`, `outcome`, `pubmed_id`,
-        `disease_trait`, `note` columns.
+        TSV file with required `accession_id`, `outcome` columns and
+        optional (may be absent or empty) `pubmed_id`, `disease_trait`,
+        `pub_date`, `first_author`, `journal`, `title`, `sample_size`,
+        `ancestry`, `cohort`, `note` columns. The metadata columns only
+        feed the study-discovery audit log; non-empty values override
+        what PubMed returns for `pubmed_id`.
 
     Returns
     -------
@@ -682,10 +812,29 @@ def load_manual_gwas_catalog_studies(
         FinnGen manifest, this file is expected to grow over time rather
         than always being present.
     """
-    columns = ["accession_id", "outcome", "pubmed_id", "disease_trait", "note"]
+    columns = [
+        "accession_id",
+        "outcome",
+        ColumnNames.PUBMED_ID,
+        ColumnNames.DISEASE_TRAIT,
+        ColumnNames.PUB_DATE,
+        ColumnNames.FIRST_AUTHOR,
+        ColumnNames.JOURNAL,
+        ColumnNames.TITLE,
+        ColumnNames.SAMPLE_SIZE,
+        ColumnNames.ANCESTRY,
+        ColumnNames.COHORT,
+        ColumnNames.NOTE,
+    ]
     if not path.exists():
         return pd.DataFrame(columns=columns)
-    return pd.read_csv(path, sep="\t", dtype=str).fillna("")
+    manual_df = pd.read_csv(path, sep="\t", dtype=str).fillna("")
+    # Metadata columns are optional (empty allowed); add any missing ones
+    # so older files without them still load.
+    for column in columns:
+        if column not in manual_df.columns:
+            manual_df[column] = ""
+    return manual_df
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -897,24 +1046,20 @@ def resolve_sumstats_source(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def curated_associations(
-    efo_id: str, region: GeneRegion, maf_threshold: float
-) -> pd.DataFrame:
-    """Fetch curated genome-wide-significant associations for a trait.
+def fetch_curated_associations(efo_id: str) -> list[dict]:
+    """Fetch all curated genome-wide-significant associations for a trait.
 
     Parameters
     ----------
     efo_id : `str`
         EFO ID (underscore form).
-    region : `GeneRegion`
-        Gene region to restrict associations to.
-    maf_threshold : `float`
-        Only associations with a reported MAF below this are kept.
 
     Returns
     -------
-    associations : `pd.DataFrame`
-        Curated associations, region- and MAF-filtered. Empty if none.
+    records : `list[dict]`
+        Every association record for `efo_id`, unfiltered. The download
+        does not depend on any gene, so fetch once per EFO ID and filter
+        per gene with `filter_curated_associations`.
 
     Notes
     -----
@@ -925,16 +1070,39 @@ def curated_associations(
         warnings.simplefilter("ignore", UserWarning)
         result = reader.read(profile="associations", efo_id=efo_id)
 
-    records = []
-    for row in result.records:
+    records = list(result.records)
+    log_info(f"{efo_id} -> {len(records)} curated associations fetched")
+    return records
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def filter_curated_associations(
+    records: list[dict], region: GeneRegion, maf_threshold: float
+) -> pd.DataFrame:
+    """Restrict curated association records to a region and MAF threshold.
+
+    Parameters
+    ----------
+    records : `list[dict]`
+        Association records from `fetch_curated_associations`.
+    region : `GeneRegion`
+        Gene region to restrict associations to.
+    maf_threshold : `float`
+        Only associations with a reported MAF below this are kept.
+
+    Returns
+    -------
+    associations : `pd.DataFrame`
+        Curated associations, region- and MAF-filtered. Empty if none.
+    """
+    kept = []
+    for row in records:
         if not _location_in_region(row.get("locations"), region):
             continue
         if _maf_at_or_above_threshold(row.get("risk_frequency"), maf_threshold):
             continue
-        records.append(row)
-
-    log_info(f"{efo_id} -> {len(records)} curated associations in region")
-    return pd.DataFrame.from_records(records)
+        kept.append(row)
+    return pd.DataFrame.from_records(kept)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

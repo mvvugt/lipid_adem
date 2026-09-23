@@ -1,7 +1,7 @@
-accession_id	outcome	pubmed_id	disease_trait	note
-GCST90861026	alzheimers_dementia	42736378	APOE e44 strata GWAS - Alzheimer's disease	Thomassen et al. 2026, Nat Genet, DOI:10.1038/s41588-026-02713-9
-GCST90861027	alzheimers_dementia	42736378	APOE e43 strata GWAS - Alzheimer's disease	Thomassen et al. 2026, Nat Genet, DOI:10.1038/s41588-026-02713-9
-GCST90861028	alzheimers_dementia	42736378	APOE e44+e43 strata GWAS - Alzheimer's disease	Thomassen et al. 2026, Nat Genet, DOI:10.1038/s41588-026-02713-9
-GCST90861029	alzheimers_dementia	42736378	APOE e33 strata GWAS - Alzheimer's disease	Thomassen et al. 2026, Nat Genet, DOI:10.1038/s41588-026-02713-9
-GCST90861030	alzheimers_dementia	42736378	APOE e22+e32 strata GWAS - Alzheimer's disease	Thomassen et al. 2026, Nat Genet, DOI:10.1038/s41588-026-02713-9
-GCST90861031	alzheimers_dementia	42736378	APOE carrier interaction GWAS - Alzheimer's disease	Thomassen et al. 2026, Nat Genet, DOI:10.1038/s41588-026-02713-9
+accession_id	outcome	pubmed_id	disease_trait	pub_date	first_author	journal	title	sample_size	ancestry	cohort	note
+GCST90861026	alzheimers_dementia	42736378	APOE e44 strata GWAS - Alzheimer's disease								Thomassen et al. 2026, Nat Genet, DOI:10.1038/s41588-026-02713-9
+GCST90861027	alzheimers_dementia	42736378	APOE e43 strata GWAS - Alzheimer's disease								Thomassen et al. 2026, Nat Genet, DOI:10.1038/s41588-026-02713-9
+GCST90861028	alzheimers_dementia	42736378	APOE e44+e43 strata GWAS - Alzheimer's disease								Thomassen et al. 2026, Nat Genet, DOI:10.1038/s41588-026-02713-9
+GCST90861029	alzheimers_dementia	42736378	APOE e33 strata GWAS - Alzheimer's disease								Thomassen et al. 2026, Nat Genet, DOI:10.1038/s41588-026-02713-9
+GCST90861030	alzheimers_dementia	42736378	APOE e22+e32 strata GWAS - Alzheimer's disease								Thomassen et al. 2026, Nat Genet, DOI:10.1038/s41588-026-02713-9
+GCST90861031	alzheimers_dementia	42736378	APOE carrier interaction GWAS - Alzheimer's disease								Thomassen et al. 2026, Nat Genet, DOI:10.1038/s41588-026-02713-9
