@@ -23,7 +23,7 @@ from biomed_api.errors import ReaderError
 from biomed_api.readers.reader_ensembl import EnsemblReader
 from biomed_api.readers.reader_gwascat import GwasCatalogReader
 from biomed_api.readers.reader_uniprot import UniProtIdMappingReader
-from log_tools.emitter import log_debug, log_info, log_warn
+from log_tools.emitter import log_debug, log_info, log_warn, log_stage
 
 from project_constants import ColumnNames, Constants, FileNames
 
@@ -279,6 +279,7 @@ def resolve_gene_table(df: pd.DataFrame) -> pd.DataFrame:
         row = df.loc[idx]
         if not (row[list(ColumnNames.GENE_TABLE_COLUMNS)] == "").any():
             continue
+        log_stage('resolve_genes')
         given = _given_gene_ids(row)
         label = f"gene table row {idx + 2} {given}"
         record = _anchor_gene_record(given)
@@ -537,6 +538,7 @@ def resolve_efo_ids(
     if not mask.any():
         return df
 
+    log_stage('resolve_efo')
     master_mapping = load_efo_ukb_mapping(mapping_path)
     normalized_codes = df.loc[mask, ColumnNames.ICD_CODE].map(
         normalize_icd10_code
@@ -900,6 +902,7 @@ def discover_studies_with_reasons(
         As returned by `classify_studies` -- `accession_id`, `pubmed_id`,
         `reason`, plus publication/trait/sample metadata.
     """
+    log_stage('discover_gwas')
     records = _fetch_gwas_catalog_study_records(efo_id)
     log_info(f"{efo_id} -> {len(records)} studies")
     return classify_studies(records, cap=cap)

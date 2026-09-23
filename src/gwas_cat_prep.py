@@ -258,9 +258,7 @@ def build_tasks() -> None:
                     )
 
         # Curated accessions deposited on the FTP server but not yet
-        # searchable via the API -- see gwas_catalog_manual_studies.SOURCE.md.
-        # setdefault: an accession the API *can* already discover keeps
-        # its real efo_id rather than being overwritten with "".
+        # searchable via the API
         for accession in functions.manual_studies_for_outcome(
             outcome, manual_studies_df
         ):
