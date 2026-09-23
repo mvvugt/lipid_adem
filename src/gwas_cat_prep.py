@@ -183,7 +183,11 @@ def build_tasks() -> None:
     # Discover studies once per distinct efo_id (global dedupe), then
     # union each outcome's accessions from its own distinct efo_ids.
     distinct_efo_ids = sorted(
-        {efo_id for efo_id in icd_df[ColumnNames.EFO_ID] if efo_id}
+        {
+            efo_id
+            for efo_id in icd_df[ColumnNames.EFO_ID]
+            if efo_id not in ("", Constants.NA_STRING)
+        }
     )
     classified_by_efo = {
         efo_id: functions.discover_studies_with_reasons(efo_id)
@@ -218,7 +222,13 @@ def build_tasks() -> None:
     rows: list[dict[str, str]] = []
     audit_rows: list[dict[str, str]] = []
     for outcome, group in icd_df.groupby(ColumnNames.OUTCOME):
-        outcome_efo_ids = sorted({e for e in group[ColumnNames.EFO_ID] if e})
+        outcome_efo_ids = sorted(
+            {
+                e
+                for e in group[ColumnNames.EFO_ID]
+                if e not in ("", Constants.NA_STRING)
+            }
+        )
         accession_to_efo: dict[str, str] = {}
         for efo_id in outcome_efo_ids:
             for record in classified_by_efo[efo_id]:

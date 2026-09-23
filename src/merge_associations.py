@@ -89,7 +89,7 @@ def merge_results() -> None:
     parts = [load_filter_results()]
 
     outcome_efo_ids = (
-        icd_df[icd_df[ColumnNames.EFO_ID] != ""]
+        icd_df[~icd_df[ColumnNames.EFO_ID].isin(["", Constants.NA_STRING])]
         .groupby(ColumnNames.OUTCOME)[ColumnNames.EFO_ID]
         .unique()
     )

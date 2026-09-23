@@ -417,7 +417,8 @@ def load_icd_table(path: Path) -> pd.DataFrame:
     -------
     icd_codes : `pd.DataFrame`
         The ICD-code table, with `efo_id` and `finngen_phenocode`
-        guaranteed present.
+        guaranteed present. A literal "NA" `efo_id` (looked up before,
+        not found) is kept as-is; clear the cell by hand to retry.
 
     Raises
     ------
@@ -426,7 +427,9 @@ def load_icd_table(path: Path) -> pd.DataFrame:
     """
     if not path.exists():
         raise FileNotFoundError(f"ICD code list not found: {path}")
-    df = pd.read_csv(path, dtype=str).fillna("")
+    # keep_default_na=False so a literal "NA" (looked up, not found) is not
+    # read back as blank and re-resolved on every run
+    df = pd.read_csv(path, dtype=str, keep_default_na=False)
     if ColumnNames.EFO_ID not in df.columns:
         df[ColumnNames.EFO_ID] = ""
     if ColumnNames.FINNGEN_PHENOCODE not in df.columns:
@@ -514,8 +517,9 @@ def resolve_efo_ids(
     code; (2) for rows still unresolved, the EBI OLS free-text search,
     keyed on `description` when non-blank else raw `code`, with
     identical search terms deduped so a repeated one is only queried
-    once. Rows that already have an `efo_id` are left untouched, so
-    `icd_codes.txt` doubles as a persisted cache across reruns.
+    once. Rows that already have an `efo_id` (including "NA", i.e. looked
+    up before and not found) are left untouched, so `icd_codes.txt`
+    doubles as a persisted cache across reruns.
 
     Parameters
     ----------
@@ -567,7 +571,8 @@ def icd_to_efo(term: str) -> str:
     Returns
     -------
     efo_id : `str`
-        The first matching EFO term's short OBO ID (e.g. "EFO_0001645").
+        The first matching EFO term's short OBO ID (e.g. "EFO_0001645"),
+        or "NA" if there is no match or the match has no OBO ID.
     """
     response = requests.get(
         Constants.EBI_OLS_SEARCH_URL,
@@ -578,11 +583,12 @@ def icd_to_efo(term: str) -> str:
     docs = response.json().get("response", {}).get("docs", [])
     if not docs:
         log_warn(f"No EFO term found for: {term}")
-        return "NA"
+        return Constants.NA_STRING
 
     obo_id = docs[0].get("obo_id")
     if not obo_id:
         log_warn(f"EFO match for {term!r} has no obo_id: {docs[0]}")
+        return Constants.NA_STRING
     log_info(f"mapped {term} -> {obo_id}")
     return obo_id.replace(":", "_")
 
