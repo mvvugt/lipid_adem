@@ -15,6 +15,7 @@ import io
 import re
 import time
 import warnings
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -2099,70 +2100,181 @@ def filter_raw_sumstats_region(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def gene_burden_evidence(gene: str) -> pd.DataFrame:
+def _open_targets_query(query: str, variables: dict) -> dict:
+    """Run one Open Targets GraphQL query.
+
+    Parameters
+    ----------
+    query : `str`
+        GraphQL query text.
+    variables : `dict`
+        Query variables.
+
+    Returns
+    -------
+    data : `dict`
+        The response's `data` object.
+
+    Raises
+    ------
+    requests.HTTPError
+        On an HTTP error status.
+    RuntimeError
+        If the response reports GraphQL errors (these come with HTTP 200).
+    """
+    response = requests.post(
+        Constants.OPEN_TARGETS_GRAPHQL_URL,
+        json={"query": query, "variables": variables},
+        timeout=60,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    if payload.get("errors"):
+        raise RuntimeError(f"Open Targets query failed: {payload['errors']}")
+    return payload["data"]
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def open_targets_disease_ids(
+    outcome_efo_ids: Mapping[str, Sequence[str]],
+) -> dict[str, set[tuple[str, str]]]:
+    """Map Open Targets disease IDs to the outcome trait IDs they count for.
+
+    Open Targets evidence only matches exact disease IDs, so each outcome
+    `efo_id` is widened to its `Constants.OPEN_TARGETS_EXTRA_DISEASE_IDS`
+    and, for child-trait outcomes (`includes_child_traits`), to the
+    Open Targets descendants of those IDs.
+
+    Parameters
+    ----------
+    outcome_efo_ids : `Mapping[str, Sequence[str]]`
+        Outcome -> its `efo_id` values.
+
+    Returns
+    -------
+    lookup : `dict[str, set[tuple[str, str]]]`
+        Open Targets disease ID -> the `(outcome, efo_id)` pairs it
+        belongs to. IDs unknown to Open Targets are left out (warned).
+    """
+    query_ids: dict[str, set[str]] = {}
+    for _, efo_ids in outcome_efo_ids.items():
+        for efo_id in efo_ids:
+            query_ids[efo_id] = {efo_id} | set(
+                Constants.OPEN_TARGETS_EXTRA_DISEASE_IDS.get(efo_id, ())
+            )
+    all_ids = sorted(set().union(*query_ids.values())) if query_ids else []
+    data = _open_targets_query(
+        "query Diseases($ids: [String!]!) {"
+        " diseases(efoIds: $ids) { id descendants } }",
+        {"ids": all_ids},
+    )
+    descendants = {d["id"]: d["descendants"] for d in data["diseases"]}
+    for disease_id in all_ids:
+        if disease_id not in descendants:
+            log_warn(f"{disease_id} unknown to Open Targets, not queried")
+
+    lookup: dict[str, set[tuple[str, str]]] = {}
+    for outcome, efo_ids in outcome_efo_ids.items():
+        child_traits = includes_child_traits(outcome)
+        for efo_id in efo_ids:
+            for disease_id in query_ids[efo_id]:
+                if disease_id not in descendants:
+                    continue
+                matched = [disease_id]
+                if child_traits:
+                    matched += descendants[disease_id]
+                for match in matched:
+                    lookup.setdefault(match, set()).add((outcome, efo_id))
+    log_info(
+        f"Open Targets disease ids: {len(lookup)} "
+        f"(from {len(all_ids)} outcome ids)"
+    )
+    return lookup
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def gene_burden_evidence(
+    ensembl_id: str, disease_ids: Collection[str]
+) -> pd.DataFrame:
     """Fetch gene-based rare-variant burden evidence from Open Targets.
 
     Parameters
     ----------
-    gene : `str`
-        HGNC gene symbol.
+    ensembl_id : `str`
+        Ensembl gene ID of the target.
+    disease_ids : `Collection[str]`
+        Open Targets disease IDs to fetch evidence for (exact matches).
 
     Returns
     -------
     evidence : `pd.DataFrame`
-        Evidence rows where `datasourceId == "gene_burden"`. Empty if none.
+        One row per `gene_burden` evidence record (all pages), with the
+        evidence fields plus `disease_id`, `disease_name`, `p_value` and
+        `neg_log10_p`. Empty if none.
     """
     query = """
-    query GeneBurdenEvidence($geneSymbol: String!) {
-      search(queryString: $geneSymbol, entityNames: ["target"]) {
-        hits {
-          id
-          object {
-            ... on Target {
-              associatedDiseases {
-                rows {
-                  disease { id name }
-                  datasourceScores { id score }
-                }
-              }
-            }
+    query GeneBurden(
+      $ensemblId: String!, $efoIds: [String!]!, $size: Int!, $cursor: String
+    ) {
+      target(ensemblId: $ensemblId) {
+        evidences(
+          efoIds: $efoIds, datasourceIds: ["gene_burden"],
+          size: $size, cursor: $cursor
+        ) {
+          cursor
+          rows {
+            disease { id name }
+            studyId projectId cohortId ancestry statisticalMethod
+            studySampleSize score pValueMantissa pValueExponent
+            beta betaConfidenceIntervalLower betaConfidenceIntervalUpper
+            oddsRatio oddsRatioConfidenceIntervalLower
+            oddsRatioConfidenceIntervalUpper
           }
         }
       }
     }
     """
-    response = requests.post(
-        Constants.OPEN_TARGETS_GRAPHQL_URL,
-        json={"query": query, "variables": {"geneSymbol": gene}},
-        timeout=30,
-    )
-    response.raise_for_status()
-    payload = response.json()
-
-    records = []
-    for hit in payload.get("data", {}).get("search", {}).get("hits", []):
-        rows = (
-            hit.get("object", {})
-            .get("associatedDiseases", {})
-            .get("rows", [])
+    records: list[dict] = []
+    cursor = None
+    while disease_ids:
+        data = _open_targets_query(
+            query,
+            {
+                "ensemblId": ensembl_id,
+                "efoIds": sorted(disease_ids),
+                "size": Constants.OPEN_TARGETS_PAGE_SIZE,
+                "cursor": cursor,
+            },
         )
-        for row in rows:
-            scores = {
-                s["id"]: s["score"] for s in row.get("datasourceScores", [])
-            }
-            if "gene_burden" in scores:
-                records.append(
-                    {
-                        "gene": gene,
-                        "disease_id": row["disease"]["id"],
-                        "disease_name": row["disease"]["name"],
-                        "gene_burden_score": scores["gene_burden"],
-                    }
-                )
+        if data["target"] is None:
+            log_warn(f"{ensembl_id} unknown to Open Targets")
+            break
+        evidences = data["target"]["evidences"]
+        for row in evidences["rows"]:
+            disease = row.pop("disease")
+            records.append(
+                {
+                    "disease_id": disease["id"],
+                    "disease_name": disease["name"],
+                    **row,
+                }
+            )
+        cursor = evidences["cursor"]
+        if not cursor or not evidences["rows"]:
+            break
 
+    evidence = pd.DataFrame.from_records(records)
+    if not evidence.empty:
+        mantissa = pd.to_numeric(evidence["pValueMantissa"], errors="coerce")
+        exponent = pd.to_numeric(evidence["pValueExponent"], errors="coerce")
+        evidence["p_value"] = mantissa * 10.0**exponent
+        # from mantissa/exponent so tiny p-values do not underflow to 0
+        evidence["neg_log10_p"] = -(
+            np.log10(mantissa.where(mantissa > 0)) + exponent
+        )
     # printed only; merge_associations records one summary line
-    log_debug(f"{gene} -> {len(records)} gene-burden evidence rows")
-    return pd.DataFrame.from_records(records)
+    log_debug(f"{ensembl_id} -> {len(evidence)} gene-burden evidence rows")
+    return evidence
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

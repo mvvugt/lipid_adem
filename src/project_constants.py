@@ -68,6 +68,14 @@ class Constants:
     OPEN_TARGETS_GRAPHQL_URL: str = (
         "https://api.platform.opentargets.org/api/v4/graphql"
     )
+    OPEN_TARGETS_PAGE_SIZE: int = 1000
+    # extra Open Targets disease IDs queried alongside an outcome ID:
+    # Open Targets still files HDL/LDL cholesterol evidence under the older
+    # EFO terms, and labels the current ones "free cholesterol in HDL/LDL"
+    OPEN_TARGETS_EXTRA_DISEASE_IDS: dict[str, tuple[str, ...]] = {
+        "EFO_0022264": ("EFO_0004612",),
+        "EFO_0022266": ("EFO_0004611",),
+    }
     # written to a gene-table cell that was looked up but not found;
     # treated as resolved on reruns (clear the cell by hand to retry)
     NA_STRING: str = "NA"
@@ -276,9 +284,17 @@ class SourceColumnMaps:
         HarmonisedColumns.STUDY_ACCESSION: "accession_id",
     }
     GENE_BURDEN: dict[str, str] = {
-        HarmonisedColumns.DISEASE_ID: "disease_id",
+        HarmonisedColumns.STUDY_ACCESSION: "studyId",
+        HarmonisedColumns.MAPPED_TRAIT_ID: "disease_id",
+        HarmonisedColumns.MAPPED_TRAIT: "disease_name",
         HarmonisedColumns.TRAIT_LABEL: "disease_name",
-        HarmonisedColumns.GENE_BURDEN_SCORE: "gene_burden_score",
+        HarmonisedColumns.BETA: "beta",
+        HarmonisedColumns.ODDS_RATIO: "oddsRatio",
+        HarmonisedColumns.P_VALUE: "p_value",
+        HarmonisedColumns.NEG_LOG10_P: "neg_log10_p",
+        HarmonisedColumns.N: "studySampleSize",
+        HarmonisedColumns.DISEASE_ID: "disease_id",
+        HarmonisedColumns.GENE_BURDEN_SCORE: "score",
     }
 
 

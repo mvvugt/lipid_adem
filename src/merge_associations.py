@@ -310,6 +310,57 @@ def _format_counts(counts: dict[str, int]) -> str:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _expand_burden_outcomes(
+    evidence: pd.DataFrame,
+    disease_ids: dict[str, set[tuple[str, str]]],
+    outcome_desc: dict[tuple[str, str], str],
+) -> pd.DataFrame:
+    """Tag gene-burden evidence rows with the outcomes they belong to.
+
+    Parameters
+    ----------
+    evidence : `pd.DataFrame`
+        Rows from `functions.gene_burden_evidence`.
+    disease_ids : `dict[str, set[tuple[str, str]]]`
+        From `functions.open_targets_disease_ids`.
+    outcome_desc : `dict[tuple[str, str], str]`
+        `(outcome, efo_id)` -> outcome description.
+
+    Returns
+    -------
+    expanded : `pd.DataFrame`
+        One row per evidence row and `(outcome, efo_id)` pair it counts
+        for (a disease can belong to several outcomes), with `outcome`,
+        `efo_id`, `child_traits` and `outcome_desc` set, in outcome then
+        `efo_id` order. Empty if `evidence` is empty.
+    """
+    if evidence.empty:
+        return evidence
+    pairs = pd.DataFrame.from_records(
+        [
+            (disease_id, outcome, efo_id)
+            for disease_id, matches in disease_ids.items()
+            for outcome, efo_id in matches
+        ],
+        columns=["disease_id", ColumnNames.OUTCOME, ColumnNames.EFO_ID],
+    )
+    expanded = evidence.merge(pairs, on="disease_id", how="inner")
+    expanded = expanded.sort_values(
+        [ColumnNames.OUTCOME, ColumnNames.EFO_ID], kind="stable"
+    ).reset_index(drop=True)
+    expanded[ColumnNames.CHILD_TRAITS] = expanded[ColumnNames.OUTCOME].map(
+        functions.includes_child_traits
+    )
+    expanded[HarmonisedColumns.OUTCOME_DESC] = [
+        outcome_desc.get((outcome, efo_id), pd.NA)
+        for outcome, efo_id in zip(
+            expanded[ColumnNames.OUTCOME], expanded[ColumnNames.EFO_ID]
+        )
+    ]
+    return expanded
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def merge_results() -> None:
     """Merge all three evidence sources and write the final results table.
 
@@ -355,6 +406,12 @@ def merge_results() -> None:
         )
         for _, gene_row in genes_df.iterrows()
     }
+    ensembl_ids = dict(
+        zip(
+            genes_df[ColumnNames.GENE],
+            genes_df[ColumnNames.ENSEMBL_ID].fillna("").astype(str).str.strip(),
+        )
+    )
 
     # fetch each (efo_id, child_traits) query once and filter it for every
     # gene; only one query's full record list is held in memory at a time
@@ -393,6 +450,7 @@ def merge_results() -> None:
 
     # assemble in gene -> outcome -> efo_id order so row order is unchanged
     log_stage("gene_burden")
+    burden_disease_ids = functions.open_targets_disease_ids(outcome_efo_ids)
     burden_rows: dict[str, int] = {}
     maf_status_counts: dict[str, int] = {
         MafStatus.NUMERIC: 0,
@@ -424,9 +482,19 @@ def merge_results() -> None:
                         maf_status_counts[status] += n
                     parts.append(harmonised)
 
-        burden = functions.gene_burden_evidence(gene)
+        ensembl_id = ensembl_ids[gene]
+        if ensembl_id in ("", Constants.NA_STRING):
+            log_warn(f"{gene}: no Ensembl id, gene-burden skipped")
+            burden_rows[gene] = 0
+            continue
+        burden = _expand_burden_outcomes(
+            functions.gene_burden_evidence(ensembl_id, burden_disease_ids),
+            burden_disease_ids,
+            outcome_desc,
+        )
         burden_rows[gene] = len(burden)
         if not burden.empty:
+            burden[ColumnNames.GENE] = gene
             burden[ColumnNames.SOURCE] = "gene-burden"
             burden[ColumnNames.SOURCE_DB] = "open_targets"
             parts.append(
