@@ -5,17 +5,7 @@
 #$ -l h_rt=02:00:00
 #$ -l mem=4G
 #$ -wd /myriadfs/home/rmgpmva/projects/lipid_adem
-#
-# NOTE on cost: single-core, serial job. Myriad bills per core with a 1G/core
-# default allowance, so mem=4G is billed as 4 cores. Accepted here: the
-# curated GWAS Catalog download for one EFO ID is held fully in memory.
-#
-# NOTE on output: merge_associations.py writes results/output/
-# final_results.tsv atomically itself (functions.write_table_atomic), so this
-# wrapper does not use bh_init.sh's MOVE_FROM/MOVE_TO working-dir pattern.
-#
-# Submit after the pyjasub filter array, held until all its tasks finish:
-#   qsub -hold_jid <filter job> merge_associations.sh -r /path/to/project
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 USAGE=$(cat <<EOF
@@ -30,6 +20,7 @@ USAGE: $(basename "$0") [-r ROOT] [-v]
 
 EOF
 )
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Setup
@@ -85,8 +76,9 @@ trap '_combined_exit_trap' EXIT
 # shellcheck source=/dev/null
 . "${ROOT}/src/functions.sh"
 
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-### CHECKS ###
+# CHECKS
 
 check_dir_readable "${ROOT}"
 if [[ ! -r "${TASKS_FILE}" ]]; then
@@ -98,8 +90,9 @@ log_info "using root directory: ${ROOT}"
 log_info "tasks file: ${TASKS_FILE}"
 log_info "running on node: $(hostname), job id: ${JOB_ID:-NA}"
 
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-### START ###
+# START
 
 run_mamba biomed-api "${ROOT}/src/merge_associations.py"
 
