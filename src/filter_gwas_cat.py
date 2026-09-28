@@ -77,27 +77,29 @@ def _run_filter_gwas_catalog(
         return None
 
     try:
-        source_url, is_indexed = functions.resolve_sumstats_source(
-            location, study_accession
-        )
+        source = functions.resolve_sumstats_source(location, study_accession)
     except ValueError as exc:
         log_warn(f"{exc}; writing empty result for {gene}")
         _write_empty_result(outfile, gene, study_accession)
         return None
 
-    if is_indexed:
+    if source.is_tabix_indexed:
         return functions.filter_sumstats_region(
-            tabix_source=source_url,
+            tabix_source=source.url,
             region=region,
-            maf_col="effect_allele_frequency",
+            maf_col=source.maf_col,
             maf_threshold=Constants.MAF_THRESHOLD,
+            chrom_col=source.chrom_col,
+            pos_col=source.pos_col,
         )
     try:
         return functions.filter_raw_sumstats_region(
-            url=source_url,
+            url=source.url,
             region=region,
-            maf_col="effect_allele_frequency",
+            maf_col=source.maf_col,
             maf_threshold=Constants.MAF_THRESHOLD,
+            chrom_col=source.chrom_col,
+            pos_col=source.pos_col,
         )
     except ValueError as exc:
         log_warn(f"{exc}; writing empty result for {gene}")

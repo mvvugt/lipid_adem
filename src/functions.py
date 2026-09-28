@@ -67,6 +67,32 @@ class GeneRecord:
     region: GeneRegion
 
 
+@dataclass
+class SumstatsSource:
+    """A study's queryable summary-stats file and its column layout.
+
+    Attributes
+    ----------
+    url : `str`
+        URL of the sumstats file.
+    is_tabix_indexed : `bool`
+        `True` if a `.tbi` index sits next to `url` (query via
+        `filter_sumstats_region`), else `False` (query via
+        `filter_raw_sumstats_region`).
+    chrom_col : `str`
+        Name of the chromosome column to filter on.
+    pos_col : `str`
+        Name of the position column to filter on.
+    maf_col : `str`
+        Name of the allele-frequency column to filter on.
+    """
+    url: str
+    is_tabix_indexed: bool
+    chrom_col: str = "chromosome"
+    pos_col: str = "base_pair_location"
+    maf_col: str = "effect_allele_frequency"
+
+
 class GeneTableError(ValueError):
     """A gene-table row cannot be resolved or its identifiers disagree."""
 
@@ -1360,15 +1386,41 @@ def study_summary_stats_location(study_accession: str) -> str | None:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _list_ftp_dir(url: str) -> list[str]:
+    """List the entries (href targets) of an FTP-over-HTTP directory page.
+
+    Parameters
+    ----------
+    url : `str`
+        Directory URL (without trailing slash).
+
+    Returns
+    -------
+    entries : `list` [`str`]
+        The `href` values on the directory's index page.
+    """
+    response = requests.get(f"{url}/", timeout=30)
+    response.raise_for_status()
+    return re.findall(r'href="([^"]+)"', response.text)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def resolve_sumstats_source(
     location: str, study_accession: str
-) -> tuple[str, bool]:
-    """Determine the queryable summary-stats URL for a study.
+) -> SumstatsSource:
+    """Determine the queryable summary-stats file for a study.
 
-    GWAS Catalog studies with full summary statistics available are not
-    all harmonised (bgzip+tabix-indexed) -- some only have a raw,
-    author-submitted file at the top level of their FTP directory. This
-    checks the study's directory listing to tell the two cases apart.
+    GWAS Catalog studies with full summary statistics available come in
+    three layouts:
+
+    - current harmonised: `harmonised/{accession}.h.tsv.gz` (+ `.tbi`),
+      standard column names.
+    - legacy harmonised: `harmonised/{pmid}-{accession}-{efo}.h.tsv.gz`,
+      usually without a `.tbi`; the harmonised GRCh38 values are in the
+      `hm_*` columns (the plain columns hold the author's original
+      coordinates, which may be another build).
+    - raw only: a single author-submitted file at the top level of the
+      study's FTP directory, standard column names, not indexed.
 
     Parameters
     ----------
@@ -1380,25 +1432,37 @@ def resolve_sumstats_source(
 
     Returns
     -------
-    url : `str`
-        URL of the sumstats file to use.
-    is_tabix_indexed : `bool`
-        `True` if `url` is the harmonised, tabix-indexed file (query via
-        `filter_sumstats_region`); `False` if `url` is a raw, non-indexed
-        file (query via `filter_raw_sumstats_region`).
+    source : `SumstatsSource`
+        URL, whether it is tabix-indexed, and the column names to use.
 
     Raises
     ------
     ValueError
-        If no `harmonised/` folder exists and the directory listing does
-        not contain exactly one identifiable raw data file.
+        If there is no single harmonised file and the directory listing
+        does not contain exactly one identifiable raw data file.
     """
-    response = requests.get(f"{location}/", timeout=30)
-    response.raise_for_status()
-    entries = re.findall(r'href="([^"]+)"', response.text)
+    entries = _list_ftp_dir(location)
 
     if "harmonised/" in entries:
-        return f"{location}/harmonised/{study_accession}.h.tsv.gz", True
+        hm_dir = f"{location}/harmonised"
+        hm_entries = _list_ftp_dir(hm_dir)
+        hm_files = [e for e in hm_entries if e.endswith(".h.tsv.gz")]
+        if len(hm_files) == 1:
+            name = hm_files[0]
+            is_indexed = f"{name}.tbi" in hm_entries
+            if name == f"{study_accession}.h.tsv.gz":
+                return SumstatsSource(f"{hm_dir}/{name}", is_indexed)
+            return SumstatsSource(
+                url=f"{hm_dir}/{name}",
+                is_tabix_indexed=is_indexed,
+                chrom_col="hm_chrom",
+                pos_col="hm_pos",
+                maf_col="hm_effect_allele_frequency",
+            )
+        log_warn(
+            f"{study_accession}: expected one *.h.tsv.gz in {hm_dir}, "
+            f"found {hm_files}; falling back to raw file"
+        )
 
     exclude = {"README.txt", "md5sum.txt"}
     candidates = [
@@ -1414,7 +1478,7 @@ def resolve_sumstats_source(
             f"{study_accession}: could not identify a single raw sumstats "
             f"file in {location} (candidates: {candidates})"
         )
-    return f"{location}/{candidates[0]}", False
+    return SumstatsSource(f"{location}/{candidates[0]}", False)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1560,6 +1624,29 @@ def _plain_header(tabix_source: str) -> list[str]:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _parse_freq(value: str) -> float | None:
+    """Parse an allele-frequency field, treating missing values as `None`.
+
+    Parameters
+    ----------
+    value : `str`
+        Raw field value (e.g. "0.012", "NA", "").
+
+    Returns
+    -------
+    freq : `float` or `NoneType`
+        The frequency, or `None` if the field is missing/non-numeric/NaN.
+    """
+    try:
+        freq = float(value)
+    except ValueError:
+        return None
+    if freq != freq:  # NaN
+        return None
+    return freq
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def filter_sumstats_region(
     tabix_source: str,
     region: GeneRegion,
@@ -1622,7 +1709,9 @@ def filter_sumstats_region(
         records = []
         for line in tabix_file.fetch(region.chrom, region.start, region.end):
             fields = line.split("\t")
-            maf = float(fields[maf_idx])
+            maf = _parse_freq(fields[maf_idx])
+            if maf is None:
+                continue
             if transform_to_maf:
                 maf = min(maf, 1.0 - maf)
             if maf < maf_threshold:
@@ -1703,7 +1792,9 @@ def filter_raw_sumstats_region(
             pos = fields[pos_idx]
             if not pos.isdigit() or not (region.start <= int(pos) <= region.end):
                 continue
-            maf = float(fields[maf_idx])
+            maf = _parse_freq(fields[maf_idx])
+            if maf is None:
+                continue
             if transform_to_maf:
                 maf = min(maf, 1.0 - maf)
             if maf < maf_threshold:

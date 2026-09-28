@@ -1,5 +1,4 @@
 #!/bin/bash
-set -Euo pipefail
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # pyjasub task-script wrapper for GWAS catalog extraction
@@ -25,6 +24,9 @@ export RUNLOG_ROOT="${REPO_ROOT}"
 # shellcheck disable=SC1090
 source "$(runlog-setup-path)"
 runlog_setup
+# Enable strict mode only after sourcing external code (see
+# merge_associations.sh); -E keeps log-tools' ERR trap active in functions.
+set -Eeuo pipefail
 
 log_info "repo root=$REPO_ROOT"
 log_info "=== $0 ==="
