@@ -46,6 +46,7 @@ _NO_CURATED_COUNT_KEY: str = "efo_no_curated"
 def load_filter_results(
     outcome_desc: dict[tuple[str, str], str],
     trait_labels: dict[str, str],
+    study_traits: dict[str, tuple[str, str]],
 ) -> pd.DataFrame:
     """Load, label and harmonise the filtered result files in the tasks file.
 
@@ -62,6 +63,9 @@ def load_filter_results(
         `(outcome, efo_id)` -> outcome description in words.
     trait_labels : `dict[str, str]`
         `study_accession` -> the study's trait label.
+    study_traits : `dict[str, tuple[str, str]]`
+        `study_accession` -> `(mapped_trait_id, mapped_trait)`, the
+        terms the GWAS Catalog study is annotated with.
 
     Returns
     -------
@@ -98,6 +102,15 @@ def load_filter_results(
             labelled[ColumnNames.SOURCE] = "summary-stats"
             labelled[ColumnNames.OUTCOME] = outcome
             labelled[ColumnNames.EFO_ID] = efo_id
+            # only trait-searched studies (efo_id set) can use child traits
+            labelled[ColumnNames.CHILD_TRAITS] = (
+                isinstance(efo_id, str)
+                and efo_id != ""
+                and functions.includes_child_traits(outcome)
+            )
+            trait_id, trait = study_traits.get(accession, ("", ""))
+            labelled[ColumnNames.MAPPED_TRAIT_ID] = trait_id or pd.NA
+            labelled[ColumnNames.MAPPED_TRAIT] = trait or pd.NA
             labelled[HarmonisedColumns.OUTCOME_DESC] = outcome_desc.get(
                 (outcome, efo_id), pd.NA
             )
@@ -188,35 +201,86 @@ def _outcome_descriptions(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _study_trait_labels() -> dict[str, str]:
+def _read_discovery_log() -> pd.DataFrame:
+    """Read the study-discovery audit log written by `gwas_cat_prep.py`.
+
+    Returns
+    -------
+    audit : `pd.DataFrame`
+        `FileNames.STUDY_DISCOVERY_LOG`, all columns as strings with
+        blanks as `""`; empty (warned) if the file does not exist.
+    """
+    if not FileNames.STUDY_DISCOVERY_LOG.exists():
+        log_warn(
+            f"{FileNames.STUDY_DISCOVERY_LOG} not found: GWAS Catalog "
+            "trait labels and mapped traits left empty (rerun "
+            "gwas_cat_prep.py, or gzip an existing uncompressed "
+            "study_discovery_log.tsv)"
+        )
+        return pd.DataFrame()
+    return pd.read_csv(
+        FileNames.STUDY_DISCOVERY_LOG, sep="\t", dtype=str
+    ).fillna("")
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _study_mapped_traits(audit: pd.DataFrame) -> dict[str, tuple[str, str]]:
+    """Map each GWAS Catalog study to the terms it is annotated with.
+
+    Parameters
+    ----------
+    audit : `pd.DataFrame`
+        The study-discovery log from `_read_discovery_log`.
+
+    Returns
+    -------
+    traits : `dict[str, tuple[str, str]]`
+        `study_accession` -> `(mapped_trait_id, mapped_trait)`. Empty if
+        the log predates these columns (warned; rerun gwas_cat_prep.py).
+    """
+    columns = (ColumnNames.MAPPED_TRAIT_ID, ColumnNames.MAPPED_TRAIT)
+    if audit.empty:
+        return {}
+    if not all(col in audit.columns for col in columns):
+        log_warn(
+            f"{FileNames.STUDY_DISCOVERY_LOG} has no mapped-trait columns: "
+            "mapped_trait_* left empty (rerun gwas_cat_prep.py)"
+        )
+        return {}
+    traits: dict[str, tuple[str, str]] = {}
+    for accession, trait_id, trait in zip(
+        audit[ColumnNames.STUDY_ACCESSION], *(audit[col] for col in columns)
+    ):
+        if trait_id and accession not in traits:
+            traits[accession] = (trait_id, trait)
+    return traits
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _study_trait_labels(audit: pd.DataFrame) -> dict[str, str]:
     """Map each study accession to the trait label its source reports.
 
-    Uses the `trait` column of `FileNames.STUDY_DISCOVERY_LOG` (written by
-    `gwas_cat_prep.py`), then fills FinnGen phenocodes still missing from
-    the `phenotype` column of the FinnGen manifest.
+    Uses the `trait` column of the study-discovery log, then fills
+    FinnGen phenocodes still missing from the `phenotype` column of the
+    FinnGen manifest.
+
+    Parameters
+    ----------
+    audit : `pd.DataFrame`
+        The study-discovery log from `_read_discovery_log`.
 
     Returns
     -------
     labels : `dict[str, str]`
-        `study_accession` (or FinnGen phenocode) -> trait label. Missing
-        sources are skipped with a warning.
+        `study_accession` (or FinnGen phenocode) -> trait label.
     """
     labels: dict[str, str] = {}
-    if FileNames.STUDY_DISCOVERY_LOG.exists():
-        audit = pd.read_csv(
-            FileNames.STUDY_DISCOVERY_LOG, sep="\t", dtype=str
-        ).fillna("")
+    if not audit.empty:
         for accession, trait in zip(
             audit[ColumnNames.STUDY_ACCESSION], audit[ColumnNames.TRAIT]
         ):
             if trait and accession not in labels:
                 labels[accession] = trait
-    else:
-        log_warn(
-            f"{FileNames.STUDY_DISCOVERY_LOG} not found: GWAS Catalog "
-            "trait labels left empty (rerun gwas_cat_prep.py, or gzip an "
-            "existing uncompressed study_discovery_log.tsv)"
-        )
     manifest = functions.load_finngen_manifest()
     for phenocode, phenotype in zip(
         manifest["phenocode"], manifest["phenotype"]
@@ -251,8 +315,9 @@ def merge_results() -> None:
 
     Reuses the `efo_id`/`chrom`/`start`/`end` already resolved and
     persisted by `gwas_cat_prep.py` -- no lookups are repeated here.
-    Curated associations are downloaded once per unique `efo_id` (the
-    download is gene-independent) and then filtered per gene region.
+    Curated associations are downloaded once per unique `efo_id` and
+    child-trait setting (the download is gene-independent) and then
+    filtered per gene region.
 
     Returns
     -------
@@ -269,7 +334,14 @@ def merge_results() -> None:
     outcome_desc = _outcome_descriptions(icd_df)
 
     log_stage("load_sumstats")
-    parts = [load_filter_results(outcome_desc, _study_trait_labels())]
+    audit = _read_discovery_log()
+    parts = [
+        load_filter_results(
+            outcome_desc,
+            _study_trait_labels(audit),
+            _study_mapped_traits(audit),
+        )
+    ]
 
     outcome_efo_ids = (
         icd_df[~icd_df[ColumnNames.EFO_ID].isin(["", Constants.NA_STRING])]
@@ -284,27 +356,32 @@ def merge_results() -> None:
         for _, gene_row in genes_df.iterrows()
     }
 
-    # fetch each efo_id once and filter it for every gene; only one EFO's
-    # full record list is held in memory at a time
-    curated_by_gene_efo: dict[tuple[str, str], pd.DataFrame] = {}
+    # fetch each (efo_id, child_traits) query once and filter it for every
+    # gene; only one query's full record list is held in memory at a time
+    curated_by_gene_query: dict[tuple[str, str, bool], pd.DataFrame] = {}
     # dict.fromkeys de-duplicates while keeping first-seen order
-    unique_efo_ids = list(dict.fromkeys(
-        efo_id for efo_ids in outcome_efo_ids for efo_id in efo_ids
+    unique_queries = list(dict.fromkeys(
+        (efo_id, functions.includes_child_traits(outcome))
+        for outcome, efo_ids in outcome_efo_ids.items()
+        for efo_id in efo_ids
     ))
     log_stage("fetch_curated")
-    for efo_id in unique_efo_ids:
-        records = functions.fetch_curated_associations(efo_id)
+    for efo_id, child_traits in unique_queries:
+        records = functions.fetch_curated_associations(
+            efo_id, include_child_traits=child_traits
+        )
         in_region: dict[str, int] = {}
         for gene, region in regions.items():
             curated = functions.filter_curated_associations(
                 records, region, Constants.MAF_THRESHOLD
             )
             in_region[gene] = len(curated)
-            curated_by_gene_efo[(gene, efo_id)] = curated
+            curated_by_gene_query[(gene, efo_id, child_traits)] = curated
         # one line per EFO with any associations; empty EFOs only counted
         if records:
+            scope = "with child traits" if child_traits else "exact"
             log_info(
-                f"{efo_id}: {len(records)} fetched; in region: "
+                f"{efo_id} ({scope}): {len(records)} fetched; in region: "
                 f"{_format_counts(in_region)}"
             )
         else:
@@ -323,12 +400,16 @@ def merge_results() -> None:
     }
     for gene in regions:
         for outcome, efo_ids in outcome_efo_ids.items():
+            child_traits = functions.includes_child_traits(outcome)
             for efo_id in efo_ids:
-                curated = curated_by_gene_efo[(gene, efo_id)].copy()
+                curated = curated_by_gene_query[
+                    (gene, efo_id, child_traits)
+                ].copy()
                 if not curated.empty:
                     curated[ColumnNames.GENE] = gene
                     curated[ColumnNames.OUTCOME] = outcome
                     curated[ColumnNames.EFO_ID] = efo_id
+                    curated[ColumnNames.CHILD_TRAITS] = child_traits
                     curated[HarmonisedColumns.OUTCOME_DESC] = (
                         outcome_desc.get((outcome, efo_id), pd.NA)
                     )

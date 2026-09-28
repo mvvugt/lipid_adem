@@ -41,6 +41,24 @@ class Constants:
     PUBMED_BATCH_SIZE: int = 200
     GRCH_BUILD: str = "GRCh38"
     EBI_OLS_SEARCH_URL: str = "https://www.ebi.ac.uk/ols/api/search"
+    # term lookup by obo_id; also serves MONDO terms imported into EFO
+    EBI_OLS_TERMS_URL: str = (
+        "https://www.ebi.ac.uk/ols4/api/ontologies/efo/terms"
+    )
+    # obsolete term -> replacement chain length followed before giving up
+    MAX_REPLACEMENT_HOPS: int = 5
+    # outcomes whose trait IDs also match GWAS Catalog child traits (broad);
+    # every other outcome uses the exact term only (strict)
+    CHILD_TRAIT_OUTCOMES: frozenset[str] = frozenset(
+        {
+            "all_cause_dementia",
+            "alzheimers_dementia",
+            "frontotemporal_dementia",
+            "lewy_body_dementia",
+            "parkinsons_disease_dementia",
+            "vascular_dementia",
+        }
+    )
     ICD10_CODE_PATTERN: str = r"^[A-Z]\d{2}$"
     EFO_ID_PATTERN: str = r"^EFO[:_]\d+$"
     GWAS_CATALOG_API_V2: str = "https://www.ebi.ac.uk/gwas/rest/api/v2"
@@ -105,6 +123,9 @@ class ColumnNames:
     ANCESTRY: str = "ancestry"
     COHORT: str = "cohort"
     NOTE: str = "note"
+    CHILD_TRAITS: str = "child_traits"
+    MAPPED_TRAIT_ID: str = "mapped_trait_id"
+    MAPPED_TRAIT: str = "mapped_trait"
     # gene_list.txt: any one of GENE_ID_COLUMNS is enough as input, the
     # rest of GENE_TABLE_COLUMNS is resolved (see resolve_gene_table)
     GENE_ID_COLUMNS: tuple[str, ...] = (GENE, ENSEMBL_ID, UNIPROT)
@@ -131,6 +152,11 @@ class HarmonisedColumns:
     STUDY_ACCESSION: str = ColumnNames.STUDY_ACCESSION
     OUTCOME: str = ColumnNames.OUTCOME
     EFO_ID: str = ColumnNames.EFO_ID
+    # efo_id is the queried term; mapped_trait_* the term(s) the study or
+    # association is actually annotated with (a child when CHILD_TRAITS)
+    CHILD_TRAITS: str = ColumnNames.CHILD_TRAITS
+    MAPPED_TRAIT_ID: str = ColumnNames.MAPPED_TRAIT_ID
+    MAPPED_TRAIT: str = ColumnNames.MAPPED_TRAIT
     OUTCOME_DESC: str = "outcome_desc"
     TRAIT_LABEL: str = "trait_label"
     CHROM: str = ColumnNames.CHROM
@@ -157,6 +183,9 @@ class HarmonisedColumns:
         STUDY_ACCESSION,
         OUTCOME,
         EFO_ID,
+        CHILD_TRAITS,
+        MAPPED_TRAIT_ID,
+        MAPPED_TRAIT,
         OUTCOME_DESC,
         TRAIT_LABEL,
         CHROM,
@@ -186,6 +215,9 @@ class HarmonisedColumns:
         STUDY_ACCESSION,
         OUTCOME,
         EFO_ID,
+        CHILD_TRAITS,
+        MAPPED_TRAIT_ID,
+        MAPPED_TRAIT,
         OUTCOME_DESC,
         TRAIT_LABEL,
     )

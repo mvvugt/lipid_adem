@@ -47,12 +47,20 @@ META_COLUMNS: list[str] = [
 FINNGEN_COHORT: str = "FinnGen R13"
 # log_count key for EFO ids whose GWAS Catalog search found no studies
 _NO_STUDIES_COUNT_KEY: str = "efo_no_studies"
+# audit-log trait-query cells for rows not found by a trait search
+_NO_TRAIT_QUERY: dict[str, str] = {
+    ColumnNames.CHILD_TRAITS: "",
+    ColumnNames.MAPPED_TRAIT_ID: "",
+    ColumnNames.MAPPED_TRAIT: "",
+}
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # helpers
 
-def _log_discovery_summary(efo_id: str, classified: list[dict]) -> None:
+def _log_discovery_summary(
+    efo_id: str, child_traits: bool, classified: list[dict]
+) -> None:
     """Record one summary line for an EFO id's study discovery.
 
     EFO ids with no studies at all are only counted (see
@@ -63,6 +71,8 @@ def _log_discovery_summary(efo_id: str, classified: list[dict]) -> None:
     ----------
     efo_id : `str`
         EFO ID the studies were discovered for.
+    child_traits : `bool`
+        Whether child traits were included (cap applied per term).
     classified : `list[dict]`
         As returned by `functions.discover_studies_with_reasons`.
 
@@ -76,9 +86,10 @@ def _log_discovery_summary(efo_id: str, classified: list[dict]) -> None:
     reasons = [record["reason"] for record in classified]
     n_included = reasons.count("included")
     n_eligible = n_included + reasons.count("over_cap")
+    scope = "with child traits, cap per term" if child_traits else "exact"
     log_info(
-        f"{efo_id}: {len(classified)} studies -> {n_eligible} with full "
-        f"sumstats -> {n_included} included"
+        f"{efo_id} ({scope}): {len(classified)} studies -> {n_eligible} "
+        f"with full sumstats -> {n_included} included"
     )
 
 
@@ -170,10 +181,12 @@ def build_tasks() -> None:
     columns/cells (symbol, coordinates, Ensembl ID, UniProt; see
     `functions.resolve_gene_table`) and outcome/code-to-EFO mappings
     (persisting the results
-    back to those files so reruns skip already-resolved rows), discovers
+    back to those files so reruns skip already-resolved rows; obsolete
+    trait IDs are replaced by their current term on every run), discovers
     GWAS Catalog studies per outcome (grouped by the distinct EFO IDs
-    under that outcome), unions in any curated not-yet-API-indexed GWAS
-    Catalog accessions for that outcome (see
+    under that outcome; child traits included, with the cap per mapped
+    term, for `Constants.CHILD_TRAIT_OUTCOMES`), unions in any curated
+    not-yet-API-indexed GWAS Catalog accessions for that outcome (see
     data/raw/gwas_catalog_manual_studies.SOURCE.md), validates each
     outcome's curated FinnGen phenocode (if set) against the vendored
     manifest, and writes
@@ -218,6 +231,7 @@ def build_tasks() -> None:
     log_stage("resolve_efo")
     icd_before = icd_df.copy()
     icd_df = functions.resolve_efo_ids(icd_df)
+    icd_df = functions.replace_obsolete_trait_ids(icd_df)
     if not icd_df.equals(icd_before):
         functions.write_table_atomic(icd_df, FileNames.ICD_CODE_LIST, sep=",")
         log_info(f"wrote resolved efo_ids to {FileNames.ICD_CODE_LIST}")
@@ -225,21 +239,27 @@ def build_tasks() -> None:
     Paths.DATA_TEMP.mkdir(parents=True, exist_ok=True)
     Paths.GWAS_FILTERED.mkdir(parents=True, exist_ok=True)
 
-    # Discover studies once per distinct efo_id (global dedupe), then
-    # union each outcome's accessions from its own distinct efo_ids.
-    distinct_efo_ids = sorted(
+    # Discover studies once per distinct (efo_id, child_traits) pair
+    # (global dedupe), then union each outcome's accessions from its own
+    # distinct efo_ids. child_traits is set per outcome, so the same ID
+    # can be searched both strict and broad.
+    distinct_queries = sorted(
         {
-            efo_id
-            for efo_id in icd_df[ColumnNames.EFO_ID]
+            (efo_id, functions.includes_child_traits(outcome))
+            for efo_id, outcome in zip(
+                icd_df[ColumnNames.EFO_ID], icd_df[ColumnNames.OUTCOME]
+            )
             if efo_id not in ("", Constants.NA_STRING)
         }
     )
     log_stage("discover_gwas")
-    classified_by_efo = {}
-    for efo_id in distinct_efo_ids:
-        classified = functions.discover_studies_with_reasons(efo_id)
-        classified_by_efo[efo_id] = classified
-        _log_discovery_summary(efo_id, classified)
+    classified_by_query: dict[tuple[str, bool], list[dict]] = {}
+    for efo_id, child_traits in distinct_queries:
+        classified = functions.discover_studies_with_reasons(
+            efo_id, include_child_traits=child_traits
+        )
+        classified_by_query[(efo_id, child_traits)] = classified
+        _log_discovery_summary(efo_id, child_traits, classified)
     log_count_summary(
         _NO_STUDIES_COUNT_KEY, label="EFO ids with 0 GWAS Catalog studies"
     )
@@ -280,9 +300,10 @@ def build_tasks() -> None:
                 if e not in ("", Constants.NA_STRING)
             }
         )
+        child_traits = functions.includes_child_traits(outcome)
         accession_to_efo: dict[str, str] = {}
         for efo_id in outcome_efo_ids:
-            for record in classified_by_efo[efo_id]:
+            for record in classified_by_query[(efo_id, child_traits)]:
                 status = (
                     "included"
                     if record["reason"] == "included"
@@ -294,6 +315,9 @@ def build_tasks() -> None:
                         ColumnNames.SOURCE: "gwas_catalog",
                         ColumnNames.STUDY_ACCESSION: record["accession_id"],
                         ColumnNames.EFO_ID: efo_id,
+                        ColumnNames.CHILD_TRAITS: str(child_traits),
+                        ColumnNames.MAPPED_TRAIT_ID: record["mapped_trait_id"],
+                        ColumnNames.MAPPED_TRAIT: record["mapped_trait"],
                         ColumnNames.STATUS: status,
                         ColumnNames.REASON: record["reason"],
                         ColumnNames.PUBMED_ID: str(
@@ -325,6 +349,7 @@ def build_tasks() -> None:
                     ColumnNames.SOURCE: "manual",
                     ColumnNames.STUDY_ACCESSION: manual_row["accession_id"],
                     ColumnNames.EFO_ID: "",
+                    **_NO_TRAIT_QUERY,
                     ColumnNames.STATUS: "included",
                     ColumnNames.REASON: "included",
                     ColumnNames.PUBMED_ID: str(
@@ -354,6 +379,7 @@ def build_tasks() -> None:
                     ColumnNames.SOURCE: "finngen",
                     ColumnNames.STUDY_ACCESSION: phenocode,
                     ColumnNames.EFO_ID: "",
+                    **_NO_TRAIT_QUERY,
                     ColumnNames.STATUS: "included" if found else "excluded",
                     ColumnNames.REASON: (
                         "included" if found else "not_found_in_manifest"
@@ -434,6 +460,9 @@ def build_tasks() -> None:
         ColumnNames.SOURCE,
         ColumnNames.STUDY_ACCESSION,
         ColumnNames.EFO_ID,
+        ColumnNames.CHILD_TRAITS,
+        ColumnNames.MAPPED_TRAIT_ID,
+        ColumnNames.MAPPED_TRAIT,
         ColumnNames.STATUS,
         ColumnNames.REASON,
         ColumnNames.PUBMED_ID,

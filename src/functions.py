@@ -650,6 +650,148 @@ def icd_to_efo(term: str) -> str:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _ols_term(trait_id: str) -> dict | None:
+    """Look up one ontology term in EBI OLS by its short ID.
+
+    Parameters
+    ----------
+    trait_id : `str`
+        Underscore-form term ID, e.g. "EFO_0000249" or "MONDO_0004975".
+
+    Returns
+    -------
+    term : `dict` or `NoneType`
+        The OLS term record (with `label`, `is_obsolete`,
+        `term_replaced_by`), or `None` if OLS does not know the ID.
+
+    Raises
+    ------
+    requests.RequestException
+        On a network or HTTP error.
+    """
+    response = requests.get(
+        Constants.EBI_OLS_TERMS_URL,
+        params={"obo_id": trait_id.replace("_", ":", 1)},
+        timeout=30,
+    )
+    if response.status_code == 404:
+        return None
+    response.raise_for_status()
+    terms = response.json().get("_embedded", {}).get("terms", [])
+    return terms[0] if terms else None
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _replacement_id(term: dict) -> str | None:
+    """Return the short ID an obsolete OLS term was replaced by.
+
+    Parameters
+    ----------
+    term : `dict`
+        An OLS term record from `_ols_term`.
+
+    Returns
+    -------
+    replacement : `str` or `NoneType`
+        Underscore-form ID (e.g. "MONDO_0004975") taken from the last
+        path segment of `term_replaced_by`, or `None` if there is none.
+    """
+    replaced_by = term.get("term_replaced_by")
+    if isinstance(replaced_by, list):
+        replaced_by = replaced_by[0] if replaced_by else None
+    if not replaced_by:
+        return None
+    return str(replaced_by).rstrip("/").rsplit("/", 1)[-1].replace(":", "_")
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def current_trait_id(trait_id: str) -> str:
+    """Follow obsolete-term replacements to the current trait ID.
+
+    The GWAS Catalog annotates studies with current terms only, so an
+    obsolete ID (e.g. EFO_0000249, replaced by MONDO_0004975) finds
+    nothing.
+
+    Parameters
+    ----------
+    trait_id : `str`
+        Underscore-form term ID.
+
+    Returns
+    -------
+    current : `str`
+        The last ID in the `term_replaced_by` chain (at most
+        `Constants.MAX_REPLACEMENT_HOPS` hops), or `trait_id` unchanged
+        if it is current, unknown to OLS, obsolete without replacement,
+        or OLS cannot be reached (each non-current case is warned).
+    """
+    current = trait_id
+    for _ in range(Constants.MAX_REPLACEMENT_HOPS):
+        try:
+            term = _ols_term(current)
+        except requests.RequestException as err:
+            log_warn(f"OLS lookup failed for {current}, kept as is: {err}")
+            return current
+        if term is None:
+            log_warn(f"{current} not found in OLS, kept as is")
+            return current
+        if not term.get("is_obsolete"):
+            return current
+        replacement = _replacement_id(term)
+        if replacement is None:
+            log_warn(
+                f"{current} ({term.get('label')}) is obsolete without a "
+                "replacement, kept as is"
+            )
+            return current
+        current = replacement
+    log_warn(
+        f"{trait_id}: replacement chain longer than "
+        f"{Constants.MAX_REPLACEMENT_HOPS} hops, using {current}"
+    )
+    return current
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def replace_obsolete_trait_ids(df: pd.DataFrame) -> pd.DataFrame:
+    """Replace obsolete trait IDs in the ICD table, in place.
+
+    Every run checks each distinct `efo_id` against OLS (one lookup per
+    ID), since cached IDs in `icd_codes.txt` can become obsolete later.
+    Blank and "NA" cells are left alone.
+
+    Parameters
+    ----------
+    df : `pd.DataFrame`
+        ICD-code table (as returned by `load_icd_table`), `efo_id`
+        already resolved by `resolve_efo_ids`.
+
+    Returns
+    -------
+    df : `pd.DataFrame`
+        The same table, obsolete IDs replaced by their current ID.
+    """
+    trait_ids = [
+        trait_id
+        for trait_id in df[ColumnNames.EFO_ID].unique()
+        if trait_id.strip() not in ("", Constants.NA_STRING)
+    ]
+    replacements: dict[str, str] = {}
+    for trait_id in trait_ids:
+        current = current_trait_id(trait_id)
+        if current != trait_id:
+            log_warn(f"obsolete trait id {trait_id} -> {current}")
+            replacements[trait_id] = current
+    if replacements:
+        df[ColumnNames.EFO_ID] = df[ColumnNames.EFO_ID].replace(replacements)
+    log_info(
+        f"trait ids checked: {len(trait_ids)}, obsolete replaced: "
+        f"{len(replacements)}"
+    )
+    return df
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _is_not_found(err: ReaderError) -> bool:
     """Tell whether a biomed-api `ReaderError` is an HTTP "not found".
 
@@ -861,29 +1003,35 @@ def symbol_by_uniprot(accession: str) -> str | None:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _fetch_gwas_catalog_study_records(efo_id: str) -> list[dict]:
+def _fetch_gwas_catalog_study_records(
+    efo_id: str, include_child_traits: bool = False
+) -> list[dict]:
     """Fetch raw GWAS Catalog study records for an EFO trait.
 
     Parameters
     ----------
     efo_id : `str`
         EFO ID (underscore form, e.g. "EFO_0001645").
+    include_child_traits : `bool`, optional, default: `False`
+        Also return studies annotated with a child term of `efo_id`.
 
     Returns
     -------
     records : `list[dict]`
         One dict per study with `accession_id`,
         `full_summary_stats_available`, `pubmed_id`, `disease_trait`,
-        `initial_sample_size`, `discovery_ancestry`, and `cohort`, as
+        `initial_sample_size`, `discovery_ancestry`, `cohort`, and
+        `efo_traits` (the terms the study is annotated with), as
         returned by the GWAS Catalog studies-list search (absent fields
         are `None`).
     """
     reader = GwasCatalogReader()
+    query = {"show_child_trait": True} if include_child_traits else {}
     with warnings.catch_warnings():
         # biomed-api warns (rather than raising) on zero matches; an
         # empty accession list is a normal outcome for callers here.
         warnings.simplefilter("ignore", UserWarning)
-        result = reader.read(profile="studies", efo_id=efo_id)
+        result = reader.read(profile="studies", efo_id=efo_id, **query)
 
     return [
         {
@@ -896,6 +1044,7 @@ def _fetch_gwas_catalog_study_records(efo_id: str) -> list[dict]:
             "initial_sample_size": row.get("initial_sample_size"),
             "discovery_ancestry": row.get("discovery_ancestry"),
             "cohort": row.get("cohort"),
+            "efo_traits": row.get("efo_traits"),
         }
         for row in result.records
         if "accession_id" in row
@@ -903,8 +1052,56 @@ def _fetch_gwas_catalog_study_records(efo_id: str) -> list[dict]:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def includes_child_traits(outcome: str) -> bool:
+    """Tell whether an outcome's trait searches include child traits.
+
+    Parameters
+    ----------
+    outcome : `str`
+        Outcome name from `icd_codes.txt`.
+
+    Returns
+    -------
+    broad : `bool`
+        `True` if `outcome` is in `Constants.CHILD_TRAIT_OUTCOMES`.
+    """
+    return outcome in Constants.CHILD_TRAIT_OUTCOMES
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def mapped_traits(efo_traits: object) -> tuple[str, str]:
+    """Render a GWAS Catalog `efo_traits` field as ID and label cells.
+
+    Parameters
+    ----------
+    efo_traits : `object`
+        A list of `{"efo_id", "efo_trait"}` dicts, its string repr (as
+        read back from a TSV), or `None`/NA.
+
+    Returns
+    -------
+    ids_labels : `tuple[str, str]`
+        `(mapped_trait_id, mapped_trait)`, each joined with `"; "` in
+        record order; `("", "")` if there are no terms.
+    """
+    if isinstance(efo_traits, str) and efo_traits.startswith("["):
+        try:
+            efo_traits = ast.literal_eval(efo_traits)
+        except (ValueError, SyntaxError):
+            return "", ""
+    if not isinstance(efo_traits, (list, tuple)):
+        return "", ""
+    terms = [t for t in efo_traits if isinstance(t, dict)]
+    ids = "; ".join(clean_cell(t.get("efo_id")) for t in terms)
+    labels = "; ".join(clean_cell(t.get("efo_trait")) for t in terms)
+    return ids, labels
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def discover_studies(
-    efo_id: str, cap: int = Constants.MAX_STUDIES_PER_OUTCOME
+    efo_id: str,
+    cap: int = Constants.MAX_STUDIES_PER_OUTCOME,
+    include_child_traits: bool = False,
 ) -> list[str]:
     """Discover GWAS Catalog study accessions for an EFO trait.
 
@@ -921,20 +1118,27 @@ def discover_studies(
     efo_id : `str`
         EFO ID (underscore form, e.g. "EFO_0001645").
     cap : `int`, optional, default: `Constants.MAX_STUDIES_PER_OUTCOME`
-        Maximum number of studies to keep, most recent first.
+        Maximum number of studies to keep, most recent first (per mapped
+        term when `include_child_traits`).
+    include_child_traits : `bool`, optional, default: `False`
+        Also discover studies annotated with a child term of `efo_id`.
 
     Returns
     -------
     accessions : `list[str]`
         Study accession IDs (e.g. "GCST######"), filtered and capped.
     """
-    classified = discover_studies_with_reasons(efo_id, cap=cap)
+    classified = discover_studies_with_reasons(
+        efo_id, cap=cap, include_child_traits=include_child_traits
+    )
     return [r["accession_id"] for r in classified if r["reason"] == "included"]
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def discover_studies_with_reasons(
-    efo_id: str, cap: int = Constants.MAX_STUDIES_PER_OUTCOME
+    efo_id: str,
+    cap: int = Constants.MAX_STUDIES_PER_OUTCOME,
+    include_child_traits: bool = False,
 ) -> list[dict]:
     """Discover and classify GWAS Catalog studies for an EFO trait.
 
@@ -948,7 +1152,11 @@ def discover_studies_with_reasons(
         EFO ID (underscore form, e.g. "EFO_0001645").
     cap : `int`, optional, default: `Constants.MAX_STUDIES_PER_OUTCOME`
         Maximum number of studies to mark `"included"`, most recent
-        first.
+        first (per mapped term when `include_child_traits`).
+    include_child_traits : `bool`, optional, default: `False`
+        Also discover studies annotated with a child term of `efo_id`;
+        the cap is then applied per term, so child terms cannot push
+        out the studies of `efo_id` itself.
 
     Returns
     -------
@@ -956,10 +1164,10 @@ def discover_studies_with_reasons(
         As returned by `classify_studies` -- `accession_id`, `pubmed_id`,
         `reason`, plus publication/trait/sample metadata.
     """
-    records = _fetch_gwas_catalog_study_records(efo_id)
+    records = _fetch_gwas_catalog_study_records(efo_id, include_child_traits)
     # printed only; gwas_cat_prep records one summary line per EFO
     log_debug(f"{efo_id} -> {len(records)} studies")
-    return classify_studies(records, cap=cap)
+    return classify_studies(records, cap=cap, per_term=include_child_traits)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1042,7 +1250,9 @@ def pubmed_summaries(pubmed_ids: list) -> dict[int, dict]:
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def classify_studies(
-    records: list[dict], cap: int = Constants.MAX_STUDIES_PER_OUTCOME
+    records: list[dict],
+    cap: int = Constants.MAX_STUDIES_PER_OUTCOME,
+    per_term: bool = False,
 ) -> list[dict]:
     """Classify candidate GWAS Catalog studies as included or excluded.
 
@@ -1061,6 +1271,11 @@ def classify_studies(
     cap : `int`, optional, default: `Constants.MAX_STUDIES_PER_OUTCOME`
         Maximum number of eligible studies to mark `"included"`, most
         recent first.
+    per_term : `bool`, optional, default: `False`
+        Apply `cap` per mapped term (each ID in a record's `efo_traits`)
+        instead of overall, and include the union. Used with child
+        traits, so each term (the queried parent included) keeps its
+        own `cap` most recent studies.
 
     Returns
     -------
@@ -1069,7 +1284,8 @@ def classify_studies(
         `reason`, plus display-only metadata (all `str`, `""` if
         unknown): `pub_date` (YYYY-MM-DD), `first_author`, `journal`,
         `title` (from PubMed), and `trait`, `sample_size`, `ancestry`,
-        `cohort` (from the GWAS Catalog record). `reason` is one of
+        `cohort`, `mapped_trait_id`, `mapped_trait` (from the GWAS
+        Catalog record). `reason` is one of
         `"included"`, `"over_cap"` (eligible but
         beyond `cap`), or `"no_full_sumstats"`. `"included"` and
         `"over_cap"` records appear first, most-recent-publication-date
@@ -1096,9 +1312,27 @@ def classify_studies(
 
     eligible.sort(key=sort_key, reverse=True)
 
+    if per_term:
+        # eligible is sorted, so each term's first `cap` are its most recent
+        included_ids: set[str] = set()
+        per_term_counts: dict[str, int] = {}
+        for record in eligible:
+            terms = mapped_traits(record.get("efo_traits"))[0].split("; ")
+            if any(per_term_counts.get(term, 0) < cap for term in terms):
+                included_ids.add(record["accession_id"])
+            for term in terms:
+                per_term_counts[term] = per_term_counts.get(term, 0) + 1
+        included = [r for r in eligible if r["accession_id"] in included_ids]
+        over_cap = [
+            r for r in eligible if r["accession_id"] not in included_ids
+        ]
+    else:
+        included, over_cap = eligible[:cap], eligible[cap:]
+
     def _row(record: dict, reason: str) -> dict:
         summary = _summary(record)
         date = summary.get("date")
+        trait_ids, trait_labels = mapped_traits(record.get("efo_traits"))
         return {
             "accession_id": record["accession_id"],
             "pubmed_id": record.get("pubmed_id"),
@@ -1111,16 +1345,19 @@ def classify_studies(
             "sample_size": clean_cell(record.get("initial_sample_size")),
             "ancestry": clean_cell(record.get("discovery_ancestry")),
             "cohort": clean_cell(record.get("cohort")),
+            "mapped_trait_id": trait_ids,
+            "mapped_trait": trait_labels,
         }
 
     classified = (
-        [_row(r, "included") for r in eligible[:cap]]
-        + [_row(r, "over_cap") for r in eligible[cap:]]
+        [_row(r, "included") for r in included]
+        + [_row(r, "over_cap") for r in over_cap]
         + [_row(r, "no_full_sumstats") for r in ineligible]
     )
     log_debug(
         f"{len(records)} studies -> {len(eligible)} with full sumstats "
-        f"-> {len(eligible[:cap])} included after cap={cap}"
+        f"-> {len(included)} included after cap={cap}"
+        + (" per term" if per_term else "")
     )
     return classified
 
@@ -1519,13 +1756,18 @@ def resolve_sumstats_source(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def fetch_curated_associations(efo_id: str) -> list[dict]:
+def fetch_curated_associations(
+    efo_id: str, include_child_traits: bool = False
+) -> list[dict]:
     """Fetch all curated genome-wide-significant associations for a trait.
 
     Parameters
     ----------
     efo_id : `str`
         EFO ID (underscore form).
+    include_child_traits : `bool`, optional, default: `False`
+        Also fetch associations annotated with a child term of `efo_id`;
+        each record's `efo_traits` names the term it is annotated with.
 
     Returns
     -------
@@ -1539,9 +1781,10 @@ def fetch_curated_associations(efo_id: str) -> list[dict]:
     Sourced via biomed-api's `GwasCatalogReader` (GWAS Catalog REST v2).
     """
     reader = GwasCatalogReader()
+    query = {"show_child_trait": True} if include_child_traits else {}
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", UserWarning)
-        result = reader.read(profile="associations", efo_id=efo_id)
+        result = reader.read(profile="associations", efo_id=efo_id, **query)
 
     records = list(result.records)
     # printed only; merge_associations records one summary line per EFO
@@ -2051,6 +2294,10 @@ def harmonise_curated(df: pd.DataFrame) -> pd.DataFrame:
     # computed directly: very small p-values (e.g. 2e-1861) underflow to 0
     parsed[hc.NEG_LOG10_P] = -(np.log10(mantissa) + exponent)
     parsed[hc.TRAIT_LABEL] = df["reported_trait"].map(_first_item)
+    if "efo_traits" in df.columns:
+        traits = df["efo_traits"].map(mapped_traits)
+        parsed[hc.MAPPED_TRAIT_ID] = traits.map(lambda t: t[0] or pd.NA)
+        parsed[hc.MAPPED_TRAIT] = traits.map(lambda t: t[1] or pd.NA)
     return harmonise_frame(df, SourceColumnMaps.CURATED, parsed=parsed)
 
 
