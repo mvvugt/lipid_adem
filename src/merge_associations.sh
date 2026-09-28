@@ -55,6 +55,10 @@ ROOT="${FLAGS_root}"
 TASKS_FILE="${ROOT}/data/temp/tasks.tsv"
 
 export RUNLOG_ROOT="${ROOT}"
+# shellcheck disable=SC2034  # read by runlog_setup (setup.sh)
+RUNLOG_SCRIPT_ID="merge_associations_job"
+# shellcheck disable=SC2034  # read by runlog_setup (setup.sh)
+RUNLOG_ORDER=30
 # shellcheck disable=SC1090  # resolved at runtime via console script
 source "$(runlog-setup-path)"
 runlog_setup
@@ -86,9 +90,13 @@ if [[ ! -r "${TASKS_FILE}" ]]; then
     exit 1
 fi
 
+# Exactly one recorded line (stable across runs): an empty record would
+# make runlog fall back to the full raw output, duplicating the Python
+# entry. Everything else is printed only; failures still record via
+# log_error and the raw-output tail.
 log_info "using root directory: ${ROOT}"
-log_info "tasks file: ${TASKS_FILE}"
-log_info "running on node: $(hostname), job id: ${JOB_ID:-NA}"
+log_info "tasks file: ${TASKS_FILE}" no-record
+log_info "running on node: $(hostname), job id: ${JOB_ID:-NA}" no-record
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -96,4 +104,4 @@ log_info "running on node: $(hostname), job id: ${JOB_ID:-NA}"
 
 run_mamba biomed-api "${ROOT}/src/merge_associations.py"
 
-log_info "*** END ***"
+log_info "*** END ***" no-record

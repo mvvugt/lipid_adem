@@ -14,14 +14,22 @@ sources with its inclusion status and reason.
 # imports
 
 from __future__ import annotations
+
 import argparse
 
 import pandas as pd
-from log_tools.emitter import log_info
+from log_tools.emitter import log_count, log_count_summary, log_info, log_stage
 from log_tools.setup import runlog_setup
 
 import functions
-from project_constants import ColumnNames, Constants, FileNames, Paths
+from project_constants import (
+    ColumnNames,
+    Constants,
+    FileNames,
+    Paths,
+    RunlogOrder,
+)
+
 
 # Display-only per-study metadata columns in the study-discovery audit log,
 # between `pubmed_id` and `note`.
@@ -36,10 +44,44 @@ META_COLUMNS: list[str] = [
     ColumnNames.COHORT,
 ]
 FINNGEN_COHORT: str = "FinnGen R13"
+# log_count key for EFO ids whose GWAS Catalog search found no studies
+_NO_STUDIES_COUNT_KEY: str = "efo_no_studies"
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # helpers
+
+def _log_discovery_summary(efo_id: str, classified: list[dict]) -> None:
+    """Record one summary line for an EFO id's study discovery.
+
+    EFO ids with no studies at all are only counted (see
+    `_NO_STUDIES_COUNT_KEY`), so RUN_LOG.md is not filled with
+    zero lines.
+
+    Parameters
+    ----------
+    efo_id : `str`
+        EFO ID the studies were discovered for.
+    classified : `list[dict]`
+        As returned by `functions.discover_studies_with_reasons`.
+
+    Returns
+    -------
+    `None`
+    """
+    if not classified:
+        log_count(_NO_STUDIES_COUNT_KEY)
+        return
+    reasons = [record["reason"] for record in classified]
+    n_included = reasons.count("included")
+    n_eligible = n_included + reasons.count("over_cap")
+    log_info(
+        f"{efo_id}: {len(classified)} studies -> {n_eligible} with full "
+        f"sumstats -> {n_included} included"
+    )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def _manual_meta(
     manual_row: pd.Series, pubmed: dict[int, dict]
@@ -165,12 +207,14 @@ def build_tasks() -> None:
     icd_df = functions.load_icd_table(FileNames.ICD_CODE_LIST)
     log_info(f"{len(genes_df)} genes, {len(icd_df)} icd codes")
 
+    log_stage("resolve_genes")
     genes_before = genes_df.copy()
     genes_df = functions.resolve_gene_table(genes_df)
     if not genes_df.equals(genes_before):
         functions.write_table_atomic(genes_df, FileNames.GENE_LIST)
         log_info(f"wrote resolved gene annotations to {FileNames.GENE_LIST}")
 
+    log_stage("resolve_efo")
     icd_before = icd_df.copy()
     icd_df = functions.resolve_efo_ids(icd_df)
     if not icd_df.equals(icd_before):
@@ -189,15 +233,21 @@ def build_tasks() -> None:
             if efo_id not in ("", Constants.NA_STRING)
         }
     )
-    classified_by_efo = {
-        efo_id: functions.discover_studies_with_reasons(efo_id)
-        for efo_id in distinct_efo_ids
-    }
+    log_stage("discover_gwas")
+    classified_by_efo = {}
+    for efo_id in distinct_efo_ids:
+        classified = functions.discover_studies_with_reasons(efo_id)
+        classified_by_efo[efo_id] = classified
+        _log_discovery_summary(efo_id, classified)
+    log_count_summary(
+        _NO_STUDIES_COUNT_KEY, label="EFO ids with 0 GWAS Catalog studies"
+    )
 
     # Same dedupe/union pattern for FinnGen, keyed by curated phenocode(s)
     # instead of a live-discovered EFO ID. A cell may list more than one
     # phenocode (comma-separated) when an outcome is curated against
     # several definitional variants of the same disease.
+    log_stage("finngen_manual")
     finngen_manifest_df = functions.load_finngen_manifest()
     manual_studies_df = functions.load_manual_gwas_catalog_studies()
     # One batched PubMed lookup for all curated studies (their GWAS
@@ -353,6 +403,7 @@ def build_tasks() -> None:
                     }
                 )
 
+    log_stage("write_tasks")
     header = [
         ColumnNames.ROWIDX,
         ColumnNames.GENE,
@@ -368,9 +419,8 @@ def build_tasks() -> None:
     with FileNames.TASKS_FILE.with_suffix(".tmp").open("w") as handle:
         handle.write("\t".join(header) + "\n")
         for rowidx, row in enumerate(rows, start=1):
-            handle.write(
-                "\t".join([str(rowidx)] + [row[col] for col in header[1:]]) + "\n"
-            )
+            cells = [str(rowidx)] + [row[col] for col in header[1:]]
+            handle.write("\t".join(cells) + "\n")
     FileNames.TASKS_FILE.with_suffix(".tmp").replace(FileNames.TASKS_FILE)
 
     log_info(f"wrote {len(rows)} tasks to {FileNames.TASKS_FILE}")
@@ -431,7 +481,7 @@ def main() -> None:
     parser = _init_cmd_args()
     _parse_cmd_args(parser)
 
-    with runlog_setup(root=Paths.HERE):
+    with runlog_setup(root=Paths.HERE, order=RunlogOrder.GWAS_CAT_PREP):
         build_tasks()
 
 

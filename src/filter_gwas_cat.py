@@ -11,16 +11,16 @@ MAF < Constants.MAF_THRESHOLD, and writes the row's output file.
 # imports
 
 from __future__ import annotations
+
 import argparse
 from pathlib import Path
 
 import pandas as pd
-
 from log_tools.emitter import log_info, log_warn
 from log_tools.setup import runlog_setup
 
 import functions
-from project_constants import Constants, Paths
+from project_constants import Constants, Paths, RunlogOrder
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -192,7 +192,9 @@ def run_filter(
     if source == "finngen":
         filtered = _run_filter_finngen(gene, study_accession, region, outfile)
     else:
-        filtered = _run_filter_gwas_catalog(gene, study_accession, region, outfile)
+        filtered = _run_filter_gwas_catalog(
+            gene, study_accession, region, outfile
+        )
     if filtered is None:
         return
 
@@ -238,7 +240,7 @@ def main() -> None:
     parser = _init_cmd_args()
     args = _parse_cmd_args(parser)
 
-    with runlog_setup(root=Paths.HERE):
+    with runlog_setup(root=Paths.HERE, order=RunlogOrder.FILTER_GWAS_CAT):
         run_filter(
             gene=args.gene,
             study_accession=args.study_accession,

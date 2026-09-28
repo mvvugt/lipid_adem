@@ -23,7 +23,7 @@ from biomed_api.errors import ReaderError
 from biomed_api.readers.reader_ensembl import EnsemblReader
 from biomed_api.readers.reader_gwascat import GwasCatalogReader
 from biomed_api.readers.reader_uniprot import UniProtIdMappingReader
-from log_tools.emitter import log_debug, log_info, log_warn, log_stage
+from log_tools.emitter import log_debug, log_info, log_warn
 
 from project_constants import ColumnNames, Constants, FileNames
 
@@ -305,7 +305,6 @@ def resolve_gene_table(df: pd.DataFrame) -> pd.DataFrame:
         row = df.loc[idx]
         if not (row[list(ColumnNames.GENE_TABLE_COLUMNS)] == "").any():
             continue
-        log_stage('resolve_genes')
         given = _given_gene_ids(row)
         label = f"gene table row {idx + 2} {given}"
         record = _anchor_gene_record(given)
@@ -564,7 +563,6 @@ def resolve_efo_ids(
     if not mask.any():
         return df
 
-    log_stage('resolve_efo')
     master_mapping = load_efo_ukb_mapping(mapping_path)
     normalized_codes = df.loc[mask, ColumnNames.ICD_CODE].map(
         normalize_icd10_code
@@ -928,9 +926,9 @@ def discover_studies_with_reasons(
         As returned by `classify_studies` -- `accession_id`, `pubmed_id`,
         `reason`, plus publication/trait/sample metadata.
     """
-    log_stage('discover_gwas')
     records = _fetch_gwas_catalog_study_records(efo_id)
-    log_info(f"{efo_id} -> {len(records)} studies")
+    # printed only; gwas_cat_prep records one summary line per EFO
+    log_debug(f"{efo_id} -> {len(records)} studies")
     return classify_studies(records, cap=cap)
 
 
@@ -1090,7 +1088,7 @@ def classify_studies(
         + [_row(r, "over_cap") for r in eligible[cap:]]
         + [_row(r, "no_full_sumstats") for r in ineligible]
     )
-    log_info(
+    log_debug(
         f"{len(records)} studies -> {len(eligible)} with full sumstats "
         f"-> {len(eligible[:cap])} included after cap={cap}"
     )
@@ -1124,7 +1122,9 @@ def filter_and_cap_studies(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def load_finngen_manifest(path: Path = FileNames.FINNGEN_MANIFEST) -> pd.DataFrame:
+def load_finngen_manifest(
+    path: Path = FileNames.FINNGEN_MANIFEST,
+) -> pd.DataFrame:
     """Load the vendored FinnGen R13 summary-stats manifest.
 
     Parameters
@@ -1236,7 +1236,9 @@ def load_manual_gwas_catalog_studies(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def manual_studies_for_outcome(outcome: str, manual_df: pd.DataFrame) -> list[str]:
+def manual_studies_for_outcome(
+    outcome: str, manual_df: pd.DataFrame
+) -> list[str]:
     """Look up curated GWAS Catalog accessions for an outcome.
 
     Parameters
@@ -1251,11 +1253,14 @@ def manual_studies_for_outcome(outcome: str, manual_df: pd.DataFrame) -> list[st
     accessions : `list[str]`
         `accession_id` values curated for `outcome`. `[]` if none.
     """
-    return manual_df.loc[manual_df["outcome"] == outcome, "accession_id"].tolist()
+    is_outcome = manual_df["outcome"] == outcome
+    return manual_df.loc[is_outcome, "accession_id"].tolist()
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def finngen_sumstats_url(phenocode: str, manifest_df: pd.DataFrame) -> str | None:
+def finngen_sumstats_url(
+    phenocode: str, manifest_df: pd.DataFrame
+) -> str | None:
     """Look up a FinnGen phenocode's summary-stats file URL.
 
     Parameters
@@ -1272,7 +1277,9 @@ def finngen_sumstats_url(phenocode: str, manifest_df: pd.DataFrame) -> str | Non
         (with a `.tbi` index at `url + ".tbi"`), or `None` if the
         phenocode is not in the manifest.
     """
-    matches = manifest_df.loc[manifest_df["phenocode"] == phenocode, "path_https"]
+    matches = manifest_df.loc[
+        manifest_df["phenocode"] == phenocode, "path_https"
+    ]
     if matches.empty:
         return None
     return matches.iloc[0]
@@ -1507,7 +1514,8 @@ def fetch_curated_associations(efo_id: str) -> list[dict]:
         result = reader.read(profile="associations", efo_id=efo_id)
 
     records = list(result.records)
-    log_info(f"{efo_id} -> {len(records)} curated associations fetched")
+    # printed only; merge_associations records one summary line per EFO
+    log_debug(f"{efo_id} -> {len(records)} curated associations fetched")
     return records
 
 
@@ -1542,7 +1550,9 @@ def filter_curated_associations(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _location_in_region(locations: list[str] | None, region: GeneRegion) -> bool:
+def _location_in_region(
+    locations: list[str] | None, region: GeneRegion
+) -> bool:
     """Check whether any GWAS Catalog v2 `"chrom:pos"` location is in `region`.
 
     Parameters
@@ -1704,7 +1714,9 @@ def filter_sumstats_region(
         chrom_idx = header.index(chrom_col)
         pos_idx = header.index(pos_col)
         maf_idx = header.index(maf_col)
-        log_debug(f"header columns: chrom={chrom_idx} pos={pos_idx} maf={maf_idx}")
+        log_debug(
+            f"header columns: chrom={chrom_idx} pos={pos_idx} maf={maf_idx}"
+        )
 
         records = []
         for line in tabix_file.fetch(region.chrom, region.start, region.end):
@@ -1782,7 +1794,9 @@ def filter_raw_sumstats_region(
         chrom_idx = header.index(chrom_col)
         pos_idx = header.index(pos_col)
         maf_idx = header.index(maf_col)
-        log_debug(f"header columns: chrom={chrom_idx} pos={pos_idx} maf={maf_idx}")
+        log_debug(
+            f"header columns: chrom={chrom_idx} pos={pos_idx} maf={maf_idx}"
+        )
 
         records = []
         for line in text_stream:
@@ -1790,7 +1804,9 @@ def filter_raw_sumstats_region(
             if fields[chrom_idx] != region.chrom:
                 continue
             pos = fields[pos_idx]
-            if not pos.isdigit() or not (region.start <= int(pos) <= region.end):
+            if not pos.isdigit() or not (
+                region.start <= int(pos) <= region.end
+            ):
                 continue
             maf = _parse_freq(fields[maf_idx])
             if maf is None:
@@ -1856,7 +1872,9 @@ def gene_burden_evidence(gene: str) -> pd.DataFrame:
             .get("rows", [])
         )
         for row in rows:
-            scores = {s["id"]: s["score"] for s in row.get("datasourceScores", [])}
+            scores = {
+                s["id"]: s["score"] for s in row.get("datasourceScores", [])
+            }
             if "gene_burden" in scores:
                 records.append(
                     {
@@ -1867,5 +1885,6 @@ def gene_burden_evidence(gene: str) -> pd.DataFrame:
                     }
                 )
 
-    log_info(f"{gene} -> {len(records)} gene-burden evidence rows")
+    # printed only; merge_associations records one summary line
+    log_debug(f"{gene} -> {len(records)} gene-burden evidence rows")
     return pd.DataFrame.from_records(records)

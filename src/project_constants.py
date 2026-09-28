@@ -8,6 +8,7 @@ lipid_adem constants
 # imports
 
 from __future__ import annotations
+
 from pathlib import Path
 
 
@@ -53,6 +54,19 @@ class Constants:
     # treated as resolved on reruns (clear the cell by hand to retry)
     NA_STRING: str = "NA"
     UNIPROT_HUMAN_TAXON: int = 9606
+
+
+class RunlogOrder:
+    """RUN_LOG.md section order per pipeline step.
+
+    Explicit because each step runs in its own process tree (qsub,
+    pyjasub, `mamba run`), so log_tools' PPID-based auto-order would
+    give every step 10. The Bash job wrappers hard-code the same values
+    in `RUNLOG_ORDER` and must be kept in sync.
+    """
+    GWAS_CAT_PREP: int = 10
+    FILTER_GWAS_CAT: int = 20
+    MERGE_ASSOCIATIONS: int = 30
 
 
 class ColumnNames:

@@ -21,26 +21,32 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export RUNLOG_ROOT="${REPO_ROOT}"
 # shellcheck source=/dev/null
 . "${REPO_ROOT}/src/functions.sh"
+# shellcheck disable=SC2034  # read by runlog_setup (setup.sh)
+RUNLOG_SCRIPT_ID="filter_gwas_cat_job"
+# shellcheck disable=SC2034  # read by runlog_setup (setup.sh)
+RUNLOG_ORDER=20
 # shellcheck disable=SC1090
 source "$(runlog-setup-path)"
 runlog_setup
 # Enable strict mode only after sourcing external code (see
-# merge_associations.sh); -E keeps log-tools' ERR trap active in functions.
+# merge_associations.sh).
 set -Eeuo pipefail
 
-log_info "repo root=$REPO_ROOT"
-log_info "=== $0 ==="
-log_info "started at $(date)"
-log_info "hostname=${HOSTNAME:-$(hostname)}"
+# Routine lines are printed only; the one recorded line is the task
+# summary below (failures still record via log_error / raw-output tail).
+log_info "repo root=$REPO_ROOT" no-record
+log_info "=== $0 ===" no-record
+log_info "started at $(date)" no-record
+log_info "hostname=${HOSTNAME:-$(hostname)}" no-record
 
 JA="$1"
 TMP_LOC="$2"
 STEP="$3"
 IDX="${4:?Error: task id argument required}"
 
-log_info "job array file=$JA"
-log_info "temp location=$TMP_LOC"
-log_info "step=$STEP"
+log_info "job array file=$JA" no-record
+log_info "temp location=$TMP_LOC" no-record
+log_info "step=$STEP" no-record
 
 if [[ -z "$JA" ]] || [[ ! -r "$JA" ]]; then
     log_error "'$JA' job array file not given or is not readable"
@@ -60,8 +66,8 @@ fi
 mapfile -t FIELDS < <(awk -F'\t' '{for (i = 1; i <= NF; i++) print $i}' <<< "$LINE")
 
 if [[ "${#FIELDS[@]}" -ne 10 ]]; then
-    log_error "row $IDX (line $PULL_LINE) has ${#FIELDS[@]} fields," \
-        "expected 10: $LINE"
+    # single argument: the emitter's log_error only uses $1
+    log_error "row $IDX (line $PULL_LINE) has ${#FIELDS[@]} fields, expected 10: $LINE"
     exit 1
 fi
 
@@ -83,7 +89,8 @@ if [[ "$IDX" -ne "$ROW_IDX" ]]; then
     exit 1
 fi
 
-log_info "gene=$GENE study_accession=$STUDY_ACCESSION outfile=$OUTFILE source=$SOURCE"
+log_info "task ${IDX}: gene=$GENE study_accession=$STUDY_ACCESSION source=$SOURCE"
+log_info "outfile=$OUTFILE" no-record
 
 run_mamba biomed-api "${REPO_ROOT}/src/filter_gwas_cat.py" \
     --gene "$GENE" \
@@ -94,5 +101,5 @@ run_mamba biomed-api "${REPO_ROOT}/src/filter_gwas_cat.py" \
     --outfile "$OUTFILE" \
     --source "$SOURCE"
 
-log_info "ended at $(date)"
-log_info "*** END ***"
+log_info "ended at $(date)" no-record
+log_info "*** END ***" no-record
