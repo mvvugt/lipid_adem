@@ -28,8 +28,11 @@ from project_constants import (
     ColumnNames,
     Constants,
     FileNames,
+    HarmonisedColumns,
+    MafStatus,
     Paths,
     RunlogOrder,
+    SourceColumnMaps,
 )
 
 
@@ -40,34 +43,68 @@ _NO_CURATED_COUNT_KEY: str = "efo_no_curated"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # helpers
 
-def load_filter_results() -> pd.DataFrame:
-    """Load and tag the filtered result files listed in the tasks file.
+def load_filter_results(
+    outcome_desc: dict[tuple[str, str], str],
+    trait_labels: dict[str, str],
+) -> pd.DataFrame:
+    """Load, label and harmonise the filtered result files in the tasks file.
 
     Only the `outfile` paths in the current `FileNames.TASKS_FILE` are
     read, so stale files left in `gwas_filtered/` (from studies bumped
     past the cap, or genes since removed) are ignored. Listed outfiles
-    that do not exist yet are skipped with a warning.
+    that do not exist yet are skipped with a warning. Each file is read
+    once; when several task rows (outcomes) point to the same file, its
+    rows are repeated once per outcome.
+
+    Parameters
+    ----------
+    outcome_desc : `dict[tuple[str, str], str]`
+        `(outcome, efo_id)` -> outcome description in words.
+    trait_labels : `dict[str, str]`
+        `study_accession` -> the study's trait label.
 
     Returns
     -------
     combined : `pd.DataFrame`
-        Concatenated filtered outputs with a `source` column set to
-        `"summary-stats"`. Empty if no filtered output files exist yet.
+        Harmonised rows (see `functions.harmonise_frame`) with `source`
+        set to `"summary-stats"`. Empty if no filtered output files exist.
 
     Raises
     ------
     FileNotFoundError
         If the tasks file does not exist.
     """
+    tasks = functions.load_tasks(FileNames.TASKS_FILE)
     frames = []
     missing: list[Path] = []
-    for result_path in functions.load_task_outfiles(FileNames.TASKS_FILE):
+    n_files = 0
+    # groupby(sort=False) keeps the tasks-file order
+    for outfile, file_tasks in tasks.groupby(
+        ColumnNames.OUTFILE, sort=False
+    ):
+        result_path = Path(outfile)
         if not result_path.exists():
             missing.append(result_path)
             continue
-        frame = pd.read_csv(result_path, sep="\t")
-        frame[ColumnNames.SOURCE] = "summary-stats"
-        frames.append(frame)
+        n_files += 1
+        frame = _read_filtered_file(result_path)
+        if frame.empty:
+            continue
+        for _, task in file_tasks.iterrows():
+            labelled = frame.copy()
+            outcome = task[ColumnNames.OUTCOME]
+            efo_id = task[ColumnNames.EFO_ID]
+            accession = task[ColumnNames.STUDY_ACCESSION]
+            labelled[ColumnNames.SOURCE] = "summary-stats"
+            labelled[ColumnNames.OUTCOME] = outcome
+            labelled[ColumnNames.EFO_ID] = efo_id
+            labelled[HarmonisedColumns.OUTCOME_DESC] = outcome_desc.get(
+                (outcome, efo_id), pd.NA
+            )
+            labelled[HarmonisedColumns.TRAIT_LABEL] = trait_labels.get(
+                accession, pd.NA
+            )
+            frames.append(labelled)
 
     if missing:
         preview = ", ".join(str(p) for p in missing[:3])
@@ -78,12 +115,115 @@ def load_filter_results() -> pd.DataFrame:
 
     n_rows = sum(len(frame) for frame in frames)
     log_info(
-        f"summary-stats: {len(frames)} files, {n_rows} rows "
-        f"({len(missing)} missing)"
+        f"summary-stats: {n_files} files, {n_rows} rows incl. one copy "
+        f"per outcome ({len(missing)} missing)"
     )
     if not frames:
         return pd.DataFrame()
-    return pd.concat(frames, ignore_index=True)
+    harmonised = []
+    for frame in frames:
+        column_map = (
+            SourceColumnMaps.FINNGEN
+            if frame[ColumnNames.SOURCE_DB].iloc[0] == "finngen"
+            else SourceColumnMaps.GWAS_CATALOG
+        )
+        harmonised.append(functions.harmonise_frame(frame, column_map))
+    return pd.concat(harmonised, ignore_index=True)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _read_filtered_file(path: Path) -> pd.DataFrame:
+    """Read one filtered result file, removing stray CRLF carriage returns.
+
+    Files filtered before the CRLF fix in `functions` can carry a
+    trailing `"\\r"` on their last column name and values.
+
+    Parameters
+    ----------
+    path : `Path`
+        A filtered result file (`*_result.tsv.gz`).
+
+    Returns
+    -------
+    frame : `pd.DataFrame`
+        The file's rows, with `"\\r"` stripped from the last column.
+    """
+    frame = pd.read_csv(path, sep="\t", low_memory=False)
+    frame.columns = [str(col).rstrip("\r") for col in frame.columns]
+    last = frame.columns[-1]
+    if frame[last].dtype == object:
+        frame[last] = frame[last].str.rstrip("\r")
+    return frame
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _outcome_descriptions(
+    icd_df: pd.DataFrame,
+) -> dict[tuple[str, str], str]:
+    """Describe each (outcome, efo_id) pair in words, from the ICD table.
+
+    Parameters
+    ----------
+    icd_df : `pd.DataFrame`
+        The ICD/outcome table from `functions.load_icd_table`.
+
+    Returns
+    -------
+    descriptions : `dict[tuple[str, str], str]`
+        `(outcome, efo_id)` -> unique non-empty `description` values,
+        joined with `"; "`, in file order.
+    """
+    descriptions: dict[tuple[str, str], str] = {}
+    grouped = icd_df.groupby(
+        [ColumnNames.OUTCOME, ColumnNames.EFO_ID], sort=False
+    )
+    for key, group in grouped:
+        texts = [
+            text
+            for text in dict.fromkeys(group[ColumnNames.DESCRIPTION])
+            if isinstance(text, str) and text.strip()
+        ]
+        descriptions[key] = "; ".join(texts)
+    return descriptions
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _study_trait_labels() -> dict[str, str]:
+    """Map each study accession to the trait label its source reports.
+
+    Uses the `trait` column of `FileNames.STUDY_DISCOVERY_LOG` (written by
+    `gwas_cat_prep.py`), then fills FinnGen phenocodes still missing from
+    the `phenotype` column of the FinnGen manifest.
+
+    Returns
+    -------
+    labels : `dict[str, str]`
+        `study_accession` (or FinnGen phenocode) -> trait label. Missing
+        sources are skipped with a warning.
+    """
+    labels: dict[str, str] = {}
+    if FileNames.STUDY_DISCOVERY_LOG.exists():
+        audit = pd.read_csv(
+            FileNames.STUDY_DISCOVERY_LOG, sep="\t", dtype=str
+        ).fillna("")
+        for accession, trait in zip(
+            audit[ColumnNames.STUDY_ACCESSION], audit[ColumnNames.TRAIT]
+        ):
+            if trait and accession not in labels:
+                labels[accession] = trait
+    else:
+        log_warn(
+            f"{FileNames.STUDY_DISCOVERY_LOG} not found: GWAS Catalog "
+            "trait labels left empty (rerun gwas_cat_prep.py, or gzip an "
+            "existing uncompressed study_discovery_log.tsv)"
+        )
+    manifest = functions.load_finngen_manifest()
+    for phenocode, phenotype in zip(
+        manifest["phenocode"], manifest["phenotype"]
+    ):
+        if phenotype and phenocode not in labels:
+            labels[phenocode] = phenotype
+    return labels
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -126,8 +266,10 @@ def merge_results() -> None:
     genes_df = functions.load_gene_table(FileNames.GENE_LIST)
     icd_df = functions.load_icd_table(FileNames.ICD_CODE_LIST)
 
+    outcome_desc = _outcome_descriptions(icd_df)
+
     log_stage("load_sumstats")
-    parts = [load_filter_results()]
+    parts = [load_filter_results(outcome_desc, _study_trait_labels())]
 
     outcome_efo_ids = (
         icd_df[~icd_df[ColumnNames.EFO_ID].isin(["", Constants.NA_STRING])]
@@ -175,6 +317,10 @@ def merge_results() -> None:
     # assemble in gene -> outcome -> efo_id order so row order is unchanged
     log_stage("gene_burden")
     burden_rows: dict[str, int] = {}
+    maf_status_counts: dict[str, int] = {
+        MafStatus.NUMERIC: 0,
+        MafStatus.NOT_REPORTED: 0,
+    }
     for gene in regions:
         for outcome, efo_ids in outcome_efo_ids.items():
             for efo_id in efo_ids:
@@ -182,14 +328,35 @@ def merge_results() -> None:
                 if not curated.empty:
                     curated[ColumnNames.GENE] = gene
                     curated[ColumnNames.OUTCOME] = outcome
+                    curated[ColumnNames.EFO_ID] = efo_id
+                    curated[HarmonisedColumns.OUTCOME_DESC] = (
+                        outcome_desc.get((outcome, efo_id), pd.NA)
+                    )
                     curated[ColumnNames.SOURCE] = "curated"
-                    parts.append(curated)
+                    curated[ColumnNames.SOURCE_DB] = "gwas_catalog"
+                    harmonised = functions.harmonise_curated(curated)
+                    for status, n in (
+                        harmonised[HarmonisedColumns.MAF_STATUS]
+                        .value_counts()
+                        .items()
+                    ):
+                        maf_status_counts[status] += n
+                    parts.append(harmonised)
 
         burden = functions.gene_burden_evidence(gene)
         burden_rows[gene] = len(burden)
         if not burden.empty:
             burden[ColumnNames.SOURCE] = "gene-burden"
-            parts.append(burden)
+            burden[ColumnNames.SOURCE_DB] = "open_targets"
+            parts.append(
+                functions.harmonise_frame(
+                    burden, SourceColumnMaps.GENE_BURDEN, has_variants=False
+                )
+            )
+    log_info(
+        "curated MAF: "
+        + " ".join(f"{k}={n}" for k, n in maf_status_counts.items())
+    )
     n_zero_genes = sum(1 for n in burden_rows.values() if n == 0)
     log_info(
         f"gene-burden rows: {_format_counts(burden_rows)} "

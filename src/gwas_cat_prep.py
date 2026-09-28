@@ -16,6 +16,7 @@ sources with its inclusion status and reason.
 from __future__ import annotations
 
 import argparse
+import gzip
 
 import pandas as pd
 from log_tools.emitter import log_count, log_count_summary, log_info, log_stage
@@ -440,7 +441,7 @@ def build_tasks() -> None:
         ColumnNames.NOTE,
     ]
     audit_tmp = FileNames.STUDY_DISCOVERY_LOG.with_suffix(".tmp")
-    with audit_tmp.open("w") as handle:
+    with gzip.open(audit_tmp, "wt") as handle:
         handle.write("\t".join(audit_header) + "\n")
         for row in audit_rows:
             handle.write(

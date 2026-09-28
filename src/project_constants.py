@@ -118,6 +118,144 @@ class ColumnNames:
     )
 
 
+class HarmonisedColumns:
+    """Core columns of the final results table, shared by every source.
+
+    Each source's original columns are kept after the core ones, renamed
+    to `RAW_PREFIX + <original name>` so they can never collide with a
+    core name.
+    """
+    GENE: str = ColumnNames.GENE
+    SOURCE: str = ColumnNames.SOURCE
+    SOURCE_DB: str = ColumnNames.SOURCE_DB
+    STUDY_ACCESSION: str = ColumnNames.STUDY_ACCESSION
+    OUTCOME: str = ColumnNames.OUTCOME
+    EFO_ID: str = ColumnNames.EFO_ID
+    OUTCOME_DESC: str = "outcome_desc"
+    TRAIT_LABEL: str = "trait_label"
+    CHROM: str = ColumnNames.CHROM
+    POS: str = "pos"
+    RSID: str = "rsid"
+    VARIANT_ID: str = "variant_id"
+    EFFECT_ALLELE: str = "effect_allele"
+    OTHER_ALLELE: str = "other_allele"
+    EAF: str = "eaf"
+    MAF: str = ColumnNames.MAF
+    MAF_STATUS: str = "maf_status"
+    BETA: str = "beta"
+    SE: str = "se"
+    ODDS_RATIO: str = "odds_ratio"
+    P_VALUE: str = ColumnNames.P_VALUE
+    NEG_LOG10_P: str = "neg_log10_p"
+    N: str = "n"
+    DISEASE_ID: str = "disease_id"
+    GENE_BURDEN_SCORE: str = "gene_burden_score"
+    CORE_ORDER: tuple[str, ...] = (
+        GENE,
+        SOURCE,
+        SOURCE_DB,
+        STUDY_ACCESSION,
+        OUTCOME,
+        EFO_ID,
+        OUTCOME_DESC,
+        TRAIT_LABEL,
+        CHROM,
+        POS,
+        RSID,
+        VARIANT_ID,
+        EFFECT_ALLELE,
+        OTHER_ALLELE,
+        EAF,
+        MAF,
+        MAF_STATUS,
+        BETA,
+        SE,
+        ODDS_RATIO,
+        P_VALUE,
+        NEG_LOG10_P,
+        N,
+        DISEASE_ID,
+        GENE_BURDEN_SCORE,
+    )
+    # set by the pipeline itself (not source data): copied through as-is
+    # and not duplicated as `src_*` columns
+    IDENTITY_COLUMNS: tuple[str, ...] = (
+        GENE,
+        SOURCE,
+        SOURCE_DB,
+        STUDY_ACCESSION,
+        OUTCOME,
+        EFO_ID,
+        OUTCOME_DESC,
+        TRAIT_LABEL,
+    )
+    # core columns converted to numbers (unparseable values become NA)
+    NUMERIC_COLUMNS: tuple[str, ...] = (
+        POS,
+        EAF,
+        MAF,
+        BETA,
+        SE,
+        ODDS_RATIO,
+        P_VALUE,
+        NEG_LOG10_P,
+        N,
+        GENE_BURDEN_SCORE,
+    )
+    RAW_PREFIX: str = "src_"
+
+
+class SourceColumnMaps:
+    """Per-source mapping of core column -> original column name.
+
+    Core columns not listed for a source are left NA (or derived, see
+    `functions.harmonise_frame`). Curated GWAS Catalog records need extra
+    parsing (locations, allele strings, text betas), done in
+    `functions.harmonise_curated`.
+    """
+    GWAS_CATALOG: dict[str, str] = {
+        HarmonisedColumns.CHROM: "chromosome",
+        HarmonisedColumns.POS: "base_pair_location",
+        HarmonisedColumns.RSID: "rsid",
+        HarmonisedColumns.VARIANT_ID: "variant_id",
+        HarmonisedColumns.EFFECT_ALLELE: "effect_allele",
+        HarmonisedColumns.OTHER_ALLELE: "other_allele",
+        HarmonisedColumns.EAF: "effect_allele_frequency",
+        HarmonisedColumns.BETA: "beta",
+        HarmonisedColumns.SE: "standard_error",
+        HarmonisedColumns.ODDS_RATIO: "odds_ratio",
+        HarmonisedColumns.P_VALUE: "p_value",
+        HarmonisedColumns.NEG_LOG10_P: "neg_log_10_p_value",
+        HarmonisedColumns.N: "n",
+    }
+    FINNGEN: dict[str, str] = {
+        HarmonisedColumns.CHROM: "chrom",
+        HarmonisedColumns.POS: "pos",
+        HarmonisedColumns.RSID: "rsids",
+        HarmonisedColumns.EFFECT_ALLELE: "alt",
+        HarmonisedColumns.OTHER_ALLELE: "ref",
+        HarmonisedColumns.EAF: "af_alt",
+        HarmonisedColumns.BETA: "beta",
+        HarmonisedColumns.SE: "sebeta",
+        HarmonisedColumns.P_VALUE: "pval",
+        HarmonisedColumns.NEG_LOG10_P: "mlogp",
+    }
+    CURATED: dict[str, str] = {
+        HarmonisedColumns.STUDY_ACCESSION: "accession_id",
+    }
+    GENE_BURDEN: dict[str, str] = {
+        HarmonisedColumns.DISEASE_ID: "disease_id",
+        HarmonisedColumns.TRAIT_LABEL: "disease_name",
+        HarmonisedColumns.GENE_BURDEN_SCORE: "gene_burden_score",
+    }
+
+
+class MafStatus:
+    """Values of the `maf_status` column."""
+    NUMERIC: str = "numeric"
+    NOT_REPORTED: str = "not_reported"
+
+
 class FileNames:
     """File paths, built from `Paths` so they move together."""
     GENE_LIST: Path = Paths.DATA_RAW / "gene_list.txt"
@@ -128,5 +266,5 @@ class FileNames:
         Paths.DATA_RAW / "gwas_catalog_manual_studies.tsv"
     )
     TASKS_FILE: Path = Paths.DATA_TEMP / "tasks.tsv"
-    STUDY_DISCOVERY_LOG: Path = Paths.DATA_TEMP / "study_discovery_log.tsv"
-    FINAL_RESULTS: Path = Paths.RESULTS_OUTPUT / "final_results.tsv"
+    STUDY_DISCOVERY_LOG: Path = Paths.DATA_TEMP / "study_discovery_log.tsv.gz"
+    FINAL_RESULTS: Path = Paths.RESULTS_OUTPUT / "final_results.tsv.gz"

@@ -9,6 +9,7 @@ lipid_adem helper functions
 
 from __future__ import annotations
 
+import ast
 import gzip
 import io
 import re
@@ -17,6 +18,7 @@ import warnings
 from dataclasses import dataclass
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import requests
 from biomed_api.errors import ReaderError
@@ -25,7 +27,32 @@ from biomed_api.readers.reader_gwascat import GwasCatalogReader
 from biomed_api.readers.reader_uniprot import UniProtIdMappingReader
 from log_tools.emitter import log_debug, log_info, log_warn
 
-from project_constants import ColumnNames, Constants, FileNames
+from project_constants import (
+    ColumnNames,
+    Constants,
+    FileNames,
+    HarmonisedColumns,
+    MafStatus,
+    SourceColumnMaps,
+)
+
+# curated GWAS Catalog effect text, e.g. "0.18 g/l increase"
+_CURATED_BETA_PATTERN = re.compile(
+    r"""
+    ^\s*
+    (?P<value>[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?)
+    (?P<text>.*)$
+    """,
+    re.VERBOSE,
+)
+# curated GWAS Catalog risk-allele string, e.g. "rs183130-T" or "rs1-?"
+_CURATED_ALLELE_PATTERN = re.compile(
+    r"""
+    ^(?P<rsid>[^-]+)
+    -(?P<allele>.+)$
+    """,
+    re.VERBOSE,
+)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -112,7 +139,7 @@ def write_table_atomic(df: pd.DataFrame, path: Path, sep: str = "\t") -> None:
     df : `pd.DataFrame`
         Table to write.
     path : `Path`
-        Destination path.
+        Destination path. Gzip-compressed if it ends in `.gz`.
     sep : `str`, optional, default: `"\\t"`
         Field separator.
 
@@ -121,7 +148,9 @@ def write_table_atomic(df: pd.DataFrame, path: Path, sep: str = "\t") -> None:
     `None`
     """
     tmp_path = path.with_suffix(path.suffix + ".tmp")
-    df.to_csv(tmp_path, sep=sep, index=False)
+    # the ".tmp" suffix stops pandas inferring compression, so set it here
+    compression = "gzip" if path.suffix == ".gz" else None
+    df.to_csv(tmp_path, sep=sep, index=False, compression=compression)
     tmp_path.replace(path)
 
 
@@ -166,8 +195,8 @@ def archive_dir(path: Path) -> Path | None:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def load_task_outfiles(path: Path) -> list[Path]:
-    """Load the unique `outfile` paths from the job-array file.
+def load_tasks(path: Path) -> pd.DataFrame:
+    """Load the job-array file, one row per gene x study x outcome task.
 
     Parameters
     ----------
@@ -176,8 +205,9 @@ def load_task_outfiles(path: Path) -> list[Path]:
 
     Returns
     -------
-    outfiles : `list[Path]`
-        Unique `outfile` paths, in file order.
+    tasks : `pd.DataFrame`
+        All task rows, all columns as strings, rows without an `outfile`
+        dropped. Several rows can share an `outfile` (one per outcome).
 
     Raises
     ------
@@ -187,7 +217,7 @@ def load_task_outfiles(path: Path) -> list[Path]:
     if not path.exists():
         raise FileNotFoundError(f"Tasks file not found: {path}")
     tasks = pd.read_csv(path, sep="\t", dtype=str)
-    return [Path(p) for p in tasks[ColumnNames.OUTFILE].dropna().unique()]
+    return tasks.dropna(subset=[ColumnNames.OUTFILE])
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1630,7 +1660,8 @@ def _plain_header(tabix_source: str) -> list[str]:
     else:
         with gzip.open(tabix_source, "rt") as fh:
             line = fh.readline()
-    return line.rstrip("\n").split("\t")
+    # CRLF source files leave a trailing "\r" on the last column name
+    return line.rstrip("\r\n").split("\t")
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1707,7 +1738,7 @@ def filter_sumstats_region(
     with pysam.TabixFile(tabix_source) as tabix_file:
         header_lines = tabix_file.header
         header = (
-            header_lines[0].lstrip("#").split("\t")
+            header_lines[0].lstrip("#").rstrip("\r\n").split("\t")
             if header_lines
             else _plain_header(tabix_source)
         )
@@ -1720,7 +1751,8 @@ def filter_sumstats_region(
 
         records = []
         for line in tabix_file.fetch(region.chrom, region.start, region.end):
-            fields = line.split("\t")
+            # CRLF source files leave a trailing "\r" on the last field
+            fields = line.rstrip("\r\n").split("\t")
             maf = _parse_freq(fields[maf_idx])
             if maf is None:
                 continue
@@ -1790,7 +1822,7 @@ def filter_raw_sumstats_region(
             raw_stream = gzip.GzipFile(fileobj=raw_stream)
         text_stream = io.TextIOWrapper(raw_stream, encoding="utf-8")
 
-        header = next(text_stream).rstrip("\n").split("\t")
+        header = next(text_stream).rstrip("\r\n").split("\t")
         chrom_idx = header.index(chrom_col)
         pos_idx = header.index(pos_col)
         maf_idx = header.index(maf_col)
@@ -1800,7 +1832,7 @@ def filter_raw_sumstats_region(
 
         records = []
         for line in text_stream:
-            fields = line.rstrip("\n").split("\t")
+            fields = line.rstrip("\r\n").split("\t")
             if fields[chrom_idx] != region.chrom:
                 continue
             pos = fields[pos_idx]
@@ -1888,3 +1920,237 @@ def gene_burden_evidence(gene: str) -> pd.DataFrame:
     # printed only; merge_associations records one summary line
     log_debug(f"{gene} -> {len(records)} gene-burden evidence rows")
     return pd.DataFrame.from_records(records)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# harmonisation
+
+def harmonise_frame(
+    df: pd.DataFrame,
+    column_map: dict[str, str],
+    has_variants: bool = True,
+    parsed: pd.DataFrame | None = None,
+) -> pd.DataFrame:
+    """Map one source's table onto the shared final-results schema.
+
+    Parameters
+    ----------
+    df : `pd.DataFrame`
+        One source's rows, with its original columns plus any identity
+        columns (`HarmonisedColumns.IDENTITY_COLUMNS`) already set.
+    column_map : `dict[str, str]`
+        Core column -> original column, from `SourceColumnMaps`.
+    has_variants : `bool`, optional, default: `True`
+        `False` for gene-level rows (gene burden): `maf_status` is then
+        left NA instead of flagging a missing MAF.
+    parsed : `pd.DataFrame` or `NoneType`, optional, default: `None`
+        Core-named columns already parsed from `df` (same index), which
+        take precedence over `column_map` (see `harmonise_curated`).
+
+    Returns
+    -------
+    harmonised : `pd.DataFrame`
+        `HarmonisedColumns.CORE_ORDER` columns, then every original,
+        non-identity column of `df` as `src_<name>`.
+
+    Notes
+    -----
+    Values derived only where missing: `p_value` <-> `neg_log10_p`, and
+    `maf = min(eaf, 1 - eaf)`. `maf_status` is `numeric` where `maf`
+    is known and `not_reported` otherwise.
+    """
+    hc = HarmonisedColumns
+    core = pd.DataFrame(index=df.index)
+    for col in hc.CORE_ORDER:
+        if parsed is not None and col in parsed.columns:
+            core[col] = parsed[col]
+        elif col in column_map and column_map[col] in df.columns:
+            core[col] = df[column_map[col]]
+        elif col in hc.IDENTITY_COLUMNS and col in df.columns:
+            core[col] = df[col]
+        else:
+            core[col] = pd.NA
+    for col in hc.NUMERIC_COLUMNS:
+        core[col] = pd.to_numeric(core[col], errors="coerce")
+    # nullable types so NA rows do not turn "16" / 56961324 into floats
+    core[hc.POS] = core[hc.POS].round().astype("Int64")
+    core[hc.CHROM] = (
+        core[hc.CHROM]
+        .astype("string")
+        .str.replace(r"\.0$", "", regex=True)
+    )
+    _derive_columns(core, has_variants)
+    raw = df.drop(
+        columns=[c for c in df.columns if c in hc.IDENTITY_COLUMNS]
+    ).add_prefix(hc.RAW_PREFIX)
+    return pd.concat([core, raw], axis=1)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _derive_columns(core: pd.DataFrame, has_variants: bool) -> None:
+    """Fill derivable core columns in place, only where they are missing.
+
+    Parameters
+    ----------
+    core : `pd.DataFrame`
+        Core columns with numeric columns already converted.
+    has_variants : `bool`
+        If `False`, `maf_status` is left NA.
+
+    Returns
+    -------
+    `None`
+    """
+    hc = HarmonisedColumns
+    neg_log10 = core[hc.NEG_LOG10_P]
+    p_value = core[hc.P_VALUE]
+    core[hc.P_VALUE] = p_value.fillna(10.0 ** -neg_log10)
+    # p == 0 (underflow) has no finite -log10, so it stays NA
+    positive_p = core[hc.P_VALUE].where(core[hc.P_VALUE] > 0)
+    core[hc.NEG_LOG10_P] = neg_log10.fillna(-np.log10(positive_p))
+    eaf = core[hc.EAF]
+    core[hc.MAF] = core[hc.MAF].fillna(eaf.where(eaf <= 0.5, 1.0 - eaf))
+    if has_variants:
+        core[hc.MAF_STATUS] = np.where(
+            core[hc.MAF].notna(), MafStatus.NUMERIC, MafStatus.NOT_REPORTED
+        )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def harmonise_curated(df: pd.DataFrame) -> pd.DataFrame:
+    """Harmonise curated GWAS Catalog association records.
+
+    Parameters
+    ----------
+    df : `pd.DataFrame`
+        Rows from `filter_curated_associations`, with the identity columns
+        (`gene`, `outcome`, `efo_id`, `source`, ...) already set.
+
+    Returns
+    -------
+    harmonised : `pd.DataFrame`
+        As `harmonise_frame`, with location, allele, effect, p-value,
+        frequency and trait parsed from the curated record fields.
+    """
+    hc = HarmonisedColumns
+    parsed = pd.DataFrame(index=df.index)
+
+    locations = df["locations"].map(_first_item)
+    parsed[hc.CHROM] = locations.map(lambda v: _split_location(v)[0])
+    parsed[hc.POS] = locations.map(lambda v: _split_location(v)[1])
+
+    alleles = df["snp_effect_allele"].map(_first_item)
+    parsed[hc.RSID] = alleles.map(lambda v: _split_risk_allele(v)[0])
+    parsed[hc.EFFECT_ALLELE] = alleles.map(lambda v: _split_risk_allele(v)[1])
+
+    parsed[hc.EAF] = pd.to_numeric(df["risk_frequency"], errors="coerce")
+    parsed[hc.BETA] = df["beta"].map(_parse_curated_beta)
+    mantissa = pd.to_numeric(df["pvalue_mantissa"], errors="coerce")
+    exponent = pd.to_numeric(df["pvalue_exponent"], errors="coerce")
+    parsed[hc.P_VALUE] = mantissa * 10.0**exponent
+    # computed directly: very small p-values (e.g. 2e-1861) underflow to 0
+    parsed[hc.NEG_LOG10_P] = -(np.log10(mantissa) + exponent)
+    parsed[hc.TRAIT_LABEL] = df["reported_trait"].map(_first_item)
+    return harmonise_frame(df, SourceColumnMaps.CURATED, parsed=parsed)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _first_item(value: object) -> object:
+    """Return the first element of a list-valued curated field.
+
+    Parameters
+    ----------
+    value : `object`
+        A list, a string repr of a list (as read back from a TSV), a
+        scalar, or NA.
+
+    Returns
+    -------
+    item : `object`
+        The first element, the scalar itself, or `pd.NA` if empty/NA.
+    """
+    if isinstance(value, str) and value.startswith("["):
+        try:
+            value = ast.literal_eval(value)
+        except (ValueError, SyntaxError):
+            return value
+    if isinstance(value, (list, tuple)):
+        return value[0] if value else pd.NA
+    if value is None or (isinstance(value, float) and np.isnan(value)):
+        return pd.NA
+    return value
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _split_location(value: object) -> tuple[object, object]:
+    """Split a GWAS Catalog v2 `"chrom:pos"` location.
+
+    Parameters
+    ----------
+    value : `object`
+        A location string such as `"16:56961324"`, or NA.
+
+    Returns
+    -------
+    chrom_pos : `tuple[object, object]`
+        `(chrom, pos)` as strings, or `(pd.NA, pd.NA)` if unparseable.
+    """
+    if not isinstance(value, str) or ":" not in value:
+        return pd.NA, pd.NA
+    chrom, _, pos = value.partition(":")
+    return chrom, pos
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _split_risk_allele(value: object) -> tuple[object, object]:
+    """Split a GWAS Catalog `"rsid-allele"` risk-allele string.
+
+    Parameters
+    ----------
+    value : `object`
+        A string such as `"rs183130-T"` or `"rs1800775-?"`, or NA.
+
+    Returns
+    -------
+    rsid_allele : `tuple[object, object]`
+        `(rsid, allele)`; the allele is `pd.NA` when unknown (`"?"`).
+        `(value, pd.NA)` if there is no allele part.
+    """
+    if not isinstance(value, str):
+        return pd.NA, pd.NA
+    match = _CURATED_ALLELE_PATTERN.match(value)
+    if match is None:
+        return value, pd.NA
+    allele = match.group("allele")
+    return match.group("rsid"), pd.NA if allele == "?" else allele
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _parse_curated_beta(value: object) -> float:
+    """Parse a curated effect such as `"0.18 g/l increase"` to a number.
+
+    Parameters
+    ----------
+    value : `object`
+        The curated `beta` field: a number, a text effect, or NA.
+
+    Returns
+    -------
+    beta : `float`
+        The effect: negative when the text says "decrease", positive when
+        it says "increase", else the number as given; NaN if unparseable.
+    """
+    if isinstance(value, (int, float)):
+        return float(value)
+    if not isinstance(value, str):
+        return float("nan")
+    match = _CURATED_BETA_PATTERN.match(value)
+    if match is None:
+        return float("nan")
+    beta = float(match.group("value"))
+    text = match.group("text").lower()
+    if "decrease" in text:
+        return -abs(beta)
+    if "increase" in text:
+        return abs(beta)
+    return beta
