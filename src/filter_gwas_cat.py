@@ -18,6 +18,7 @@ import argparse
 from pathlib import Path
 
 import pandas as pd
+import requests
 from log_tools.emitter import log_info, log_warn
 from log_tools.setup import runlog_setup
 
@@ -248,11 +249,17 @@ def run_task(tasks_file: Path, task_id: int, step: int) -> None:
     ValueError
         If `task_id` is past the last row, or a row's `rowidx` does not
         match its position.
+    RuntimeError
+        After the whole chunk has been attempted, if any row failed with
+        a transient (network/IO) error.
 
     Notes
     -----
     Rows whose outfile already exists are skipped, so a chunk re-run by
-    pyjasub after a partial failure only redoes the missing studies.
+    pyjasub after a partial failure only redoes the missing studies. A
+    row failing with `requests.RequestException` or `OSError` is logged
+    and left without an outfile; the remaining rows still run, and the
+    task then exits non-zero so pyjasub reruns it.
     """
     tasks = functions.load_tasks(tasks_file).reset_index(drop=True)
     if not 1 <= task_id <= len(tasks):
@@ -267,6 +274,7 @@ def run_task(tasks_file: Path, task_id: int, step: int) -> None:
         f"{len(regions)} gene regions"
     )
     manifest_df = None
+    failed: list[str] = []
     for position, (_, row) in enumerate(chunk.iterrows(), start=task_id):
         if int(row[ColumnNames.ROWIDX]) != position:
             raise ValueError(
@@ -281,7 +289,18 @@ def run_task(tasks_file: Path, task_id: int, step: int) -> None:
             continue
         if source == "finngen" and manifest_df is None:
             manifest_df = functions.load_finngen_manifest()
-        run_filter(accession, source, outfile, regions, manifest_df)
+        try:
+            run_filter(accession, source, outfile, regions, manifest_df)
+        except (requests.RequestException, OSError) as exc:
+            log_warn(
+                f"{accession}: failed ({type(exc).__name__}: {exc}), "
+                f"left for rerun"
+            )
+            failed.append(accession)
+    if failed:
+        raise RuntimeError(
+            f"{len(failed)} row(s) failed, rerun pyjasub: {', '.join(failed)}"
+        )
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

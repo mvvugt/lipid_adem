@@ -1692,6 +1692,51 @@ def _accession_bucket_location(study_accession: str) -> str | None:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _get_with_retry(url: str, timeout: int) -> requests.Response:
+    """GET a URL, retrying on server errors, timeouts and dropped connections.
+
+    Parameters
+    ----------
+    url : `str`
+        URL to fetch.
+    timeout : `int`
+        Per-attempt request timeout in seconds.
+
+    Returns
+    -------
+    response : `requests.Response`
+        The first response with a status below 500, or the last response
+        if every attempt returned a 5xx status. Other statuses (e.g. 404)
+        are returned unchanged for the caller to handle.
+
+    Raises
+    ------
+    requests.Timeout, requests.ConnectionError
+        If the last attempt times out or cannot connect.
+
+    Notes
+    -----
+    Makes `len(Constants.HTTP_RETRY_BACKOFF) + 1` attempts, sleeping the
+    listed number of seconds before each retry.
+    """
+    n_retries = len(Constants.HTTP_RETRY_BACKOFF)
+    for attempt, wait in enumerate((*Constants.HTTP_RETRY_BACKOFF, None), 1):
+        try:
+            response = requests.get(url, timeout=timeout)
+        except (requests.Timeout, requests.ConnectionError) as exc:
+            if wait is None:
+                raise
+            reason = type(exc).__name__
+        else:
+            if response.status_code < 500 or wait is None:
+                return response
+            reason = f"HTTP {response.status_code}"
+        log_warn(f"{url}: {reason}, retry {attempt}/{n_retries} in {wait}s")
+        time.sleep(wait)
+    raise AssertionError("unreachable")
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def study_summary_stats_location(study_accession: str) -> str | None:
     """Look up a study's harmonised summary-stats FTP directory.
 
@@ -1715,7 +1760,7 @@ def study_summary_stats_location(study_accession: str) -> str | None:
     requests.HTTPError
         If the API call fails for a reason other than "not found".
     """
-    response = requests.get(
+    response = _get_with_retry(
         f"{Constants.GWAS_CATALOG_API_V2}/studies/{study_accession}",
         timeout=30,
     )

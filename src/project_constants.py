@@ -68,6 +68,8 @@ class Constants:
     ICD10_CODE_PATTERN: str = r"^[A-Z]\d{2}$"
     EFO_ID_PATTERN: str = r"^EFO[:_]\d+$"
     GWAS_CATALOG_API_V2: str = "https://www.ebi.ac.uk/gwas/rest/api/v2"
+    # seconds slept before each retry of a failed (5xx/timeout) REST call
+    HTTP_RETRY_BACKOFF: tuple[int, ...] = (30, 60, 120)
     GWAS_CATALOG_FTP_BASE: str = (
         "https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics"
     )
