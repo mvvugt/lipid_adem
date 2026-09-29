@@ -12,7 +12,7 @@ USAGE=$(cat <<EOF
 ====== merge_associations ======
 
 Myriad (SGE) job wrapper for merge_associations.py: gathers the filtered
-sumstats listed in data/temp/tasks.tsv, adds curated GWAS Catalog
+sumstats listed in data/temp/study_outcomes.tsv, adds curated GWAS Catalog
 associations and Open Targets gene-burden evidence, and writes
 results/output/final_results.tsv.gz.
 
@@ -52,7 +52,7 @@ info_msg "SGE job ID: ${JOB_ID:-n/a} | name: ${JOB_NAME:-n/a}" \
 set_verbose_arg
 
 ROOT="${FLAGS_root}"
-TASKS_FILE="${ROOT}/data/temp/tasks.tsv"
+STUDY_OUTCOMES_FILE="${ROOT}/data/temp/study_outcomes.tsv"
 
 export RUNLOG_ROOT="${ROOT}"
 # shellcheck disable=SC2034  # read by runlog_setup (setup.sh)
@@ -85,8 +85,9 @@ trap '_combined_exit_trap' EXIT
 # CHECKS
 
 check_dir_readable "${ROOT}"
-if [[ ! -r "${TASKS_FILE}" ]]; then
-    log_error "tasks file not found or not readable: ${TASKS_FILE}"
+if [[ ! -r "${STUDY_OUTCOMES_FILE}" ]]; then
+    # single argument: the emitter's log_error only uses $1
+    log_error "study-outcomes file not readable: ${STUDY_OUTCOMES_FILE}"
     exit 1
 fi
 
@@ -95,7 +96,7 @@ fi
 # entry. Everything else is printed only; failures still record via
 # log_error and the raw-output tail.
 log_info "using root directory: ${ROOT}"
-log_info "tasks file: ${TASKS_FILE}" no-record
+log_info "study-outcomes file: ${STUDY_OUTCOMES_FILE}" no-record
 log_info "running on node: $(hostname), job id: ${JOB_ID:-NA}" no-record
 
 

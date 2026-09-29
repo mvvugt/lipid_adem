@@ -5,15 +5,16 @@
 
 # Parameters
 # ----------
-#   $1 - ja_file  : Path to data/temp/tasks.tsv (pyjasub job-array file).
-#   $2 - tmp_loc  : Temp/scratch location (unused here -- filter_task.py
+#   $1 - ja_file  : Path to data/temp/tasks.tsv (pyjasub job-array file,
+#                   one row per study).
+#   $2 - tmp_loc  : Temp/scratch location (unused here -- filter_gwas_cat.py
 #                   writes straight to each row's `outfile` column).
-#   $3 - step     : Step size (unused -- one row per task).
-#   $4 - task_id  : Row number to process (1-based, excluding header).
+#   $3 - step     : Number of rows (studies) this task processes.
+#   $4 - task_id  : First row to process (1-based, excluding header).
 #
 # Returns
 # -------
-#   0 on success, non-zero on failure (propagated from filter_task.py).
+#   0 on success, non-zero on failure (propagated from filter_gwas_cat.py).
 # -----------------------------------------------------------------------
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -53,53 +54,22 @@ if [[ -z "$JA" ]] || [[ ! -r "$JA" ]]; then
     exit 1
 fi
 
-# tasks.tsv columns: rowidx gene study_accession efo_id outcome chrom
-# start end outfile source
-PULL_LINE=$(( IDX + 1 ))
-LINE=$(sed -n "${PULL_LINE}p" "$JA")
-
-if [[ -z "$LINE" ]]; then
-    log_error "no row $IDX (line $PULL_LINE) found in $JA"
+if [[ ! "$STEP" =~ ^[1-9][0-9]*$ ]]; then
+    log_error "step '$STEP' is not a positive integer"
     exit 1
 fi
 
-mapfile -t FIELDS < <(awk -F'\t' '{for (i = 1; i <= NF; i++) print $i}' <<< "$LINE")
-
-if [[ "${#FIELDS[@]}" -ne 10 ]]; then
-    # single argument: the emitter's log_error only uses $1
-    log_error "row $IDX (line $PULL_LINE) has ${#FIELDS[@]} fields, expected 10: $LINE"
+if [[ ! "$IDX" =~ ^[1-9][0-9]*$ ]]; then
+    log_error "task id '$IDX' is not a positive integer"
     exit 1
 fi
 
-ROW_IDX="${FIELDS[0]}"
-GENE="${FIELDS[1]}"
-STUDY_ACCESSION="${FIELDS[2]}"
-# shellcheck disable=SC2034  # kept for column alignment, unused downstream
-EFO_ID="${FIELDS[3]}"
-# shellcheck disable=SC2034  # kept for column alignment, unused downstream
-OUTCOME="${FIELDS[4]}"
-CHROM="${FIELDS[5]}"
-START="${FIELDS[6]}"
-END="${FIELDS[7]}"
-OUTFILE="${FIELDS[8]}"
-SOURCE="${FIELDS[9]}"
-
-if [[ "$IDX" -ne "$ROW_IDX" ]]; then
-    log_error "idx (task_id) [${IDX}] != rowidx [${ROW_IDX}]"
-    exit 1
-fi
-
-log_info "task ${IDX}: gene=$GENE study_accession=$STUDY_ACCESSION source=$SOURCE"
-log_info "outfile=$OUTFILE" no-record
+log_info "task ${IDX}: rows ${IDX}-$(( IDX + STEP - 1 ))"
 
 run_mamba biomed-api "${REPO_ROOT}/src/filter_gwas_cat.py" \
-    --gene "$GENE" \
-    --study-accession "$STUDY_ACCESSION" \
-    --chrom "$CHROM" \
-    --start "$START" \
-    --end "$END" \
-    --outfile "$OUTFILE" \
-    --source "$SOURCE"
+    --tasks-file "$JA" \
+    --task-id "$IDX" \
+    --step "$STEP"
 
 log_info "ended at $(date)" no-record
 log_info "*** END ***" no-record

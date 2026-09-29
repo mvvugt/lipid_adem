@@ -105,8 +105,8 @@ class SumstatsSource:
         URL of the sumstats file.
     is_tabix_indexed : `bool`
         `True` if a `.tbi` index sits next to `url` (query via
-        `filter_sumstats_region`), else `False` (query via
-        `filter_raw_sumstats_region`).
+        `filter_sumstats_regions`), else `False` (query via
+        `filter_raw_sumstats_regions`).
     chrom_col : `str`
         Name of the chromosome column to filter on.
     pos_col : `str`
@@ -197,18 +197,23 @@ def archive_dir(path: Path) -> Path | None:
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def load_tasks(path: Path) -> pd.DataFrame:
-    """Load the job-array file, one row per gene x study x outcome task.
+    """Load a task table with an `outfile` column.
+
+    Used for the job-array file (`tasks.tsv`, one row per study) and the
+    study-outcome label table (`study_outcomes.tsv`, one row per study x
+    outcome), both written by `gwas_cat_prep.py`.
 
     Parameters
     ----------
     path : `Path`
-        The job-array file (`tasks.tsv`) written by `gwas_cat_prep.py`.
+        The tab-separated task table.
 
     Returns
     -------
     tasks : `pd.DataFrame`
-        All task rows, all columns as strings, rows without an `outfile`
-        dropped. Several rows can share an `outfile` (one per outcome).
+        All rows, all columns as strings (blank cells as NaN), rows
+        without an `outfile` dropped. In `study_outcomes.tsv` several
+        rows can share an `outfile` (one per outcome).
 
     Raises
     ------
@@ -219,6 +224,39 @@ def load_tasks(path: Path) -> pd.DataFrame:
         raise FileNotFoundError(f"Tasks file not found: {path}")
     tasks = pd.read_csv(path, sep="\t", dtype=str)
     return tasks.dropna(subset=[ColumnNames.OUTFILE])
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def load_gene_regions(path: Path) -> dict[str, GeneRegion]:
+    """Load the flanked gene regions written by `gwas_cat_prep.py`.
+
+    Parameters
+    ----------
+    path : `Path`
+        Tab-separated file with `gene`, `chrom`, `start`, `end` columns
+        (`FileNames.GENE_REGIONS_FILE`).
+
+    Returns
+    -------
+    regions : `dict[str, GeneRegion]`
+        Gene symbol -> flanked region, in file order.
+
+    Raises
+    ------
+    FileNotFoundError
+        If `path` does not exist.
+    """
+    if not path.exists():
+        raise FileNotFoundError(f"Gene regions file not found: {path}")
+    table = pd.read_csv(path, sep="\t", dtype=str)
+    return {
+        row[ColumnNames.GENE]: GeneRegion(
+            chrom=row[ColumnNames.CHROM],
+            start=int(row[ColumnNames.START]),
+            end=int(row[ColumnNames.END]),
+        )
+        for _, row in table.iterrows()
+    }
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1157,7 +1195,8 @@ def discover_studies_with_reasons(
     include_child_traits : `bool`, optional, default: `False`
         Also discover studies annotated with a child term of `efo_id`;
         the cap is then applied per term, so child terms cannot push
-        out the studies of `efo_id` itself.
+        out the studies of `efo_id` itself, with an overall ceiling of
+        `Constants.MAX_STUDIES_PER_CHILD_QUERY` included studies.
 
     Returns
     -------
@@ -1168,7 +1207,16 @@ def discover_studies_with_reasons(
     records = _fetch_gwas_catalog_study_records(efo_id, include_child_traits)
     # printed only; gwas_cat_prep records one summary line per EFO
     log_debug(f"{efo_id} -> {len(records)} studies")
-    return classify_studies(records, cap=cap, per_term=include_child_traits)
+    return classify_studies(
+        records,
+        cap=cap,
+        per_term=include_child_traits,
+        total_cap=(
+            Constants.MAX_STUDIES_PER_CHILD_QUERY
+            if include_child_traits
+            else None
+        ),
+    )
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1254,6 +1302,7 @@ def classify_studies(
     records: list[dict],
     cap: int = Constants.MAX_STUDIES_PER_OUTCOME,
     per_term: bool = False,
+    total_cap: int | None = None,
 ) -> list[dict]:
     """Classify candidate GWAS Catalog studies as included or excluded.
 
@@ -1277,6 +1326,10 @@ def classify_studies(
         instead of overall, and include the union. Used with child
         traits, so each term (the queried parent included) keeps its
         own `cap` most recent studies.
+    total_cap : `int` or `NoneType`, optional, default: `None`
+        With `per_term`, also stop including once this many studies are
+        included overall (most recent first); later per-term survivors
+        are marked `"over_total_cap"`. `None` means no overall ceiling.
 
     Returns
     -------
@@ -1288,10 +1341,12 @@ def classify_studies(
         `cohort`, `mapped_trait_id`, `mapped_trait` (from the GWAS
         Catalog record). `reason` is one of
         `"included"`, `"over_cap"` (eligible but
-        beyond `cap`), or `"no_full_sumstats"`. `"included"` and
-        `"over_cap"` records appear first, most-recent-publication-date
-        first (unresolved dates sort last), followed by
-        `"no_full_sumstats"` records in their original input order.
+        beyond `cap`), `"over_total_cap"` (within its per-term `cap` but
+        beyond `total_cap`), or `"no_full_sumstats"`. `"included"`,
+        `"over_cap"` and `"over_total_cap"` records appear first, in that
+        order and most-recent-publication-date first within each
+        (unresolved dates sort last), followed by `"no_full_sumstats"`
+        records in their original input order.
     """
     eligible = [r for r in records if r.get("full_summary_stats_available")]
     ineligible = [
@@ -1313,19 +1368,30 @@ def classify_studies(
 
     eligible.sort(key=sort_key, reverse=True)
 
+    over_total_cap: list[dict] = []
     if per_term:
         # eligible is sorted, so each term's first `cap` are its most recent
         included_ids: set[str] = set()
+        over_total_ids: set[str] = set()
         per_term_counts: dict[str, int] = {}
         for record in eligible:
             terms = mapped_traits(record.get("efo_traits"))[0].split("; ")
             if any(per_term_counts.get(term, 0) < cap for term in terms):
-                included_ids.add(record["accession_id"])
+                if total_cap is not None and len(included_ids) >= total_cap:
+                    over_total_ids.add(record["accession_id"])
+                else:
+                    included_ids.add(record["accession_id"])
             for term in terms:
                 per_term_counts[term] = per_term_counts.get(term, 0) + 1
         included = [r for r in eligible if r["accession_id"] in included_ids]
+        over_total_cap = [
+            r for r in eligible if r["accession_id"] in over_total_ids
+        ]
         over_cap = [
-            r for r in eligible if r["accession_id"] not in included_ids
+            r
+            for r in eligible
+            if r["accession_id"] not in included_ids
+            and r["accession_id"] not in over_total_ids
         ]
     else:
         included, over_cap = eligible[:cap], eligible[cap:]
@@ -1353,12 +1419,14 @@ def classify_studies(
     classified = (
         [_row(r, "included") for r in included]
         + [_row(r, "over_cap") for r in over_cap]
+        + [_row(r, "over_total_cap") for r in over_total_cap]
         + [_row(r, "no_full_sumstats") for r in ineligible]
     )
     log_debug(
         f"{len(records)} studies -> {len(eligible)} with full sumstats "
         f"-> {len(included)} included after cap={cap}"
         + (" per term" if per_term else "")
+        + (f", total_cap={total_cap}" if total_cap is not None else "")
     )
     return classified
 
@@ -1932,26 +2000,61 @@ def _parse_freq(value: str) -> float | None:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def filter_sumstats_region(
+def _passes_maf(
+    fields: list[str],
+    maf_idx: int,
+    maf_threshold: float,
+    transform_to_maf: bool,
+) -> bool:
+    """Check one sumstats row against the MAF cutoff.
+
+    Parameters
+    ----------
+    fields : `list[str]`
+        The row's tab-split fields.
+    maf_idx : `int`
+        Index of the allele-frequency column.
+    maf_threshold : `float`
+        Rows with MAF below this pass.
+    transform_to_maf : `bool`
+        Apply `min(af, 1 - af)` before comparing (see
+        `filter_sumstats_regions`).
+
+    Returns
+    -------
+    passes : `bool`
+        `True` if the frequency parses and is below `maf_threshold`.
+    """
+    maf = _parse_freq(fields[maf_idx])
+    if maf is None:
+        return False
+    if transform_to_maf:
+        maf = min(maf, 1.0 - maf)
+    return maf < maf_threshold
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def filter_sumstats_regions(
     tabix_source: str,
-    region: GeneRegion,
+    regions: dict[str, GeneRegion],
     maf_col: str,
     maf_threshold: float,
     chrom_col: str = "chromosome",
     pos_col: str = "base_pair_location",
     transform_to_maf: bool = False,
 ) -> pd.DataFrame:
-    """Filter a tabix-indexed sumstats file to one region and a MAF cutoff.
+    """Filter a tabix-indexed sumstats file to gene regions and a MAF cutoff.
 
     Based on GWAS catalog downloads, but should work on any
-    bgzip+tabix-indexed sumstats file.
+    bgzip+tabix-indexed sumstats file. The file (and its remote `.tbi`)
+    is opened once and queried once per region.
 
     Parameters
     ----------
     tabix_source : `str`
         Path or URL to a bgzip+tabix-indexed sumstats file.
-    region : `GeneRegion`
-        Region to query.
+    regions : `dict[str, GeneRegion]`
+        Gene symbol -> region to query.
     maf_col : `str`
         Name of the allele-frequency column.
     maf_threshold : `float`
@@ -1968,7 +2071,9 @@ def filter_sumstats_region(
     Returns
     -------
     filtered : `pd.DataFrame`
-        Rows in `region` with MAF < `maf_threshold`.
+        A leading `gene` column plus the file's columns: rows in each
+        gene's region with MAF < `maf_threshold`. A row in overlapping
+        regions appears once per gene.
 
     Raises
     ------
@@ -1994,47 +2099,55 @@ def filter_sumstats_region(
         )
 
         records = []
-        for line in tabix_file.fetch(region.chrom, region.start, region.end):
-            # CRLF source files leave a trailing "\r" on the last field
-            fields = line.rstrip("\r\n").split("\t")
-            maf = _parse_freq(fields[maf_idx])
-            if maf is None:
-                continue
-            if transform_to_maf:
-                maf = min(maf, 1.0 - maf)
-            if maf < maf_threshold:
-                records.append(fields)
+        for gene, region in regions.items():
+            n_before = len(records)
+            for line in tabix_file.fetch(
+                region.chrom, region.start, region.end
+            ):
+                # CRLF source files leave a trailing "\r" on the last field
+                fields = line.rstrip("\r\n").split("\t")
+                if _passes_maf(
+                    fields, maf_idx, maf_threshold, transform_to_maf
+                ):
+                    records.append([gene, *fields])
+            log_debug(
+                f"{gene} @ {region.chrom}:{region.start}-{region.end} -> "
+                f"{len(records) - n_before} rows"
+            )
 
     log_info(
-        f"{tabix_source} @ {region.chrom}:{region.start}-{region.end} -> "
-        f"{len(records)} rows with MAF < {maf_threshold}"
+        f"{tabix_source} @ {len(regions)} regions -> {len(records)} rows "
+        f"with MAF < {maf_threshold}"
     )
-    return pd.DataFrame.from_records(records, columns=header)
+    return pd.DataFrame.from_records(
+        records, columns=[ColumnNames.GENE, *header]
+    )
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def filter_raw_sumstats_region(
+def filter_raw_sumstats_regions(
     url: str,
-    region: GeneRegion,
+    regions: dict[str, GeneRegion],
     maf_col: str,
     maf_threshold: float,
     chrom_col: str = "chromosome",
     pos_col: str = "base_pair_location",
     transform_to_maf: bool = False,
 ) -> pd.DataFrame:
-    """Stream-filter a non-indexed sumstats file to one region and MAF cutoff.
+    """Stream-filter a non-indexed sumstats file to gene regions and MAF.
 
     No tabix index is available for raw (non-harmonised) sumstats files,
     so the file is scanned sequentially via HTTP streaming, decompressed
     on the fly if gzip-compressed; only matching rows are held in memory.
-    Rows are not assumed sorted, so the full file is always scanned.
+    Rows are not assumed sorted, so the full file is always scanned --
+    once, whatever the number of regions.
 
     Parameters
     ----------
     url : `str`
         URL of the raw (non-tabix-indexed) sumstats file.
-    region : `GeneRegion`
-        Region to filter to.
+    regions : `dict[str, GeneRegion]`
+        Gene symbol -> region to filter to.
     maf_col : `str`
         Name of the allele-frequency column.
     maf_threshold : `float`
@@ -2051,7 +2164,9 @@ def filter_raw_sumstats_region(
     Returns
     -------
     filtered : `pd.DataFrame`
-        Rows in `region` with MAF < `maf_threshold`.
+        A leading `gene` column plus the file's columns: rows in each
+        gene's region with MAF < `maf_threshold`. A row in overlapping
+        regions appears once per gene.
 
     Raises
     ------
@@ -2059,6 +2174,12 @@ def filter_raw_sumstats_region(
         If `chrom_col`, `pos_col`, or `maf_col` are not in the file's
         header.
     """
+    # chrom -> [(gene, region)], so each line is only tested against the
+    # regions on its own chromosome
+    regions_by_chrom: dict[str, list[tuple[str, GeneRegion]]] = {}
+    for gene, region in regions.items():
+        regions_by_chrom.setdefault(region.chrom, []).append((gene, region))
+
     with requests.get(url, stream=True, timeout=60) as response:
         response.raise_for_status()
         raw_stream = response.raw
@@ -2077,26 +2198,29 @@ def filter_raw_sumstats_region(
         records = []
         for line in text_stream:
             fields = line.rstrip("\r\n").split("\t")
-            if fields[chrom_idx] != region.chrom:
+            chrom_regions = regions_by_chrom.get(fields[chrom_idx])
+            if chrom_regions is None:
                 continue
             pos = fields[pos_idx]
-            if not pos.isdigit() or not (
-                region.start <= int(pos) <= region.end
-            ):
+            if not pos.isdigit():
                 continue
-            maf = _parse_freq(fields[maf_idx])
-            if maf is None:
+            genes = [
+                gene
+                for gene, region in chrom_regions
+                if region.start <= int(pos) <= region.end
+            ]
+            if not genes:
                 continue
-            if transform_to_maf:
-                maf = min(maf, 1.0 - maf)
-            if maf < maf_threshold:
-                records.append(fields)
+            if _passes_maf(fields, maf_idx, maf_threshold, transform_to_maf):
+                records.extend([gene, *fields] for gene in genes)
 
     log_info(
-        f"{url} @ {region.chrom}:{region.start}-{region.end} -> "
-        f"{len(records)} rows with MAF < {maf_threshold} (raw scan)"
+        f"{url} @ {len(regions)} regions -> {len(records)} rows with "
+        f"MAF < {maf_threshold} (raw scan)"
     )
-    return pd.DataFrame.from_records(records, columns=header)
+    return pd.DataFrame.from_records(
+        records, columns=[ColumnNames.GENE, *header]
+    )
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

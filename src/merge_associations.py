@@ -48,14 +48,15 @@ def load_filter_results(
     trait_labels: dict[str, str],
     study_traits: dict[str, tuple[str, str]],
 ) -> pd.DataFrame:
-    """Load, label and harmonise the filtered result files in the tasks file.
+    """Load, label and harmonise the filtered per-study result files.
 
-    Only the `outfile` paths in the current `FileNames.TASKS_FILE` are
-    read, so stale files left in `gwas_filtered/` (from studies bumped
-    past the cap, or genes since removed) are ignored. Listed outfiles
-    that do not exist yet are skipped with a warning. Each file is read
-    once; when several task rows (outcomes) point to the same file, its
-    rows are repeated once per outcome.
+    Only the `outfile` paths in the current
+    `FileNames.STUDY_OUTCOMES_FILE` are read, so stale files left in
+    `gwas_filtered/` (from studies bumped past the cap, or the old
+    per-gene layout) are ignored. Listed outfiles that do not exist yet
+    are skipped with a warning. Each file (one study, all genes) is read
+    once; when several rows (outcomes) point to the same file, its rows
+    are repeated once per outcome.
 
     Parameters
     ----------
@@ -76,9 +77,9 @@ def load_filter_results(
     Raises
     ------
     FileNotFoundError
-        If the tasks file does not exist.
+        If the study-outcomes file does not exist.
     """
-    tasks = functions.load_tasks(FileNames.TASKS_FILE)
+    tasks = functions.load_tasks(FileNames.STUDY_OUTCOMES_FILE)
     frames = []
     missing: list[Path] = []
     n_files = 0
@@ -122,7 +123,8 @@ def load_filter_results(
     if missing:
         preview = ", ".join(str(p) for p in missing[:3])
         log_warn(
-            f"{len(missing)} outfiles listed in {FileNames.TASKS_FILE} "
+            f"{len(missing)} outfiles listed in "
+            f"{FileNames.STUDY_OUTCOMES_FILE} "
             f"do not exist yet, skipped (first: {preview})"
         )
 

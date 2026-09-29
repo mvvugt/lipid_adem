@@ -1,12 +1,16 @@
-# pyjasub config -- filters each gene x study pair's summary stats (GWAS
-# Catalog harmonised, or FinnGen) to MAF < 0.01 in the gene's flanked region
+# pyjasub config -- filters each study's summary stats (GWAS Catalog
+# harmonised/raw, or FinnGen) to MAF < 0.01 in every gene's flanked region.
+# One job-array row = one study (all genes in one pass); each array task
+# processes `step` rows, skipping studies whose outfile already exists.
+# Do not pass -w/--whole-steps: it needs the row count to be a multiple
+# of `step`.
 
 [qsub]
-step=1
+step=10
 batch=50
-mem=3G
+mem=8G
 shell=/bin/bash
-time=01:00:00
+time=04:00:00
 nodes=None
 tmp_size=2G
 tmp_dir=/home/rmgpmva/Scratch/lipid_adem/filter_task_tmp

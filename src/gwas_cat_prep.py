@@ -4,7 +4,8 @@ Resolves gene coordinates and outcome-to-EFO mappings (persisting any new
 lookups back to data/raw/gene_list.txt and data/raw/icd_codes.txt),
 discovers GWAS Catalog studies, curated FinnGen phenocodes, and curated
 not-yet-API-indexed GWAS Catalog studies per outcome, and writes the
-pyjasub job-array file that src/filter_gwas_cat.sh consumes, plus a
+pyjasub job-array file (one row per study) that src/filter_gwas_cat.sh
+consumes, with its study-outcome labels and gene regions, plus a
 study-discovery audit log listing every discovered study across all
 sources with its inclusion status and reason.
 """
@@ -58,6 +59,26 @@ _NO_TRAIT_QUERY: dict[str, str] = {
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # helpers
 
+def _is_searchable_efo_id(efo_id: str) -> bool:
+    """Whether an outcome-table trait ID should be searched.
+
+    Parameters
+    ----------
+    efo_id : `str`
+        Cell from the `efo_id` column of the outcome table.
+
+    Returns
+    -------
+    searchable : `bool`
+        `False` for blank/`NA` cells and for `Constants.EXCLUDED_EFO_IDS`.
+    """
+    return (
+        efo_id not in ("", Constants.NA_STRING)
+        and efo_id not in Constants.EXCLUDED_EFO_IDS
+    )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _log_discovery_summary(
     efo_id: str, child_traits: bool, classified: list[dict]
 ) -> None:
@@ -85,8 +106,15 @@ def _log_discovery_summary(
         return
     reasons = [record["reason"] for record in classified]
     n_included = reasons.count("included")
-    n_eligible = n_included + reasons.count("over_cap")
-    scope = "with child traits, cap per term" if child_traits else "exact"
+    n_eligible = (
+        n_included + reasons.count("over_cap") + reasons.count("over_total_cap")
+    )
+    scope = (
+        "with child traits, cap per term and "
+        f"{Constants.MAX_STUDIES_PER_CHILD_QUERY} total"
+        if child_traits
+        else "exact"
+    )
     log_info(
         f"{efo_id} ({scope}): {len(classified)} studies -> {n_eligible} "
         f"with full sumstats -> {n_included} included"
@@ -189,16 +217,26 @@ def build_tasks() -> None:
     not-yet-API-indexed GWAS Catalog accessions for that outcome (see
     data/raw/gwas_catalog_manual_studies.SOURCE.md), validates each
     outcome's curated FinnGen phenocode (if set) against the vendored
-    manifest, and writes
-    `FileNames.TASKS_FILE` with columns: rowidx, gene, study_accession,
-    efo_id, outcome, chrom, start, end, outfile, source. Then archives any
-    existing pyjasub log dir (`Paths.FILTER_TASK_LOGS`) via
+    manifest, and writes three tables:
+
+    - `FileNames.TASKS_FILE`: the pyjasub job array, one row per study
+      (all genes are filtered in one pass), columns: rowidx,
+      study_accession, source, outfile.
+    - `FileNames.STUDY_OUTCOMES_FILE`: one row per study x outcome,
+      columns: study_accession, source, outcome, efo_id, outfile; used
+      by `merge_associations.py` to label each outfile per outcome.
+    - `FileNames.GENE_REGIONS_FILE`: the flanked region per gene,
+      columns: gene, chrom, start, end; read by the filter tasks.
+
+    Trait IDs in `Constants.EXCLUDED_EFO_IDS` are not searched. Then
+    archives any existing pyjasub log dir (`Paths.FILTER_TASK_LOGS`) via
     `functions.archive_dir`, since pyjasub refuses a newer array file.
 
     Also writes `FileNames.STUDY_DISCOVERY_LOG`, an audit trail of every
     study discovered across all three sources (GWAS Catalog, FinnGen,
     manual), one row each, with its inclusion status and reason (e.g.
-    "no_full_sumstats", "over_cap", "not_found_in_manifest") -- unlike
+    "no_full_sumstats", "over_cap", "over_total_cap",
+    "not_found_in_manifest") -- unlike
     `TASKS_FILE`, which only contains the surviving, capped set. Each
     row also carries display-only metadata (`META_COLUMNS`): publication
     date/first author/journal/title from PubMed, and trait, sample size,
@@ -243,13 +281,23 @@ def build_tasks() -> None:
     # (global dedupe), then union each outcome's accessions from its own
     # distinct efo_ids. child_traits is set per outcome, so the same ID
     # can be searched both strict and broad.
+    for efo_id, outcome in sorted(
+        {
+            (efo_id, outcome)
+            for efo_id, outcome in zip(
+                icd_df[ColumnNames.EFO_ID], icd_df[ColumnNames.OUTCOME]
+            )
+            if efo_id in Constants.EXCLUDED_EFO_IDS
+        }
+    ):
+        log_info(f"{efo_id} ({outcome}) in Constants.EXCLUDED_EFO_IDS, skipped")
     distinct_queries = sorted(
         {
             (efo_id, functions.includes_child_traits(outcome))
             for efo_id, outcome in zip(
                 icd_df[ColumnNames.EFO_ID], icd_df[ColumnNames.OUTCOME]
             )
-            if efo_id not in ("", Constants.NA_STRING)
+            if _is_searchable_efo_id(efo_id)
         }
     )
     log_stage("discover_gwas")
@@ -290,15 +338,11 @@ def build_tasks() -> None:
         for phenocode in distinct_phenocodes
     }
 
-    rows: list[dict[str, str]] = []
+    study_outcome_rows: list[dict[str, str]] = []
     audit_rows: list[dict[str, str]] = []
     for outcome, group in icd_df.groupby(ColumnNames.OUTCOME):
         outcome_efo_ids = sorted(
-            {
-                e
-                for e in group[ColumnNames.EFO_ID]
-                if e not in ("", Constants.NA_STRING)
-            }
+            {e for e in group[ColumnNames.EFO_ID] if _is_searchable_efo_id(e)}
         )
         child_traits = functions.includes_child_traits(outcome)
         accession_to_efo: dict[str, str] = {}
@@ -390,67 +434,73 @@ def build_tasks() -> None:
                 }
             )
 
-        for _, gene_row in genes_df.iterrows():
-            gene = gene_row[ColumnNames.GENE]
-            region = functions.gene_row_region(
-                gene_row, Constants.GENE_COORD_FLANK_BP
+        study_sources = [
+            (accession, efo_id, "gwas_catalog")
+            for accession, efo_id in accession_to_efo.items()
+        ] + [(accession, "", "finngen") for accession in finngen_accessions]
+        for accession, efo_id, source in study_sources:
+            outfile = Paths.GWAS_FILTERED / f"{accession}_result.tsv.gz"
+            study_outcome_rows.append(
+                {
+                    ColumnNames.STUDY_ACCESSION: accession,
+                    ColumnNames.SOURCE: source,
+                    ColumnNames.OUTCOME: outcome,
+                    ColumnNames.EFO_ID: efo_id,
+                    ColumnNames.OUTFILE: str(outfile),
+                }
             )
-            for accession, efo_id in accession_to_efo.items():
-                outfile = (
-                    Paths.GWAS_FILTERED / f"{gene}_{accession}_result.tsv.gz"
-                )
-                rows.append(
-                    {
-                        ColumnNames.GENE: gene,
-                        ColumnNames.STUDY_ACCESSION: accession,
-                        ColumnNames.EFO_ID: efo_id,
-                        ColumnNames.OUTCOME: outcome,
-                        ColumnNames.CHROM: region.chrom,
-                        ColumnNames.START: str(region.start),
-                        ColumnNames.END: str(region.end),
-                        ColumnNames.OUTFILE: str(outfile),
-                        ColumnNames.SOURCE: "gwas_catalog",
-                    }
-                )
-            for accession in finngen_accessions:
-                outfile = (
-                    Paths.GWAS_FILTERED / f"{gene}_{accession}_result.tsv.gz"
-                )
-                rows.append(
-                    {
-                        ColumnNames.GENE: gene,
-                        ColumnNames.STUDY_ACCESSION: accession,
-                        ColumnNames.EFO_ID: "",
-                        ColumnNames.OUTCOME: outcome,
-                        ColumnNames.CHROM: region.chrom,
-                        ColumnNames.START: str(region.start),
-                        ColumnNames.END: str(region.end),
-                        ColumnNames.OUTFILE: str(outfile),
-                        ColumnNames.SOURCE: "finngen",
-                    }
-                )
 
     log_stage("write_tasks")
-    header = [
-        ColumnNames.ROWIDX,
-        ColumnNames.GENE,
-        ColumnNames.STUDY_ACCESSION,
-        ColumnNames.EFO_ID,
-        ColumnNames.OUTCOME,
-        ColumnNames.CHROM,
-        ColumnNames.START,
-        ColumnNames.END,
-        ColumnNames.OUTFILE,
-        ColumnNames.SOURCE,
+    # One filter task per study (all genes in one pass); a study found
+    # under several outcomes is filtered once and labelled per outcome
+    # from STUDY_OUTCOMES_FILE at merge time.
+    study_outcomes_df = pd.DataFrame(
+        study_outcome_rows,
+        columns=[
+            ColumnNames.STUDY_ACCESSION,
+            ColumnNames.SOURCE,
+            ColumnNames.OUTCOME,
+            ColumnNames.EFO_ID,
+            ColumnNames.OUTFILE,
+        ],
+    )
+    tasks_df = study_outcomes_df.drop_duplicates(subset=[ColumnNames.OUTFILE])[
+        [ColumnNames.STUDY_ACCESSION, ColumnNames.SOURCE, ColumnNames.OUTFILE]
     ]
-    with FileNames.TASKS_FILE.with_suffix(".tmp").open("w") as handle:
-        handle.write("\t".join(header) + "\n")
-        for rowidx, row in enumerate(rows, start=1):
-            cells = [str(rowidx)] + [row[col] for col in header[1:]]
-            handle.write("\t".join(cells) + "\n")
-    FileNames.TASKS_FILE.with_suffix(".tmp").replace(FileNames.TASKS_FILE)
+    tasks_df.insert(0, ColumnNames.ROWIDX, range(1, len(tasks_df) + 1))
+    region_rows: list[dict[str, str | int]] = []
+    for _, gene_row in genes_df.iterrows():
+        region = functions.gene_row_region(
+            gene_row, Constants.GENE_COORD_FLANK_BP
+        )
+        region_rows.append(
+            {
+                ColumnNames.GENE: gene_row[ColumnNames.GENE],
+                ColumnNames.CHROM: region.chrom,
+                ColumnNames.START: region.start,
+                ColumnNames.END: region.end,
+            }
+        )
+    regions_df = pd.DataFrame(
+        region_rows,
+        columns=[
+            ColumnNames.GENE,
+            ColumnNames.CHROM,
+            ColumnNames.START,
+            ColumnNames.END,
+        ],
+    )
+    functions.write_table_atomic(regions_df, FileNames.GENE_REGIONS_FILE)
+    functions.write_table_atomic(
+        study_outcomes_df, FileNames.STUDY_OUTCOMES_FILE
+    )
+    functions.write_table_atomic(tasks_df, FileNames.TASKS_FILE)
 
-    log_info(f"wrote {len(rows)} tasks to {FileNames.TASKS_FILE}")
+    log_info(
+        f"wrote {len(tasks_df)} tasks ({len(study_outcomes_df)} study x "
+        f"outcome rows, {len(regions_df)} gene regions) to "
+        f"{FileNames.TASKS_FILE}"
+    )
 
     # pyjasub errors if the job-array file is newer than an existing log dir
     functions.archive_dir(Paths.FILTER_TASK_LOGS)

@@ -35,6 +35,12 @@ class Constants:
     MAF_THRESHOLD: float = 0.01
     GENE_COORD_FLANK_BP: int = 10_000
     MAX_STUDIES_PER_OUTCOME: int = 10
+    # overall ceiling per child-trait search, on top of the per-term cap
+    MAX_STUDIES_PER_CHILD_QUERY: int = 30
+    # trait IDs never searched: MONDO_0011057 (I67.3, Binswanger disease)
+    # expands via child traits to general cerebrovascular disease (stroke,
+    # TIA, aneurysm) rather than dementia
+    EXCLUDED_EFO_IDS: frozenset[str] = frozenset({"MONDO_0011057"})
     NCBI_ESUMMARY_URL: str = (
         "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
     )
@@ -314,5 +320,9 @@ class FileNames:
         Paths.DATA_RAW / "gwas_catalog_manual_studies.tsv"
     )
     TASKS_FILE: Path = Paths.DATA_TEMP / "tasks.tsv"
+    # (study, outcome) labels for the per-study filter outfiles
+    STUDY_OUTCOMES_FILE: Path = Paths.DATA_TEMP / "study_outcomes.tsv"
+    # flanked gene regions, frozen at prep time for the filter tasks
+    GENE_REGIONS_FILE: Path = Paths.DATA_TEMP / "gene_regions.tsv"
     STUDY_DISCOVERY_LOG: Path = Paths.DATA_TEMP / "study_discovery_log.tsv.gz"
     FINAL_RESULTS: Path = Paths.RESULTS_OUTPUT / "final_results.tsv.gz"
