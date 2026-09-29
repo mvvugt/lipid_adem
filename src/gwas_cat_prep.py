@@ -236,6 +236,7 @@ def build_tasks() -> None:
     study discovered across all three sources (GWAS Catalog, FinnGen,
     manual), one row each, with its inclusion status and reason (e.g.
     "no_full_sumstats", "over_cap", "over_total_cap",
+    "gxe_interaction", "gxg_interaction", "cnv_study",
     "not_found_in_manifest") -- unlike
     `TASKS_FILE`, which only contains the surviving, capped set. Each
     row also carries display-only metadata (`META_COLUMNS`): publication
@@ -273,6 +274,8 @@ def build_tasks() -> None:
     if not icd_df.equals(icd_before):
         functions.write_table_atomic(icd_df, FileNames.ICD_CODE_LIST, sep=",")
         log_info(f"wrote resolved efo_ids to {FileNames.ICD_CODE_LIST}")
+    # after the write-back, so overrides live in code only
+    icd_df = functions.apply_outcome_efo_overrides(icd_df)
 
     Paths.DATA_TEMP.mkdir(parents=True, exist_ok=True)
     Paths.GWAS_FILTERED.mkdir(parents=True, exist_ok=True)

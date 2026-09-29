@@ -77,13 +77,22 @@ class Constants:
         "https://api.platform.opentargets.org/api/v4/graphql"
     )
     OPEN_TARGETS_PAGE_SIZE: int = 1000
-    # extra Open Targets disease IDs queried alongside an outcome ID:
-    # Open Targets still files HDL/LDL cholesterol evidence under the older
-    # EFO terms, and labels the current ones "free cholesterol in HDL/LDL"
-    OPEN_TARGETS_EXTRA_DISEASE_IDS: dict[str, tuple[str, ...]] = {
-        "EFO_0022264": ("EFO_0004612",),
-        "EFO_0022266": ("EFO_0004611",),
+    # extra Open Targets disease IDs queried alongside an outcome ID; none
+    # needed since OUTCOME_EFO_OVERRIDES maps HDL/LDL to the terms Open
+    # Targets files their evidence under
+    OPEN_TARGETS_EXTRA_DISEASE_IDS: dict[str, tuple[str, ...]] = {}
+    # outcome -> efo_id applied in memory over icd_codes.txt (never written
+    # back, so the raw file stays as-is): EFO_0022264/EFO_0022266 resolved
+    # for these outcomes are "free cholesterol in HDL/LDL" (NMR), not
+    # HDL-C/LDL-C
+    OUTCOME_EFO_OVERRIDES: dict[str, str] = {
+        "hdl_cholesterol": "EFO_0004612",
+        "ldl_cholesterol": "EFO_0004611",
     }
+    # GWAS Catalog studies whose disease_trait matches this (case-
+    # insensitive) are copy-number-variant association models, not SNP
+    # GWAS; the REST API has no CNV flag, unlike gxe/gxg
+    CNV_TRAIT_PATTERN: str = r"\bCNV\b|copy[- ]number"
     # written to a gene-table cell that was looked up but not found;
     # treated as resolved on reruns (clear the cell by hand to retry)
     NA_STRING: str = "NA"

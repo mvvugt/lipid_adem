@@ -54,6 +54,7 @@ _CURATED_ALLELE_PATTERN = re.compile(
     """,
     re.VERBOSE,
 )
+_CNV_TRAIT_PATTERN = re.compile(Constants.CNV_TRAIT_PATTERN, re.IGNORECASE)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -655,6 +656,40 @@ def resolve_efo_ids(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def apply_outcome_efo_overrides(
+    df: pd.DataFrame,
+    overrides: Mapping[str, str] = Constants.OUTCOME_EFO_OVERRIDES,
+) -> pd.DataFrame:
+    """Replace the `efo_id` of whole outcomes with a code-defined term.
+
+    Applied in memory only, after any write-back of `icd_codes.txt`, so
+    the raw file is never changed and a rerun reproduces the same
+    mapping from code alone.
+
+    Parameters
+    ----------
+    df : `pd.DataFrame`
+        ICD-code table (as returned by `load_icd_table`).
+    overrides : `Mapping[str, str]`, optional, default: `Constants.OUTCOME_EFO_OVERRIDES`
+        Outcome -> EFO ID to use for every row of that outcome.
+
+    Returns
+    -------
+    df : `pd.DataFrame`
+        A copy of the table with overridden `efo_id` cells.
+    """
+    df = df.copy()
+    for outcome, efo_id in overrides.items():
+        mask = df[ColumnNames.OUTCOME] == outcome
+        if not mask.any():
+            continue
+        previous = sorted(set(df.loc[mask, ColumnNames.EFO_ID]))
+        df.loc[mask, ColumnNames.EFO_ID] = efo_id
+        log_info(f"{outcome}: efo_id {', '.join(previous)} -> {efo_id}")
+    return df
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def icd_to_efo(term: str) -> str:
     """Map an ICD code or trait/description string to an EFO ID.
 
@@ -1059,10 +1094,11 @@ def _fetch_gwas_catalog_study_records(
     records : `list[dict]`
         One dict per study with `accession_id`,
         `full_summary_stats_available`, `pubmed_id`, `disease_trait`,
-        `initial_sample_size`, `discovery_ancestry`, `cohort`, and
-        `efo_traits` (the terms the study is annotated with), as
-        returned by the GWAS Catalog studies-list search (absent fields
-        are `None`).
+        `initial_sample_size`, `discovery_ancestry`, `cohort`,
+        `efo_traits` (the terms the study is annotated with), and the
+        `gxe`/`gxg` interaction-study flags, as returned by the GWAS
+        Catalog studies-list search (absent fields are `None`, absent
+        flags `False`).
     """
     reader = GwasCatalogReader()
     query = {"show_child_trait": True} if include_child_traits else {}
@@ -1084,6 +1120,8 @@ def _fetch_gwas_catalog_study_records(
             "discovery_ancestry": row.get("discovery_ancestry"),
             "cohort": row.get("cohort"),
             "efo_traits": row.get("efo_traits"),
+            "gxe": row.get("gxe", False),
+            "gxg": row.get("gxg", False),
         }
         for row in result.records
         if "accession_id" in row
@@ -1148,8 +1186,9 @@ def discover_studies(
     hundreds of associated studies; only those with full summary
     statistics available are usable downstream, and pulling all of them
     is expensive (a sumstats download and filter per gene). Results are
-    therefore filtered to studies with full summary statistics available
-    and capped to the `cap` most recently published, via
+    therefore filtered to non-interaction, non-CNV studies with full
+    summary statistics available and capped to the `cap` most recently
+    published, via
     `filter_and_cap_studies`.
 
     Parameters
@@ -1298,6 +1337,38 @@ def pubmed_summaries(pubmed_ids: list) -> dict[int, dict]:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def study_exclusion_reason(record: dict) -> str | None:
+    """Tell whether a GWAS Catalog study is a design we never use.
+
+    Gene-environment (GxE) and gene-gene (GxG) interaction studies and
+    copy-number-variant (CNV) models report interaction or CNV effects,
+    not the SNP main effects filtered downstream, yet would otherwise
+    take recency-cap slots (e.g. one GWAS Catalog paper deposits dozens
+    of "<trait> x <environment> interaction" studies).
+
+    Parameters
+    ----------
+    record : `dict`
+        Study record with optional `gxe`, `gxg` and `disease_trait`
+        fields (as returned by `_fetch_gwas_catalog_study_records`).
+
+    Returns
+    -------
+    reason : `str` or `NoneType`
+        `"gxe_interaction"`, `"gxg_interaction"` or `"cnv_study"`
+        (checked in that order), or `None` if the study is usable.
+    """
+    if record.get("gxe"):
+        return "gxe_interaction"
+    if record.get("gxg"):
+        return "gxg_interaction"
+    trait = record.get("disease_trait")
+    if isinstance(trait, str) and _CNV_TRAIT_PATTERN.search(trait):
+        return "cnv_study"
+    return None
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def classify_studies(
     records: list[dict],
     cap: int = Constants.MAX_STUDIES_PER_OUTCOME,
@@ -1306,9 +1377,12 @@ def classify_studies(
 ) -> list[dict]:
     """Classify candidate GWAS Catalog studies as included or excluded.
 
-    Same eligibility filter (full summary stats available) and recency
-    cap as `filter_and_cap_studies`, but returns every input record
-    annotated with the reason it was kept or dropped, rather than only
+    Studies with a `study_exclusion_reason` (GxE/GxG interaction, CNV)
+    are set aside first, so they never take a cap slot. The rest go
+    through the same eligibility filter (full summary stats available)
+    and recency cap as `filter_and_cap_studies`, but every input record
+    is returned
+    with the reason it was kept or dropped, rather than only
     the surviving accessions -- the basis for the study-discovery audit
     log (see `gwas_cat_prep.build_tasks`).
 
@@ -1342,15 +1416,23 @@ def classify_studies(
         Catalog record). `reason` is one of
         `"included"`, `"over_cap"` (eligible but
         beyond `cap`), `"over_total_cap"` (within its per-term `cap` but
-        beyond `total_cap`), or `"no_full_sumstats"`. `"included"`,
-        `"over_cap"` and `"over_total_cap"` records appear first, in that
-        order and most-recent-publication-date first within each
-        (unresolved dates sort last), followed by `"no_full_sumstats"`
-        records in their original input order.
+        beyond `total_cap`), `"no_full_sumstats"`, or a
+        `study_exclusion_reason` (`"gxe_interaction"`,
+        `"gxg_interaction"`, `"cnv_study"`). `"included"`, `"over_cap"`
+        and `"over_total_cap"` records appear first, in that order and
+        most-recent-publication-date first within each (unresolved dates
+        sort last), followed by `"no_full_sumstats"` records and then
+        excluded-design records, both in their original input order.
     """
-    eligible = [r for r in records if r.get("full_summary_stats_available")]
+    excluded = [
+        (r, reason)
+        for r in records
+        if (reason := study_exclusion_reason(r)) is not None
+    ]
+    usable = [r for r in records if study_exclusion_reason(r) is None]
+    eligible = [r for r in usable if r.get("full_summary_stats_available")]
     ineligible = [
-        r for r in records if not r.get("full_summary_stats_available")
+        r for r in usable if not r.get("full_summary_stats_available")
     ]
     # Fetched for every record (not just eligible ones) so the audit log
     # shows dates for no_full_sumstats studies too.
@@ -1421,9 +1503,11 @@ def classify_studies(
         + [_row(r, "over_cap") for r in over_cap]
         + [_row(r, "over_total_cap") for r in over_total_cap]
         + [_row(r, "no_full_sumstats") for r in ineligible]
+        + [_row(r, reason) for r, reason in excluded]
     )
     log_debug(
-        f"{len(records)} studies -> {len(eligible)} with full sumstats "
+        f"{len(records)} studies -> {len(usable)} after dropping "
+        f"GxE/GxG/CNV -> {len(eligible)} with full sumstats "
         f"-> {len(included)} included after cap={cap}"
         + (" per term" if per_term else "")
         + (f", total_cap={total_cap}" if total_cap is not None else "")
@@ -1436,6 +1520,9 @@ def filter_and_cap_studies(
     records: list[dict], cap: int = Constants.MAX_STUDIES_PER_OUTCOME
 ) -> list[str]:
     """Keep studies with full summary stats, capped to the N most recent.
+
+    GxE/GxG interaction and CNV studies (`study_exclusion_reason`) are
+    dropped before the cap.
 
     Parameters
     ----------

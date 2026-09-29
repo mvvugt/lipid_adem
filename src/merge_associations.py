@@ -383,6 +383,7 @@ def merge_results() -> None:
     """
     genes_df = functions.load_gene_table(FileNames.GENE_LIST)
     icd_df = functions.load_icd_table(FileNames.ICD_CODE_LIST)
+    icd_df = functions.apply_outcome_efo_overrides(icd_df)
 
     outcome_desc = _outcome_descriptions(icd_df)
 
