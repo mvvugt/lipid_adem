@@ -2,7 +2,7 @@
 #$ -N merge_associations
 #$ -o /myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/merge_associations.log
 #$ -j y
-#$ -l h_rt=02:00:00
+#$ -l h_rt=08:00:00
 #$ -l mem=4G
 #$ -wd /myriadfs/home/rmgpmva/projects/lipid_adem
 
@@ -103,6 +103,7 @@ log_info "running on node: $(hostname), job id: ${JOB_ID:-NA}" no-record
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # START
 
+export PYTHONUNBUFFERED=1
 run_mamba biomed-api "${ROOT}/src/merge_associations.py"
 
 log_info "*** END ***" no-record

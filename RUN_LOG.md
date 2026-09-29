@@ -46,40 +46,6 @@ Output:
 - last run: 2026-09-29 16:13:04
 - commit: `a97941b`
 
-Δ vs previous run (was `a97941b`):
-```diff
-@@ -1,22 +1,7 @@
--[info]  2026-09-29 16:06:27 rows 11-20 of 23, 9 gene regions
--[info]  2026-09-29 16:06:31 APOB @ chr2: chromosome not in http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90473001-GCST90474000/GCST90473596/harmonised/GCST90473596.h.tsv.gz -> 0 rows
--[info]  2026-09-29 16:06:31 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90473001-GCST90474000/GCST90473596/harmonised/GCST90473596.h.tsv.gz @ 9 regions -> 8859 rows with MAF < 0.01
--[info]  2026-09-29 16:06:31 GCST90473596: 8859 rows over 8 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90473596_result.tsv.gz
--[info]  2026-09-29 16:06:34 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90480001-GCST90481000/GCST90480200/harmonised/GCST90480200.h.tsv.gz @ 9 regions -> 1912 rows with MAF < 0.01
--[info]  2026-09-29 16:06:34 GCST90480200: 1912 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90480200_result.tsv.gz
--[info]  2026-09-29 16:07:20 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90480001-GCST90481000/GCST90480198/GCST90480198.tsv.gz @ 9 regions -> 0 rows with MAF < 0.01 (raw scan)
--[info]  2026-09-29 16:07:20 GCST90480198: 0 rows over 0 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90480198_result.tsv.gz
--[info]  2026-09-29 16:07:27 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90480001-GCST90481000/GCST90480197/harmonised/GCST90480197.h.tsv.gz @ 9 regions -> 1915 rows with MAF < 0.01
--[info]  2026-09-29 16:07:27 GCST90480197: 1915 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90480197_result.tsv.gz
--[info]  2026-09-29 16:07:30 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90478001-GCST90479000/GCST90478009/harmonised/GCST90478009.h.tsv.gz @ 9 regions -> 1674 rows with MAF < 0.01
--[info]  2026-09-29 16:07:30 GCST90478009: 1674 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90478009_result.tsv.gz
--[info]  2026-09-29 16:07:34 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90478001-GCST90479000/GCST90478008/harmonised/GCST90478008.h.tsv.gz @ 9 regions -> 3070 rows with MAF < 0.01
--[info]  2026-09-29 16:07:35 GCST90478008: 3070 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90478008_result.tsv.gz
--[info]  2026-09-29 16:07:38 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90726001-GCST90727000/GCST90726916/harmonised/GCST90726916.h.tsv.gz @ 9 regions -> 977 rows with MAF < 0.01
--[info]  2026-09-29 16:07:38 GCST90726916: 977 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90726916_result.tsv.gz
--[info]  2026-09-29 16:07:41 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90432001-GCST90433000/GCST90432123/harmonised/GCST90432123.h.tsv.gz @ 9 regions -> 1277 rows with MAF < 0.01
--[info]  2026-09-29 16:07:41 GCST90432123: 1277 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90432123_result.tsv.gz
--[warn]  2026-09-29 16:07:41 'base_pair_location' is not in list
--[info]  2026-09-29 16:07:41 GCST90827342: empty result -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90827342_result.tsv.gz
--[warn]  2026-09-29 16:07:42 'base_pair_location' is not in list
--[info]  2026-09-29 16:07:42 GCST90826054: empty result -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90826054_result.tsv.gz
-+[info]  2026-09-29 16:12:25 rows 21-23 of 23, 9 gene regions
-+[info]  2026-09-29 16:12:37 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90692001-GCST90693000/GCST90692207/harmonised/GCST90692207.h.tsv.gz @ 9 regions -> 1392 rows with MAF < 0.01
-+[info]  2026-09-29 16:12:43 GCST90692207: 1392 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90692207_result.tsv.gz
-+[warn]  2026-09-29 16:12:50 'chromosome' is not in list
-+[info]  2026-09-29 16:12:55 GCST90103349: empty result -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90103349_result.tsv.gz
-+[info]  2026-09-29 16:13:04 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90726001-GCST90727000/GCST90726809/harmonised/GCST90726809.h.tsv.gz @ 9 regions -> 977 rows with MAF < 0.01
-+[info]  2026-09-29 16:13:04 GCST90726809: 977 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90726809_result.tsv.gz
-```
-
 Output:
 ```text
 [info]  2026-09-29 16:12:25 rows 21-23 of 23, 9 gene regions
@@ -153,26 +119,96 @@ Output:
 
 ## [30] merge_associations (`/home/rmgpmva/projects/lipid_adem/src/merge_associations.py`)
 - first run: 2026-09-22 15:24:19
-- last run: 2026-09-28 13:48:15
-- commit: `3cbcdce`
+- last run: 2026-09-29 20:47:18
+- commit: `83b53a8` (dirty)
+
+Δ vs previous run (was `3cbcdce`):
+stage `load_sumstats`:
+```diff
+@@ -1 +1 @@
+-[info]  2026-09-28 13:36:51 summary-stats: 648 files, 171500 rows (0 missing)
++[info]  2026-09-29 18:40:54 summary-stats: 188 files, 322355 rows incl. one copy per outcome (0 missing)
+```
+stage `fetch_curated`:
+```diff
+@@ -1,9 +1,21 @@
+-[info]  2026-09-28 13:37:09 MONDO_0004648: 120 fetched; in region: none
+-[info]  2026-09-28 13:42:17 EFO_0004614: 2375 fetched; in region: CETP=21 ANGPTL3=4 APOA1=10 APOB=6 APOE=10
+-[info]  2026-09-28 13:46:05 EFO_0004615: 1772 fetched; in region: CETP=6 HMGCR=1 NPC1L1=1 PCSK9=14 APOA1=2 APOB=24 APOE=22
+-[info]  2026-09-28 13:46:54 EFO_0003913: 320 fetched; in region: PCSK9=2 APOB=3 APOE=4
+-[info]  2026-09-28 13:47:39 EFO_0022264: 316 fetched; in region: CETP=1 APOA1=1 APOB=1 APOE=3
+-[info]  2026-09-28 13:47:59 EFO_0022266: 151 fetched; in region: CETP=1 HMGCR=1 NPC1L1=1 APOE=3
+-[info]  2026-09-28 13:48:04 EFO_0006799: 40 fetched; in region: none
+-[info]  2026-09-28 13:48:07 EFO_0011057: 14 fetched; in region: none
+-[info]  2026-09-28 13:48:10 EFO ids with 0 curated associations: 16
++[info]  2026-09-29 19:33:17 MONDO_0004975 (with child traits): 7069 fetched; in region: APOB=1 APOE=179
++[info]  2026-09-29 19:34:09 MONDO_0004648 (with child traits): 120 fetched; in region: none
++[info]  2026-09-29 19:44:35 MONDO_0011057 (with child traits): 1495 fetched; in region: CETP=1 APOE=4
++[info]  2026-09-29 19:57:49 EFO_0004614 (exact): 2375 fetched; in region: CETP=21 ANGPTL3=4 APOA1=10 APOB=6 APOE=10
++[info]  2026-09-29 20:08:14 EFO_0004615 (exact): 1772 fetched; in region: CETP=6 HMGCR=1 NPC1L1=1 PCSK9=14 APOA1=2 APOB=24 APOE=22
++[info]  2026-09-29 20:13:51 MONDO_0005252 (exact): 892 fetched; in region: CETP=1
++[info]  2026-09-29 20:13:56 MONDO_0005099 (exact): 15 fetched; in region: none
++[info]  2026-09-29 20:14:15 MONDO_0013792 (exact): 42 fetched; in region: APOE=1
++[info]  2026-09-29 20:14:33 MONDO_0005394 (exact): 41 fetched; in region: none
++[info]  2026-09-29 20:16:31 MONDO_0005098 (exact): 327 fetched; in region: CETP=1
++[info]  2026-09-29 20:16:59 MONDO_0005311 (exact): 74 fetched; in region: CETP=1
++[info]  2026-09-29 20:17:35 MONDO_0005294 (exact): 92 fetched; in region: none
++[info]  2026-09-29 20:19:43 EFO_0003913 (exact): 320 fetched; in region: PCSK9=2 APOB=3 APOE=4
++[info]  2026-09-29 20:19:50 MONDO_0004781 (exact): 17 fetched; in region: none
++[info]  2026-09-29 20:20:11 MONDO_0005267 (exact): 55 fetched; in region: none
++[info]  2026-09-29 20:43:33 MONDO_0005010 (exact): 3913 fetched; in region: CETP=3 HMGCR=1 PCSK9=9 APOB=2 APOE=14
++[info]  2026-09-29 20:45:14 EFO_0022264 (exact): 316 fetched; in region: CETP=1 APOA1=1 APOB=1 APOE=3
++[info]  2026-09-29 20:46:02 EFO_0022266 (exact): 151 fetched; in region: CETP=1 HMGCR=1 NPC1L1=1 APOE=3
++[info]  2026-09-29 20:46:20 EFO_0006799 (with child traits): 40 fetched; in region: none
++[info]  2026-09-29 20:46:33 EFO_0011057 (with child traits): 26 fetched; in region: none
++[info]  2026-09-29 20:46:37 EFO ids with 0 curated associations: 4
+```
+stage `gene_burden`:
+```diff
+@@ -1 +1,3 @@
+-[info]  2026-09-28 13:48:11 gene-burden rows: PCSK9=4 ANGPTL3=5 APOB=7 (6 genes with 0)
++[info]  2026-09-29 20:46:38 Open Targets disease ids: 111 (from 26 outcome ids)
++[info]  2026-09-29 20:46:39 curated MAF: numeric=10 not_reported=530
++[info]  2026-09-29 20:46:39 gene-burden rows: CETP=141 HMGCR=7 NPC1L1=53 PCSK9=173 ANGPTL3=96 APOA1=63 APOB=213 APOE=2 (1 genes with 0)
+```
+stage `write`:
+```diff
+@@ -1 +1 @@
+-[info]  2026-09-28 13:48:15 wrote 171658 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/final_results.tsv
++[info]  2026-09-29 20:47:11 wrote 323643 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/final_results.tsv.gz
+```
 
 Output:
 ```text
-[stage] 2026-09-28 13:36:49 load_sumstats
-[info]  2026-09-28 13:36:51 summary-stats: 648 files, 171500 rows (0 missing)
-[stage] 2026-09-28 13:36:52 fetch_curated
-[info]  2026-09-28 13:37:09 MONDO_0004648: 120 fetched; in region: none
-[info]  2026-09-28 13:42:17 EFO_0004614: 2375 fetched; in region: CETP=21 ANGPTL3=4 APOA1=10 APOB=6 APOE=10
-[info]  2026-09-28 13:46:05 EFO_0004615: 1772 fetched; in region: CETP=6 HMGCR=1 NPC1L1=1 PCSK9=14 APOA1=2 APOB=24 APOE=22
-[info]  2026-09-28 13:46:54 EFO_0003913: 320 fetched; in region: PCSK9=2 APOB=3 APOE=4
-[info]  2026-09-28 13:47:39 EFO_0022264: 316 fetched; in region: CETP=1 APOA1=1 APOB=1 APOE=3
-[info]  2026-09-28 13:47:59 EFO_0022266: 151 fetched; in region: CETP=1 HMGCR=1 NPC1L1=1 APOE=3
-[info]  2026-09-28 13:48:04 EFO_0006799: 40 fetched; in region: none
-[info]  2026-09-28 13:48:07 EFO_0011057: 14 fetched; in region: none
-[info]  2026-09-28 13:48:10 EFO ids with 0 curated associations: 16
-[stage] 2026-09-28 13:48:10 gene_burden
-[info]  2026-09-28 13:48:11 gene-burden rows: PCSK9=4 ANGPTL3=5 APOB=7 (6 genes with 0)
-[stage] 2026-09-28 13:48:11 write
-[info]  2026-09-28 13:48:15 wrote 171658 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/final_results.tsv
+[stage] 2026-09-29 18:40:53 load_sumstats
+[info]  2026-09-29 18:40:54 summary-stats: 188 files, 322355 rows incl. one copy per outcome (0 missing)
+[stage] 2026-09-29 18:40:56 fetch_curated
+[info]  2026-09-29 19:33:17 MONDO_0004975 (with child traits): 7069 fetched; in region: APOB=1 APOE=179
+[info]  2026-09-29 19:34:09 MONDO_0004648 (with child traits): 120 fetched; in region: none
+[info]  2026-09-29 19:44:35 MONDO_0011057 (with child traits): 1495 fetched; in region: CETP=1 APOE=4
+[info]  2026-09-29 19:57:49 EFO_0004614 (exact): 2375 fetched; in region: CETP=21 ANGPTL3=4 APOA1=10 APOB=6 APOE=10
+[info]  2026-09-29 20:08:14 EFO_0004615 (exact): 1772 fetched; in region: CETP=6 HMGCR=1 NPC1L1=1 PCSK9=14 APOA1=2 APOB=24 APOE=22
+[info]  2026-09-29 20:13:51 MONDO_0005252 (exact): 892 fetched; in region: CETP=1
+[info]  2026-09-29 20:13:56 MONDO_0005099 (exact): 15 fetched; in region: none
+[info]  2026-09-29 20:14:15 MONDO_0013792 (exact): 42 fetched; in region: APOE=1
+[info]  2026-09-29 20:14:33 MONDO_0005394 (exact): 41 fetched; in region: none
+[info]  2026-09-29 20:16:31 MONDO_0005098 (exact): 327 fetched; in region: CETP=1
+[info]  2026-09-29 20:16:59 MONDO_0005311 (exact): 74 fetched; in region: CETP=1
+[info]  2026-09-29 20:17:35 MONDO_0005294 (exact): 92 fetched; in region: none
+[info]  2026-09-29 20:19:43 EFO_0003913 (exact): 320 fetched; in region: PCSK9=2 APOB=3 APOE=4
+[info]  2026-09-29 20:19:50 MONDO_0004781 (exact): 17 fetched; in region: none
+[info]  2026-09-29 20:20:11 MONDO_0005267 (exact): 55 fetched; in region: none
+[info]  2026-09-29 20:43:33 MONDO_0005010 (exact): 3913 fetched; in region: CETP=3 HMGCR=1 PCSK9=9 APOB=2 APOE=14
+[info]  2026-09-29 20:45:14 EFO_0022264 (exact): 316 fetched; in region: CETP=1 APOA1=1 APOB=1 APOE=3
+[info]  2026-09-29 20:46:02 EFO_0022266 (exact): 151 fetched; in region: CETP=1 HMGCR=1 NPC1L1=1 APOE=3
+[info]  2026-09-29 20:46:20 EFO_0006799 (with child traits): 40 fetched; in region: none
+[info]  2026-09-29 20:46:33 EFO_0011057 (with child traits): 26 fetched; in region: none
+[info]  2026-09-29 20:46:37 EFO ids with 0 curated associations: 4
+[stage] 2026-09-29 20:46:37 gene_burden
+[info]  2026-09-29 20:46:38 Open Targets disease ids: 111 (from 26 outcome ids)
+[info]  2026-09-29 20:46:39 curated MAF: numeric=10 not_reported=530
+[info]  2026-09-29 20:46:39 gene-burden rows: CETP=141 HMGCR=7 NPC1L1=53 PCSK9=173 ANGPTL3=96 APOA1=63 APOB=213 APOE=2 (1 genes with 0)
+[stage] 2026-09-29 20:46:39 write
+[info]  2026-09-29 20:47:11 wrote 323643 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/final_results.tsv.gz
 
 ```
