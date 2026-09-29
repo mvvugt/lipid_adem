@@ -397,8 +397,22 @@ def merge_results() -> None:
         )
     ]
 
+    excluded = icd_df[ColumnNames.EFO_ID].isin(Constants.EXCLUDED_EFO_IDS)
+    for efo_id, outcome in sorted(
+        set(
+            zip(
+                icd_df.loc[excluded, ColumnNames.EFO_ID],
+                icd_df.loc[excluded, ColumnNames.OUTCOME],
+            )
+        )
+    ):
+        log_info(f"{efo_id} ({outcome}) in Constants.EXCLUDED_EFO_IDS, skipped")
+    # excluded ids are dropped for both curated and gene-burden evidence
     outcome_efo_ids = (
-        icd_df[~icd_df[ColumnNames.EFO_ID].isin(["", Constants.NA_STRING])]
+        icd_df[
+            ~icd_df[ColumnNames.EFO_ID].isin(["", Constants.NA_STRING])
+            & ~excluded
+        ]
         .groupby(ColumnNames.OUTCOME)[ColumnNames.EFO_ID]
         .unique()
     )
