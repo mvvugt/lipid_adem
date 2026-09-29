@@ -2118,7 +2118,8 @@ def filter_sumstats_regions(
     filtered : `pd.DataFrame`
         A leading `gene` column plus the file's columns: rows in each
         gene's region with MAF < `maf_threshold`. A row in overlapping
-        regions appears once per gene.
+        regions appears once per gene. A gene whose chromosome is absent
+        from the index contributes no rows.
 
     Raises
     ------
@@ -2144,7 +2145,16 @@ def filter_sumstats_regions(
         )
 
         records = []
+        contigs = set(tabix_file.contigs)
         for gene, region in regions.items():
+            # sparse sumstats can lack whole chromosomes; fetch() on a
+            # contig absent from the index raises ValueError
+            if region.chrom not in contigs:
+                log_info(
+                    f"{gene} @ chr{region.chrom}: chromosome not in "
+                    f"{tabix_source} -> 0 rows"
+                )
+                continue
             n_before = len(records)
             for line in tabix_file.fetch(
                 region.chrom, region.start, region.end
