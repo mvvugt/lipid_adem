@@ -53,85 +53,69 @@ Output:
 
 ```
 
-## [20] filter_gwas_cat (`/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py --gene CETP --study-accession GCST90480194 --chrom 16 --start 56951980 --end 56993663 --outfile /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/CETP_GCST90480194_result.tsv.gz --source gwas_catalog`)
+## [20] filter_gwas_cat (`/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py --gene CETP --study-accession GCST90477988 --chrom 16 --start 56951980 --end 56993663 --outfile /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/CETP_GCST90477988_result.tsv.gz --source gwas_catalog`)
 - first run: 2026-09-21 22:58:26
-- last run: 2026-09-29 08:22:23
-- commit: `4f133a2`
-- status: failed
+- last run: 2026-09-29 09:49:23
+- commit: `9ffb828`
+
+Δ vs previous run (was `9ffb828`):
+- error resolved
+```diff
+@@ -1,23 +1,2 @@
+-Traceback (most recent call last):
+-  File "/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py", line 244, in main
+-    run_filter(
+-    ~~~~~~~~~~^
+-        gene=args.gene,
+-        ^^^^^^^^^^^^^^^
+-    ...<5 lines>...
+-        source=args.source,
+-        ^^^^^^^^^^^^^^^^^^^
+-    )
+-    ^
+-  File "/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py", line 195, in run_filter
+-    filtered = _run_filter_gwas_catalog(
+-        gene, study_accession, region, outfile
+-    )
+-  File "/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py", line 70, in _run_filter_gwas_catalog
+-    location = functions.study_summary_stats_location(study_accession)
+-  File "/myriadfs/home/rmgpmva/projects/lipid_adem/src/functions.py", line 1656, in study_summary_stats_location
+-    response.raise_for_status()
+-    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+-  File "/home/rmgpmva/mambaforge/envs/biomed-api/lib/python3.13/site-packages/requests/models.py", line 1167, in raise_for_status
+-    raise HTTPError(http_error_msg, response=self)
+-requests.exceptions.HTTPError: 500 Server Error:  for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90477989
++[info]  2026-09-29 09:49:23 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90477001-GCST90478000/GCST90477988/GCST90477988.tsv.gz @ 16:56951980-56993663 -> 0 rows with MAF < 0.01 (raw scan)
++[info]  2026-09-29 09:49:23 CETP x GCST90477988: 0 rows -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/CETP_GCST90477988_result.tsv.gz
+```
 
 Output:
 ```text
-Traceback (most recent call last):
-  File "/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py", line 244, in main
-    run_filter(
-    ~~~~~~~~~~^
-        gene=args.gene,
-        ^^^^^^^^^^^^^^^
-    ...<5 lines>...
-        source=args.source,
-        ^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py", line 195, in run_filter
-    filtered = _run_filter_gwas_catalog(
-        gene, study_accession, region, outfile
-    )
-  File "/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py", line 70, in _run_filter_gwas_catalog
-    location = functions.study_summary_stats_location(study_accession)
-  File "/myriadfs/home/rmgpmva/projects/lipid_adem/src/functions.py", line 1656, in study_summary_stats_location
-    response.raise_for_status()
-    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
-  File "/home/rmgpmva/mambaforge/envs/biomed-api/lib/python3.13/site-packages/requests/models.py", line 1167, in raise_for_status
-    raise HTTPError(http_error_msg, response=self)
-requests.exceptions.HTTPError: 500 Server Error:  for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90480194
-
---- error output (raw) ---
-Traceback (most recent call last):
-  File "/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py", line 244, in main
-    run_filter(
-    ~~~~~~~~~~^
-        gene=args.gene,
-        ^^^^^^^^^^^^^^^
-    ...<5 lines>...
-        source=args.source,
-        ^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py", line 195, in run_filter
-    filtered = _run_filter_gwas_catalog(
-        gene, study_accession, region, outfile
-    )
-  File "/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py", line 70, in _run_filter_gwas_catalog
-    location = functions.study_summary_stats_location(study_accession)
-  File "/myriadfs/home/rmgpmva/projects/lipid_adem/src/functions.py", line 1656, in study_summary_stats_location
-    response.raise_for_status()
-    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
-  File "/home/rmgpmva/mambaforge/envs/biomed-api/lib/python3.13/site-packages/requests/models.py", line 1167, in raise_for_status
-    raise HTTPError(http_error_msg, response=self)
-requests.exceptions.HTTPError: 500 Server Error:  for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90480194
+[info]  2026-09-29 09:49:23 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90477001-GCST90478000/GCST90477988/GCST90477988.tsv.gz @ 16:56951980-56993663 -> 0 rows with MAF < 0.01 (raw scan)
+[info]  2026-09-29 09:49:23 CETP x GCST90477988: 0 rows -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/CETP_GCST90477988_result.tsv.gz
 
 ```
 
 ## [20] filter_gwas_cat_job
 - first run: 2026-09-28 23:45:21
-- last run: 2026-09-29 08:22:37
-- commit: `4f133a2`
+- last run: 2026-09-29 09:38:53
+- commit: `9ffb828`
 - status: failed
 
 Output:
 ```text
-[info]  2026-09-29 08:21:39 task 104: gene=CETP study_accession=GCST90480194 source=gwas_catalog
-[error] 2026-09-29 08:22:28 run_mamba: '/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py --gene CETP --study-accession GCST90480194 --chrom 16 --start 56951980 --end 56993663 --outfile /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/CETP_GCST90480194_result.tsv.gz --source gwas_catalog' failed in env 'biomed-api' (exit 1)
+[info]  2026-09-29 09:38:19 task 119: gene=CETP study_accession=GCST90477989 source=gwas_catalog
+[error] 2026-09-29 09:38:51 run_mamba: '/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py --gene CETP --study-accession GCST90477989 --chrom 16 --start 56951980 --end 56993663 --outfile /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/CETP_GCST90477989_result.tsv.gz --source gwas_catalog' failed in env 'biomed-api' (exit 1)
 --- error output (raw) ---
-[info]  2026-09-29 08:21:35 repo root=/myriadfs/home/rmgpmva/projects/lipid_adem
-[info]  2026-09-29 08:21:35 === /myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.sh ===
-[info]  2026-09-29 08:21:35 started at Tue 29 Sep 08:21:35 BST 2026
-[info]  2026-09-29 08:21:35 hostname=node-b00a-007.myriad.ucl.ac.uk
-[info]  2026-09-29 08:21:35 job array file=/myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/filter_task_logs/1_1790631293/run_job_array.job
-[info]  2026-09-29 08:21:35 temp location=/myriadfs/home/rmgpmva/Scratch/lipid_adem/filter_task_tmp
-[info]  2026-09-29 08:21:35 step=1
-[info]  2026-09-29 08:21:39 task 104: gene=CETP study_accession=GCST90480194 source=gwas_catalog
-[info]  2026-09-29 08:21:39 outfile=/myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/CETP_GCST90480194_result.tsv.gz
+[info]  2026-09-29 09:38:19 repo root=/myriadfs/home/rmgpmva/projects/lipid_adem
+[info]  2026-09-29 09:38:19 === /myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.sh ===
+[info]  2026-09-29 09:38:19 started at Tue 29 Sep 09:38:19 BST 2026
+[info]  2026-09-29 09:38:19 hostname=node-b00a-007.myriad.ucl.ac.uk
+[info]  2026-09-29 09:38:19 job array file=/myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/filter_task_logs/1_1790631293/run_job_array.job
+[info]  2026-09-29 09:38:19 temp location=/myriadfs/home/rmgpmva/Scratch/lipid_adem/filter_task_tmp
+[info]  2026-09-29 09:38:19 step=1
+[info]  2026-09-29 09:38:19 task 119: gene=CETP study_accession=GCST90477989 source=gwas_catalog
+[info]  2026-09-29 09:38:19 outfile=/myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/CETP_GCST90477989_result.tsv.gz
 
 ```
 
