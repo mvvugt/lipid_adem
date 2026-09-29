@@ -1,41 +1,41 @@
 outcome,code,code_type,description,finngen_phenocode,efo_id
-all_cause_dementia,F00,icd10,Dementia in Alzheimer disease,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",EFO_0000249
+all_cause_dementia,F00,icd10,Dementia in Alzheimer disease,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",MONDO_0004975
 all_cause_dementia,F01,icd10,Vascular dementia,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",MONDO_0004648
 all_cause_dementia,F02.0,icd10,Dementia in Pick disease,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",MONDO_0008243
 all_cause_dementia,F02.0A,icd10,,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",NA
 all_cause_dementia,F03,icd10,Unspecified dementia,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",NA
 all_cause_dementia,F05.1,icd10,Delirium superimposed on dementia,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",NA
-all_cause_dementia,G30,icd10,Alzheimer disease,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",EFO_0000249
+all_cause_dementia,G30,icd10,Alzheimer disease,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",MONDO_0004975
 all_cause_dementia,G31.0,icd10,Circumscribed brain atrophy,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",NA
 all_cause_dementia,G31.09,icd10,,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",NA
-all_cause_dementia,I67.3,icd10,Progressive vascular leukoencephalopathy,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",EFO_0003763
-alzheimers_dementia,F00.0,icd10,Dementia in Alzheimer disease with early onset,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",EFO_0000249
-alzheimers_dementia,F00.0A,icd10,,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",EFO_0000249
-alzheimers_dementia,F00.1,icd10,Dementia in Alzheimer disease with late onset,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",EFO_0000249
-alzheimers_dementia,F00.1A,icd10,,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",EFO_0000249
-alzheimers_dementia,F00.2,icd10,"Dementia in Alzheimer disease, atypical or mixed type","G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",EFO_0000249
-alzheimers_dementia,F00.2A,icd10,,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",EFO_0000249
-alzheimers_dementia,F00.9,icd10,"Dementia in Alzheimer disease, unspecified","G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",EFO_0000249
-alzheimers_dementia,F00.9A,icd10,,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",EFO_0000249
-alzheimers_dementia,G30.0,icd10,Alzheimer disease with early onset,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",EFO_0000249
-alzheimers_dementia,G30.1,icd10,Alzheimer disease with late onset,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",EFO_0000249
-alzheimers_dementia,G30.8,icd10,Other Alzheimer disease,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",EFO_0000249
-alzheimers_dementia,G30.9,icd10,"Alzheimer disease, unspecified","G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",EFO_0000249
+all_cause_dementia,I67.3,icd10,Progressive vascular leukoencephalopathy,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",MONDO_0011057
+alzheimers_dementia,F00.0,icd10,Dementia in Alzheimer disease with early onset,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
+alzheimers_dementia,F00.0A,icd10,,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
+alzheimers_dementia,F00.1,icd10,Dementia in Alzheimer disease with late onset,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
+alzheimers_dementia,F00.1A,icd10,,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
+alzheimers_dementia,F00.2,icd10,"Dementia in Alzheimer disease, atypical or mixed type","G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
+alzheimers_dementia,F00.2A,icd10,,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
+alzheimers_dementia,F00.9,icd10,"Dementia in Alzheimer disease, unspecified","G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
+alzheimers_dementia,F00.9A,icd10,,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
+alzheimers_dementia,G30.0,icd10,Alzheimer disease with early onset,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
+alzheimers_dementia,G30.1,icd10,Alzheimer disease with late onset,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
+alzheimers_dementia,G30.8,icd10,Other Alzheimer disease,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
+alzheimers_dementia,G30.9,icd10,"Alzheimer disease, unspecified","G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
 apolipoprotein_a1,,quantitative_trait,Apolipoprotein A1 measurement,,EFO_0004614
 apolipoprotein_b,,quantitative_trait,Apolipoprotein B measurement,,EFO_0004615
-cardiovascular_disease,I50,icd10,Heart failure,FG_CVD,EFO_0003144
-cardiovascular_disease,I60,icd10,Subarachnoid haemorrhage,FG_CVD,EFO_0000713
-cardiovascular_disease,I61,icd10,Intracerebral haemorrhage,FG_CVD,EFO_0005669
-cardiovascular_disease,I63,icd10,Cerebral infarction,FG_CVD,EFO_0004277
-cardiovascular_disease,I64,icd10,"Stroke, not specified as haemorrhage or infarction",FG_CVD,EFO_0000712
-cardiovascular_disease,I70,icd10,Atherosclerosis,FG_CVD,EFO_0003914
-cardiovascular_disease,I73,icd10,Other peripheral vascular diseases,FG_CVD,EFO_0003875
+cardiovascular_disease,I50,icd10,Heart failure,FG_CVD,MONDO_0005252
+cardiovascular_disease,I60,icd10,Subarachnoid haemorrhage,FG_CVD,MONDO_0005099
+cardiovascular_disease,I61,icd10,Intracerebral haemorrhage,FG_CVD,MONDO_0013792
+cardiovascular_disease,I63,icd10,Cerebral infarction,FG_CVD,MONDO_0005394
+cardiovascular_disease,I64,icd10,"Stroke, not specified as haemorrhage or infarction",FG_CVD,MONDO_0005098
+cardiovascular_disease,I70,icd10,Atherosclerosis,FG_CVD,MONDO_0005311
+cardiovascular_disease,I73,icd10,Other peripheral vascular diseases,FG_CVD,MONDO_0005294
 coronary_heart_disease,I20,icd10,Angina pectoris,I9_CHD,EFO_0003913
-coronary_heart_disease,I21,icd10,Acute myocardial infarction,I9_CHD,EFO_0008583
+coronary_heart_disease,I21,icd10,Acute myocardial infarction,I9_CHD,MONDO_0004781
 coronary_heart_disease,I22,icd10,Subsequent myocardial infarction,I9_CHD,EFO_0008584
 coronary_heart_disease,I23,icd10,Certain current complications following acute myocardial infarction,I9_CHD,NA
-coronary_heart_disease,I24,icd10,Other acute ischaemic heart diseases,I9_CHD,EFO_0003777
-coronary_heart_disease,I25,icd10,Chronic ischaemic heart disease,I9_CHD,EFO_0001645
+coronary_heart_disease,I24,icd10,Other acute ischaemic heart diseases,I9_CHD,MONDO_0005267
+coronary_heart_disease,I25,icd10,Chronic ischaemic heart disease,I9_CHD,MONDO_0005010
 frontotemporal_dementia,F02.0,icd10,Dementia in Pick disease,FTD,MONDO_0008243
 frontotemporal_dementia,G31.0,icd10,Circumscribed brain atrophy,FTD,NA
 hdl_cholesterol,,quantitative_trait,HDL cholesterol measurement,,EFO_0022264
