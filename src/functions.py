@@ -126,6 +126,10 @@ class GeneTableError(ValueError):
     """A gene-table row cannot be resolved or its identifiers disagree."""
 
 
+class SumstatsColumnError(ValueError):
+    """A sumstats file lacks an expected chrom/pos/MAF column."""
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # helpers
 
@@ -1939,13 +1943,14 @@ def resolve_sumstats_source(
             f"found {hm_files}; falling back to raw file"
         )
 
-    exclude = {"README.txt", "md5sum.txt"}
+    # lower-case match: some directories hold only a `readme.txt`
+    exclude = {"readme.txt", "md5sum.txt"}
     candidates = [
         entry
         for entry in entries
         if not entry.endswith("/")
         and not entry.startswith("?")
-        and entry not in exclude
+        and entry.lower() not in exclude
         and not entry.endswith("-meta.yaml")
     ]
     if len(candidates) != 1:
@@ -2166,6 +2171,39 @@ def _passes_maf(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _header_indices(
+    header: list[str], url: str, columns: list[str]
+) -> list[int]:
+    """Look up the positions of the required columns in a header.
+
+    Parameters
+    ----------
+    header : `list[str]`
+        The sumstats file's column names.
+    url : `str`
+        URL of the sumstats file (error message only).
+    columns : `list[str]`
+        Column names to look up.
+
+    Returns
+    -------
+    indices : `list[int]`
+        The index of each of `columns` in `header`, in the same order.
+
+    Raises
+    ------
+    SumstatsColumnError
+        If any of `columns` is not in `header`.
+    """
+    missing = [col for col in columns if col not in header]
+    if missing:
+        raise SumstatsColumnError(
+            f"{url}: missing column(s) {missing}; header: {header}"
+        )
+    return [header.index(col) for col in columns]
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def filter_sumstats_regions(
     tabix_source: str,
     regions: dict[str, GeneRegion],
@@ -2214,6 +2252,9 @@ def filter_sumstats_regions(
         If `tabix_source` has no `.tbi` index (no remote-tabix fallback is
         implemented here -- see gwas_cat.md's caveat on falling back to a
         full-file download).
+    SumstatsColumnError
+        If `chrom_col`, `pos_col`, or `maf_col` are not in the file's
+        header.
     """
     import pysam
 
@@ -2224,9 +2265,9 @@ def filter_sumstats_regions(
             if header_lines
             else _plain_header(tabix_source)
         )
-        chrom_idx = header.index(chrom_col)
-        pos_idx = header.index(pos_col)
-        maf_idx = header.index(maf_col)
+        chrom_idx, pos_idx, maf_idx = _header_indices(
+            header, tabix_source, [chrom_col, pos_col, maf_col]
+        )
         log_debug(
             f"header columns: chrom={chrom_idx} pos={pos_idx} maf={maf_idx}"
         )
@@ -2312,7 +2353,7 @@ def filter_raw_sumstats_regions(
 
     Raises
     ------
-    ValueError
+    SumstatsColumnError
         If `chrom_col`, `pos_col`, or `maf_col` are not in the file's
         header.
     """
@@ -2330,9 +2371,9 @@ def filter_raw_sumstats_regions(
         text_stream = io.TextIOWrapper(raw_stream, encoding="utf-8")
 
         header = next(text_stream).rstrip("\r\n").split("\t")
-        chrom_idx = header.index(chrom_col)
-        pos_idx = header.index(pos_col)
-        maf_idx = header.index(maf_col)
+        chrom_idx, pos_idx, maf_idx = _header_indices(
+            header, url, [chrom_col, pos_col, maf_col]
+        )
         log_debug(
             f"header columns: chrom={chrom_idx} pos={pos_idx} maf={maf_idx}"
         )

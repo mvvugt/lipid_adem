@@ -81,6 +81,11 @@ def _run_filter_gwas_catalog(
     filtered : `pd.DataFrame` or `NoneType`
         The filtered sumstats (leading `gene` column), or `None` if the
         study has no usable summary statistics.
+
+    Raises
+    ------
+    functions.SumstatsColumnError
+        If the sumstats file lacks the expected chrom/pos/MAF columns.
     """
     location = functions.study_summary_stats_location(study_accession)
     if location is None:
@@ -105,18 +110,14 @@ def _run_filter_gwas_catalog(
             chrom_col=source.chrom_col,
             pos_col=source.pos_col,
         )
-    try:
-        return functions.filter_raw_sumstats_regions(
-            url=source.url,
-            regions=regions,
-            maf_col=source.maf_col,
-            maf_threshold=Constants.MAF_THRESHOLD,
-            chrom_col=source.chrom_col,
-            pos_col=source.pos_col,
-        )
-    except ValueError as exc:
-        log_warn(str(exc))
-        return None
+    return functions.filter_raw_sumstats_regions(
+        url=source.url,
+        regions=regions,
+        maf_col=source.maf_col,
+        maf_threshold=Constants.MAF_THRESHOLD,
+        chrom_col=source.chrom_col,
+        pos_col=source.pos_col,
+    )
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -195,12 +196,13 @@ def run_filter(
     Notes
     -----
     If the study/phenocode has no usable summary statistics (not
-    available, ambiguous/missing raw file, unexpected column layout, or
-    absent from the FinnGen manifest), a header-only (0-row) result is
-    written instead of raising, so the row is marked done and never
-    retried. Transient failures (network errors, a `.tbi`-missing
-    `OSError` on the tabix path) are not caught here and still
-    propagate, so pyjasub retries those. The outfile is written
+    available, ambiguous/missing raw file, or absent from the FinnGen
+    manifest), a header-only (0-row) result is written instead of
+    raising, so the row is marked done and never retried. Transient
+    failures (network errors, a `.tbi`-missing `OSError` on the tabix
+    path) and a `functions.SumstatsColumnError` (unexpected column
+    layout) are not caught here and propagate without writing an
+    outfile, so the row is never marked done. The outfile is written
     atomically, so an interrupted task never leaves a partial file that
     pyjasub would count as done.
     """
@@ -251,15 +253,17 @@ def run_task(tasks_file: Path, task_id: int, step: int) -> None:
         match its position.
     RuntimeError
         After the whole chunk has been attempted, if any row failed with
-        a transient (network/IO) error.
+        a transient (network/IO) error or a column mismatch.
 
     Notes
     -----
     Rows whose outfile already exists are skipped, so a chunk re-run by
     pyjasub after a partial failure only redoes the missing studies. A
-    row failing with `requests.RequestException` or `OSError` is logged
-    and left without an outfile; the remaining rows still run, and the
-    task then exits non-zero so pyjasub reruns it.
+    row failing with `requests.RequestException`, `OSError` or
+    `functions.SumstatsColumnError` is logged and left without an
+    outfile; the remaining rows still run, and the task then exits
+    non-zero. A column mismatch will not resolve on a rerun: it needs
+    the study's source or column names fixed.
     """
     tasks = functions.load_tasks(tasks_file).reset_index(drop=True)
     if not 1 <= task_id <= len(tasks):
@@ -275,6 +279,7 @@ def run_task(tasks_file: Path, task_id: int, step: int) -> None:
     )
     manifest_df = None
     failed: list[str] = []
+    mismatched: list[str] = []
     for position, (_, row) in enumerate(chunk.iterrows(), start=task_id):
         if int(row[ColumnNames.ROWIDX]) != position:
             raise ValueError(
@@ -297,10 +302,23 @@ def run_task(tasks_file: Path, task_id: int, step: int) -> None:
                 f"left for rerun"
             )
             failed.append(accession)
+        except functions.SumstatsColumnError as exc:
+            log_warn(
+                f"{accession}: column mismatch, no outfile written ({exc})"
+            )
+            mismatched.append(accession)
+    errors = []
     if failed:
-        raise RuntimeError(
+        errors.append(
             f"{len(failed)} row(s) failed, rerun pyjasub: {', '.join(failed)}"
         )
+    if mismatched:
+        errors.append(
+            f"{len(mismatched)} row(s) with a column mismatch, fix source/"
+            f"columns: {', '.join(mismatched)}"
+        )
+    if errors:
+        raise RuntimeError("; ".join(errors))
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
