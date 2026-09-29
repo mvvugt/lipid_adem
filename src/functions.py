@@ -105,8 +105,8 @@ class SumstatsSource:
         URL of the sumstats file.
     is_tabix_indexed : `bool`
         `True` if a `.tbi` index sits next to `url` (query via
-        `filter_sumstats_region`), else `False` (query via
-        `filter_raw_sumstats_region`).
+        `filter_sumstats_regions`), else `False` (query via
+        `filter_raw_sumstats_regions`).
     chrom_col : `str`
         Name of the chromosome column to filter on.
     pos_col : `str`
@@ -197,18 +197,23 @@ def archive_dir(path: Path) -> Path | None:
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def load_tasks(path: Path) -> pd.DataFrame:
-    """Load the job-array file, one row per gene x study x outcome task.
+    """Load a task table with an `outfile` column.
+
+    Used for the job-array file (`tasks.tsv`, one row per study) and the
+    study-outcome label table (`study_outcomes.tsv`, one row per study x
+    outcome), both written by `gwas_cat_prep.py`.
 
     Parameters
     ----------
     path : `Path`
-        The job-array file (`tasks.tsv`) written by `gwas_cat_prep.py`.
+        The tab-separated task table.
 
     Returns
     -------
     tasks : `pd.DataFrame`
-        All task rows, all columns as strings, rows without an `outfile`
-        dropped. Several rows can share an `outfile` (one per outcome).
+        All rows, all columns as strings (blank cells as NaN), rows
+        without an `outfile` dropped. In `study_outcomes.tsv` several
+        rows can share an `outfile` (one per outcome).
 
     Raises
     ------
@@ -219,6 +224,39 @@ def load_tasks(path: Path) -> pd.DataFrame:
         raise FileNotFoundError(f"Tasks file not found: {path}")
     tasks = pd.read_csv(path, sep="\t", dtype=str)
     return tasks.dropna(subset=[ColumnNames.OUTFILE])
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def load_gene_regions(path: Path) -> dict[str, GeneRegion]:
+    """Load the flanked gene regions written by `gwas_cat_prep.py`.
+
+    Parameters
+    ----------
+    path : `Path`
+        Tab-separated file with `gene`, `chrom`, `start`, `end` columns
+        (`FileNames.GENE_REGIONS_FILE`).
+
+    Returns
+    -------
+    regions : `dict[str, GeneRegion]`
+        Gene symbol -> flanked region, in file order.
+
+    Raises
+    ------
+    FileNotFoundError
+        If `path` does not exist.
+    """
+    if not path.exists():
+        raise FileNotFoundError(f"Gene regions file not found: {path}")
+    table = pd.read_csv(path, sep="\t", dtype=str)
+    return {
+        row[ColumnNames.GENE]: GeneRegion(
+            chrom=row[ColumnNames.CHROM],
+            start=int(row[ColumnNames.START]),
+            end=int(row[ColumnNames.END]),
+        )
+        for _, row in table.iterrows()
+    }
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1962,26 +2000,61 @@ def _parse_freq(value: str) -> float | None:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def filter_sumstats_region(
+def _passes_maf(
+    fields: list[str],
+    maf_idx: int,
+    maf_threshold: float,
+    transform_to_maf: bool,
+) -> bool:
+    """Check one sumstats row against the MAF cutoff.
+
+    Parameters
+    ----------
+    fields : `list[str]`
+        The row's tab-split fields.
+    maf_idx : `int`
+        Index of the allele-frequency column.
+    maf_threshold : `float`
+        Rows with MAF below this pass.
+    transform_to_maf : `bool`
+        Apply `min(af, 1 - af)` before comparing (see
+        `filter_sumstats_regions`).
+
+    Returns
+    -------
+    passes : `bool`
+        `True` if the frequency parses and is below `maf_threshold`.
+    """
+    maf = _parse_freq(fields[maf_idx])
+    if maf is None:
+        return False
+    if transform_to_maf:
+        maf = min(maf, 1.0 - maf)
+    return maf < maf_threshold
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def filter_sumstats_regions(
     tabix_source: str,
-    region: GeneRegion,
+    regions: dict[str, GeneRegion],
     maf_col: str,
     maf_threshold: float,
     chrom_col: str = "chromosome",
     pos_col: str = "base_pair_location",
     transform_to_maf: bool = False,
 ) -> pd.DataFrame:
-    """Filter a tabix-indexed sumstats file to one region and a MAF cutoff.
+    """Filter a tabix-indexed sumstats file to gene regions and a MAF cutoff.
 
     Based on GWAS catalog downloads, but should work on any
-    bgzip+tabix-indexed sumstats file.
+    bgzip+tabix-indexed sumstats file. The file (and its remote `.tbi`)
+    is opened once and queried once per region.
 
     Parameters
     ----------
     tabix_source : `str`
         Path or URL to a bgzip+tabix-indexed sumstats file.
-    region : `GeneRegion`
-        Region to query.
+    regions : `dict[str, GeneRegion]`
+        Gene symbol -> region to query.
     maf_col : `str`
         Name of the allele-frequency column.
     maf_threshold : `float`
@@ -1998,7 +2071,9 @@ def filter_sumstats_region(
     Returns
     -------
     filtered : `pd.DataFrame`
-        Rows in `region` with MAF < `maf_threshold`.
+        A leading `gene` column plus the file's columns: rows in each
+        gene's region with MAF < `maf_threshold`. A row in overlapping
+        regions appears once per gene.
 
     Raises
     ------
@@ -2024,47 +2099,55 @@ def filter_sumstats_region(
         )
 
         records = []
-        for line in tabix_file.fetch(region.chrom, region.start, region.end):
-            # CRLF source files leave a trailing "\r" on the last field
-            fields = line.rstrip("\r\n").split("\t")
-            maf = _parse_freq(fields[maf_idx])
-            if maf is None:
-                continue
-            if transform_to_maf:
-                maf = min(maf, 1.0 - maf)
-            if maf < maf_threshold:
-                records.append(fields)
+        for gene, region in regions.items():
+            n_before = len(records)
+            for line in tabix_file.fetch(
+                region.chrom, region.start, region.end
+            ):
+                # CRLF source files leave a trailing "\r" on the last field
+                fields = line.rstrip("\r\n").split("\t")
+                if _passes_maf(
+                    fields, maf_idx, maf_threshold, transform_to_maf
+                ):
+                    records.append([gene, *fields])
+            log_debug(
+                f"{gene} @ {region.chrom}:{region.start}-{region.end} -> "
+                f"{len(records) - n_before} rows"
+            )
 
     log_info(
-        f"{tabix_source} @ {region.chrom}:{region.start}-{region.end} -> "
-        f"{len(records)} rows with MAF < {maf_threshold}"
+        f"{tabix_source} @ {len(regions)} regions -> {len(records)} rows "
+        f"with MAF < {maf_threshold}"
     )
-    return pd.DataFrame.from_records(records, columns=header)
+    return pd.DataFrame.from_records(
+        records, columns=[ColumnNames.GENE, *header]
+    )
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def filter_raw_sumstats_region(
+def filter_raw_sumstats_regions(
     url: str,
-    region: GeneRegion,
+    regions: dict[str, GeneRegion],
     maf_col: str,
     maf_threshold: float,
     chrom_col: str = "chromosome",
     pos_col: str = "base_pair_location",
     transform_to_maf: bool = False,
 ) -> pd.DataFrame:
-    """Stream-filter a non-indexed sumstats file to one region and MAF cutoff.
+    """Stream-filter a non-indexed sumstats file to gene regions and MAF.
 
     No tabix index is available for raw (non-harmonised) sumstats files,
     so the file is scanned sequentially via HTTP streaming, decompressed
     on the fly if gzip-compressed; only matching rows are held in memory.
-    Rows are not assumed sorted, so the full file is always scanned.
+    Rows are not assumed sorted, so the full file is always scanned --
+    once, whatever the number of regions.
 
     Parameters
     ----------
     url : `str`
         URL of the raw (non-tabix-indexed) sumstats file.
-    region : `GeneRegion`
-        Region to filter to.
+    regions : `dict[str, GeneRegion]`
+        Gene symbol -> region to filter to.
     maf_col : `str`
         Name of the allele-frequency column.
     maf_threshold : `float`
@@ -2081,7 +2164,9 @@ def filter_raw_sumstats_region(
     Returns
     -------
     filtered : `pd.DataFrame`
-        Rows in `region` with MAF < `maf_threshold`.
+        A leading `gene` column plus the file's columns: rows in each
+        gene's region with MAF < `maf_threshold`. A row in overlapping
+        regions appears once per gene.
 
     Raises
     ------
@@ -2089,6 +2174,12 @@ def filter_raw_sumstats_region(
         If `chrom_col`, `pos_col`, or `maf_col` are not in the file's
         header.
     """
+    # chrom -> [(gene, region)], so each line is only tested against the
+    # regions on its own chromosome
+    regions_by_chrom: dict[str, list[tuple[str, GeneRegion]]] = {}
+    for gene, region in regions.items():
+        regions_by_chrom.setdefault(region.chrom, []).append((gene, region))
+
     with requests.get(url, stream=True, timeout=60) as response:
         response.raise_for_status()
         raw_stream = response.raw
@@ -2107,26 +2198,29 @@ def filter_raw_sumstats_region(
         records = []
         for line in text_stream:
             fields = line.rstrip("\r\n").split("\t")
-            if fields[chrom_idx] != region.chrom:
+            chrom_regions = regions_by_chrom.get(fields[chrom_idx])
+            if chrom_regions is None:
                 continue
             pos = fields[pos_idx]
-            if not pos.isdigit() or not (
-                region.start <= int(pos) <= region.end
-            ):
+            if not pos.isdigit():
                 continue
-            maf = _parse_freq(fields[maf_idx])
-            if maf is None:
+            genes = [
+                gene
+                for gene, region in chrom_regions
+                if region.start <= int(pos) <= region.end
+            ]
+            if not genes:
                 continue
-            if transform_to_maf:
-                maf = min(maf, 1.0 - maf)
-            if maf < maf_threshold:
-                records.append(fields)
+            if _passes_maf(fields, maf_idx, maf_threshold, transform_to_maf):
+                records.extend([gene, *fields] for gene in genes)
 
     log_info(
-        f"{url} @ {region.chrom}:{region.start}-{region.end} -> "
-        f"{len(records)} rows with MAF < {maf_threshold} (raw scan)"
+        f"{url} @ {len(regions)} regions -> {len(records)} rows with "
+        f"MAF < {maf_threshold} (raw scan)"
     )
-    return pd.DataFrame.from_records(records, columns=header)
+    return pd.DataFrame.from_records(
+        records, columns=[ColumnNames.GENE, *header]
+    )
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

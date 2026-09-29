@@ -320,5 +320,9 @@ class FileNames:
         Paths.DATA_RAW / "gwas_catalog_manual_studies.tsv"
     )
     TASKS_FILE: Path = Paths.DATA_TEMP / "tasks.tsv"
+    # (study, outcome) labels for the per-study filter outfiles
+    STUDY_OUTCOMES_FILE: Path = Paths.DATA_TEMP / "study_outcomes.tsv"
+    # flanked gene regions, frozen at prep time for the filter tasks
+    GENE_REGIONS_FILE: Path = Paths.DATA_TEMP / "gene_regions.tsv"
     STUDY_DISCOVERY_LOG: Path = Paths.DATA_TEMP / "study_discovery_log.tsv.gz"
     FINAL_RESULTS: Path = Paths.RESULTS_OUTPUT / "final_results.tsv.gz"

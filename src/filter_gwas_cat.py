@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
-Runs once per row of the pyjasub job-array file (data/temp/tasks.tsv).
-Remote-tabix-queries one gene x study pair's summary stats (GWAS Catalog
-harmonised, or FinnGen, per the row's `source`), filters to
-MAF < Constants.MAF_THRESHOLD, and writes the row's output file.
+Runs once per pyjasub array task over `--step` rows of the job-array file
+(data/temp/tasks.tsv), one row per study. For each study, remote-queries
+its summary stats (GWAS Catalog harmonised or raw, or FinnGen, per the
+row's `source`) for every gene region in data/temp/gene_regions.tsv in one
+pass, filters to MAF < Constants.MAF_THRESHOLD, and writes the row's
+output file. Rows whose output file already exists are skipped.
 """
 
 
@@ -20,23 +22,27 @@ from log_tools.emitter import log_info, log_warn
 from log_tools.setup import runlog_setup
 
 import functions
-from project_constants import Constants, Paths, RunlogOrder
+from project_constants import (
+    ColumnNames,
+    Constants,
+    FileNames,
+    Paths,
+    RunlogOrder,
+)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # helpers
 
-def _write_empty_result(outfile: Path, gene: str, study_accession: str) -> None:
+def _write_empty_result(outfile: Path, study_accession: str) -> None:
     """Write a header-only (0-row) result for an unusable study.
 
     Parameters
     ----------
     outfile : `Path`
         Path to write the empty TSV to.
-    gene : `str`
-        HGNC gene symbol.
     study_accession : `str`
-        GWAS Catalog study accession or FinnGen phenocode.
+        GWAS Catalog study accession or FinnGen phenocode (logging only).
 
     Returns
     -------
@@ -49,90 +55,100 @@ def _write_empty_result(outfile: Path, gene: str, study_accession: str) -> None:
     parses a header-only file fine as a 0-row frame. Satisfies pyjasub's
     outfile-existence check so the row is never retried.
     """
-    pd.DataFrame(columns=["gene", "study_accession", "source_db"]).to_csv(
-        outfile, sep="\t", index=False
+    functions.write_table_atomic(
+        pd.DataFrame(columns=["gene", "study_accession", "source_db"]),
+        outfile,
     )
+    log_info(f"{study_accession}: empty result -> {outfile}")
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _run_filter_gwas_catalog(
-    gene: str, study_accession: str, region: functions.GeneRegion, outfile: Path
+    study_accession: str, regions: dict[str, functions.GeneRegion]
 ) -> pd.DataFrame | None:
-    """Resolve and filter one gene x study pair from GWAS Catalog.
+    """Resolve and filter one GWAS Catalog study over all gene regions.
+
+    Parameters
+    ----------
+    study_accession : `str`
+        GWAS Catalog study accession.
+    regions : `dict[str, functions.GeneRegion]`
+        Gene symbol -> flanked region.
 
     Returns
     -------
     filtered : `pd.DataFrame` or `NoneType`
-        The filtered sumstats, or `None` if an empty result was already
-        written for an unusable study (caller should return without
-        further writes).
+        The filtered sumstats (leading `gene` column), or `None` if the
+        study has no usable summary statistics.
     """
     location = functions.study_summary_stats_location(study_accession)
     if location is None:
         log_warn(
             f"{study_accession} has no full summary statistics available "
-            f"on GWAS Catalog; writing empty result for {gene}"
+            f"on GWAS Catalog"
         )
-        _write_empty_result(outfile, gene, study_accession)
         return None
 
     try:
         source = functions.resolve_sumstats_source(location, study_accession)
     except ValueError as exc:
-        log_warn(f"{exc}; writing empty result for {gene}")
-        _write_empty_result(outfile, gene, study_accession)
+        log_warn(str(exc))
         return None
 
     if source.is_tabix_indexed:
-        return functions.filter_sumstats_region(
+        return functions.filter_sumstats_regions(
             tabix_source=source.url,
-            region=region,
+            regions=regions,
             maf_col=source.maf_col,
             maf_threshold=Constants.MAF_THRESHOLD,
             chrom_col=source.chrom_col,
             pos_col=source.pos_col,
         )
     try:
-        return functions.filter_raw_sumstats_region(
+        return functions.filter_raw_sumstats_regions(
             url=source.url,
-            region=region,
+            regions=regions,
             maf_col=source.maf_col,
             maf_threshold=Constants.MAF_THRESHOLD,
             chrom_col=source.chrom_col,
             pos_col=source.pos_col,
         )
     except ValueError as exc:
-        log_warn(f"{exc}; writing empty result for {gene}")
-        _write_empty_result(outfile, gene, study_accession)
+        log_warn(str(exc))
         return None
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _run_filter_finngen(
-    gene: str, phenocode: str, region: functions.GeneRegion, outfile: Path
+    phenocode: str,
+    regions: dict[str, functions.GeneRegion],
+    manifest_df: pd.DataFrame,
 ) -> pd.DataFrame | None:
-    """Resolve and filter one gene x phenocode pair from FinnGen.
+    """Resolve and filter one FinnGen phenocode over all gene regions.
+
+    Parameters
+    ----------
+    phenocode : `str`
+        FinnGen phenocode.
+    regions : `dict[str, functions.GeneRegion]`
+        Gene symbol -> flanked region.
+    manifest_df : `pd.DataFrame`
+        As returned by `functions.load_finngen_manifest`.
 
     Returns
     -------
     filtered : `pd.DataFrame` or `NoneType`
-        The filtered sumstats, or `None` if an empty result was already
-        written for an unusable phenocode (caller should return without
-        further writes).
+        The filtered sumstats (leading `gene` column), or `None` if the
+        phenocode is not in the manifest.
     """
-    manifest_df = functions.load_finngen_manifest()
     url = functions.finngen_sumstats_url(phenocode, manifest_df)
     if url is None:
-        log_warn(
-            f"{phenocode} not found in FinnGen manifest; writing empty "
-            f"result for {gene}"
-        )
-        _write_empty_result(outfile, gene, phenocode)
+        log_warn(f"{phenocode} not found in FinnGen manifest")
         return None
 
-    return functions.filter_sumstats_region(
+    return functions.filter_sumstats_regions(
         tabix_source=url,
-        region=region,
+        regions=regions,
         maf_col="af_alt",
         maf_threshold=Constants.MAF_THRESHOLD,
         chrom_col="chrom",
@@ -143,67 +159,129 @@ def _run_filter_finngen(
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def run_filter(
-    gene: str,
     study_accession: str,
-    chrom: str,
-    start: int,
-    end: int,
+    source: str,
     outfile: Path,
-    source: str = "gwas_catalog",
+    regions: dict[str, functions.GeneRegion],
+    manifest_df: pd.DataFrame | None,
 ) -> None:
-    """Filter one gene x study pair's sumstats and write the result.
+    """Filter one study's sumstats over all gene regions and write it.
 
     Parameters
     ----------
-    gene : `str`
-        HGNC gene symbol (for logging/traceability only).
     study_accession : `str`
         GWAS Catalog study accession, or FinnGen phenocode if
         `source == "finngen"`.
-    chrom : `str`
-        Chromosome of the (already-flanked) gene region.
-    start : `int`
-        Region start.
-    end : `int`
-        Region end.
-    outfile : `Path`
-        Path to write the filtered TSV to.
-    source : `str`, optional, default: `"gwas_catalog"`
+    source : `str`
         Which sumstats source `study_accession` refers to: `"gwas_catalog"`
         or `"finngen"`.
+    outfile : `Path`
+        Path to write the filtered TSV to.
+    regions : `dict[str, functions.GeneRegion]`
+        Gene symbol -> flanked region.
+    manifest_df : `pd.DataFrame` or `NoneType`
+        FinnGen manifest; required when `source == "finngen"`.
 
     Returns
     -------
     `None`
+
+    Raises
+    ------
+    ValueError
+        If `source` is not `"gwas_catalog"` or `"finngen"`.
 
     Notes
     -----
     If the study/phenocode has no usable summary statistics (not
     available, ambiguous/missing raw file, unexpected column layout, or
     absent from the FinnGen manifest), a header-only (0-row) result is
-    written instead of raising, so the pyjasub job-array row is marked
-    done and never retried. Transient failures (network errors, a
-    `.tbi`-missing `OSError` on the tabix path) are not caught here and
-    still propagate, so pyjasub retries those.
+    written instead of raising, so the row is marked done and never
+    retried. Transient failures (network errors, a `.tbi`-missing
+    `OSError` on the tabix path) are not caught here and still
+    propagate, so pyjasub retries those. The outfile is written
+    atomically, so an interrupted task never leaves a partial file that
+    pyjasub would count as done.
     """
-    region = functions.GeneRegion(chrom=chrom, start=start, end=end)
     outfile.parent.mkdir(parents=True, exist_ok=True)
 
     if source == "finngen":
-        filtered = _run_filter_finngen(gene, study_accession, region, outfile)
+        filtered = _run_filter_finngen(study_accession, regions, manifest_df)
+    elif source == "gwas_catalog":
+        filtered = _run_filter_gwas_catalog(study_accession, regions)
     else:
-        filtered = _run_filter_gwas_catalog(
-            gene, study_accession, region, outfile
-        )
+        raise ValueError(f"unknown source {source!r} for {study_accession}")
     if filtered is None:
+        _write_empty_result(outfile, study_accession)
         return
 
-    filtered.insert(0, "source_db", source)
-    filtered.insert(0, "study_accession", study_accession)
-    filtered.insert(0, "gene", gene)
+    filtered.insert(1, "study_accession", study_accession)
+    filtered.insert(2, "source_db", source)
 
-    filtered.to_csv(outfile, sep="\t", index=False)
-    log_info(f"{gene} x {study_accession}: {len(filtered)} rows -> {outfile}")
+    functions.write_table_atomic(filtered, outfile)
+    log_info(
+        f"{study_accession}: {len(filtered)} rows over "
+        f"{filtered[ColumnNames.GENE].nunique()} genes -> {outfile}"
+    )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def run_task(tasks_file: Path, task_id: int, step: int) -> None:
+    """Filter the `step` job-array rows starting at `task_id`.
+
+    Parameters
+    ----------
+    tasks_file : `Path`
+        The pyjasub job-array file (`tasks.tsv`), columns: rowidx,
+        study_accession, source, outfile.
+    task_id : `int`
+        First row to process (1-based, excluding the header).
+    step : `int`
+        Number of rows to process; capped at the last row.
+
+    Returns
+    -------
+    `None`
+
+    Raises
+    ------
+    ValueError
+        If `task_id` is past the last row, or a row's `rowidx` does not
+        match its position.
+
+    Notes
+    -----
+    Rows whose outfile already exists are skipped, so a chunk re-run by
+    pyjasub after a partial failure only redoes the missing studies.
+    """
+    tasks = functions.load_tasks(tasks_file).reset_index(drop=True)
+    if not 1 <= task_id <= len(tasks):
+        raise ValueError(
+            f"task_id {task_id} out of range: {tasks_file} has "
+            f"{len(tasks)} rows"
+        )
+    chunk = tasks.iloc[task_id - 1 : task_id - 1 + step]
+    regions = functions.load_gene_regions(FileNames.GENE_REGIONS_FILE)
+    log_info(
+        f"rows {task_id}-{task_id + len(chunk) - 1} of {len(tasks)}, "
+        f"{len(regions)} gene regions"
+    )
+    manifest_df = None
+    for position, (_, row) in enumerate(chunk.iterrows(), start=task_id):
+        if int(row[ColumnNames.ROWIDX]) != position:
+            raise ValueError(
+                f"row {position} has rowidx {row[ColumnNames.ROWIDX]} in "
+                f"{tasks_file}"
+            )
+        outfile = Path(row[ColumnNames.OUTFILE])
+        accession = row[ColumnNames.STUDY_ACCESSION]
+        source = row[ColumnNames.SOURCE]
+        if outfile.exists():
+            log_info(f"{accession}: {outfile} exists, skipped")
+            continue
+        if source == "finngen" and manifest_df is None:
+            manifest_df = functions.load_finngen_manifest()
+        run_filter(accession, source, outfile, regions, manifest_df)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -212,16 +290,28 @@ def run_filter(
 def _init_cmd_args() -> argparse.ArgumentParser:
     """Create and configure the argument parser."""
     parser = argparse.ArgumentParser(
-        description="Filter: one gene x study pair's sumstats."
+        description=(
+            "Filter the sumstats of `--step` job-array rows (one study "
+            "each) over all gene regions."
+        )
     )
-    parser.add_argument("--gene", required=True)
-    parser.add_argument("--study-accession", required=True)
-    parser.add_argument("--chrom", required=True)
-    parser.add_argument("--start", type=int, required=True)
-    parser.add_argument("--end", type=int, required=True)
-    parser.add_argument("--outfile", type=Path, required=True)
     parser.add_argument(
-        "--source", required=True, choices=["gwas_catalog", "finngen"]
+        "--tasks-file",
+        type=Path,
+        required=True,
+        help="pyjasub job-array file (data/temp/tasks.tsv)",
+    )
+    parser.add_argument(
+        "--task-id",
+        type=int,
+        required=True,
+        help="first row to process (1-based, excluding the header)",
+    )
+    parser.add_argument(
+        "--step",
+        type=int,
+        default=1,
+        help="number of rows to process (default: 1)",
     )
     return parser
 
@@ -229,7 +319,10 @@ def _init_cmd_args() -> argparse.ArgumentParser:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _parse_cmd_args(parser: argparse.ArgumentParser) -> argparse.Namespace:
     """Parse and validate command-line arguments."""
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.step < 1:
+        parser.error(f"--step must be >= 1, got {args.step}")
+    return args
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -241,15 +334,7 @@ def main() -> None:
     args = _parse_cmd_args(parser)
 
     with runlog_setup(root=Paths.HERE, order=RunlogOrder.FILTER_GWAS_CAT):
-        run_filter(
-            gene=args.gene,
-            study_accession=args.study_accession,
-            chrom=args.chrom,
-            start=args.start,
-            end=args.end,
-            outfile=args.outfile,
-            source=args.source,
-        )
+        run_task(args.tasks_file, args.task_id, args.step)
 
 
 if __name__ == "__main__":
