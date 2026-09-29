@@ -35,6 +35,12 @@ class Constants:
     MAF_THRESHOLD: float = 0.01
     GENE_COORD_FLANK_BP: int = 10_000
     MAX_STUDIES_PER_OUTCOME: int = 10
+    # overall ceiling per child-trait search, on top of the per-term cap
+    MAX_STUDIES_PER_CHILD_QUERY: int = 30
+    # trait IDs never searched: MONDO_0011057 (I67.3, Binswanger disease)
+    # expands via child traits to general cerebrovascular disease (stroke,
+    # TIA, aneurysm) rather than dementia
+    EXCLUDED_EFO_IDS: frozenset[str] = frozenset({"MONDO_0011057"})
     NCBI_ESUMMARY_URL: str = (
         "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
     )

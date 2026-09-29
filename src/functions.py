@@ -1157,7 +1157,8 @@ def discover_studies_with_reasons(
     include_child_traits : `bool`, optional, default: `False`
         Also discover studies annotated with a child term of `efo_id`;
         the cap is then applied per term, so child terms cannot push
-        out the studies of `efo_id` itself.
+        out the studies of `efo_id` itself, with an overall ceiling of
+        `Constants.MAX_STUDIES_PER_CHILD_QUERY` included studies.
 
     Returns
     -------
@@ -1168,7 +1169,16 @@ def discover_studies_with_reasons(
     records = _fetch_gwas_catalog_study_records(efo_id, include_child_traits)
     # printed only; gwas_cat_prep records one summary line per EFO
     log_debug(f"{efo_id} -> {len(records)} studies")
-    return classify_studies(records, cap=cap, per_term=include_child_traits)
+    return classify_studies(
+        records,
+        cap=cap,
+        per_term=include_child_traits,
+        total_cap=(
+            Constants.MAX_STUDIES_PER_CHILD_QUERY
+            if include_child_traits
+            else None
+        ),
+    )
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1254,6 +1264,7 @@ def classify_studies(
     records: list[dict],
     cap: int = Constants.MAX_STUDIES_PER_OUTCOME,
     per_term: bool = False,
+    total_cap: int | None = None,
 ) -> list[dict]:
     """Classify candidate GWAS Catalog studies as included or excluded.
 
@@ -1277,6 +1288,10 @@ def classify_studies(
         instead of overall, and include the union. Used with child
         traits, so each term (the queried parent included) keeps its
         own `cap` most recent studies.
+    total_cap : `int` or `NoneType`, optional, default: `None`
+        With `per_term`, also stop including once this many studies are
+        included overall (most recent first); later per-term survivors
+        are marked `"over_total_cap"`. `None` means no overall ceiling.
 
     Returns
     -------
@@ -1288,10 +1303,12 @@ def classify_studies(
         `cohort`, `mapped_trait_id`, `mapped_trait` (from the GWAS
         Catalog record). `reason` is one of
         `"included"`, `"over_cap"` (eligible but
-        beyond `cap`), or `"no_full_sumstats"`. `"included"` and
-        `"over_cap"` records appear first, most-recent-publication-date
-        first (unresolved dates sort last), followed by
-        `"no_full_sumstats"` records in their original input order.
+        beyond `cap`), `"over_total_cap"` (within its per-term `cap` but
+        beyond `total_cap`), or `"no_full_sumstats"`. `"included"`,
+        `"over_cap"` and `"over_total_cap"` records appear first, in that
+        order and most-recent-publication-date first within each
+        (unresolved dates sort last), followed by `"no_full_sumstats"`
+        records in their original input order.
     """
     eligible = [r for r in records if r.get("full_summary_stats_available")]
     ineligible = [
@@ -1313,19 +1330,30 @@ def classify_studies(
 
     eligible.sort(key=sort_key, reverse=True)
 
+    over_total_cap: list[dict] = []
     if per_term:
         # eligible is sorted, so each term's first `cap` are its most recent
         included_ids: set[str] = set()
+        over_total_ids: set[str] = set()
         per_term_counts: dict[str, int] = {}
         for record in eligible:
             terms = mapped_traits(record.get("efo_traits"))[0].split("; ")
             if any(per_term_counts.get(term, 0) < cap for term in terms):
-                included_ids.add(record["accession_id"])
+                if total_cap is not None and len(included_ids) >= total_cap:
+                    over_total_ids.add(record["accession_id"])
+                else:
+                    included_ids.add(record["accession_id"])
             for term in terms:
                 per_term_counts[term] = per_term_counts.get(term, 0) + 1
         included = [r for r in eligible if r["accession_id"] in included_ids]
+        over_total_cap = [
+            r for r in eligible if r["accession_id"] in over_total_ids
+        ]
         over_cap = [
-            r for r in eligible if r["accession_id"] not in included_ids
+            r
+            for r in eligible
+            if r["accession_id"] not in included_ids
+            and r["accession_id"] not in over_total_ids
         ]
     else:
         included, over_cap = eligible[:cap], eligible[cap:]
@@ -1353,12 +1381,14 @@ def classify_studies(
     classified = (
         [_row(r, "included") for r in included]
         + [_row(r, "over_cap") for r in over_cap]
+        + [_row(r, "over_total_cap") for r in over_total_cap]
         + [_row(r, "no_full_sumstats") for r in ineligible]
     )
     log_debug(
         f"{len(records)} studies -> {len(eligible)} with full sumstats "
         f"-> {len(included)} included after cap={cap}"
         + (" per term" if per_term else "")
+        + (f", total_cap={total_cap}" if total_cap is not None else "")
     )
     return classified
 

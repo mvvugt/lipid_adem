@@ -58,6 +58,26 @@ _NO_TRAIT_QUERY: dict[str, str] = {
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # helpers
 
+def _is_searchable_efo_id(efo_id: str) -> bool:
+    """Whether an outcome-table trait ID should be searched.
+
+    Parameters
+    ----------
+    efo_id : `str`
+        Cell from the `efo_id` column of the outcome table.
+
+    Returns
+    -------
+    searchable : `bool`
+        `False` for blank/`NA` cells and for `Constants.EXCLUDED_EFO_IDS`.
+    """
+    return (
+        efo_id not in ("", Constants.NA_STRING)
+        and efo_id not in Constants.EXCLUDED_EFO_IDS
+    )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _log_discovery_summary(
     efo_id: str, child_traits: bool, classified: list[dict]
 ) -> None:
@@ -85,8 +105,15 @@ def _log_discovery_summary(
         return
     reasons = [record["reason"] for record in classified]
     n_included = reasons.count("included")
-    n_eligible = n_included + reasons.count("over_cap")
-    scope = "with child traits, cap per term" if child_traits else "exact"
+    n_eligible = (
+        n_included + reasons.count("over_cap") + reasons.count("over_total_cap")
+    )
+    scope = (
+        "with child traits, cap per term and "
+        f"{Constants.MAX_STUDIES_PER_CHILD_QUERY} total"
+        if child_traits
+        else "exact"
+    )
     log_info(
         f"{efo_id} ({scope}): {len(classified)} studies -> {n_eligible} "
         f"with full sumstats -> {n_included} included"
