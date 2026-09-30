@@ -1985,9 +1985,14 @@ def fetch_curated_associations(
     Notes
     -----
     Sourced via biomed-api's `GwasCatalogReader` (GWAS Catalog REST v2).
+    Pages are requested at `Constants.GWAS_CATALOG_PAGE_SIZE` records, so
+    large traits (e.g. HDL-C, 25k records) stay under biomed-api's
+    500-page cap.
     """
     reader = GwasCatalogReader()
-    query = {"show_child_trait": True} if include_child_traits else {}
+    query: dict[str, object] = {"size": Constants.GWAS_CATALOG_PAGE_SIZE}
+    if include_child_traits:
+        query["show_child_trait"] = True
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", UserWarning)
         result = reader.read(profile="associations", efo_id=efo_id, **query)
