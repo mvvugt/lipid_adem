@@ -530,6 +530,11 @@ def merge_results() -> None:
     )
 
     combined = pd.concat([p for p in parts if not p.empty], ignore_index=True)
+    combined = functions.flag_duplicate_variants(combined)
+    log_info(
+        f"duplicate variants flagged: "
+        f"{int(combined[HarmonisedColumns.DUPLICATE_VARIANT].sum())} rows"
+    )
 
     log_stage("write")
     Paths.RESULTS_OUTPUT.mkdir(parents=True, exist_ok=True)

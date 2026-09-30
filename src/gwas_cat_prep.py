@@ -237,7 +237,7 @@ def build_tasks() -> None:
     manual), one row each, with its inclusion status and reason (e.g.
     "no_full_sumstats", "over_cap", "over_total_cap",
     "gxe_interaction", "gxg_interaction", "cnv_study",
-    "not_found_in_manifest") -- unlike
+    "x_chromosome_study", "not_found_in_manifest") -- unlike
     `TASKS_FILE`, which only contains the surviving, capped set. Each
     row also carries display-only metadata (`META_COLUMNS`): publication
     date/first author/journal/title from PubMed, and trait, sample size,

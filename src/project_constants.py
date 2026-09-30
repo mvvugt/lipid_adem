@@ -96,6 +96,10 @@ class Constants:
     # insensitive) are copy-number-variant association models, not SNP
     # GWAS; the REST API has no CNV flag, unlike gxe/gxg
     CNV_TRAIT_PATTERN: str = r"\bCNV\b|copy[- ]number"
+    # disease_trait of X-chromosome-only analyses (e.g. "(r-XCI
+    # inactivation)"); no gene in gene_list.txt is on X, so they can
+    # never return rows
+    X_CHROM_TRAIT_PATTERN: str = r"\bXCI\b|X[- ]chromosom|\bXWAS\b"
     # written to a gene-table cell that was looked up but not found;
     # treated as resolved on reruns (clear the cell by hand to retry)
     NA_STRING: str = "NA"
@@ -190,7 +194,12 @@ class HarmonisedColumns:
     CHROM: str = ColumnNames.CHROM
     POS: str = "pos"
     RSID: str = "rsid"
+    # canonical chrom:pos:other_allele:effect_allele; the source's own ID
+    # is kept as src_variant_id
     VARIANT_ID: str = "variant_id"
+    # True for rows sharing source/study/outcome/gene/variant_id (e.g. two
+    # source variants harmonised to the same site)
+    DUPLICATE_VARIANT: str = "duplicate_variant"
     EFFECT_ALLELE: str = "effect_allele"
     OTHER_ALLELE: str = "other_allele"
     EAF: str = "eaf"
@@ -220,6 +229,7 @@ class HarmonisedColumns:
         POS,
         RSID,
         VARIANT_ID,
+        DUPLICATE_VARIANT,
         EFFECT_ALLELE,
         OTHER_ALLELE,
         EAF,
@@ -277,7 +287,6 @@ class SourceColumnMaps:
         HarmonisedColumns.CHROM: "chromosome",
         HarmonisedColumns.POS: "base_pair_location",
         HarmonisedColumns.RSID: "rsid",
-        HarmonisedColumns.VARIANT_ID: "variant_id",
         HarmonisedColumns.EFFECT_ALLELE: "effect_allele",
         HarmonisedColumns.OTHER_ALLELE: "other_allele",
         HarmonisedColumns.EAF: "effect_allele_frequency",

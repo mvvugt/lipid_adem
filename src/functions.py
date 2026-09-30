@@ -55,6 +55,9 @@ _CURATED_ALLELE_PATTERN = re.compile(
     re.VERBOSE,
 )
 _CNV_TRAIT_PATTERN = re.compile(Constants.CNV_TRAIT_PATTERN, re.IGNORECASE)
+_X_CHROM_TRAIT_PATTERN = re.compile(
+    Constants.X_CHROM_TRAIT_PATTERN, re.IGNORECASE
+)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1349,6 +1352,8 @@ def study_exclusion_reason(record: dict) -> str | None:
     not the SNP main effects filtered downstream, yet would otherwise
     take recency-cap slots (e.g. one GWAS Catalog paper deposits dozens
     of "<trait> x <environment> interaction" studies).
+    X-chromosome-only analyses (e.g. X-inactivation models) cannot cover
+    the autosomal gene regions filtered downstream.
 
     Parameters
     ----------
@@ -1359,8 +1364,9 @@ def study_exclusion_reason(record: dict) -> str | None:
     Returns
     -------
     reason : `str` or `NoneType`
-        `"gxe_interaction"`, `"gxg_interaction"` or `"cnv_study"`
-        (checked in that order), or `None` if the study is usable.
+        `"gxe_interaction"`, `"gxg_interaction"`, `"cnv_study"` or
+        `"x_chromosome_study"` (checked in that order), or `None` if the
+        study is usable.
     """
     if record.get("gxe"):
         return "gxe_interaction"
@@ -1369,6 +1375,8 @@ def study_exclusion_reason(record: dict) -> str | None:
     trait = record.get("disease_trait")
     if isinstance(trait, str) and _CNV_TRAIT_PATTERN.search(trait):
         return "cnv_study"
+    if isinstance(trait, str) and _X_CHROM_TRAIT_PATTERN.search(trait):
+        return "x_chromosome_study"
     return None
 
 
@@ -1381,9 +1389,9 @@ def classify_studies(
 ) -> list[dict]:
     """Classify candidate GWAS Catalog studies as included or excluded.
 
-    Studies with a `study_exclusion_reason` (GxE/GxG interaction, CNV)
-    are set aside first, so they never take a cap slot. The rest go
-    through the same eligibility filter (full summary stats available)
+    Studies with a `study_exclusion_reason` (GxE/GxG interaction, CNV,
+    X-chromosome-only) are set aside first, so they never take a cap
+    slot. The rest go through the same eligibility filter (full summary stats available)
     and recency cap as `filter_and_cap_studies`, but every input record
     is returned
     with the reason it was kept or dropped, rather than only
@@ -1422,7 +1430,8 @@ def classify_studies(
         beyond `cap`), `"over_total_cap"` (within its per-term `cap` but
         beyond `total_cap`), `"no_full_sumstats"`, or a
         `study_exclusion_reason` (`"gxe_interaction"`,
-        `"gxg_interaction"`, `"cnv_study"`). `"included"`, `"over_cap"`
+        `"gxg_interaction"`, `"cnv_study"`, `"x_chromosome_study"`).
+        `"included"`, `"over_cap"`
         and `"over_total_cap"` records appear first, in that order and
         most-recent-publication-date first within each (unresolved dates
         sort last), followed by `"no_full_sumstats"` records and then
@@ -2176,6 +2185,74 @@ def _passes_maf(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _norm_chrom(value: str) -> str:
+    """Normalise a sumstats chromosome field to the gene-region form.
+
+    Parameters
+    ----------
+    value : `str`
+        Raw chromosome field (e.g. "16", " 16", "chr16").
+
+    Returns
+    -------
+    chrom : `str`
+        `value` without surrounding whitespace or a leading "chr"/"CHR"
+        (e.g. "16").
+    """
+    chrom = value.strip()
+    if chrom[:3].lower() == "chr":
+        chrom = chrom[3:]
+    return chrom
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _warn_if_empty(
+    source: str,
+    n_rows: int,
+    n_in_region: int,
+    n_no_freq: int,
+    maf_threshold: float,
+) -> None:
+    """Warn with a likely cause when a sumstats file yields 0 rows.
+
+    Parameters
+    ----------
+    source : `str`
+        Path or URL of the sumstats file (message only).
+    n_rows : `int`
+        Rows kept after the region and MAF filters.
+    n_in_region : `int`
+        Rows inside any gene region, before the MAF filter.
+    n_no_freq : `int`
+        Of `n_in_region`, rows with a missing/non-numeric frequency.
+    maf_threshold : `float`
+        MAF cutoff used (message only).
+
+    Returns
+    -------
+    `None`
+
+    Notes
+    -----
+    0 rows in region points to a build, coverage or parsing problem;
+    rows in region but none kept points to missing frequencies or an
+    author-side MAF filter.
+    """
+    if n_rows > 0:
+        return
+    if n_in_region == 0:
+        log_warn(
+            f"{source}: 0 rows -- 0 in region (check build, coverage or "
+            f"chrom/pos format)"
+        )
+        return
+    log_warn(
+        f"{source}: 0 rows -- {n_in_region} in region, {n_no_freq} "
+        f"missing frequency, none with MAF < {maf_threshold}"
+    )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _header_indices(
     header: list[str], url: str, columns: list[str]
 ) -> list[int]:
@@ -2278,23 +2355,30 @@ def filter_sumstats_regions(
         )
 
         records = []
+        n_in_region = 0
+        n_no_freq = 0
         contigs = set(tabix_file.contigs)
         for gene, region in regions.items():
             # sparse sumstats can lack whole chromosomes; fetch() on a
-            # contig absent from the index raises ValueError
-            if region.chrom not in contigs:
+            # contig absent from the index raises ValueError. Some files
+            # name contigs "chr16" rather than "16".
+            contig = region.chrom
+            if contig not in contigs and f"chr{contig}" in contigs:
+                contig = f"chr{contig}"
+            if contig not in contigs:
                 log_info(
                     f"{gene} @ chr{region.chrom}: chromosome not in "
                     f"{tabix_source} -> 0 rows"
                 )
                 continue
             n_before = len(records)
-            for line in tabix_file.fetch(
-                region.chrom, region.start, region.end
-            ):
+            for line in tabix_file.fetch(contig, region.start, region.end):
                 # CRLF source files leave a trailing "\r" on the last field
                 fields = line.rstrip("\r\n").split("\t")
-                if _passes_maf(
+                n_in_region += 1
+                if _parse_freq(fields[maf_idx]) is None:
+                    n_no_freq += 1
+                elif _passes_maf(
                     fields, maf_idx, maf_threshold, transform_to_maf
                 ):
                     records.append([gene, *fields])
@@ -2306,6 +2390,9 @@ def filter_sumstats_regions(
     log_info(
         f"{tabix_source} @ {len(regions)} regions -> {len(records)} rows "
         f"with MAF < {maf_threshold}"
+    )
+    _warn_if_empty(
+        tabix_source, len(records), n_in_region, n_no_freq, maf_threshold
     )
     return pd.DataFrame.from_records(
         records, columns=[ColumnNames.GENE, *header]
@@ -2384,12 +2471,18 @@ def filter_raw_sumstats_regions(
         )
 
         records = []
+        n_in_region = 0
+        n_no_freq = 0
         for line in text_stream:
             fields = line.rstrip("\r\n").split("\t")
-            chrom_regions = regions_by_chrom.get(fields[chrom_idx])
+            # author files may pad fields (e.g. "   940005") or prefix
+            # "chr"; left as-is in the output, only matched normalised
+            chrom_regions = regions_by_chrom.get(
+                _norm_chrom(fields[chrom_idx])
+            )
             if chrom_regions is None:
                 continue
-            pos = fields[pos_idx]
+            pos = fields[pos_idx].strip()
             if not pos.isdigit():
                 continue
             genes = [
@@ -2399,13 +2492,19 @@ def filter_raw_sumstats_regions(
             ]
             if not genes:
                 continue
-            if _passes_maf(fields, maf_idx, maf_threshold, transform_to_maf):
+            n_in_region += 1
+            if _parse_freq(fields[maf_idx]) is None:
+                n_no_freq += 1
+            elif _passes_maf(
+                fields, maf_idx, maf_threshold, transform_to_maf
+            ):
                 records.extend([gene, *fields] for gene in genes)
 
     log_info(
         f"{url} @ {len(regions)} regions -> {len(records)} rows with "
         f"MAF < {maf_threshold} (raw scan)"
     )
+    _warn_if_empty(url, len(records), n_in_region, n_no_freq, maf_threshold)
     return pd.DataFrame.from_records(
         records, columns=[ColumnNames.GENE, *header]
     )
@@ -2624,7 +2723,10 @@ def harmonise_frame(
     -----
     Values derived only where missing: `p_value` <-> `neg_log10_p`, and
     `maf = min(eaf, 1 - eaf)`. `maf_status` is `numeric` where `maf`
-    is known and `not_reported` otherwise.
+    is known and `not_reported` otherwise. `variant_id` is always
+    derived as `chrom:pos:other_allele:effect_allele` (NA if any part is
+    missing); a source's own `variant_id` is kept as `src_variant_id`.
+    `duplicate_variant` is left NA here (see `flag_duplicate_variants`).
     """
     hc = HarmonisedColumns
     core = pd.DataFrame(index=df.index)
@@ -2644,6 +2746,8 @@ def harmonise_frame(
     core[hc.CHROM] = (
         core[hc.CHROM]
         .astype("string")
+        .str.strip()
+        .str.replace(r"(?i)^chr", "", regex=True)
         .str.replace(r"\.0$", "", regex=True)
     )
     _derive_columns(core, has_variants)
@@ -2655,14 +2759,17 @@ def harmonise_frame(
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _derive_columns(core: pd.DataFrame, has_variants: bool) -> None:
-    """Fill derivable core columns in place, only where they are missing.
+    """Fill derivable core columns in place.
+
+    `p_value`, `neg_log10_p` and `maf` are filled only where missing;
+    `variant_id` is always rebuilt as `chrom:pos:other:effect`.
 
     Parameters
     ----------
     core : `pd.DataFrame`
         Core columns with numeric columns already converted.
     has_variants : `bool`
-        If `False`, `maf_status` is left NA.
+        If `False`, `maf_status` and `variant_id` are left NA.
 
     Returns
     -------
@@ -2681,6 +2788,41 @@ def _derive_columns(core: pd.DataFrame, has_variants: bool) -> None:
         core[hc.MAF_STATUS] = np.where(
             core[hc.MAF].notna(), MafStatus.NUMERIC, MafStatus.NOT_REPORTED
         )
+        parts = [
+            core[col].astype("string").str.strip()
+            for col in (hc.CHROM, hc.POS, hc.OTHER_ALLELE, hc.EFFECT_ALLELE)
+        ]
+        complete = pd.concat(parts, axis=1).notna().all(axis=1)
+        variant_id = parts[0].str.cat(parts[1:], sep=":")
+        core[hc.VARIANT_ID] = variant_id.where(complete, pd.NA)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def flag_duplicate_variants(df: pd.DataFrame) -> pd.DataFrame:
+    """Flag rows that repeat a variant within one study/outcome/gene.
+
+    E.g. two source variants harmonised to the same site. Rows are kept;
+    only `duplicate_variant` is set.
+
+    Parameters
+    ----------
+    df : `pd.DataFrame`
+        Harmonised rows (`HarmonisedColumns.CORE_ORDER` columns).
+
+    Returns
+    -------
+    flagged : `pd.DataFrame`
+        `df` with `duplicate_variant` `True` for every row sharing
+        `source`, `study_accession`, `outcome`, `gene` and a non-NA
+        `variant_id` with another row, else `False`.
+    """
+    hc = HarmonisedColumns
+    keys = [hc.SOURCE, hc.STUDY_ACCESSION, hc.OUTCOME, hc.GENE, hc.VARIANT_ID]
+    has_id = df[hc.VARIANT_ID].notna()
+    duplicated = df[keys].astype("string").duplicated(keep=False)
+    flagged = df.copy()
+    flagged[hc.DUPLICATE_VARIANT] = (duplicated & has_id).astype(bool)
+    return flagged
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
