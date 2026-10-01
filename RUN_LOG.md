@@ -134,16 +134,85 @@ Output:
 - last run: 2026-09-30 22:35:32
 - commit: `578bffb`
 
-Δ vs previous run (was `a361304`):
-- error resolved
-```diff
-@@ -1,2 +1 @@
- [info]  2026-09-30 21:07:43 using root directory: /home/rmgpmva/projects/lipid_adem
--[error] 2026-09-30 11:30:47 run_mamba: '/home/rmgpmva/projects/lipid_adem/src/merge_associations.py' failed in env 'biomed-api' (exit 1)
-```
-
 Output:
 ```text
 [info]  2026-09-30 21:07:43 using root directory: /home/rmgpmva/projects/lipid_adem
+
+```
+
+## [40] match_variants (`/home/rmgpmva/projects/lipid_adem/src/match_variants.py`)
+- first run: 2026-10-01 09:59:12
+- last run: 2026-10-01 09:59:12
+- commit: `74dae41` (dirty)
+
+Output:
+```text
+[stage] 2026-10-01 09:58:41 load_variant_lists
+[info]  2026-10-01 09:58:41 6 variant lists, 30561 rows: ANGPTL3_variants.tsv, CETP_variants.tsv, HMGCR_variants.tsv, NPC1L1_variants.tsv, PCSK9_variants.tsv, PPARA_variants.tsv
+[info]  2026-10-01 09:58:41 28539 rows with source in ['AM'] skipped
+[info]  2026-10-01 09:58:41 1125 duplicate rows removed
+[info]  2026-10-01 09:58:41 ANGPTL3 ClinVar: 22 rows, 12 without alleles, 10 outside gene region
+[info]  2026-10-01 09:58:41 ANGPTL3 PTV: 57 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-01 09:58:41 CETP ClinVar: 317 rows, 9 without alleles, 6 outside gene region
+[info]  2026-10-01 09:58:41 CETP GoF: 1 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-01 09:58:41 CETP PTV: 61 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-01 09:58:41 CETP landfors_paper: 94 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-01 09:58:41 HMGCR ClinVar: 9 rows, 1 without alleles, 1 outside gene region
+[info]  2026-10-01 09:58:41 HMGCR PTV: 40 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-01 09:58:41 NPC1L1 ClinVar: 9 rows, 9 without alleles, 9 outside gene region
+[info]  2026-10-01 09:58:41 NPC1L1 PTV: 102 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-01 09:58:41 PCSK9 ClinVar: 23 rows, 6 without alleles, 5 outside gene region
+[info]  2026-10-01 09:58:41 PCSK9 GoF: 18 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-01 09:58:41 PCSK9 PTV: 85 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-01 09:58:41 PPARA ClinVar: 33 rows, 33 without alleles, 33 outside gene region
+[info]  2026-10-01 09:58:41 PPARA PTV: 26 rows, 0 without alleles, 0 outside gene region
+[stage] 2026-10-01 09:58:41 load_gwas
+[info]  2026-10-01 09:59:08 /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/final_results.tsv.gz: 598192 rows, 597469 variant-level (summary-stats, curated)
+[info]  2026-10-01 09:59:10 summary-stats: 973 rows without chrom/pos or effect allele, cannot be matched
+[info]  2026-10-01 09:59:10 curated: 420 rows without chrom/pos or effect allele, cannot be matched
+[stage] 2026-10-01 09:59:11 match
+[info]  2026-10-01 09:59:11 ANGPTL3 ClinVar: 10 variants, 0 matched, GWAS rows: none
+[info]  2026-10-01 09:59:11 ANGPTL3 PTV: 57 variants, 9 matched, GWAS rows: summary-stats=255
+[info]  2026-10-01 09:59:11 CETP ClinVar: 308 variants, 140 matched, GWAS rows: summary-stats=5300 curated=32
+[info]  2026-10-01 09:59:11 CETP GoF: 1 variants, 1 matched, GWAS rows: summary-stats=12 curated=5
+[info]  2026-10-01 09:59:11 CETP PTV: 61 variants, 17 matched, GWAS rows: summary-stats=343
+[info]  2026-10-01 09:59:11 CETP landfors_paper: 94 variants, 23 matched, GWAS rows: summary-stats=531
+[info]  2026-10-01 09:59:11 HMGCR ClinVar: 8 variants, 0 matched, GWAS rows: none
+[info]  2026-10-01 09:59:11 HMGCR PTV: 40 variants, 1 matched, GWAS rows: summary-stats=6
+[info]  2026-10-01 09:59:11 NPC1L1 PTV: 102 variants, 22 matched, GWAS rows: summary-stats=337
+[info]  2026-10-01 09:59:11 PCSK9 ClinVar: 17 variants, 3 matched, GWAS rows: summary-stats=38
+[info]  2026-10-01 09:59:11 PCSK9 GoF: 18 variants, 8 matched, GWAS rows: summary-stats=287
+[info]  2026-10-01 09:59:11 PCSK9 PTV: 85 variants, 18 matched, GWAS rows: summary-stats=358 curated=3
+[info]  2026-10-01 09:59:11 PPARA PTV: 26 variants, 2 matched, GWAS rows: summary-stats=25
+[info]  2026-10-01 09:59:11 no ensembl_variant_id column: a1-vs-Ensembl-ref check skipped
+[stage] 2026-10-01 09:59:11 write
+[info]  2026-10-01 09:59:12 wrote 7532 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/matched_variants.tsv.gz
+
+```
+
+## [50] meta_analysis (`/home/rmgpmva/projects/lipid_adem/src/meta_analysis.py --group-by variant`)
+- first run: 2026-10-01 10:26:24
+- last run: 2026-10-01 10:26:24
+- commit: `f98a0d0`
+
+Output:
+```text
+[info]  2026-10-01 10:26:15 grouping variant: variant_site, outcome
+[stage] 2026-10-01 10:26:15 load_matched
+[info]  2026-10-01 10:26:15 /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/matched_variants.tsv.gz: 7532 rows, 217 variants
+[stage] 2026-10-01 10:26:15 prepare_effects
+[info]  2026-10-01 10:26:15 3 rows dropped: no beta or odds ratio
+[info]  2026-10-01 10:26:15 6 rows dropped: no SE and p missing, 0 or 1
+[info]  2026-10-01 10:26:15 7523 usable rows, 663 with SE derived from p
+[stage] 2026-10-01 10:26:15 orient
+[info]  2026-10-01 10:26:15 114 variants oriented as ldl_lowering
+[info]  2026-10-01 10:26:15 98 variants oriented as a2
+[info]  2026-10-01 10:26:15 4 variants oriented as a2_gof_flipped
+[stage] 2026-10-01 10:26:15 dedupe
+[info]  2026-10-01 10:26:15 617 duplicate rows removed
+[stage] 2026-10-01 10:26:15 meta_analyse
+[info]  2026-10-01 10:26:18 1237 groups, 1034 pooling more than one estimate
+[stage] 2026-10-01 10:26:18 write
+[info]  2026-10-01 10:26:18 wrote 1237 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_variant.tsv.gz
 
 ```

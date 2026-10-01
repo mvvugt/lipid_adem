@@ -22,7 +22,12 @@ esac
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Obtain publicly available results
+# VARIANT ANNOTATION
+# TODO annotate variants using ClinVar, GoF, and VEP+LOFTEE
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# GWAS LOOKUPS
 
 # [myriad] resolve gene/outcome lookups, discover studies, write job-array file
 run_mamba biomed-api "${ROOT}"/src/gwas_cat_prep.py
@@ -33,9 +38,21 @@ run_mamba biomed-api pyjasub "${ROOT}"/config/filter_task.cnf
 # [myriad] adds GWAS Catalog associations + Open Targets gene-burden evidence
 qsub "${ROOT}"/src/merge_associations.sh -r "${ROOT}"
 
-# [myriad] match GWAS lookups to the gene variant lists (non-AM); run after
-# the merge job has finished
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# NON-AGGREGATED ANALYSES
+# TODO analyse variants in UKB and AoU
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# INTERMEDIATE MATCH
+
+# [myriad] match GWAS lookups to the gene variant lists
 run_mamba biomed-api "${ROOT}"/src/match_variants.py
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# META-ANALYSIS
 
 # [myriad] fixed-effect IVW meta-analysis of the matched variants
 run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --group-by variant
