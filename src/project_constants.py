@@ -115,6 +115,12 @@ class Constants:
     ENSEMBL_BAD_FRACTION_WARN: float = 0.5
     # ... but only when it has at least this many variant rows
     ENSEMBL_BAD_MIN_ROWS: int = 20
+    # per-gene variant lists (external, not written by this pipeline)
+    VARIANT_LIST_GLOB: str = "*_variants.tsv"
+    # variant-list sources not matched to GWAS lookups (AlphaMissense)
+    EXCLUDED_VARIANT_SOURCES: frozenset[str] = frozenset({"AM"})
+    # GWAS result sources with single variants (gene-burden has none)
+    VARIANT_LEVEL_SOURCES: tuple[str, ...] = ("summary-stats", "curated")
 
 
 class RunlogOrder:
@@ -128,6 +134,7 @@ class RunlogOrder:
     GWAS_CAT_PREP: int = 10
     FILTER_GWAS_CAT: int = 20
     MERGE_ASSOCIATIONS: int = 30
+    MATCH_VARIANTS: int = 40
 
 
 class ColumnNames:
@@ -354,6 +361,32 @@ class MafStatus:
     NOT_REPORTED: str = "not_reported"
 
 
+class VariantListColumns:
+    """Columns of the per-gene `*_variants.tsv` lists and the columns
+    `match_variants.py` adds to the matched GWAS rows.
+
+    `A1` is taken to be the GRCh38 reference allele and `A2` the
+    alternate allele.
+    """
+    CHROM: str = "chr"
+    POS: str = "pos"
+    A1: str = "a1"
+    A2: str = "a2"
+    SOURCE: str = "source"
+    GENE: str = "gene"
+    TRI_CLASS: str = "tri_class"
+    # added to the matched output, after the final-results columns
+    OUT_SOURCE: str = "variant_list_source"
+    OUT_GENE: str = "variant_list_gene"
+    OUT_A1: str = "variant_list_a1"
+    OUT_A2: str = "variant_list_a2"
+    OUT_TRI_CLASS: str = "variant_list_tri_class"
+    # "a2" or "a1": which list allele is the GWAS effect allele
+    EFFECT_ALLELE_IS: str = "effect_allele_is"
+    # "both" (effect + other allele) or "effect_only" (curated rows)
+    MATCH_ALLELES: str = "match_alleles"
+
+
 class EnsemblAlleleCheck:
     """Values of the `ensembl_allele_check` column.
 
@@ -403,3 +436,5 @@ class FileNames:
     GENE_REGIONS_FILE: Path = Paths.DATA_TEMP / "gene_regions.tsv"
     STUDY_DISCOVERY_LOG: Path = Paths.DATA_TEMP / "study_discovery_log.tsv.gz"
     FINAL_RESULTS: Path = Paths.RESULTS_OUTPUT / "final_results.tsv.gz"
+    # final-results rows matching a (non-AM) gene variant-list entry
+    MATCHED_VARIANTS: Path = Paths.RESULTS_OUTPUT / "matched_variants.tsv.gz"

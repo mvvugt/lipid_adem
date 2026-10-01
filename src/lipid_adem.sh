@@ -32,3 +32,7 @@ run_mamba biomed-api pyjasub "${ROOT}"/config/filter_task.cnf
 
 # [myriad] adds GWAS Catalog associations + Open Targets gene-burden evidence
 qsub "${ROOT}"/src/merge_associations.sh -r "${ROOT}"
+
+# [myriad] match GWAS lookups to the gene variant lists (non-AM); run after
+# the merge job has finished
+run_mamba biomed-api "${ROOT}"/src/match_variants.py
