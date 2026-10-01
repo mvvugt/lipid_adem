@@ -3173,6 +3173,61 @@ def _ensembl_variant(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _ensembl_read_with_retry(profile: str, **params: str) -> object:
+    """Run an `EnsemblReader` profile, retrying transient failures.
+
+    Retries when the wrapped cause is an HTTP 5xx response, a timeout or
+    a dropped connection, like `_get_with_retry`.
+
+    Parameters
+    ----------
+    profile : `str`
+        `EnsemblReader` profile, e.g. "overlap_region" or "variation".
+    **params : `str`
+        The profile's parameters.
+
+    Returns
+    -------
+    result : `object`
+        The reader's result (with `.records`).
+
+    Raises
+    ------
+    ReaderError
+        If the last attempt fails, or on any non-transient failure (e.g.
+        400/404) without retrying.
+
+    Notes
+    -----
+    Makes `len(Constants.HTTP_RETRY_BACKOFF) + 1` attempts, sleeping the
+    listed number of seconds before each retry.
+    """
+    n_retries = len(Constants.HTTP_RETRY_BACKOFF)
+    for attempt, wait in enumerate((*Constants.HTTP_RETRY_BACKOFF, None), 1):
+        try:
+            return EnsemblReader().read(profile=profile, **params)
+        except ReaderError as err:
+            cause = err.__cause__
+            response = getattr(cause, "response", None)
+            transient = isinstance(
+                cause, (requests.Timeout, requests.ConnectionError)
+            ) or (response is not None and response.status_code >= 500)
+            if not transient or wait is None:
+                raise
+            reason = (
+                f"HTTP {response.status_code}"
+                if response is not None
+                else type(cause).__name__
+            )
+        log_warn(
+            f"Ensembl {profile} {params}: {reason}, "
+            f"retry {attempt}/{n_retries} in {wait}s"
+        )
+        time.sleep(wait)
+    raise AssertionError("unreachable")
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _ensembl_window_records(
     chrom: str, start: int, end: int
 ) -> tuple[list[dict], bool]:
@@ -3205,7 +3260,7 @@ def _ensembl_window_records(
     path = Paths.ENSEMBL_CACHE / f"overlap_{chrom}_{start}_{end}.json.gz"
     if path.exists():
         return list(_read_json_gz(path)), False
-    result = EnsemblReader().read(
+    result = _ensembl_read_with_retry(
         profile="overlap_region",
         region=f"{chrom}:{start}-{end}",
         feature="variation",
@@ -3300,7 +3355,7 @@ def _ensembl_rsid_variants(rsid: str) -> tuple[list[EnsemblVariant], bool]:
         data = _read_json_gz(path)
     else:
         try:
-            result = EnsemblReader().read(profile="variation", id=rsid)
+            result = _ensembl_read_with_retry(profile="variation", id=rsid)
             record = result.records[0] if result.records else {}
         except ReaderError as err:
             if not _is_not_found(err):
