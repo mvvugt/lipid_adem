@@ -72,7 +72,7 @@ class Constants:
     EFO_ID_PATTERN: str = r"^EFO[:_]\d+$"
     GWAS_CATALOG_API_V2: str = "https://www.ebi.ac.uk/gwas/rest/api/v2"
     # REST v2 page-size maximum; the default (20) hits biomed-api's
-    # 500-page cap (10k records) for HDL-C/LDL-C
+    # 500-page cap (10k records) for large traits
     GWAS_CATALOG_PAGE_SIZE: int = 500
     # seconds slept before each retry of a failed (5xx/timeout) REST call
     HTTP_RETRY_BACKOFF: tuple[int, ...] = (30, 60, 120)
@@ -84,17 +84,12 @@ class Constants:
     )
     OPEN_TARGETS_PAGE_SIZE: int = 1000
     # extra Open Targets disease IDs queried alongside an outcome ID; none
-    # needed since OUTCOME_EFO_OVERRIDES maps HDL/LDL to the terms Open
-    # Targets files their evidence under
+    # needed currently
     OPEN_TARGETS_EXTRA_DISEASE_IDS: dict[str, tuple[str, ...]] = {}
     # outcome -> efo_id applied in memory over icd_codes.txt (never written
-    # back, so the raw file stays as-is): EFO_0022264/EFO_0022266 resolved
-    # for these outcomes are "free cholesterol in HDL/LDL" (NMR), not
-    # HDL-C/LDL-C
-    OUTCOME_EFO_OVERRIDES: dict[str, str] = {
-        "hdl_cholesterol": "EFO_0004612",
-        "ldl_cholesterol": "EFO_0004611",
-    }
+    # back, so the raw file stays as-is), for outcomes whose resolved
+    # efo_id is the wrong term; none needed currently
+    OUTCOME_EFO_OVERRIDES: dict[str, str] = {}
     # GWAS Catalog studies whose disease_trait matches this (case-
     # insensitive) are copy-number-variant association models, not SNP
     # GWAS; the REST API has no CNV flag, unlike gxe/gxg
@@ -121,10 +116,8 @@ class Constants:
     EXCLUDED_VARIANT_SOURCES: frozenset[str] = frozenset({"AM"})
     # GWAS result sources with single variants (gene-burden has none)
     VARIANT_LEVEL_SOURCES: tuple[str, ...] = ("summary-stats", "curated")
-    # outcome whose pooled per-variant beta sets the effect direction
-    # (towards the LDL-lowering allele) in the meta-analysis
-    LDL_OUTCOME: str = "ldl_cholesterol"
-    # variant-list source flipped when no LDL estimate orients a variant
+    # variant-list source flipped in the meta-analysis so the a1 allele's
+    # effect is reported
     GOF_VARIANT_SOURCE: str = "GoF"
     # meta-analysis dedupe: per study/outcome/variant the first source here
     # is kept (rows from other sources go last)
@@ -414,7 +407,7 @@ class MetaColumns:
     BETA_A2: str = "beta_a2"
     # BETA_A2 for ORIENTED_ALLELE
     BETA_ORIENTED: str = "beta_oriented"
-    # "ldl_lowering", "a2" or "a2_gof_flipped", see `Orientation`
+    # "a2" or "a2_gof_flipped", see `Orientation`
     ORIENTATION: str = "orientation"
     ORIENTED_ALLELE: str = "oriented_allele"
     # per pooled group
@@ -422,6 +415,8 @@ class MetaColumns:
     N_ESTIMATES: str = "n_estimates"
     N_STUDIES: str = "n_studies"
     STUDIES: str = "studies"
+    # accessions dropped because their (beta, se) copies a kept estimate
+    COPIED_STUDIES: str = "copied_studies"
     N_SE_DERIVED: str = "n_se_derived"
     BETA: str = "meta_beta"
     SE: str = "meta_se"
@@ -453,11 +448,9 @@ class MetaColumns:
 
 class Orientation:
     """Values of the `orientation` column."""
-    # sign set by the variant's pooled LDL-C beta (any p)
-    LDL_LOWERING: str = "ldl_lowering"
-    # no LDL estimate: effect of the a2 (alt) allele
+    # effect of the a2 (alt) allele
     A2: str = "a2"
-    # no LDL estimate, GoF-listed variant: effect of the a1 allele
+    # GoF-listed variant: effect of the a1 allele
     A2_GOF_FLIPPED: str = "a2_gof_flipped"
 
 

@@ -3,9 +3,11 @@
 Fixed-effect inverse-variance weighted (IVW) meta-analysis of the GWAS
 rows matched to the gene variant lists (`matched_variants.tsv.gz`).
 
-Effects are oriented towards the LDL-lowering allele when the variant has
-an LDL-C estimate; otherwise towards the a2 (alt) allele, flipped for GoF
-variants. Rows are pooled per named grouping (`MetaColumns.GROUPINGS`).
+Effects are oriented towards the a2 (alt) allele, flipped to a1 for GoF
+variants. Rows are pooled per named grouping (`MetaColumns.GROUPINGS`),
+after keeping one estimate per study, dropping estimates copied under
+another accession, and dropping effect-allele-only matches whose tested
+alt is unknown.
 """
 
 
@@ -37,11 +39,17 @@ from project_constants import (
 
 
 # helper columns, dropped before writing
-_P_KEY: str = "_p"
+_NEG_LOG10_P_KEY: str = "_neg_log10_p"
 _RANK_KEY: str = "_source_rank"
-# vectorised stdlib functions (scipy is not a project dependency)
+_COPY_OF_KEY: str = "_copy_of"
+# `match_alleles` value of rows matched on the effect allele only
+_EFFECT_ONLY: str = "effect_only"
+# above this -log10 p, 10**-x underflows; z comes from the normal tail
+_DIRECT_Z_MAX_NEG_LOG10_P: float = 300.0
+_TAIL_ITERATIONS: int = 5
+_NORMAL = NormalDist()
+# vectorised stdlib function (scipy is not a project dependency)
 _ERFC = np.vectorize(math.erfc, otypes=[float])
-_NORMAL_INV_CDF = np.vectorize(NormalDist().inv_cdf, otypes=[float])
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -82,6 +90,82 @@ def _join_unique(values: pd.Series) -> str:
         ``""`` when every value is missing.
     """
     return ";".join(sorted(values.dropna().astype(str).unique()))
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _z_from_neg_log10_p(neg_log10_p: float) -> float:
+    """Convert a two-sided -log10 p-value to an absolute z-score.
+
+    Parameters
+    ----------
+    neg_log10_p : `float`
+        -log10 of the two-sided p-value, > 0.
+
+    Returns
+    -------
+    z : `float`
+        ``|z|`` with ``p = 2 * (1 - Phi(|z|))``.
+
+    Notes
+    -----
+    Below `_DIRECT_Z_MAX_NEG_LOG10_P` the normal quantile is used
+    directly. Above it, ``10**-x`` underflows, so ``z`` is solved from
+    the Mills-ratio tail approximation
+    ``-ln(p/2) = z^2/2 + ln(z) + ln(2*pi)/2 - ln(1 - 1/z^2)``
+    by fixed-point iteration (relative error < 1e-6 for z > 37).
+    """
+    if neg_log10_p < _DIRECT_Z_MAX_NEG_LOG10_P:
+        return -_NORMAL.inv_cdf(10.0**-neg_log10_p / 2)
+    tail = neg_log10_p * math.log(10) + math.log(2)
+    z = math.sqrt(2 * tail)
+    for _ in range(_TAIL_ITERATIONS):
+        z = math.sqrt(
+            2
+            * (
+                tail
+                - math.log(z)
+                - 0.5 * math.log(2 * math.pi)
+                + math.log1p(-1 / z**2)
+            )
+        )
+    return z
+
+
+_Z_FROM_NEG_LOG10_P = np.vectorize(_z_from_neg_log10_p, otypes=[float])
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _rank_rows(rows: pd.DataFrame) -> pd.DataFrame:
+    """Sort rows by preference: source, then smallest p, then accession.
+
+    Parameters
+    ----------
+    rows : `pd.DataFrame`
+        With `source`, `study_accession` and helper `_NEG_LOG10_P_KEY`.
+
+    Returns
+    -------
+    ranked : `pd.DataFrame`
+        `rows` sorted, index kept, sources ranked by
+        `Constants.GWAS_SOURCE_PREFERENCE` (others last).
+    """
+    rank = {
+        source: i
+        for i, source in enumerate(Constants.GWAS_SOURCE_PREFERENCE)
+    }
+    ranked = rows.assign(
+        **{
+            _RANK_KEY: rows[HarmonisedColumns.SOURCE]
+            .map(rank)
+            .fillna(len(rank))
+        }
+    )
+    return ranked.sort_values(
+        [_RANK_KEY, _NEG_LOG10_P_KEY, HarmonisedColumns.STUDY_ACCESSION],
+        ascending=[True, False, True],
+        kind="stable",
+        na_position="last",
+    ).drop(columns=_RANK_KEY)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -154,7 +238,7 @@ def prepare_effects(matched: pd.DataFrame) -> pd.DataFrame:
     -------
     rows : `pd.DataFrame`
         Usable rows with `BETA_USED`, `EFFECT_SCALE`, `SE_USED`,
-        `SE_DERIVED`, `BETA_A2` and helper `_P_KEY`.
+        `SE_DERIVED`, `BETA_A2` and helper `_NEG_LOG10_P_KEY`.
     """
     rows = matched.copy()
     beta = pd.to_numeric(rows[HarmonisedColumns.BETA], errors="coerce")
@@ -175,21 +259,23 @@ def prepare_effects(matched: pd.DataFrame) -> pd.DataFrame:
         has_beta, "beta", np.where(has_or, "log_or", None)
     )
 
-    # p_value of 0 is an underflow; -log10 p keeps the value then
-    p = p_value.where(p_value > 0, 10 ** -neg_log10_p)
-    rows[_P_KEY] = p
+    # p_value of 0 is an underflow; neg_log10_p keeps the value then.
+    # Kept on the -log10 scale so it never underflows again.
+    from_p = -np.log10(p_value.where(p_value > 0))
+    neg_log10 = from_p.where(p_value > 0, neg_log10_p)
+    rows[_NEG_LOG10_P_KEY] = neg_log10
     has_se = se.notna() & (se > 0) & np.isfinite(se)
-    p_ok = p.notna() & (p > 0) & (p < 1)
+    p_ok = neg_log10.notna() & (neg_log10 > 0) & np.isfinite(neg_log10)
     beta_used = rows[MetaColumns.BETA_USED]
     derivable = ~has_se & p_ok & beta_used.notna() & (beta_used != 0)
     z = pd.Series(np.nan, index=rows.index)
-    z[derivable] = -_NORMAL_INV_CDF(p[derivable].to_numpy() / 2)
+    z[derivable] = _Z_FROM_NEG_LOG10_P(neg_log10[derivable].to_numpy())
     rows[MetaColumns.SE_USED] = se.where(has_se, beta_used.abs() / z)
     rows[MetaColumns.SE_DERIVED] = ~has_se
 
     reasons = {
         "no beta or odds ratio": beta_used.isna(),
-        "no SE and p missing, 0 or 1": (
+        "no SE and p missing or 1": (
             beta_used.notna() & ~has_se & ~p_ok
         ),
         "no SE and beta 0": (
@@ -217,9 +303,9 @@ def prepare_effects(matched: pd.DataFrame) -> pd.DataFrame:
 def dedupe(rows: pd.DataFrame, keys: list[str]) -> pd.DataFrame:
     """Keep one row per study, variant, outcome and grouping key.
 
-    Rows are ranked by `Constants.GWAS_SOURCE_PREFERENCE`, then by
-    smallest p. Rows without a study accession cannot be told apart and
-    are all kept (warned).
+    Rows are ranked with `_rank_rows` (source preference, then smallest
+    p). Rows without a study accession cannot be told apart and are all
+    kept (warned).
 
     Parameters
     ----------
@@ -250,25 +336,150 @@ def dedupe(rows: pd.DataFrame, keys: list[str]) -> pd.DataFrame:
             f"{n_no_study} rows without "
             f"{HarmonisedColumns.STUDY_ACCESSION} kept without deduping"
         )
-    rank = {
-        source: i
-        for i, source in enumerate(Constants.GWAS_SOURCE_PREFERENCE)
-    }
-    ranked = rows.assign(
-        **{
-            _RANK_KEY: rows[HarmonisedColumns.SOURCE]
-            .map(rank)
-            .fillna(len(rank))
-        }
-    )
-    ranked = ranked.sort_values(
-        [_RANK_KEY, _P_KEY], kind="stable", na_position="last"
-    )
+    ranked = _rank_rows(rows)
     no_study = ranked[HarmonisedColumns.STUDY_ACCESSION].isna()
     kept = ranked[no_study].index.union(
         ranked[~no_study].drop_duplicates(subset).index
     )
     return rows.loc[kept].sort_index()
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def resolve_ambiguous(rows: pd.DataFrame) -> pd.DataFrame:
+    """Keep effect-allele-only a1 matches only where the alt is known.
+
+    A GWAS row with only an effect allele (curated) whose effect allele
+    is `a1` is copied into every list site at a multi-allelic position,
+    although the study tested one unknown alt. When summary-stats rows
+    of the same study matched exactly one of those sites (both alleles),
+    that site is kept; otherwise all copies are dropped and logged, as
+    is standard for unresolvable multi-allelic variants.
+
+    Parameters
+    ----------
+    rows : `pd.DataFrame`
+        From `prepare_effects`.
+
+    Returns
+    -------
+    resolved : `pd.DataFrame`
+        `rows` without the unresolved and wrong-site copies.
+    """
+    hc = HarmonisedColumns
+    vl = VariantListColumns
+    site = MetaColumns.VARIANT_SITE
+    candidate = (rows[vl.MATCH_ALLELES] == _EFFECT_ONLY) & (
+        rows[vl.EFFECT_ALLELE_IS] == "a1"
+    )
+    if not candidate.any():
+        return rows
+    # one key per original GWAS row (its copies share every GWAS column)
+    row_columns = [
+        hc.SOURCE,
+        hc.STUDY_ACCESSION,
+        hc.OUTCOME,
+        hc.CHROM,
+        hc.POS,
+        hc.RSID,
+        hc.EFFECT_ALLELE,
+        MetaColumns.BETA_USED,
+        _NEG_LOG10_P_KEY,
+    ]
+    row_key = (
+        rows.loc[candidate, row_columns]
+        .astype("string")
+        .fillna("")
+        .agg("|".join, axis=1)
+    )
+    n_sites = rows.loc[candidate, site].groupby(row_key).transform("nunique")
+    ambiguous = n_sites[n_sites > 1].index
+    if ambiguous.empty:
+        return rows
+
+    both = rows[rows[vl.MATCH_ALLELES] != _EFFECT_ONLY]
+    study_sites = set(zip(both[hc.STUDY_ACCESSION], both[site]))
+    confirmed = pd.Series(
+        [
+            (study, variant) in study_sites
+            for study, variant in zip(
+                rows.loc[ambiguous, hc.STUDY_ACCESSION],
+                rows.loc[ambiguous, site],
+            )
+        ],
+        index=ambiguous,
+    )
+    keys = row_key[ambiguous]
+    n_confirmed = confirmed.groupby(keys).transform("sum")
+    keep = confirmed & (n_confirmed == 1)
+    drop = ambiguous[~keep.to_numpy()]
+
+    resolved_keys = keys[n_confirmed == 1].unique()
+    unresolved = rows.loc[ambiguous[(n_confirmed != 1).to_numpy()]]
+    log_info(
+        f"{keys.nunique()} effect-allele-only GWAS rows with a1 at a "
+        f"multi-allelic site: {len(resolved_keys)} resolved by same-study "
+        f"summary stats, {unresolved.groupby(keys).ngroups} dropped"
+    )
+    for _, group in unresolved.groupby(keys, sort=False):
+        first = group.iloc[0]
+        log_info(
+            f"dropped, tested alt unknown: {first[hc.RSID]} "
+            f"{first[hc.STUDY_ACCESSION]} {first[hc.OUTCOME]} "
+            f"a1={first[vl.OUT_A1]} a2 in {_join_unique(group[vl.OUT_A2])}"
+        )
+    log_info(f"{len(drop)} ambiguous copies removed")
+    return rows.drop(index=drop)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def drop_copies(
+    rows: pd.DataFrame, keys: list[str]
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Drop estimates that copy another study's estimate exactly.
+
+    The same analysis is sometimes deposited under several accessions
+    (identical beta and SE). Pooling the copies would count one
+    estimate several times, so per variant, outcome and grouping key
+    only the first-ranked (`_rank_rows`) of identical estimates is kept.
+
+    Parameters
+    ----------
+    rows : `pd.DataFrame`
+        Deduped rows (`dedupe`), one per study and group.
+    keys : `list[str]`
+        Grouping columns.
+
+    Returns
+    -------
+    kept : `pd.DataFrame`
+        `rows` without the copies, in the original row order.
+    copies : `pd.DataFrame`
+        The dropped rows, with helper `_COPY_OF_KEY` (the accession of
+        the kept estimate).
+    """
+    accession = HarmonisedColumns.STUDY_ACCESSION
+    subset = list(
+        dict.fromkeys(
+            [
+                MetaColumns.VARIANT_SITE,
+                HarmonisedColumns.OUTCOME,
+                *keys,
+                MetaColumns.BETA_USED,
+                MetaColumns.SE_USED,
+            ]
+        )
+    )
+    ranked = _rank_rows(rows)
+    is_copy = ranked.duplicated(subset, keep="first")
+    originals = ranked.loc[~is_copy, [*subset, accession]].drop_duplicates(
+        subset
+    )
+    copies = ranked.loc[is_copy].copy()
+    # a left merge keeps the left row order; originals are unique per subset
+    copies[_COPY_OF_KEY] = (
+        copies[subset].merge(originals, on=subset, how="left")[accession]
+    ).to_numpy()
+    return rows.drop(index=copies.index), copies
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -345,10 +556,8 @@ def ivw(rows: pd.DataFrame, keys: list[str], beta: str) -> pd.DataFrame:
 def orient(rows: pd.DataFrame) -> pd.DataFrame:
     """Orient every row's effect per variant.
 
-    A variant with any `Constants.LDL_OUTCOME` estimate is oriented
-    towards its LDL-lowering allele (sign of its pooled a2 LDL-C beta,
-    no p threshold). Otherwise the a2 allele is used, or a1 when any of
-    the variant's list sources is `Constants.GOF_VARIANT_SOURCE`.
+    The a2 allele is used, or a1 when any of the variant's list sources
+    is `Constants.GOF_VARIANT_SOURCE`.
 
     Parameters
     ----------
@@ -361,12 +570,6 @@ def orient(rows: pd.DataFrame) -> pd.DataFrame:
         `rows` plus `ORIENTATION`, `ORIENTED_ALLELE` and `BETA_ORIENTED`.
     """
     site = MetaColumns.VARIANT_SITE
-    ldl_rows = rows[rows[HarmonisedColumns.OUTCOME] == Constants.LDL_OUTCOME]
-    ldl = ivw(
-        dedupe(ldl_rows, [site, HarmonisedColumns.OUTCOME]),
-        [site],
-        MetaColumns.BETA_A2,
-    ).set_index(site)[MetaColumns.BETA]
     gof_sites = set(
         rows.loc[
             rows[VariantListColumns.OUT_SOURCE]
@@ -375,17 +578,11 @@ def orient(rows: pd.DataFrame) -> pd.DataFrame:
         ]
     )
 
-    ldl_beta = rows[site].map(ldl)
-    has_ldl = ldl_beta.notna()
     is_gof = rows[site].isin(gof_sites)
-    sign = np.where(
-        has_ldl, np.where(ldl_beta > 0, -1.0, 1.0), np.where(is_gof, -1.0, 1.0)
-    )
+    sign = np.where(is_gof, -1.0, 1.0)
     oriented = rows.copy()
     oriented[MetaColumns.ORIENTATION] = np.where(
-        has_ldl,
-        Orientation.LDL_LOWERING,
-        np.where(is_gof, Orientation.A2_GOF_FLIPPED, Orientation.A2),
+        is_gof, Orientation.A2_GOF_FLIPPED, Orientation.A2
     )
     oriented[MetaColumns.ORIENTED_ALLELE] = np.where(
         sign > 0,
@@ -401,20 +598,25 @@ def orient(rows: pd.DataFrame) -> pd.DataFrame:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def meta_analyse(rows: pd.DataFrame, keys: list[str]) -> pd.DataFrame:
+def meta_analyse(
+    rows: pd.DataFrame, keys: list[str], copies: pd.DataFrame
+) -> pd.DataFrame:
     """Pool the oriented effects per group and describe each group.
 
     Parameters
     ----------
     rows : `pd.DataFrame`
-        From `orient`, deduped with `dedupe` on `keys`.
+        From `orient`, deduped with `dedupe` and `drop_copies` on `keys`.
     keys : `list[str]`
         Grouping columns.
+    copies : `pd.DataFrame`
+        The copies removed by `drop_copies`.
 
     Returns
     -------
     pooled : `pd.DataFrame`
-        `ivw` output plus `N_STUDIES`, `N_SE_DERIVED`, `STUDIES` and the
+        `ivw` output plus `N_STUDIES`, `N_SE_DERIVED`, `STUDIES`,
+        `COPIED_STUDIES` (``""`` when none) and the
         `MetaColumns.DESCRIBE_COLUMNS` (unique values joined with ``;``).
     """
     pooled = ivw(rows, keys, MetaColumns.BETA_ORIENTED)
@@ -439,6 +641,21 @@ def meta_analyse(rows: pd.DataFrame, keys: list[str]) -> pd.DataFrame:
     for column in describe:
         extra[column] = grouped[column].agg(_join_unique)
     pooled = pooled.merge(extra.reset_index(), on=keys, how="left")
+    if copies.empty:
+        pooled[MetaColumns.COPIED_STUDIES] = ""
+    else:
+        copied = (
+            copies.groupby(keys, sort=True, dropna=False)[
+                HarmonisedColumns.STUDY_ACCESSION
+            ]
+            .agg(_join_unique)
+            .rename(MetaColumns.COPIED_STUDIES)
+            .reset_index()
+        )
+        pooled = pooled.merge(copied, on=keys, how="left")
+        pooled[MetaColumns.COPIED_STUDIES] = pooled[
+            MetaColumns.COPIED_STUDIES
+        ].fillna("")
 
     n_multi = int((pooled[MetaColumns.N_ESTIMATES] > 1).sum())
     log_info(
@@ -475,6 +692,9 @@ def meta_analysis(grouping: str) -> None:
     rows = prepare_effects(matched)
     del matched
 
+    log_stage("resolve_ambiguous")
+    rows = resolve_ambiguous(rows)
+
     log_stage("orient")
     rows = orient(rows)
 
@@ -482,9 +702,16 @@ def meta_analysis(grouping: str) -> None:
     n_before = len(rows)
     rows = dedupe(rows, keys)
     log_info(f"{n_before - len(rows)} duplicate rows removed")
+    rows, copies = drop_copies(rows, keys)
+    log_info(f"{len(copies)} estimates removed as copies of another study")
+    pairs = copies.groupby(
+        [_COPY_OF_KEY, HarmonisedColumns.STUDY_ACCESSION]
+    ).size()
+    for (original, copy), n in pairs.items():
+        log_info(f"{copy} copies {original}: {n} estimates")
 
     log_stage("meta_analyse")
-    pooled = meta_analyse(rows, keys)
+    pooled = meta_analyse(rows, keys, copies)
 
     log_stage("write")
     path = Paths.RESULTS_OUTPUT / FileNames.META_ANALYSIS_TEMPLATE.format(

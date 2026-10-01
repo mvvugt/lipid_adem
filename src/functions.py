@@ -524,7 +524,7 @@ def load_icd_table(path: Path) -> pd.DataFrame:
     Parameters
     ----------
     path : `Path`
-        CSV file with `outcome`, `code`, `code_type`, `description`
+        Tab-separated file with `outcome`, `code`, `code_type`, `description`
         columns. Adds empty `efo_id`/`finngen_phenocode` columns if the
         file doesn't have them yet (one-time migration).
 
@@ -544,7 +544,7 @@ def load_icd_table(path: Path) -> pd.DataFrame:
         raise FileNotFoundError(f"ICD code list not found: {path}")
     # keep_default_na=False so a literal "NA" (looked up, not found) is not
     # read back as blank and re-resolved on every run
-    df = pd.read_csv(path, dtype=str, keep_default_na=False)
+    df = pd.read_csv(path, sep="\t", dtype=str, keep_default_na=False)
     if ColumnNames.EFO_ID not in df.columns:
         df[ColumnNames.EFO_ID] = ""
     if ColumnNames.FINNGEN_PHENOCODE not in df.columns:

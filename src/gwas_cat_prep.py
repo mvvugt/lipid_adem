@@ -272,7 +272,7 @@ def build_tasks() -> None:
     icd_df = functions.resolve_efo_ids(icd_df)
     icd_df = functions.replace_obsolete_trait_ids(icd_df)
     if not icd_df.equals(icd_before):
-        functions.write_table_atomic(icd_df, FileNames.ICD_CODE_LIST, sep=",")
+        functions.write_table_atomic(icd_df, FileNames.ICD_CODE_LIST, sep="\t")
         log_info(f"wrote resolved efo_ids to {FileNames.ICD_CODE_LIST}")
     # after the write-back, so overrides live in code only
     icd_df = functions.apply_outcome_efo_overrides(icd_df)

@@ -1,51 +1,85 @@
-outcome,code,code_type,description,finngen_phenocode,efo_id
-all_cause_dementia,F00,icd10,Dementia in Alzheimer disease,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",MONDO_0004975
-all_cause_dementia,F01,icd10,Vascular dementia,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",MONDO_0004648
-all_cause_dementia,F02.0,icd10,Dementia in Pick disease,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",MONDO_0008243
-all_cause_dementia,F02.0A,icd10,,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",NA
-all_cause_dementia,F03,icd10,Unspecified dementia,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",NA
-all_cause_dementia,F05.1,icd10,Delirium superimposed on dementia,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",NA
-all_cause_dementia,G30,icd10,Alzheimer disease,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",MONDO_0004975
-all_cause_dementia,G31.0,icd10,Circumscribed brain atrophy,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",NA
-all_cause_dementia,G31.09,icd10,,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",NA
-all_cause_dementia,I67.3,icd10,Progressive vascular leukoencephalopathy,"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE",MONDO_0011057
-alzheimers_dementia,F00.0,icd10,Dementia in Alzheimer disease with early onset,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
-alzheimers_dementia,F00.0A,icd10,,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
-alzheimers_dementia,F00.1,icd10,Dementia in Alzheimer disease with late onset,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
-alzheimers_dementia,F00.1A,icd10,,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
-alzheimers_dementia,F00.2,icd10,"Dementia in Alzheimer disease, atypical or mixed type","G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
-alzheimers_dementia,F00.2A,icd10,,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
-alzheimers_dementia,F00.9,icd10,"Dementia in Alzheimer disease, unspecified","G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
-alzheimers_dementia,F00.9A,icd10,,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
-alzheimers_dementia,G30.0,icd10,Alzheimer disease with early onset,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
-alzheimers_dementia,G30.1,icd10,Alzheimer disease with late onset,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
-alzheimers_dementia,G30.8,icd10,Other Alzheimer disease,"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
-alzheimers_dementia,G30.9,icd10,"Alzheimer disease, unspecified","G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT",MONDO_0004975
-apolipoprotein_a1,,quantitative_trait,Apolipoprotein A1 measurement,,EFO_0004614
-apolipoprotein_b,,quantitative_trait,Apolipoprotein B measurement,,EFO_0004615
-cardiovascular_disease,I50,icd10,Heart failure,FG_CVD,MONDO_0005252
-cardiovascular_disease,I60,icd10,Subarachnoid haemorrhage,FG_CVD,MONDO_0005099
-cardiovascular_disease,I61,icd10,Intracerebral haemorrhage,FG_CVD,MONDO_0013792
-cardiovascular_disease,I63,icd10,Cerebral infarction,FG_CVD,MONDO_0005394
-cardiovascular_disease,I64,icd10,"Stroke, not specified as haemorrhage or infarction",FG_CVD,MONDO_0005098
-cardiovascular_disease,I70,icd10,Atherosclerosis,FG_CVD,MONDO_0005311
-cardiovascular_disease,I73,icd10,Other peripheral vascular diseases,FG_CVD,MONDO_0005294
-coronary_heart_disease,I20,icd10,Angina pectoris,I9_CHD,EFO_0003913
-coronary_heart_disease,I21,icd10,Acute myocardial infarction,I9_CHD,MONDO_0004781
-coronary_heart_disease,I22,icd10,Subsequent myocardial infarction,I9_CHD,EFO_0008584
-coronary_heart_disease,I23,icd10,Certain current complications following acute myocardial infarction,I9_CHD,NA
-coronary_heart_disease,I24,icd10,Other acute ischaemic heart diseases,I9_CHD,MONDO_0005267
-coronary_heart_disease,I25,icd10,Chronic ischaemic heart disease,I9_CHD,MONDO_0005010
-frontotemporal_dementia,F02.0,icd10,Dementia in Pick disease,FTD,MONDO_0008243
-frontotemporal_dementia,G31.0,icd10,Circumscribed brain atrophy,FTD,NA
-hdl_cholesterol,,quantitative_trait,HDL cholesterol measurement,,EFO_0022264
-ldl_cholesterol,,quantitative_trait,LDL cholesterol measurement,,EFO_0022266
-lewy_body_dementia,G31.83,icd10cm,Dementia with Lewy bodies,,EFO_0006799
-parkinsons_disease_dementia,F02.3,icd10,Dementia in Parkinson disease,PD_DEMENTIA_EXMORE,EFO_0011057
-vascular_dementia,F01,icd10,Vascular dementia,F5_VASCDEM,MONDO_0004648
-vascular_dementia,F01.0,icd10,Vascular dementia of acute onset,F5_VASCDEM,NA
-vascular_dementia,F01.1,icd10,Multi-infarct dementia,F5_VASCDEM,MONDO_0043224
-vascular_dementia,F01.2,icd10,Subcortical vascular dementia,F5_VASCDEM,MONDO_0000914
-vascular_dementia,F01.3,icd10,Mixed cortical and subcortical vascular dementia,F5_VASCDEM,NA
-vascular_dementia,F01.8,icd10,Other vascular dementia,F5_VASCDEM,MONDO_0004648
-vascular_dementia,F01.9,icd10,"Vascular dementia, unspecified",F5_VASCDEM,NA
+outcome	code	code_type	description	finngen_phenocode	efo_id
+all_cause_dementia	F00	icd10	Dementia in Alzheimer disease	"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE"	MONDO_0004975
+all_cause_dementia	F01	icd10	Vascular dementia	"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE"	MONDO_0004648
+all_cause_dementia	F02.0	icd10	Dementia in Pick disease	"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE"	MONDO_0008243
+all_cause_dementia	F02.0A	icd10		"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE"	NA
+all_cause_dementia	F03	icd10	Unspecified dementia	"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE"	NA
+all_cause_dementia	F05.1	icd10	Delirium superimposed on dementia	"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE"	NA
+all_cause_dementia	G30	icd10	Alzheimer disease	"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE"	MONDO_0004975
+all_cause_dementia	G31.0	icd10	Circumscribed brain atrophy	"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE"	NA
+all_cause_dementia	G31.09	icd10		"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE"	NA
+all_cause_dementia	I67.3	icd10	Progressive vascular leukoencephalopathy	"F5_DEMENTIA,F5_DEMENTIA_INCLAVO,KRA_PSY_DEMENTIA_EXMORE"	MONDO_0011057
+alzheimers_dementia	F00.0	icd10	Dementia in Alzheimer disease with early onset	"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT"	MONDO_0004975
+alzheimers_dementia	F00.0A	icd10		"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT"	MONDO_0004975
+alzheimers_dementia	F00.1	icd10	Dementia in Alzheimer disease with late onset	"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT"	MONDO_0004975
+alzheimers_dementia	F00.1A	icd10		"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT"	MONDO_0004975
+alzheimers_dementia	F00.2	icd10	"Dementia in Alzheimer disease, atypical or mixed type"	"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT"	MONDO_0004975
+alzheimers_dementia	F00.2A	icd10		"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT"	MONDO_0004975
+alzheimers_dementia	F00.9	icd10	"Dementia in Alzheimer disease, unspecified"	"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT"	MONDO_0004975
+alzheimers_dementia	F00.9A	icd10		"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT"	MONDO_0004975
+alzheimers_dementia	G30.0	icd10	Alzheimer disease with early onset	"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT"	MONDO_0004975
+alzheimers_dementia	G30.1	icd10	Alzheimer disease with late onset	"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT"	MONDO_0004975
+alzheimers_dementia	G30.8	icd10	Other Alzheimer disease	"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT"	MONDO_0004975
+alzheimers_dementia	G30.9	icd10	"Alzheimer disease, unspecified"	"G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT"	MONDO_0004975
+hf	I50	icd10	Heart failure	FG_CVD	MONDO_0005252
+stroke	I60	icd10	Subarachnoid haemorrhage	FG_CVD	MONDO_0005099
+stroke	I61	icd10	Intracerebral haemorrhage	FG_CVD	MONDO_0013792
+stroke	I63	icd10	Cerebral infarction	FG_CVD	MONDO_0005394
+stroke	I64	icd10	"Stroke, not specified as haemorrhage or infarction"	FG_CVD	MONDO_0005098
+coronary_heart_disease	I20	icd10	Angina pectoris	I9_CHD	EFO_0003913
+coronary_heart_disease	I21	icd10	Acute myocardial infarction	I9_CHD	MONDO_0004781
+coronary_heart_disease	I22	icd10	Subsequent myocardial infarction	I9_CHD	EFO_0008584
+coronary_heart_disease	I23	icd10	Certain current complications following acute myocardial infarction	I9_CHD	NA
+coronary_heart_disease	I24	icd10	Other acute ischaemic heart diseases	I9_CHD	MONDO_0005267
+coronary_heart_disease	I25	icd10	Chronic ischaemic heart disease	I9_CHD	MONDO_0005010
+frontotemporal_dementia	F02.0	icd10	Dementia in Pick disease	FTD	MONDO_0008243
+frontotemporal_dementia	G31.0	icd10	Circumscribed brain atrophy	FTD	NA
+lewy_body_dementia	G31.83	icd10cm	Dementia with Lewy bodies		EFO_0006799
+parkinsons_disease_dementia	F02.3	icd10	Dementia in Parkinson disease	PD_DEMENTIA_EXMORE	EFO_0011057
+vascular_dementia	F01	icd10	Vascular dementia	F5_VASCDEM	MONDO_0004648
+vascular_dementia	F01.0	icd10	Vascular dementia of acute onset	F5_VASCDEM	NA
+vascular_dementia	F01.1	icd10	Multi-infarct dementia	F5_VASCDEM	MONDO_0043224
+vascular_dementia	F01.2	icd10	Subcortical vascular dementia	F5_VASCDEM	MONDO_0000914
+vascular_dementia	F01.3	icd10	Mixed cortical and subcortical vascular dementia	F5_VASCDEM	NA
+vascular_dementia	F01.8	icd10	Other vascular dementia	F5_VASCDEM	MONDO_0004648
+vascular_dementia	F01.9	icd10	"Vascular dementia, unspecified"	F5_VASCDEM	NA
+vascular_dementia	I67.3	icd10	Progressive vascular leukoencephalopathy		
+sudden_cardiac_death	I49.0	icd10	Ventricular fibrillation and flutter		
+sudden_cardiac_death	I46.0	icd10	Cardiac arrest with successful resuscitation		
+sudden_cardiac_death	I46.9	icd10	"Cardiac arrest, unspecified"		
+sudden_cardiac_death	I46.1	icd10	"Sudden cardiac death, so described"		
+sudden_cardiac_death	I47.0	icd10	Re-entry ventricular arrhythmia		
+sudden_cardiac_death	I47.2	icd10	Ventricular tachycardia		
+cardiovascular_disease	I60	icd10	Subarachnoid haemorrhage		
+cardiovascular_disease	I61	icd10	Intracerebral haemorrhage		
+cardiovascular_disease	I63	icd10	Cerebral infarction		
+cardiovascular_disease	I64	icd10	"Stroke, not specified as haemorrhage or infarction"		
+cardiovascular_disease	I20	icd10	Angina pectoris		
+cardiovascular_disease	I21	icd10	Acute myocardial infarction		
+cardiovascular_disease	I22	icd10	Subsequent myocardial infarction		
+cardiovascular_disease	I23	icd10	Certain current complications following acute myocardial infarction		
+cardiovascular_disease	I24	icd10	Other acute ischaemic heart diseases		
+cardiovascular_disease	I25	icd10	Chronic ischaemic heart disease		
+cardiovascular_disease	I49.0	icd10	Ventricular fibrillation and flutter		
+cardiovascular_disease	I46.0	icd10	Cardiac arrest with successful resuscitation		
+cardiovascular_disease	I46.9	icd10	"Cardiac arrest, unspecified"		
+cardiovascular_disease	I46.1	icd10	"Sudden cardiac death, so described"		
+cardiovascular_disease	I47.0	icd10	Re-entry ventricular arrhythmia		
+cardiovascular_disease	I47.2	icd10	Ventricular tachycardia		
+MACE	I50	icd10	Heart failure		
+MACE	I60	icd10	Subarachnoid haemorrhage		
+MACE	I61	icd10	Intracerebral haemorrhage		
+MACE	I63	icd10	Cerebral infarction		
+MACE	I64	icd10	"Stroke, not specified as haemorrhage or infarction"		
+MACE	I20	icd10	Angina pectoris		
+MACE	I21	icd10	Acute myocardial infarction		
+MACE	I22	icd10	Subsequent myocardial infarction		
+MACE	I23	icd10	Certain current complications following acute myocardial infarction		
+MACE	I24	icd10	Other acute ischaemic heart diseases		
+MACE	I25	icd10	Chronic ischaemic heart disease		
+MACE	I49.0	icd10	Ventricular fibrillation and flutter		
+MACE	I46.0	icd10	Cardiac arrest with successful resuscitation		
+MACE	I46.9	icd10	"Cardiac arrest, unspecified"		
+MACE	I46.1	icd10	"Sudden cardiac death, so described"		
+MACE	I47.0	icd10	Re-entry ventricular arrhythmia		
+MACE	I47.2	icd10	Ventricular tachycardia		
