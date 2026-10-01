@@ -20,7 +20,13 @@ import argparse
 import gzip
 
 import pandas as pd
-from log_tools.emitter import log_count, log_count_summary, log_info, log_stage
+from log_tools.emitter import (
+    log_count,
+    log_count_summary,
+    log_info,
+    log_stage,
+    log_warn,
+)
 from log_tools.setup import runlog_setup
 
 import functions
@@ -80,7 +86,10 @@ def _is_searchable_efo_id(efo_id: str) -> bool:
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _log_discovery_summary(
-    efo_id: str, child_traits: bool, classified: list[dict]
+    efo_id: str,
+    child_traits: bool,
+    cohorts: frozenset[str],
+    classified: list[dict],
 ) -> None:
     """Record one summary line for an EFO id's study discovery.
 
@@ -94,6 +103,8 @@ def _log_discovery_summary(
         EFO ID the studies were discovered for.
     child_traits : `bool`
         Whether child traits were included (cap applied per term).
+    cohorts : `frozenset[str]`
+        Preferred-cohort keys whose catalog studies were excluded.
     classified : `list[dict]`
         As returned by `functions.discover_studies_with_reasons`.
 
@@ -115,10 +126,79 @@ def _log_discovery_summary(
         if child_traits
         else "exact"
     )
+    overlap = ""
+    if cohorts:
+        n_overlap = sum(
+            reason.startswith(Constants.COHORT_OVERLAP_REASON_PREFIX)
+            for reason in reasons
+        )
+        # a blank cohort cannot be checked for overlap, so it is kept
+        n_blank = sum(
+            record["reason"] == "included" and not record["cohort"]
+            for record in classified
+        )
+        overlap = (
+            f", {n_overlap} dropped for cohort overlap "
+            f"({', '.join(sorted(cohorts))}), {n_blank} included with "
+            "blank cohort"
+        )
     log_info(
         f"{efo_id} ({scope}): {len(classified)} studies -> {n_eligible} "
-        f"with full sumstats -> {n_included} included"
+        f"with full sumstats -> {n_included} included{overlap}"
     )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _covered_cohorts(
+    icd_df: pd.DataFrame,
+    studies_by_phenocode: dict[str, list[str]],
+    marvel_df: pd.DataFrame,
+) -> dict[str, frozenset[str]]:
+    """Find the preferred cohorts each outcome has own results for.
+
+    Parameters
+    ----------
+    icd_df : `pd.DataFrame`
+        The outcome table (`functions.load_icd_table`).
+    studies_by_phenocode : `dict[str, list[str]]`
+        Curated FinnGen phenocode -> `[phenocode]` if in the manifest,
+        else `[]` (`functions.finngen_studies_for_phenocode`).
+    marvel_df : `pd.DataFrame`
+        From `functions.load_marvel_table`.
+
+    Returns
+    -------
+    covered : `dict[str, frozenset[str]]`
+        Outcome -> `Constants.PREFERRED_COHORT_ALIASES` keys: ``finngen``
+        when any of its phenocodes is in the manifest, plus each marvel
+        `cohort` listed for it. Every outcome in `icd_df` is a key.
+    """
+    covered: dict[str, set[str]] = {
+        outcome: set() for outcome in icd_df[ColumnNames.OUTCOME]
+    }
+    for outcome, cell in zip(
+        icd_df[ColumnNames.OUTCOME], icd_df[ColumnNames.FINNGEN_PHENOCODE]
+    ):
+        if any(
+            studies_by_phenocode[phenocode]
+            for phenocode in functions.finngen_phenocodes_in_cell(cell)
+        ):
+            covered[outcome].add("finngen")
+    for outcome, cohort in zip(marvel_df["outcome"], marvel_df["cohort"]):
+        if outcome not in covered:
+            log_warn(
+                f"{FileNames.MARVEL_RESULTS}: outcome {outcome!r} not in "
+                f"{FileNames.ICD_CODE_LIST}, ignored"
+            )
+            continue
+        covered[outcome].add(cohort)
+    for outcome, cohorts in sorted(covered.items()):
+        if cohorts:
+            log_info(
+                f"{outcome}: own results for {', '.join(sorted(cohorts))}; "
+                "catalog studies with these cohorts excluded"
+            )
+    return {outcome: frozenset(cohorts) for outcome, cohorts in covered.items()}
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -228,6 +308,11 @@ def build_tasks() -> None:
     - `FileNames.GENE_REGIONS_FILE`: the flanked region per gene,
       columns: gene, chrom, start, end; read by the filter tasks.
 
+    Catalog studies listing a cohort the outcome has own results for
+    (FinnGen phenocode, or a `FileNames.MARVEL_RESULTS` row for UKB/AoU;
+    see `_covered_cohorts`) are excluded for that outcome before the
+    cap. Curated manual accessions get `source` ``manual``.
+
     Trait IDs in `Constants.EXCLUDED_EFO_IDS` are not searched. Then
     archives any existing pyjasub log dir (`Paths.FILTER_TASK_LOGS`) via
     `functions.archive_dir`, since pyjasub refuses a newer array file.
@@ -237,7 +322,8 @@ def build_tasks() -> None:
     manual), one row each, with its inclusion status and reason (e.g.
     "no_full_sumstats", "over_cap", "over_total_cap",
     "gxe_interaction", "gxg_interaction", "cnv_study",
-    "x_chromosome_study", "not_found_in_manifest") -- unlike
+    "x_chromosome_study", "cohort_overlap_<cohort>",
+    "not_found_in_manifest") -- unlike
     `TASKS_FILE`, which only contains the surviving, capped set. Each
     row also carries display-only metadata (`META_COLUMNS`): publication
     date/first author/journal/title from PubMed, and trait, sample size,
@@ -280,10 +366,6 @@ def build_tasks() -> None:
     Paths.DATA_TEMP.mkdir(parents=True, exist_ok=True)
     Paths.GWAS_FILTERED.mkdir(parents=True, exist_ok=True)
 
-    # Discover studies once per distinct (efo_id, child_traits) pair
-    # (global dedupe), then union each outcome's accessions from its own
-    # distinct efo_ids. child_traits is set per outcome, so the same ID
-    # can be searched both strict and broad.
     for efo_id, outcome in sorted(
         {
             (efo_id, outcome)
@@ -294,31 +376,11 @@ def build_tasks() -> None:
         }
     ):
         log_info(f"{efo_id} ({outcome}) in Constants.EXCLUDED_EFO_IDS, skipped")
-    distinct_queries = sorted(
-        {
-            (efo_id, functions.includes_child_traits(outcome))
-            for efo_id, outcome in zip(
-                icd_df[ColumnNames.EFO_ID], icd_df[ColumnNames.OUTCOME]
-            )
-            if _is_searchable_efo_id(efo_id)
-        }
-    )
-    log_stage("discover_gwas")
-    classified_by_query: dict[tuple[str, bool], list[dict]] = {}
-    for efo_id, child_traits in distinct_queries:
-        classified = functions.discover_studies_with_reasons(
-            efo_id, include_child_traits=child_traits
-        )
-        classified_by_query[(efo_id, child_traits)] = classified
-        _log_discovery_summary(efo_id, child_traits, classified)
-    log_count_summary(
-        _NO_STUDIES_COUNT_KEY, label="EFO ids with 0 GWAS Catalog studies"
-    )
-
-    # Same dedupe/union pattern for FinnGen, keyed by curated phenocode(s)
-    # instead of a live-discovered EFO ID. A cell may list more than one
-    # phenocode (comma-separated) when an outcome is curated against
-    # several definitional variants of the same disease.
+    # FinnGen is keyed by curated phenocode(s) instead of a live-discovered
+    # EFO ID. A cell may list more than one phenocode (comma-separated)
+    # when an outcome is curated against several definitional variants of
+    # the same disease. Resolved before the GWAS Catalog search, since
+    # the cohorts with own results decide which catalog studies are kept.
     log_stage("finngen_manual")
     finngen_manifest_df = functions.load_finngen_manifest()
     manual_studies_df = functions.load_manual_gwas_catalog_studies()
@@ -340,6 +402,41 @@ def build_tasks() -> None:
         )
         for phenocode in distinct_phenocodes
     }
+    covered = _covered_cohorts(
+        icd_df, studies_by_phenocode, functions.load_marvel_table()
+    )
+
+    # Discover studies once per distinct (efo_id, child_traits, covered
+    # cohorts) key (global dedupe), then union each outcome's accessions
+    # from its own distinct efo_ids. child_traits and covered cohorts are
+    # set per outcome, so the same ID can be searched more than once.
+    distinct_queries = sorted(
+        {
+            (
+                efo_id,
+                functions.includes_child_traits(outcome),
+                covered[outcome],
+            )
+            for efo_id, outcome in zip(
+                icd_df[ColumnNames.EFO_ID], icd_df[ColumnNames.OUTCOME]
+            )
+            if _is_searchable_efo_id(efo_id)
+        },
+        key=lambda query: (query[0], query[1], sorted(query[2])),
+    )
+    log_stage("discover_gwas")
+    classified_by_query: dict[
+        tuple[str, bool, frozenset[str]], list[dict]
+    ] = {}
+    for efo_id, child_traits, cohorts in distinct_queries:
+        classified = functions.discover_studies_with_reasons(
+            efo_id, include_child_traits=child_traits, excluded_cohorts=cohorts
+        )
+        classified_by_query[(efo_id, child_traits, cohorts)] = classified
+        _log_discovery_summary(efo_id, child_traits, cohorts, classified)
+    log_count_summary(
+        _NO_STUDIES_COUNT_KEY, label="EFO ids with 0 GWAS Catalog studies"
+    )
 
     study_outcome_rows: list[dict[str, str]] = []
     audit_rows: list[dict[str, str]] = []
@@ -350,7 +447,8 @@ def build_tasks() -> None:
         child_traits = functions.includes_child_traits(outcome)
         accession_to_efo: dict[str, str] = {}
         for efo_id in outcome_efo_ids:
-            for record in classified_by_query[(efo_id, child_traits)]:
+            query = (efo_id, child_traits, covered[outcome])
+            for record in classified_by_query[query]:
                 status = (
                     "included"
                     if record["reason"] == "included"
@@ -380,11 +478,15 @@ def build_tasks() -> None:
                     )
 
         # Curated accessions deposited on the FTP server but not yet
-        # searchable via the API
-        for accession in functions.manual_studies_for_outcome(
-            outcome, manual_studies_df
-        ):
-            accession_to_efo.setdefault(accession, "")
+        # searchable via the API; source "manual" so the meta-analysis
+        # can prefer them (Constants.SOURCE_DB_PREFERENCE)
+        manual_accessions = [
+            accession
+            for accession in functions.manual_studies_for_outcome(
+                outcome, manual_studies_df
+            )
+            if accession not in accession_to_efo
+        ]
 
         outcome_manual_rows = manual_studies_df.loc[
             manual_studies_df[ColumnNames.OUTCOME] == outcome
@@ -437,10 +539,14 @@ def build_tasks() -> None:
                 }
             )
 
-        study_sources = [
-            (accession, efo_id, "gwas_catalog")
-            for accession, efo_id in accession_to_efo.items()
-        ] + [(accession, "", "finngen") for accession in finngen_accessions]
+        study_sources = (
+            [
+                (accession, efo_id, "gwas_catalog")
+                for accession, efo_id in accession_to_efo.items()
+            ]
+            + [(accession, "", "manual") for accession in manual_accessions]
+            + [(accession, "", "finngen") for accession in finngen_accessions]
+        )
         for accession, efo_id, source in study_sources:
             outfile = Paths.GWAS_FILTERED / f"{accession}_result.tsv.gz"
             study_outcome_rows.append(

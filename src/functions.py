@@ -70,6 +70,10 @@ _CNV_TRAIT_PATTERN = re.compile(Constants.CNV_TRAIT_PATTERN, re.IGNORECASE)
 _X_CHROM_TRAIT_PATTERN = re.compile(
     Constants.X_CHROM_TRAIT_PATTERN, re.IGNORECASE
 )
+_COHORT_SPLIT_PATTERN = re.compile(Constants.COHORT_SPLIT_PATTERN)
+_MARVEL_VARIANT_PATTERN = re.compile(
+    Constants.MARVEL_VARIANT_PATTERN, re.IGNORECASE
+)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1236,6 +1240,7 @@ def discover_studies_with_reasons(
     efo_id: str,
     cap: int = Constants.MAX_STUDIES_PER_OUTCOME,
     include_child_traits: bool = False,
+    excluded_cohorts: Collection[str] = frozenset(),
 ) -> list[dict]:
     """Discover and classify GWAS Catalog studies for an EFO trait.
 
@@ -1255,6 +1260,9 @@ def discover_studies_with_reasons(
         the cap is then applied per term, so child terms cannot push
         out the studies of `efo_id` itself, with an overall ceiling of
         `Constants.MAX_STUDIES_PER_CHILD_QUERY` included studies.
+    excluded_cohorts : `Collection[str]`, optional, default: `frozenset()`
+        Preferred-cohort keys with own results for the outcome; studies
+        listing one are excluded before the cap (see `classify_studies`).
 
     Returns
     -------
@@ -1274,6 +1282,7 @@ def discover_studies_with_reasons(
             if include_child_traits
             else None
         ),
+        excluded_cohorts=excluded_cohorts,
     )
 
 
@@ -1393,16 +1402,72 @@ def study_exclusion_reason(record: dict) -> str | None:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def study_cohorts(cohort_cell: object) -> set[str]:
+    """Map a GWAS Catalog `cohort` cell to preferred-cohort keys.
+
+    Parameters
+    ----------
+    cohort_cell : `object`
+        The study's `cohort` value, e.g. ``"UKB; EB"`` or a list of
+        cohort names; anything else (``None``, NaN) has no cohorts.
+
+    Returns
+    -------
+    cohorts : `set[str]`
+        Keys of `Constants.PREFERRED_COHORT_ALIASES` whose aliases match
+        a cohort token (case-insensitive); other cohorts are ignored.
+    """
+    tokens = {
+        token.strip().lower()
+        for token in _COHORT_SPLIT_PATTERN.split(clean_cell(cohort_cell))
+        if token.strip()
+    }
+    return {
+        key
+        for key, aliases in Constants.PREFERRED_COHORT_ALIASES.items()
+        if tokens & aliases
+    }
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def cohort_overlap_reason(
+    record: dict, excluded_cohorts: Collection[str]
+) -> str | None:
+    """Tell whether a study shares a cohort we have own results for.
+
+    Parameters
+    ----------
+    record : `dict`
+        Study record with an optional `cohort` field.
+    excluded_cohorts : `Collection[str]`
+        Preferred-cohort keys (`Constants.PREFERRED_COHORT_ALIASES`)
+        covered by own results for the outcome being searched.
+
+    Returns
+    -------
+    reason : `str` or `NoneType`
+        `Constants.COHORT_OVERLAP_REASON_PREFIX` + the first overlapping
+        key in sorted order (e.g. ``"cohort_overlap_ukb"``), or `None`.
+    """
+    overlap = study_cohorts(record.get("cohort")) & set(excluded_cohorts)
+    if not overlap:
+        return None
+    return Constants.COHORT_OVERLAP_REASON_PREFIX + sorted(overlap)[0]
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def classify_studies(
     records: list[dict],
     cap: int = Constants.MAX_STUDIES_PER_OUTCOME,
     per_term: bool = False,
     total_cap: int | None = None,
+    excluded_cohorts: Collection[str] = frozenset(),
 ) -> list[dict]:
     """Classify candidate GWAS Catalog studies as included or excluded.
 
     Studies with a `study_exclusion_reason` (GxE/GxG interaction, CNV,
-    X-chromosome-only) are set aside first, so they never take a cap
+    X-chromosome-only) or a `cohort_overlap_reason` are set aside first,
+    so they never take a cap
     slot. The rest go through the same eligibility filter (full summary stats available)
     and recency cap as `filter_and_cap_studies`, but every input record
     is returned
@@ -1428,6 +1493,9 @@ def classify_studies(
         With `per_term`, also stop including once this many studies are
         included overall (most recent first); later per-term survivors
         are marked `"over_total_cap"`. `None` means no overall ceiling.
+    excluded_cohorts : `Collection[str]`, optional, default: `frozenset()`
+        Preferred-cohort keys with own results for the outcome; studies
+        listing one of them get a `cohort_overlap_reason`.
 
     Returns
     -------
@@ -1442,19 +1510,23 @@ def classify_studies(
         beyond `cap`), `"over_total_cap"` (within its per-term `cap` but
         beyond `total_cap`), `"no_full_sumstats"`, or a
         `study_exclusion_reason` (`"gxe_interaction"`,
-        `"gxg_interaction"`, `"cnv_study"`, `"x_chromosome_study"`).
+        `"gxg_interaction"`, `"cnv_study"`, `"x_chromosome_study"`), or
+        a `cohort_overlap_reason` (e.g. `"cohort_overlap_finngen"`).
         `"included"`, `"over_cap"`
         and `"over_total_cap"` records appear first, in that order and
         most-recent-publication-date first within each (unresolved dates
         sort last), followed by `"no_full_sumstats"` records and then
         excluded-design records, both in their original input order.
     """
+    def _exclusion(record: dict) -> str | None:
+        return study_exclusion_reason(record) or cohort_overlap_reason(
+            record, excluded_cohorts
+        )
+
     excluded = [
-        (r, reason)
-        for r in records
-        if (reason := study_exclusion_reason(r)) is not None
+        (r, reason) for r in records if (reason := _exclusion(r)) is not None
     ]
-    usable = [r for r in records if study_exclusion_reason(r) is None]
+    usable = [r for r in records if _exclusion(r) is None]
     eligible = [r for r in usable if r.get("full_summary_stats_available")]
     ineligible = [
         r for r in usable if not r.get("full_summary_stats_available")
@@ -1532,7 +1604,7 @@ def classify_studies(
     )
     log_debug(
         f"{len(records)} studies -> {len(usable)} after dropping "
-        f"GxE/GxG/CNV -> {len(eligible)} with full sumstats "
+        f"GxE/GxG/CNV/cohort overlap -> {len(eligible)} with full sumstats "
         f"-> {len(included)} included after cap={cap}"
         + (" per term" if per_term else "")
         + (f", total_cap={total_cap}" if total_cap is not None else "")
@@ -1703,6 +1775,81 @@ def manual_studies_for_outcome(
     """
     is_outcome = manual_df["outcome"] == outcome
     return manual_df.loc[is_outcome, "accession_id"].tolist()
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def load_marvel_table(path: Path = FileNames.MARVEL_RESULTS) -> pd.DataFrame:
+    """Load the curated table of own (marvel) association result files.
+
+    See `data/raw/marvel_results.SOURCE.md`.
+
+    Parameters
+    ----------
+    path : `Path`, optional, default: `FileNames.MARVEL_RESULTS`
+        TSV with `cohort` (a `Constants.PREFERRED_COHORT_ALIASES` key,
+        e.g. ``ukb``/``aou``), `outcome` (as in `icd_codes.txt`), `path`
+        (a marvel `{exposure}_results.tsv.gz`), `variable` and `model`
+        (the marvel `Variable`/`Model` to keep), and an optional `note`.
+
+    Returns
+    -------
+    marvel : `pd.DataFrame`
+        The table, all columns as strings, `cohort` lower-cased. Empty
+        (but correctly columned) if `path` does not exist.
+
+    Raises
+    ------
+    ValueError
+        If a required column is missing or a `cohort` is not a key of
+        `Constants.PREFERRED_COHORT_ALIASES`.
+    """
+    required = ["cohort", "outcome", "path", "variable", "model"]
+    columns = [*required, ColumnNames.NOTE]
+    if not path.exists():
+        return pd.DataFrame(columns=columns)
+    marvel_df = pd.read_csv(path, sep="\t", dtype=str).fillna("")
+    missing = [col for col in required if col not in marvel_df.columns]
+    if missing:
+        raise ValueError(f"{path}: missing column(s) {missing}")
+    if ColumnNames.NOTE not in marvel_df.columns:
+        marvel_df[ColumnNames.NOTE] = ""
+    marvel_df["cohort"] = marvel_df["cohort"].str.strip().str.lower()
+    unknown = sorted(
+        set(marvel_df["cohort"]) - set(Constants.PREFERRED_COHORT_ALIASES)
+    )
+    if unknown:
+        raise ValueError(
+            f"{path}: unknown cohort(s) {unknown}, expected one of "
+            f"{sorted(Constants.PREFERRED_COHORT_ALIASES)}"
+        )
+    return marvel_df[columns]
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def parse_marvel_exposure(exposure: str) -> tuple[str, int, str, str] | None:
+    """Parse a marvel `Exposure` naming a single variant.
+
+    Parameters
+    ----------
+    exposure : `str`
+        ``chr:pos:a1:a2`` as in the `*_variants.tsv` lists (``chr``
+        prefix optional), with a2 the counted allele; or a gene symbol.
+
+    Returns
+    -------
+    variant : `tuple[str, int, str, str]` or `NoneType`
+        `(chrom, pos, a1, a2)`, chrom without ``chr`` and alleles upper
+        case; `None` if `exposure` is not a variant (gene-level result).
+    """
+    match = _MARVEL_VARIANT_PATTERN.match(str(exposure).strip())
+    if match is None:
+        return None
+    return (
+        match["chrom"].upper(),
+        int(match["pos"]),
+        match["a1"].upper(),
+        match["a2"].upper(),
+    )
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

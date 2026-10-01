@@ -122,6 +122,37 @@ class Constants:
     # meta-analysis dedupe: per study/outcome/variant the first source here
     # is kept (rows from other sources go last)
     GWAS_SOURCE_PREFERENCE: tuple[str, ...] = ("summary-stats", "curated")
+    # meta-analysis tie-break after GWAS_SOURCE_PREFERENCE: per study/
+    # outcome/variant (and between identical copies) the first source_db
+    # here is kept (others go last)
+    SOURCE_DB_PREFERENCE: tuple[str, ...] = (
+        "manual",
+        "finngen",
+        "marvel_aou",
+        "marvel_ukb",
+        "gwas_catalog",
+    )
+    # preferred cohort key -> GWAS Catalog `cohort` tokens (lower case) it
+    # matches; a catalog study listing a cohort is excluded for every
+    # outcome that has that cohort's own results (FinnGen phenocode or
+    # marvel_results.tsv row)
+    PREFERRED_COHORT_ALIASES: dict[str, frozenset[str]] = {
+        "finngen": frozenset({"finngen"}),
+        "ukb": frozenset({"ukb", "ukbb", "uk biobank"}),
+        "aou": frozenset({"aou", "all of us"}),
+    }
+    # separators between cohorts in a GWAS Catalog `cohort` cell
+    COHORT_SPLIT_PATTERN: str = r"[;|,]"
+    # catalog reason prefix for a cohort-overlap exclusion, + cohort key
+    COHORT_OVERLAP_REASON_PREFIX: str = "cohort_overlap_"
+    # marvel `Exposure` naming a single variant (chr:pos:a1:a2, a2
+    # counted); any other exposure is a gene-level (burden) result
+    MARVEL_VARIANT_PATTERN: str = (
+        r"^(?:chr)?(?P<chrom>[0-9XYMT]+):(?P<pos>\d+):"
+        r"(?P<a1>[ACGT]+):(?P<a2>[ACGT]+)$"
+    )
+    # source_db of marvel rows, + cohort key
+    MARVEL_SOURCE_DB_PREFIX: str = "marvel_"
 
 
 class RunlogOrder:
@@ -339,6 +370,14 @@ class SourceColumnMaps:
         HarmonisedColumns.P_VALUE: "pval",
         HarmonisedColumns.NEG_LOG10_P: "mlogp",
     }
+    # chrom/pos/alleles are parsed from `Exposure` in
+    # `merge_associations.load_marvel_results` (effect = a2)
+    MARVEL: dict[str, str] = {
+        HarmonisedColumns.BETA: "Estimate",
+        HarmonisedColumns.SE: "Std. Error",
+        HarmonisedColumns.P_VALUE: "P-value",
+        HarmonisedColumns.N: "N (Samples)",
+    }
     CURATED: dict[str, str] = {
         HarmonisedColumns.STUDY_ACCESSION: "accession_id",
     }
@@ -496,6 +535,8 @@ class FileNames:
     GWAS_CATALOG_MANUAL_STUDIES: Path = (
         Paths.DATA_RAW / "gwas_catalog_manual_studies.tsv"
     )
+    # own UKB/AoU association results (marvel), one row per file/outcome
+    MARVEL_RESULTS: Path = Paths.DATA_RAW / "marvel_results.tsv"
     TASKS_FILE: Path = Paths.DATA_TEMP / "tasks.tsv"
     # (study, outcome) labels for the per-study filter outfiles
     STUDY_OUTCOMES_FILE: Path = Paths.DATA_TEMP / "study_outcomes.tsv"

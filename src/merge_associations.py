@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Gathers filtered sumstats, adds curated GWAS Catalog associations and Open
-Targets gene-burden evidence, and writes the combined final results table.
+Gathers filtered sumstats, adds own UKB/AoU (marvel) results, curated GWAS
+Catalog associations and Open Targets gene-burden evidence, and writes the
+combined final results table.
 """
 
 
@@ -101,6 +102,9 @@ def load_filter_results(
             efo_id = task[ColumnNames.EFO_ID]
             accession = task[ColumnNames.STUDY_ACCESSION]
             labelled[ColumnNames.SOURCE] = "summary-stats"
+            # from the tasks file, not the outfile, so outfiles filtered
+            # before manual studies got their own source are relabelled
+            labelled[ColumnNames.SOURCE_DB] = task[ColumnNames.SOURCE]
             labelled[ColumnNames.OUTCOME] = outcome
             labelled[ColumnNames.EFO_ID] = efo_id
             # only trait-searched studies (efo_id set) can use child traits
@@ -144,6 +148,199 @@ def load_filter_results(
         )
         harmonised.append(functions.harmonise_frame(frame, column_map))
     return pd.concat(harmonised, ignore_index=True)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _marvel_identity(
+    frame: pd.DataFrame, entry: pd.Series, source: str
+) -> pd.DataFrame:
+    """Set the identity columns of marvel rows from their table entry.
+
+    Parameters
+    ----------
+    frame : `pd.DataFrame`
+        Marvel result rows, `gene` already set.
+    entry : `pd.Series`
+        The row of `functions.load_marvel_table` the rows come from.
+    source : `str`
+        ``"summary-stats"`` (variant rows) or ``"gene-burden"``.
+
+    Returns
+    -------
+    labelled : `pd.DataFrame`
+        `frame` with `source`, `source_db`, `study_accession`, `outcome`,
+        `efo_id` (NA), `child_traits` (`False`) and `trait_label` set.
+    """
+    cohort = entry["cohort"]
+    outcome = entry["outcome"]
+    labelled = frame.copy()
+    labelled[ColumnNames.SOURCE] = source
+    labelled[ColumnNames.SOURCE_DB] = (
+        Constants.MARVEL_SOURCE_DB_PREFIX + cohort
+    )
+    labelled[ColumnNames.STUDY_ACCESSION] = (
+        f"{Constants.MARVEL_SOURCE_DB_PREFIX}{cohort}_{outcome}"
+    )
+    labelled[ColumnNames.OUTCOME] = outcome
+    labelled[ColumnNames.EFO_ID] = pd.NA
+    labelled[ColumnNames.CHILD_TRAITS] = False
+    labelled[HarmonisedColumns.TRAIT_LABEL] = entry["variable"]
+    return labelled
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def load_marvel_results(
+    regions: dict[str, functions.GeneRegion],
+    marvel_df: pd.DataFrame,
+) -> list[pd.DataFrame]:
+    """Load and harmonise own UKB/AoU association results (marvel).
+
+    Each entry of `marvel_df` names one marvel results file and the
+    `Variable`/`Model` to keep from it. A row whose `Exposure` is a
+    variant (``chr:pos:a1:a2``, a2 counted) becomes a ``summary-stats``
+    row for every gene region containing it, with effect allele a2 and
+    other allele a1. A row whose `Exposure` is a gene in `regions`
+    becomes a ``gene-burden`` row for that gene. Other rows are dropped
+    (warned).
+
+    Parameters
+    ----------
+    regions : `dict[str, functions.GeneRegion]`
+        Gene symbol -> flanked region.
+    marvel_df : `pd.DataFrame`
+        From `functions.load_marvel_table`.
+
+    Returns
+    -------
+    harmonised : `list[pd.DataFrame]`
+        Harmonised frames (`functions.harmonise_frame`), `source_db`
+        ``marvel_<cohort>`` and `study_accession`
+        ``marvel_<cohort>_<outcome>``. Empty if no entries or rows.
+
+    Raises
+    ------
+    FileNotFoundError
+        If a listed results file does not exist.
+    ValueError
+        If a results file lacks the `Exposure`/`Variable`/`Model` columns.
+    """
+    hc = HarmonisedColumns
+    parts: list[pd.DataFrame] = []
+    for _, entry in marvel_df.iterrows():
+        path = Path(entry["path"])
+        if not path.exists():
+            raise FileNotFoundError(
+                f"{FileNames.MARVEL_RESULTS}: results file not found: {path}"
+            )
+        results = pd.read_csv(path, sep="\t", dtype=str)
+        missing = [
+            col
+            for col in ("Exposure", "Variable", "Model")
+            if col not in results.columns
+        ]
+        if missing:
+            raise ValueError(f"{path}: missing marvel column(s) {missing}")
+        results = results[
+            (results["Variable"] == entry["variable"])
+            & (results["Model"] == entry["model"])
+        ].reset_index(drop=True)
+
+        variant_rows: list[dict] = []
+        variant_index: list[int] = []
+        burden_index: list[int] = []
+        burden_genes: list[str] = []
+        n_unplaced = 0
+        for index, exposure in results["Exposure"].items():
+            variant = functions.parse_marvel_exposure(exposure)
+            if variant is None:
+                if exposure in regions:
+                    burden_index.append(index)
+                    burden_genes.append(exposure)
+                else:
+                    n_unplaced += 1
+                continue
+            chrom, pos, a1, a2 = variant
+            genes = [
+                gene
+                for gene, region in regions.items()
+                if str(region.chrom).removeprefix("chr") == chrom
+                and region.start <= pos <= region.end
+            ]
+            if not genes:
+                n_unplaced += 1
+            for gene in genes:
+                variant_index.append(index)
+                variant_rows.append(
+                    {
+                        hc.GENE: gene,
+                        hc.CHROM: chrom,
+                        hc.POS: pos,
+                        hc.OTHER_ALLELE: a1,
+                        hc.EFFECT_ALLELE: a2,
+                    }
+                )
+
+        if variant_index:
+            variants = results.loc[variant_index].reset_index(drop=True)
+            parsed = pd.DataFrame(variant_rows)
+            variants[ColumnNames.GENE] = parsed[hc.GENE]
+            variants = _marvel_identity(variants, entry, "summary-stats")
+            parts.append(
+                functions.harmonise_frame(
+                    variants,
+                    SourceColumnMaps.MARVEL,
+                    parsed=parsed.drop(columns=hc.GENE),
+                )
+            )
+        if burden_index:
+            burden = results.loc[burden_index].reset_index(drop=True)
+            burden[ColumnNames.GENE] = burden_genes
+            burden = _marvel_identity(burden, entry, "gene-burden")
+            parts.append(
+                functions.harmonise_frame(
+                    burden, SourceColumnMaps.MARVEL, has_variants=False
+                )
+            )
+        log_info(
+            f"marvel {entry['cohort']} {entry['outcome']}: "
+            f"{len(results)} rows -> {len(variant_index)} variant rows, "
+            f"{len(burden_index)} gene-burden rows ({path.name})"
+        )
+        if n_unplaced:
+            log_warn(
+                f"marvel {entry['cohort']} {entry['outcome']}: {n_unplaced} "
+                "exposures neither a variant in a gene region nor a gene "
+                "in gene_list.txt, dropped"
+            )
+    return parts
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _cohort_overlap_studies(audit: pd.DataFrame) -> set[tuple[str, str]]:
+    """List catalog studies excluded per outcome for cohort overlap.
+
+    Parameters
+    ----------
+    audit : `pd.DataFrame`
+        The study-discovery log from `_read_discovery_log`.
+
+    Returns
+    -------
+    excluded : `set[tuple[str, str]]`
+        `(outcome, study_accession)` pairs whose `reason` starts with
+        `Constants.COHORT_OVERLAP_REASON_PREFIX`.
+    """
+    if audit.empty:
+        return set()
+    overlap = audit[ColumnNames.REASON].str.startswith(
+        Constants.COHORT_OVERLAP_REASON_PREFIX
+    )
+    return set(
+        zip(
+            audit.loc[overlap, ColumnNames.OUTCOME],
+            audit.loc[overlap, ColumnNames.STUDY_ACCESSION],
+        )
+    )
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -364,9 +561,12 @@ def _expand_burden_outcomes(
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def merge_results() -> None:
-    """Merge all three evidence sources and write the final results table.
+    """Merge all evidence sources and write the final results table.
 
-    Reuses the `efo_id`/`chrom`/`start`/`end` already resolved and
+    Sources: filtered summary stats (GWAS Catalog, manual, FinnGen), own
+    UKB/AoU marvel results (`load_marvel_results`), curated GWAS Catalog
+    associations (minus studies excluded for cohort overlap) and Open
+    Targets gene burden. Reuses the `efo_id`/`chrom`/`start`/`end` already resolved and
     persisted by `gwas_cat_prep.py` -- no lookups are repeated here.
     Curated associations are downloaded once per unique `efo_id` and
     child-trait setting (the download is gene-independent) and then
@@ -423,6 +623,12 @@ def merge_results() -> None:
         )
         for _, gene_row in genes_df.iterrows()
     }
+    log_stage("marvel")
+    marvel_df = functions.load_marvel_table()
+    if marvel_df.empty:
+        log_info(f"no own results listed in {FileNames.MARVEL_RESULTS}")
+    parts.extend(load_marvel_results(regions, marvel_df))
+
     ensembl_ids = dict(
         zip(
             genes_df[ColumnNames.GENE],
@@ -473,6 +679,10 @@ def merge_results() -> None:
         MafStatus.NUMERIC: 0,
         MafStatus.NOT_REPORTED: 0,
     }
+    # curated hits of studies excluded for an outcome (own results for a
+    # cohort they include) are dropped for that outcome too
+    overlap_studies = _cohort_overlap_studies(audit)
+    n_overlap_curated = 0
     for gene in regions:
         for outcome, efo_ids in outcome_efo_ids.items():
             child_traits = functions.includes_child_traits(outcome)
@@ -491,6 +701,18 @@ def merge_results() -> None:
                     curated[ColumnNames.SOURCE] = "curated"
                     curated[ColumnNames.SOURCE_DB] = "gwas_catalog"
                     harmonised = functions.harmonise_curated(curated)
+                    is_overlap = pd.Series(
+                        [
+                            (outcome, accession) in overlap_studies
+                            for accession in harmonised[
+                                HarmonisedColumns.STUDY_ACCESSION
+                            ]
+                        ],
+                        index=harmonised.index,
+                        dtype=bool,
+                    )
+                    n_overlap_curated += int(is_overlap.sum())
+                    harmonised = harmonised[~is_overlap]
                     for status, n in (
                         harmonised[HarmonisedColumns.MAF_STATUS]
                         .value_counts()
@@ -522,6 +744,10 @@ def merge_results() -> None:
     log_info(
         "curated MAF: "
         + " ".join(f"{k}={n}" for k, n in maf_status_counts.items())
+    )
+    log_info(
+        f"curated: {n_overlap_curated} rows dropped from studies excluded "
+        "for cohort overlap"
     )
     n_zero_genes = sum(1 for n in burden_rows.values() if n == 0)
     log_info(

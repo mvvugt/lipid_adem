@@ -41,6 +41,7 @@ from project_constants import (
 # helper columns, dropped before writing
 _NEG_LOG10_P_KEY: str = "_neg_log10_p"
 _RANK_KEY: str = "_source_rank"
+_DB_RANK_KEY: str = "_source_db_rank"
 _COPY_OF_KEY: str = "_copy_of"
 # `match_alleles` value of rows matched on the effect allele only
 _EFFECT_ONLY: str = "effect_only"
@@ -136,36 +137,50 @@ _Z_FROM_NEG_LOG10_P = np.vectorize(_z_from_neg_log10_p, otypes=[float])
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _rank_rows(rows: pd.DataFrame) -> pd.DataFrame:
-    """Sort rows by preference: source, then smallest p, then accession.
+    """Sort rows by preference: source, source_db, smallest p, accession.
 
     Parameters
     ----------
     rows : `pd.DataFrame`
-        With `source`, `study_accession` and helper `_NEG_LOG10_P_KEY`.
+        With `source`, `source_db`, `study_accession` and helper
+        `_NEG_LOG10_P_KEY`.
 
     Returns
     -------
     ranked : `pd.DataFrame`
         `rows` sorted, index kept, sources ranked by
-        `Constants.GWAS_SOURCE_PREFERENCE` (others last).
+        `Constants.GWAS_SOURCE_PREFERENCE` and then source databases by
+        `Constants.SOURCE_DB_PREFERENCE` (others last in both).
     """
-    rank = {
+    source_rank = {
         source: i
         for i, source in enumerate(Constants.GWAS_SOURCE_PREFERENCE)
+    }
+    db_rank = {
+        source_db: i
+        for i, source_db in enumerate(Constants.SOURCE_DB_PREFERENCE)
     }
     ranked = rows.assign(
         **{
             _RANK_KEY: rows[HarmonisedColumns.SOURCE]
-            .map(rank)
-            .fillna(len(rank))
+            .map(source_rank)
+            .fillna(len(source_rank)),
+            _DB_RANK_KEY: rows[HarmonisedColumns.SOURCE_DB]
+            .map(db_rank)
+            .fillna(len(db_rank)),
         }
     )
     return ranked.sort_values(
-        [_RANK_KEY, _NEG_LOG10_P_KEY, HarmonisedColumns.STUDY_ACCESSION],
-        ascending=[True, False, True],
+        [
+            _RANK_KEY,
+            _DB_RANK_KEY,
+            _NEG_LOG10_P_KEY,
+            HarmonisedColumns.STUDY_ACCESSION,
+        ],
+        ascending=[True, True, False, True],
         kind="stable",
         na_position="last",
-    ).drop(columns=_RANK_KEY)
+    ).drop(columns=[_RANK_KEY, _DB_RANK_KEY])
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

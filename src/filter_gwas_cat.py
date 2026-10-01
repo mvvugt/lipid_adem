@@ -179,8 +179,9 @@ def run_filter(
         GWAS Catalog study accession, or FinnGen phenocode if
         `source == "finngen"`.
     source : `str`
-        Which sumstats source `study_accession` refers to: `"gwas_catalog"`
-        or `"finngen"`.
+        Which sumstats source `study_accession` refers to: `"gwas_catalog"`,
+        `"manual"` (a curated GWAS Catalog accession, same FTP route) or
+        `"finngen"`.
     outfile : `Path`
         Path to write the filtered TSV to.
     regions : `dict[str, functions.GeneRegion]`
@@ -195,7 +196,7 @@ def run_filter(
     Raises
     ------
     ValueError
-        If `source` is not `"gwas_catalog"` or `"finngen"`.
+        If `source` is not `"gwas_catalog"`, `"manual"` or `"finngen"`.
 
     Notes
     -----
@@ -214,7 +215,7 @@ def run_filter(
 
     if source == "finngen":
         filtered = _run_filter_finngen(study_accession, regions, manifest_df)
-    elif source == "gwas_catalog":
+    elif source in ("gwas_catalog", "manual"):
         filtered = _run_filter_gwas_catalog(study_accession, regions)
     else:
         raise ValueError(f"unknown source {source!r} for {study_accession}")
