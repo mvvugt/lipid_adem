@@ -121,6 +121,14 @@ class Constants:
     EXCLUDED_VARIANT_SOURCES: frozenset[str] = frozenset({"AM"})
     # GWAS result sources with single variants (gene-burden has none)
     VARIANT_LEVEL_SOURCES: tuple[str, ...] = ("summary-stats", "curated")
+    # outcome whose pooled per-variant beta sets the effect direction
+    # (towards the LDL-lowering allele) in the meta-analysis
+    LDL_OUTCOME: str = "ldl_cholesterol"
+    # variant-list source flipped when no LDL estimate orients a variant
+    GOF_VARIANT_SOURCE: str = "GoF"
+    # meta-analysis dedupe: per study/outcome/variant the first source here
+    # is kept (rows from other sources go last)
+    GWAS_SOURCE_PREFERENCE: tuple[str, ...] = ("summary-stats", "curated")
 
 
 class RunlogOrder:
@@ -135,6 +143,7 @@ class RunlogOrder:
     FILTER_GWAS_CAT: int = 20
     MERGE_ASSOCIATIONS: int = 30
     MATCH_VARIANTS: int = 40
+    META_ANALYSIS: int = 50
 
 
 class ColumnNames:
@@ -387,6 +396,71 @@ class VariantListColumns:
     MATCH_ALLELES: str = "match_alleles"
 
 
+class MetaColumns:
+    """Columns derived and written by `meta_analysis.py`, and the named
+    groupings it can pool by.
+    """
+    # per matched row
+    # chrom:pos:a1:a2 of the variant-list entry (chrom without "chr")
+    VARIANT_SITE: str = "variant_site"
+    # beta, or log(odds_ratio) when beta is missing
+    BETA_USED: str = "beta_used"
+    # "beta" or "log_or": where BETA_USED came from
+    EFFECT_SCALE: str = "effect_scale"
+    # se, or |beta| / z(p) when se is missing
+    SE_USED: str = "se_used"
+    SE_DERIVED: str = "se_derived"
+    # BETA_USED for the a2 allele
+    BETA_A2: str = "beta_a2"
+    # BETA_A2 for ORIENTED_ALLELE
+    BETA_ORIENTED: str = "beta_oriented"
+    # "ldl_lowering", "a2" or "a2_gof_flipped", see `Orientation`
+    ORIENTATION: str = "orientation"
+    ORIENTED_ALLELE: str = "oriented_allele"
+    # per pooled group
+    # estimates pooled (k) and the distinct studies among them
+    N_ESTIMATES: str = "n_estimates"
+    N_STUDIES: str = "n_studies"
+    STUDIES: str = "studies"
+    N_SE_DERIVED: str = "n_se_derived"
+    BETA: str = "meta_beta"
+    SE: str = "meta_se"
+    Z: str = "meta_z"
+    P: str = "meta_p"
+    # Cochran's Q, its degrees of freedom (k - 1) and I^2; NA when k = 1
+    Q: str = "q"
+    Q_DF: str = "q_df"
+    I2: str = "i2"
+    # grouping name -> columns pooled over (one output file per grouping);
+    # add an entry, e.g. ("variant_list_gene", "variant_list_source",
+    # "outcome"), to pool at another level
+    GROUPINGS: dict[str, tuple[str, ...]] = {
+        "variant": (VARIANT_SITE, HarmonisedColumns.OUTCOME),
+    }
+    DEFAULT_GROUPING: str = "variant"
+    # unique values joined with ";" per group in the output
+    DESCRIBE_COLUMNS: tuple[str, ...] = (
+        VariantListColumns.OUT_GENE,
+        VariantListColumns.OUT_SOURCE,
+        VariantListColumns.OUT_TRI_CLASS,
+        HarmonisedColumns.RSID,
+        ORIENTED_ALLELE,
+        ORIENTATION,
+        EFFECT_SCALE,
+        HarmonisedColumns.SOURCE,
+    )
+
+
+class Orientation:
+    """Values of the `orientation` column."""
+    # sign set by the variant's pooled LDL-C beta (any p)
+    LDL_LOWERING: str = "ldl_lowering"
+    # no LDL estimate: effect of the a2 (alt) allele
+    A2: str = "a2"
+    # no LDL estimate, GoF-listed variant: effect of the a1 allele
+    A2_GOF_FLIPPED: str = "a2_gof_flipped"
+
+
 class EnsemblAlleleCheck:
     """Values of the `ensembl_allele_check` column.
 
@@ -438,3 +512,5 @@ class FileNames:
     FINAL_RESULTS: Path = Paths.RESULTS_OUTPUT / "final_results.tsv.gz"
     # final-results rows matching a (non-AM) gene variant-list entry
     MATCHED_VARIANTS: Path = Paths.RESULTS_OUTPUT / "matched_variants.tsv.gz"
+    # IVW meta-analysis per `MetaColumns.GROUPINGS` name
+    META_ANALYSIS_TEMPLATE: str = "meta_{grouping}.tsv.gz"

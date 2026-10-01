@@ -36,3 +36,6 @@ qsub "${ROOT}"/src/merge_associations.sh -r "${ROOT}"
 # [myriad] match GWAS lookups to the gene variant lists (non-AM); run after
 # the merge job has finished
 run_mamba biomed-api "${ROOT}"/src/match_variants.py
+
+# [myriad] fixed-effect IVW meta-analysis of the matched variants
+run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --group-by variant
