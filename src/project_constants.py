@@ -21,6 +21,9 @@ class Paths:
     DATA_RAW: Path = HERE / "data" / "raw"
     DATA_TEMP: Path = HERE / "data" / "temp"
     GWAS_FILTERED: Path = DATA_TEMP / "gwas_filtered"
+    # gzipped JSON per Ensembl overlap window / rsid lookup; delete a file
+    # to refetch it
+    ENSEMBL_CACHE: Path = DATA_TEMP / "ensembl_cache"
     RESULTS_OUTPUT: Path = HERE / "results" / "output"
     LOGS: Path = HERE / "logs"
     # must match `log_dir` in config/filter_task.cnf
@@ -104,6 +107,14 @@ class Constants:
     # treated as resolved on reruns (clear the cell by hand to retry)
     NA_STRING: str = "NA"
     UNIPROT_HUMAN_TAXON: int = 9606
+    # gene regions are fetched from Ensembl overlap/region in windows of
+    # this size: ~1.3 variant records per bp, so ~6.5k records per call
+    ENSEMBL_OVERLAP_WINDOW_BP: int = 5_000
+    # a study is warned about when more than this fraction of its rows is
+    # not_found/mismatch against Ensembl (e.g. a GRCh37 file)
+    ENSEMBL_BAD_FRACTION_WARN: float = 0.5
+    # ... but only when it has at least this many variant rows
+    ENSEMBL_BAD_MIN_ROWS: int = 20
 
 
 class RunlogOrder:
@@ -200,6 +211,13 @@ class HarmonisedColumns:
     # True for rows sharing source/study/outcome/gene/variant_id (e.g. two
     # source variants harmonised to the same site)
     DUPLICATE_VARIANT: str = "duplicate_variant"
+    # GRCh38 chrom:pos:ref:alt of the matching Ensembl variant (alts joined
+    # with "/" when the row's allele does not pick one); NA if not found
+    ENSEMBL_VARIANT_ID: str = "ensembl_variant_id"
+    # row alleles vs Ensembl alleles, see `EnsemblAlleleCheck`
+    ENSEMBL_ALLELE_CHECK: str = "ensembl_allele_check"
+    # row rsid vs Ensembl rsid, see `EnsemblRsidCheck`
+    ENSEMBL_RSID_CHECK: str = "ensembl_rsid_check"
     EFFECT_ALLELE: str = "effect_allele"
     OTHER_ALLELE: str = "other_allele"
     EAF: str = "eaf"
@@ -230,6 +248,9 @@ class HarmonisedColumns:
         RSID,
         VARIANT_ID,
         DUPLICATE_VARIANT,
+        ENSEMBL_VARIANT_ID,
+        ENSEMBL_ALLELE_CHECK,
+        ENSEMBL_RSID_CHECK,
         EFFECT_ALLELE,
         OTHER_ALLELE,
         EAF,
@@ -331,6 +352,39 @@ class MafStatus:
     """Values of the `maf_status` column."""
     NUMERIC: str = "numeric"
     NOT_REPORTED: str = "not_reported"
+
+
+class EnsemblAlleleCheck:
+    """Values of the `ensembl_allele_check` column.
+
+    Ensembl ref is the first allele of the Ensembl record. Rows with only
+    one allele (curated: effect allele only) are `match` when it is an
+    Ensembl alt and `flipped` when it is the ref.
+    """
+    # other allele = Ensembl ref, effect allele = an Ensembl alt
+    MATCH: str = "match"
+    # effect allele = Ensembl ref, other allele = an Ensembl alt
+    FLIPPED: str = "flipped"
+    # match/flipped only after complementing the row's alleles
+    STRAND_FLIP: str = "strand_flip"
+    # Ensembl variant found, but the row has no allele (curated "?")
+    EFFECT_UNKNOWN: str = "effect_unknown"
+    # Ensembl variant found, row alleles not among its alleles
+    MISMATCH: str = "mismatch"
+    # no Ensembl variant at chrom:pos (nor via the row's rsid)
+    NOT_FOUND: str = "not_found"
+
+
+class EnsemblRsidCheck:
+    """Values of the `ensembl_rsid_check` column (NA when not found)."""
+    # the row's rsid is the matched Ensembl variant's id
+    SAME: str = "same"
+    # matched by position, but the row's rsid differs (e.g. merged rsid)
+    DIFFERENT: str = "different"
+    # matched by position; the row has no rsid
+    NO_SOURCE_RSID: str = "no_source_rsid"
+    # nothing at chrom:pos; matched via the row's rsid at another position
+    RSID_ONLY: str = "rsid_only"
 
 
 class FileNames:

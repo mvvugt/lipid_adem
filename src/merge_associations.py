@@ -530,6 +530,8 @@ def merge_results() -> None:
     )
 
     combined = pd.concat([p for p in parts if not p.empty], ignore_index=True)
+    log_stage("ensembl_check")
+    combined = functions.annotate_ensembl_variants(combined, regions)
     combined = functions.flag_duplicate_variants(combined)
     log_info(
         f"duplicate variants flagged: "

@@ -12,10 +12,11 @@ from __future__ import annotations
 import ast
 import gzip
 import io
+import json
 import re
 import time
 import warnings
-from collections.abc import Collection, Mapping, Sequence
+from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -31,9 +32,12 @@ from log_tools.emitter import log_debug, log_info, log_warn
 from project_constants import (
     ColumnNames,
     Constants,
+    EnsemblAlleleCheck,
+    EnsemblRsidCheck,
     FileNames,
     HarmonisedColumns,
     MafStatus,
+    Paths,
     SourceColumnMaps,
 )
 
@@ -54,6 +58,14 @@ _CURATED_ALLELE_PATTERN = re.compile(
     """,
     re.VERBOSE,
 )
+# Ensembl alleles usable for the allele check ("-" = deletion/insertion
+# side); records with e.g. "HGMD_MUTATION" alleles are skipped
+_ENSEMBL_ALLELE_PATTERN = re.compile(r"^(?:[ACGT]+|-)$")
+_RSID_PATTERN = re.compile(r"^rs\d+$")
+# Ensembl mappings on primary assembly chromosomes (not patches/haplotypes)
+_PRIMARY_CHROM_PATTERN = re.compile(r"^(?:\d+|X|Y|MT)$")
+# source rsid cells can hold several ids, e.g. FinnGen "rs1,rs2"
+_RSID_SPLIT_PATTERN = re.compile(r"[,;\s]+")
 _CNV_TRAIT_PATTERN = re.compile(Constants.CNV_TRAIT_PATTERN, re.IGNORECASE)
 _X_CHROM_TRAIT_PATTERN = re.compile(
     Constants.X_CHROM_TRAIT_PATTERN, re.IGNORECASE
@@ -2030,15 +2042,19 @@ def filter_curated_associations(
     Returns
     -------
     associations : `pd.DataFrame`
-        Curated associations, region- and MAF-filtered. Empty if none.
+        Curated associations, region- and MAF-filtered, with an added
+        `region_location` column: the record's first `"chrom:pos"`
+        location inside `region` (used by `harmonise_curated`). Empty if
+        none.
     """
     kept = []
     for row in records:
-        if not _location_in_region(row.get("locations"), region):
+        location = _region_location(row.get("locations"), region)
+        if location is None:
             continue
         if _maf_at_or_above_threshold(row.get("risk_frequency"), maf_threshold):
             continue
-        kept.append(row)
+        kept.append({**row, "region_location": location})
     return pd.DataFrame.from_records(kept)
 
 
@@ -2060,13 +2076,34 @@ def _location_in_region(
     `bool`
         `True` if at least one location falls within `region`.
     """
+    return _region_location(locations, region) is not None
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _region_location(
+    locations: list[str] | None, region: GeneRegion
+) -> str | None:
+    """Return the first GWAS Catalog v2 `"chrom:pos"` location in `region`.
+
+    Parameters
+    ----------
+    locations : `list[str]` or `NoneType`
+        Values of an association record's `locations` field.
+    region : `GeneRegion`
+        Region to test against.
+
+    Returns
+    -------
+    location : `str` or `NoneType`
+        The first location falling within `region`, or `None` if none does.
+    """
     for location in locations or []:
         chrom, _, pos = str(location).partition(":")
         if chrom != region.chrom or not pos.isdigit():
             continue
         if region.start <= int(pos) <= region.end:
-            return True
-    return False
+            return str(location)
+    return None
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2076,24 +2113,28 @@ def _maf_at_or_above_threshold(maf: str | None, maf_threshold: float) -> bool:
     Parameters
     ----------
     maf : `str` or `NoneType`
-        Value of an association record's `risk_frequency` field. Not
-        always numeric (e.g. blank or "NR").
+        Value of an association record's `risk_frequency` field: the
+        risk-allele frequency, not a MAF. Not always numeric (e.g. blank
+        or "NR").
     maf_threshold : `float`
         Threshold to compare against.
 
     Returns
     -------
     `bool`
-        `True` only if `maf` parses to a float that is `>= maf_threshold`.
+        `True` only if `maf` parses to a float `f` with
+        `min(f, 1 - f) >= maf_threshold`, so a rare variant reported with
+        its common allele as risk allele (e.g. `f = 0.995`) is kept.
         Missing or unparseable values are treated as not excluding the
         record.
     """
     if maf is None:
         return False
     try:
-        return float(maf) >= maf_threshold
+        frequency = float(maf)
     except ValueError:
         return False
+    return min(frequency, 1.0 - frequency) >= maf_threshold
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2844,7 +2885,13 @@ def harmonise_curated(df: pd.DataFrame) -> pd.DataFrame:
     hc = HarmonisedColumns
     parsed = pd.DataFrame(index=df.index)
 
+    # the in-region location (see filter_curated_associations), not
+    # simply the first one, so chrom/pos always fall inside the gene
     locations = df["locations"].map(_first_item)
+    if "region_location" in df.columns:
+        locations = df["region_location"].where(
+            df["region_location"].notna(), locations
+        )
     parsed[hc.CHROM] = locations.map(lambda v: _split_location(v)[0])
     parsed[hc.POS] = locations.map(lambda v: _split_location(v)[1])
 
@@ -2967,3 +3014,695 @@ def _parse_curated_beta(value: object) -> float:
     if "increase" in text:
         return abs(beta)
     return beta
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Ensembl variant check
+
+# fields kept per overlap/region record in the cache
+_ENSEMBL_VARIANT_FIELDS: tuple[str, ...] = (
+    "id",
+    "seq_region_name",
+    "start",
+    "strand",
+    "alleles",
+)
+# fields kept per variation-endpoint mapping in the cache
+_ENSEMBL_MAPPING_FIELDS: tuple[str, ...] = (
+    "assembly_name",
+    "seq_region_name",
+    "start",
+    "strand",
+    "allele_string",
+)
+_COMPLEMENT = str.maketrans("ACGT", "TGCA")
+# candidate preference when several Ensembl variants fit a row
+_ALLELE_CHECK_RANK: dict[str, int] = {
+    EnsemblAlleleCheck.MATCH: 0,
+    EnsemblAlleleCheck.FLIPPED: 0,
+    EnsemblAlleleCheck.STRAND_FLIP: 1,
+    EnsemblAlleleCheck.EFFECT_UNKNOWN: 2,
+    EnsemblAlleleCheck.MISMATCH: 3,
+}
+
+
+@dataclass
+class EnsemblVariant:
+    """One Ensembl variant, alleles on the forward strand.
+
+    Attributes
+    ----------
+    rsid : `str`
+        Ensembl variant id (e.g. "rs429358").
+    chrom : `str`
+        GRCh38 chromosome name.
+    start : `int`
+        GRCh38 start position (1-based).
+    alleles : `tuple[str, ...]`
+        Ref allele first, then the alts; `"-"` for an empty allele.
+    """
+    rsid: str
+    chrom: str
+    start: int
+    alleles: tuple[str, ...]
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _read_json_gz(path: Path) -> object:
+    """Read a gzipped JSON file.
+
+    Parameters
+    ----------
+    path : `Path`
+        A `.json.gz` file.
+
+    Returns
+    -------
+    data : `object`
+        The decoded JSON.
+    """
+    with gzip.open(path, "rt", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _write_json_gz_atomic(path: Path, data: object) -> None:
+    """Write `data` as gzipped JSON via a temp file, then rename.
+
+    An interrupted run leaves at most a `.tmp` file, never a truncated
+    cache file that later runs would trust.
+
+    Parameters
+    ----------
+    path : `Path`
+        Destination `.json.gz` file; its directory is created if needed.
+    data : `object`
+        JSON-serialisable data.
+
+    Returns
+    -------
+    `None`
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = path.with_name(path.name + ".tmp")
+    with gzip.open(tmp_path, "wt", encoding="utf-8") as handle:
+        json.dump(data, handle)
+    tmp_path.replace(path)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _complement(allele: str | None) -> str | None:
+    """Reverse-complement an allele (`"-"` and `None` are returned as-is).
+
+    Parameters
+    ----------
+    allele : `str` or `NoneType`
+        Upper-case nucleotide allele, `"-"`, or `None`.
+
+    Returns
+    -------
+    complement : `str` or `NoneType`
+        The reverse complement; non-ACGT characters are left unchanged.
+    """
+    if allele is None or allele == "-":
+        return allele
+    return allele.translate(_COMPLEMENT)[::-1]
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _ensembl_variant(
+    rsid: object,
+    chrom: object,
+    start: object,
+    strand: object,
+    alleles: Sequence[object] | None,
+) -> EnsemblVariant | None:
+    """Build an `EnsemblVariant` from raw Ensembl fields.
+
+    Parameters
+    ----------
+    rsid : `object`
+        Ensembl variant id.
+    chrom : `object`
+        Chromosome name.
+    start : `object`
+        Start position.
+    strand : `object`
+        `1` or `-1`; alleles on `-1` are reverse-complemented.
+    alleles : `Sequence` or `NoneType`
+        Ensembl alleles, ref first.
+
+    Returns
+    -------
+    variant : `EnsemblVariant` or `NoneType`
+        `None` when fields are missing, there are fewer than two alleles,
+        or any allele is not plain ACGT/`"-"` (e.g. "HGMD_MUTATION").
+    """
+    if rsid is None or chrom is None or start is None or not alleles:
+        return None
+    clean = tuple(str(allele).upper() for allele in alleles)
+    if len(clean) < 2 or not all(
+        _ENSEMBL_ALLELE_PATTERN.match(allele) for allele in clean
+    ):
+        return None
+    if strand == -1:
+        clean = tuple(_complement(allele) for allele in clean)
+    return EnsemblVariant(
+        rsid=str(rsid), chrom=str(chrom), start=int(start), alleles=clean
+    )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _ensembl_window_records(
+    chrom: str, start: int, end: int
+) -> tuple[list[dict], bool]:
+    """Return Ensembl overlap/region variation records for one window.
+
+    Read from `Paths.ENSEMBL_CACHE` when cached, else fetched through
+    biomed-api and cached (trimmed to `_ENSEMBL_VARIANT_FIELDS`).
+
+    Parameters
+    ----------
+    chrom : `str`
+        Chromosome name.
+    start : `int`
+        Window start (1-based, inclusive).
+    end : `int`
+        Window end (inclusive).
+
+    Returns
+    -------
+    records : `list[dict]`
+        Trimmed variation records overlapping the window.
+    fetched : `bool`
+        `True` if the window was fetched from Ensembl, `False` if cached.
+
+    Raises
+    ------
+    ReaderError
+        If the Ensembl request fails.
+    """
+    path = Paths.ENSEMBL_CACHE / f"overlap_{chrom}_{start}_{end}.json.gz"
+    if path.exists():
+        return list(_read_json_gz(path)), False
+    result = EnsemblReader().read(
+        profile="overlap_region",
+        region=f"{chrom}:{start}-{end}",
+        feature="variation",
+    )
+    records = [
+        {field: record.get(field) for field in _ENSEMBL_VARIANT_FIELDS}
+        for record in result.records
+    ]
+    _write_json_gz_atomic(path, records)
+    return records, True
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def fetch_ensembl_region_variants(
+    region: GeneRegion,
+) -> tuple[list[EnsemblVariant], int]:
+    """Fetch every Ensembl variant in a gene region, window by window.
+
+    The region is split into `Constants.ENSEMBL_OVERLAP_WINDOW_BP`
+    windows; each window is cached separately, so an interrupted run
+    resumes where it stopped.
+
+    Parameters
+    ----------
+    region : `GeneRegion`
+        Flanked gene region (GRCh38).
+
+    Returns
+    -------
+    variants : `list[EnsemblVariant]`
+        Usable variants (see `_ensembl_variant`), each once even when it
+        spans a window boundary.
+    n_fetched : `int`
+        Number of windows fetched from Ensembl (the rest were cached).
+
+    Raises
+    ------
+    ReaderError
+        If an Ensembl request fails.
+    """
+    window = Constants.ENSEMBL_OVERLAP_WINDOW_BP
+    variants: list[EnsemblVariant] = []
+    seen: set[tuple[str, int]] = set()
+    n_fetched = 0
+    for start in range(region.start, region.end + 1, window):
+        end = min(start + window - 1, region.end)
+        records, fetched = _ensembl_window_records(region.chrom, start, end)
+        n_fetched += int(fetched)
+        for record in records:
+            variant = _ensembl_variant(
+                record.get("id"),
+                record.get("seq_region_name"),
+                record.get("start"),
+                record.get("strand"),
+                record.get("alleles"),
+            )
+            if variant is None or (variant.rsid, variant.start) in seen:
+                continue
+            seen.add((variant.rsid, variant.start))
+            variants.append(variant)
+    return variants, n_fetched
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _ensembl_rsid_variants(rsid: str) -> tuple[list[EnsemblVariant], bool]:
+    """Look up one rsid with the Ensembl variation endpoint (cached).
+
+    An rsid Ensembl does not know is cached as having no mappings, so it
+    is not requested again.
+
+    Parameters
+    ----------
+    rsid : `str`
+        Lower-case rsid, e.g. "rs429358".
+
+    Returns
+    -------
+    variants : `list[EnsemblVariant]`
+        One variant per GRCh38 primary-chromosome mapping; empty if the
+        rsid is unknown.
+    fetched : `bool`
+        `True` if requested from Ensembl, `False` if cached.
+
+    Raises
+    ------
+    ReaderError
+        If the request fails for any reason other than "not found".
+    """
+    path = Paths.ENSEMBL_CACHE / f"variation_{rsid}.json.gz"
+    fetched = False
+    if path.exists():
+        data = _read_json_gz(path)
+    else:
+        try:
+            result = EnsemblReader().read(profile="variation", id=rsid)
+            record = result.records[0] if result.records else {}
+        except ReaderError as err:
+            if not _is_not_found(err):
+                raise
+            record = {}
+        data = {
+            "name": record.get("name", rsid),
+            "mappings": [
+                {
+                    field: mapping.get(field)
+                    for field in _ENSEMBL_MAPPING_FIELDS
+                }
+                for mapping in record.get("mappings") or []
+            ],
+        }
+        _write_json_gz_atomic(path, data)
+        fetched = True
+    variants = []
+    for mapping in data["mappings"]:
+        chrom = str(mapping.get("seq_region_name"))
+        if (
+            mapping.get("assembly_name") != Constants.GRCH_BUILD
+            or not _PRIMARY_CHROM_PATTERN.match(chrom)
+        ):
+            continue
+        variant = _ensembl_variant(
+            data["name"],
+            chrom,
+            mapping.get("start"),
+            mapping.get("strand"),
+            str(mapping.get("allele_string") or "").split("/"),
+        )
+        if variant is not None:
+            variants.append(variant)
+    return variants, fetched
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _clean_allele(value: object) -> str | None:
+    """Normalise a row allele to upper case, or `None` when unknown.
+
+    Parameters
+    ----------
+    value : `object`
+        An allele cell (string, NA or `None`).
+
+    Returns
+    -------
+    allele : `str` or `NoneType`
+        Upper-case stripped allele; `None` for NA, blank, `"?"` or "NA".
+    """
+    if value is None or pd.isna(value):
+        return None
+    allele = str(value).strip().upper()
+    if allele in ("", "?", "NA", "NAN"):
+        return None
+    return allele
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _source_rsids(value: object) -> list[str]:
+    """Split a row's rsid cell into valid lower-case rsids.
+
+    Parameters
+    ----------
+    value : `object`
+        An rsid cell, e.g. "rs1", "rs1,rs2" (FinnGen), NA or `None`.
+
+    Returns
+    -------
+    rsids : `list[str]`
+        Unique `rs<digits>` ids in cell order; empty if none.
+    """
+    if value is None or pd.isna(value):
+        return []
+    parts = _RSID_SPLIT_PATTERN.split(str(value).strip().lower())
+    return list(dict.fromkeys(p for p in parts if _RSID_PATTERN.match(p)))
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _trim_anchor_base(
+    effect: str | None, other: str | None
+) -> tuple[str, str] | None:
+    """Drop a VCF-style shared first base from an indel's alleles.
+
+    Ensembl places e.g. VCF `pos CT/C` at `pos + 1` as `T/-`.
+
+    Parameters
+    ----------
+    effect : `str` or `NoneType`
+        Effect allele.
+    other : `str` or `NoneType`
+        Other allele.
+
+    Returns
+    -------
+    trimmed : `tuple[str, str]` or `NoneType`
+        `(effect, other)` without the shared base (`"-"` when empty), or
+        `None` when not an anchored indel (to look up at `pos + 1`).
+    """
+    if effect is None or other is None or "-" in (effect, other):
+        return None
+    if effect[0] != other[0] or max(len(effect), len(other)) < 2:
+        return None
+    return effect[1:] or "-", other[1:] or "-"
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _orientation(
+    effect: str | None,
+    other: str | None,
+    ref: str,
+    alts: tuple[str, ...],
+) -> tuple[str | None, str | None]:
+    """Compare row alleles with an Ensembl ref/alts, without strand flips.
+
+    Parameters
+    ----------
+    effect : `str` or `NoneType`
+        Effect allele (`None` if unknown).
+    other : `str` or `NoneType`
+        Other allele (`None` if unknown); at least one of the two is set.
+    ref : `str`
+        Ensembl ref allele.
+    alts : `tuple[str, ...]`
+        Ensembl alt alleles.
+
+    Returns
+    -------
+    status_alt : `tuple[str | None, str | None]`
+        (`EnsemblAlleleCheck.MATCH` or `FLIPPED`, or `None` if the
+        alleles do not fit) and the row's alt allele when it identifies
+        one, else `None`.
+    """
+    if effect is not None and other is not None:
+        if other == ref and effect in alts:
+            return EnsemblAlleleCheck.MATCH, effect
+        if effect == ref and other in alts:
+            return EnsemblAlleleCheck.FLIPPED, other
+        return None, None
+    if effect is not None:
+        if effect in alts:
+            return EnsemblAlleleCheck.MATCH, effect
+        if effect == ref:
+            return EnsemblAlleleCheck.FLIPPED, None
+        return None, None
+    if other == ref:
+        return EnsemblAlleleCheck.MATCH, None
+    if other in alts:
+        return EnsemblAlleleCheck.FLIPPED, other
+    return None, None
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _allele_status(
+    effect: str | None, other: str | None, alleles: tuple[str, ...]
+) -> tuple[str, str | None]:
+    """Classify row alleles against one Ensembl variant's alleles.
+
+    Parameters
+    ----------
+    effect : `str` or `NoneType`
+        Effect allele (`None` if unknown).
+    other : `str` or `NoneType`
+        Other allele (`None` if unknown).
+    alleles : `tuple[str, ...]`
+        Ensembl alleles, ref first.
+
+    Returns
+    -------
+    status_alt : `tuple[str, str | None]`
+        An `EnsemblAlleleCheck` value (never `NOT_FOUND`) and the Ensembl
+        alt the row points to, on the forward strand (`None` if none).
+    """
+    if effect is None and other is None:
+        return EnsemblAlleleCheck.EFFECT_UNKNOWN, None
+    ref, alts = alleles[0], alleles[1:]
+    status, alt = _orientation(effect, other, ref, alts)
+    if status is not None:
+        return status, alt
+    status, alt = _orientation(
+        _complement(effect), _complement(other), ref, alts
+    )
+    if status is not None:
+        return EnsemblAlleleCheck.STRAND_FLIP, alt
+    return EnsemblAlleleCheck.MISMATCH, None
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _ensembl_check(
+    chrom: object,
+    pos: object,
+    effect_allele: object,
+    other_allele: object,
+    rsid: object,
+    by_position: Mapping[tuple[str, int], list[EnsemblVariant]],
+    by_rsid: Mapping[str, list[EnsemblVariant]],
+    lookup_rsid: Callable[[str], list[EnsemblVariant]],
+) -> tuple[object, str, object]:
+    """Match one variant row to Ensembl and classify alleles and rsid.
+
+    Candidates are the Ensembl variants at `chrom:pos` (plus `pos + 1`
+    for VCF-anchored indels). Only when there are none, the row's rsids
+    are looked up: first in the region variants, then via
+    `lookup_rsid` (Ensembl variation endpoint). The best candidate has
+    the best `_ALLELE_CHECK_RANK`, then the row's own rsid.
+
+    Parameters
+    ----------
+    chrom : `object`
+        Row chromosome.
+    pos : `object`
+        Row GRCh38 position.
+    effect_allele : `object`
+        Row effect allele (may be NA).
+    other_allele : `object`
+        Row other allele (may be NA).
+    rsid : `object`
+        Row rsid cell (may be NA or hold several ids).
+    by_position : `Mapping[tuple[str, int], list[EnsemblVariant]]`
+        Region variants by `(chrom, start)`.
+    by_rsid : `Mapping[str, list[EnsemblVariant]]`
+        Region variants by rsid.
+    lookup_rsid : `Callable[[str], list[EnsemblVariant]]`
+        Fallback rsid lookup for rsids not among the region variants.
+
+    Returns
+    -------
+    result : `tuple[object, str, object]`
+        `(ensembl_variant_id, ensembl_allele_check, ensembl_rsid_check)`;
+        `(NA, "not_found", NA)` if nothing matches.
+    """
+    effect = _clean_allele(effect_allele)
+    other = _clean_allele(other_allele)
+    source_rsids = _source_rsids(rsid)
+    trimmed = _trim_anchor_base(effect, other)
+    chrom, pos = str(chrom), int(pos)
+
+    candidates = [
+        (v, effect, other) for v in by_position.get((chrom, pos), [])
+    ]
+    if trimmed is not None:
+        candidates += [
+            (v, *trimmed) for v in by_position.get((chrom, pos + 1), [])
+        ]
+    rsid_only = False
+    if not candidates:
+        variants = []
+        for source_rsid in source_rsids:
+            variants += by_rsid.get(source_rsid) or lookup_rsid(source_rsid)
+        candidates = [(v, effect, other) for v in variants]
+        if trimmed is not None:
+            candidates += [(v, *trimmed) for v in variants]
+        rsid_only = True
+    if not candidates:
+        return pd.NA, EnsemblAlleleCheck.NOT_FOUND, pd.NA
+
+    scored = []
+    for variant, row_effect, row_other in candidates:
+        status, alt = _allele_status(row_effect, row_other, variant.alleles)
+        scored.append((variant, status, alt))
+    variant, status, alt = min(
+        scored,
+        key=lambda item: (
+            _ALLELE_CHECK_RANK[item[1]],
+            item[0].rsid not in source_rsids,
+        ),
+    )
+    alt_text = alt if alt is not None else "/".join(variant.alleles[1:])
+    variant_id = (
+        f"{variant.chrom}:{variant.start}:{variant.alleles[0]}:{alt_text}"
+    )
+    if rsid_only:
+        rsid_check = EnsemblRsidCheck.RSID_ONLY
+    elif variant.rsid in source_rsids:
+        rsid_check = EnsemblRsidCheck.SAME
+    elif source_rsids:
+        rsid_check = EnsemblRsidCheck.DIFFERENT
+    else:
+        rsid_check = EnsemblRsidCheck.NO_SOURCE_RSID
+    return variant_id, status, rsid_check
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def annotate_ensembl_variants(
+    df: pd.DataFrame, regions: Mapping[str, GeneRegion]
+) -> pd.DataFrame:
+    """Check every variant row against Ensembl (GRCh38).
+
+    Sets `ensembl_variant_id`, `ensembl_allele_check` and
+    `ensembl_rsid_check` (see `HarmonisedColumns`) for rows with a
+    chromosome and position; gene-level rows (gene burden) stay NA.
+    Each unique (chrom, pos, alleles, rsid) combination is checked once,
+    since rows repeat per outcome.
+
+    Parameters
+    ----------
+    df : `pd.DataFrame`
+        Combined harmonised rows (`HarmonisedColumns.CORE_ORDER`
+        columns). Modified in place (no copy of the ~600k-row table).
+    regions : `Mapping[str, GeneRegion]`
+        Gene -> flanked region; Ensembl variants are fetched for these.
+
+    Returns
+    -------
+    df : `pd.DataFrame`
+        The same frame, with the three Ensembl columns filled.
+
+    Raises
+    ------
+    ReaderError
+        If an Ensembl request fails (cached windows are kept for reruns).
+    """
+    hc = HarmonisedColumns
+    by_position: dict[tuple[str, int], list[EnsemblVariant]] = {}
+    by_rsid: dict[str, list[EnsemblVariant]] = {}
+    seen: set[tuple[str, int]] = set()
+    for gene, region in regions.items():
+        variants, n_fetched = fetch_ensembl_region_variants(region)
+        log_info(
+            f"{gene}: {len(variants)} Ensembl variants in "
+            f"{region.chrom}:{region.start}-{region.end} "
+            f"({n_fetched} windows fetched, rest cached)"
+        )
+        for variant in variants:
+            if (variant.rsid, variant.start) in seen:
+                continue
+            seen.add((variant.rsid, variant.start))
+            by_position.setdefault(
+                (variant.chrom, variant.start), []
+            ).append(variant)
+            by_rsid.setdefault(variant.rsid.lower(), []).append(variant)
+
+    n_rsid_fetched = 0
+
+    def lookup_rsid(rsid: str) -> list[EnsemblVariant]:
+        """Look up an rsid via Ensembl, counting uncached requests.
+
+        Parameters
+        ----------
+        rsid : `str`
+            Lower-case rsid.
+
+        Returns
+        -------
+        variants : `list[EnsemblVariant]`
+            See `_ensembl_rsid_variants`.
+        """
+        nonlocal n_rsid_fetched
+        variants, fetched = _ensembl_rsid_variants(rsid)
+        n_rsid_fetched += int(fetched)
+        return variants
+
+    has_site = df[hc.CHROM].notna() & df[hc.POS].notna()
+    key_columns = [
+        hc.CHROM,
+        hc.POS,
+        hc.EFFECT_ALLELE,
+        hc.OTHER_ALLELE,
+        hc.RSID,
+    ]
+    sites = df.loc[has_site, key_columns].astype(object)
+    sites = sites.where(sites.notna(), None)
+    keys = list(sites.itertuples(index=False, name=None))
+    results = {
+        key: _ensembl_check(*key, by_position, by_rsid, lookup_rsid)
+        for key in dict.fromkeys(keys)
+    }
+    log_info(
+        f"Ensembl check: {len(results)} unique variant rows checked, "
+        f"{n_rsid_fetched} rsids fetched via the variation endpoint"
+    )
+    site_index = df.index[has_site]
+    for position, column in enumerate(
+        (hc.ENSEMBL_VARIANT_ID, hc.ENSEMBL_ALLELE_CHECK, hc.ENSEMBL_RSID_CHECK)
+    ):
+        df[column] = pd.Series(pd.NA, index=df.index, dtype=object)
+        df.loc[site_index, column] = [results[key][position] for key in keys]
+
+    checked = df.loc[has_site]
+    for source, group in checked.groupby(hc.SOURCE, sort=False):
+        alleles = group[hc.ENSEMBL_ALLELE_CHECK].value_counts()
+        rsids = group[hc.ENSEMBL_RSID_CHECK].value_counts()
+        log_info(
+            f"{source} rows: alleles "
+            + " ".join(f"{k}={n}" for k, n in alleles.items())
+            + "; rsid "
+            + " ".join(f"{k}={n}" for k, n in rsids.items())
+        )
+    bad = checked[hc.ENSEMBL_ALLELE_CHECK].isin(
+        [EnsemblAlleleCheck.NOT_FOUND, EnsemblAlleleCheck.MISMATCH]
+    )
+    per_study = bad.groupby(
+        [checked[hc.SOURCE], checked[hc.STUDY_ACCESSION]]
+    ).agg(["mean", "size"])
+    for (source, study), row in per_study.iterrows():
+        if (
+            row["size"] >= Constants.ENSEMBL_BAD_MIN_ROWS
+            and row["mean"] > Constants.ENSEMBL_BAD_FRACTION_WARN
+        ):
+            log_warn(
+                f"{source} {study}: {row['mean']:.0%} of {int(row['size'])} "
+                "rows not_found/mismatch in Ensembl (GRCh37 file?)"
+            )
+    return df
