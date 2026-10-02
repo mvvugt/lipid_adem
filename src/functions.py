@@ -19,6 +19,7 @@ import warnings
 from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TypeVar
 
 import numpy as np
 import pandas as pd
@@ -79,6 +80,9 @@ _ANCESTRY_SEGMENT_PATTERN = re.compile(Ancestry.SEGMENT_PATTERN, re.VERBOSE)
 _ANCESTRY_CATEGORY_SPLIT_PATTERN = re.compile(Ancestry.CATEGORY_SPLIT_PATTERN)
 # unmapped ancestry categories already warned about (warn once each)
 _WARNED_ANCESTRY_CATEGORIES: set[str] = set()
+# server-error status in a biomed-api ReaderError message (no HTTP cause)
+_READER_HTTP_5XX_PATTERN = re.compile(r"HTTP 5\d\d")
+_T = TypeVar("_T")
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -152,6 +156,72 @@ class GeneTableError(ValueError):
 
 class SumstatsColumnError(ValueError):
     """A sumstats file lacks an expected chrom/pos/MAF column."""
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# network retry
+
+def _transient_reason(exc: BaseException) -> str | None:
+    """Return why a failed network call is worth retrying, else `None`.
+
+    Timeouts, dropped connections and HTTP 5xx are transient. A
+    `ReaderError` is judged by its wrapped cause, or, without one (e.g.
+    UniProt), by an "HTTP 5xx" in its message.
+    """
+    cause = exc
+    if isinstance(exc, ReaderError) and exc.__cause__ is not None:
+        cause = exc.__cause__
+    if isinstance(cause, (requests.Timeout, requests.ConnectionError)):
+        return type(cause).__name__
+    response = getattr(cause, "response", None)
+    if response is not None and response.status_code >= 500:
+        return f"HTTP {response.status_code}"
+    if isinstance(cause, ReaderError):
+        match = _READER_HTTP_5XX_PATTERN.search(str(cause))
+        return match.group(0) if match else None
+    return None
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _call_with_retry(func: Callable[[], _T], label: str) -> _T:
+    """Call `func`, retrying transient failures (see `_transient_reason`).
+
+    Makes `len(Constants.HTTP_RETRY_BACKOFF) + 1` attempts, sleeping the
+    listed seconds before each retry; `label` names the call in warnings.
+    The last error, or any non-transient one, is re-raised.
+    """
+    n_retries = len(Constants.HTTP_RETRY_BACKOFF)
+    for attempt, wait in enumerate((*Constants.HTTP_RETRY_BACKOFF, None), 1):
+        try:
+            return func()
+        except Exception as exc:
+            reason = _transient_reason(exc)
+            if reason is None or wait is None:
+                raise
+        log_warn(f"{label}: {reason}, retry {attempt}/{n_retries} in {wait}s")
+        time.sleep(wait)
+    raise AssertionError("unreachable")
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _request_with_retry(
+    method: str, url: str, **kwargs: object
+) -> requests.Response:
+    """`requests.request` with `_call_with_retry`; 5xx raises `HTTPError`.
+
+    Other statuses (e.g. 404) are returned for the caller to handle. With
+    `stream=True` only opening the response is retried.
+    """
+
+    def _send() -> requests.Response:
+        """Send once; raise on a 5xx status so it is retried."""
+        response = requests.request(method, url, **kwargs)
+        if response.status_code >= 500:
+            response.close()
+            response.raise_for_status()
+        return response
+
+    return _call_with_retry(_send, label=f"{method} {url}")
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -732,7 +802,8 @@ def icd_to_efo(term: str) -> str:
         The first matching EFO term's short OBO ID (e.g. "EFO_0001645"),
         or "NA" if there is no match or the match has no OBO ID.
     """
-    response = requests.get(
+    response = _request_with_retry(
+        "GET",
         Constants.EBI_OLS_SEARCH_URL,
         params={"q": term, "ontology": "efo"},
         timeout=30,
@@ -771,7 +842,8 @@ def _ols_term(trait_id: str) -> dict | None:
     requests.RequestException
         On a network or HTTP error.
     """
-    response = requests.get(
+    response = _request_with_retry(
+        "GET",
         Constants.EBI_OLS_TERMS_URL,
         params={"obo_id": trait_id.replace("_", ":", 1)},
         timeout=30,
@@ -936,7 +1008,10 @@ def _ensembl_gene_record(profile: str, **params: str) -> GeneRecord | None:
         If the lookup fails for any reason other than "not found".
     """
     try:
-        result = EnsemblReader().read(profile=profile, **params)
+        result = _call_with_retry(
+            lambda: EnsemblReader().read(profile=profile, **params),
+            label=f"Ensembl {profile} {params}",
+        )
     except ReaderError as err:
         if _is_not_found(err):
             log_warn(f"Ensembl {profile} found nothing for {params}")
@@ -1027,9 +1102,13 @@ def _uniprot_search(query: str) -> list[dict]:
     ReaderError
         If the search request fails for any other reason.
     """
-    reader = UniProtIdMappingReader()
     try:
-        return reader.read(profile="entry_lookup", query=query).records
+        return _call_with_retry(
+            lambda: UniProtIdMappingReader().read(
+                profile="entry_lookup", query=query
+            ),
+            label=f"UniProt entry_lookup {query!r}",
+        ).records
     except ReaderError as err:
         # entry_lookup raises its own ReaderError (no HTTP cause attached),
         # so the status code can only be read from the message
@@ -1128,13 +1207,17 @@ def _fetch_gwas_catalog_study_records(
         Catalog studies-list search (absent fields are `None`, absent
         flags `False`).
     """
-    reader = GwasCatalogReader()
     query = {"show_child_trait": True} if include_child_traits else {}
     with warnings.catch_warnings():
         # biomed-api warns (rather than raising) on zero matches; an
         # empty accession list is a normal outcome for callers here.
         warnings.simplefilter("ignore", UserWarning)
-        result = reader.read(profile="studies", efo_id=efo_id, **query)
+        result = _call_with_retry(
+            lambda: GwasCatalogReader().read(
+                profile="studies", efo_id=efo_id, **query
+            ),
+            label=f"GWAS Catalog studies {efo_id}",
+        )
 
     return [
         {
@@ -1450,7 +1533,8 @@ def pubmed_summaries(pubmed_ids: list) -> dict[int, dict]:
     summaries: dict[int, dict] = {}
     for start in range(0, len(unique_ids), Constants.PUBMED_BATCH_SIZE):
         chunk = unique_ids[start : start + Constants.PUBMED_BATCH_SIZE]
-        response = requests.get(
+        response = _request_with_retry(
+            "GET",
             Constants.NCBI_ESUMMARY_URL,
             params={
                 "db": "pubmed",
@@ -2078,56 +2162,11 @@ def _accession_bucket_location(study_accession: str) -> str | None:
         f"{Constants.GWAS_CATALOG_FTP_BASE}/{bucket_name}/{study_accession}"
     )
 
-    response = requests.head(f"{location}/", timeout=30)
+    response = _request_with_retry("HEAD", f"{location}/", timeout=30)
     if response.status_code != 200:
         log_warn(f"{study_accession}: derived FTP bucket {location} not found")
         return None
     return location
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _get_with_retry(url: str, timeout: int) -> requests.Response:
-    """GET a URL, retrying on server errors, timeouts and dropped connections.
-
-    Parameters
-    ----------
-    url : `str`
-        URL to fetch.
-    timeout : `int`
-        Per-attempt request timeout in seconds.
-
-    Returns
-    -------
-    response : `requests.Response`
-        The first response with a status below 500, or the last response
-        if every attempt returned a 5xx status. Other statuses (e.g. 404)
-        are returned unchanged for the caller to handle.
-
-    Raises
-    ------
-    requests.Timeout, requests.ConnectionError
-        If the last attempt times out or cannot connect.
-
-    Notes
-    -----
-    Makes `len(Constants.HTTP_RETRY_BACKOFF) + 1` attempts, sleeping the
-    listed number of seconds before each retry.
-    """
-    n_retries = len(Constants.HTTP_RETRY_BACKOFF)
-    for attempt, wait in enumerate((*Constants.HTTP_RETRY_BACKOFF, None), 1):
-        try:
-            response = requests.get(url, timeout=timeout)
-        except (requests.Timeout, requests.ConnectionError) as exc:
-            if wait is None:
-                raise
-            reason = type(exc).__name__
-        else:
-            if response.status_code < 500 or wait is None:
-                return response
-            reason = f"HTTP {response.status_code}"
-        log_warn(f"{url}: {reason}, retry {attempt}/{n_retries} in {wait}s")
-        time.sleep(wait)
-    raise AssertionError("unreachable")
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2154,7 +2193,8 @@ def study_summary_stats_location(study_accession: str) -> str | None:
     requests.HTTPError
         If the API call fails for a reason other than "not found".
     """
-    response = _get_with_retry(
+    response = _request_with_retry(
+        "GET",
         f"{Constants.GWAS_CATALOG_API_V2}/studies/{study_accession}",
         timeout=30,
     )
@@ -2181,7 +2221,7 @@ def _list_ftp_dir(url: str) -> list[str]:
     entries : `list` [`str`]
         The `href` values on the directory's index page.
     """
-    response = requests.get(f"{url}/", timeout=30)
+    response = _request_with_retry("GET", f"{url}/", timeout=30)
     response.raise_for_status()
     return re.findall(r'href="([^"]+)"', response.text)
 
@@ -2292,13 +2332,17 @@ def fetch_curated_associations(
     large traits (e.g. HDL-C, 25k records) stay under biomed-api's
     500-page cap.
     """
-    reader = GwasCatalogReader()
     query: dict[str, object] = {"size": Constants.GWAS_CATALOG_PAGE_SIZE}
     if include_child_traits:
         query["show_child_trait"] = True
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", UserWarning)
-        result = reader.read(profile="associations", efo_id=efo_id, **query)
+        result = _call_with_retry(
+            lambda: GwasCatalogReader().read(
+                profile="associations", efo_id=efo_id, **query
+            ),
+            label=f"GWAS Catalog associations {efo_id}",
+        )
 
     records = list(result.records)
     # printed only; merge_associations records one summary line per EFO
@@ -2439,7 +2483,9 @@ def _plain_header(tabix_source: str) -> list[str]:
         The first line's tab-separated fields.
     """
     if tabix_source.startswith(("http://", "https://", "ftp://")):
-        with requests.get(tabix_source, stream=True, timeout=30) as response:
+        with _request_with_retry(
+            "GET", tabix_source, stream=True, timeout=30
+        ) as response:
             response.raise_for_status()
             with gzip.GzipFile(fileobj=response.raw) as gz:
                 line = gz.readline().decode("utf-8")
@@ -2778,7 +2824,9 @@ def filter_raw_sumstats_regions(
     for gene, region in regions.items():
         regions_by_chrom.setdefault(region.chrom, []).append((gene, region))
 
-    with requests.get(url, stream=True, timeout=60) as response:
+    with _request_with_retry(
+        "GET", url, stream=True, timeout=60
+    ) as response:
         response.raise_for_status()
         raw_stream = response.raw
         if url.endswith(".gz"):
@@ -2856,7 +2904,8 @@ def _open_targets_query(query: str, variables: dict) -> dict:
     RuntimeError
         If the response reports GraphQL errors (these come with HTTP 200).
     """
-    response = requests.post(
+    response = _request_with_retry(
+        "POST",
         Constants.OPEN_TARGETS_GRAPHQL_URL,
         json={"query": query, "variables": variables},
         timeout=60,
@@ -3455,61 +3504,6 @@ def _ensembl_variant(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _ensembl_read_with_retry(profile: str, **params: str) -> object:
-    """Run an `EnsemblReader` profile, retrying transient failures.
-
-    Retries when the wrapped cause is an HTTP 5xx response, a timeout or
-    a dropped connection, like `_get_with_retry`.
-
-    Parameters
-    ----------
-    profile : `str`
-        `EnsemblReader` profile, e.g. "overlap_region" or "variation".
-    **params : `str`
-        The profile's parameters.
-
-    Returns
-    -------
-    result : `object`
-        The reader's result (with `.records`).
-
-    Raises
-    ------
-    ReaderError
-        If the last attempt fails, or on any non-transient failure (e.g.
-        400/404) without retrying.
-
-    Notes
-    -----
-    Makes `len(Constants.HTTP_RETRY_BACKOFF) + 1` attempts, sleeping the
-    listed number of seconds before each retry.
-    """
-    n_retries = len(Constants.HTTP_RETRY_BACKOFF)
-    for attempt, wait in enumerate((*Constants.HTTP_RETRY_BACKOFF, None), 1):
-        try:
-            return EnsemblReader().read(profile=profile, **params)
-        except ReaderError as err:
-            cause = err.__cause__
-            response = getattr(cause, "response", None)
-            transient = isinstance(
-                cause, (requests.Timeout, requests.ConnectionError)
-            ) or (response is not None and response.status_code >= 500)
-            if not transient or wait is None:
-                raise
-            reason = (
-                f"HTTP {response.status_code}"
-                if response is not None
-                else type(cause).__name__
-            )
-        log_warn(
-            f"Ensembl {profile} {params}: {reason}, "
-            f"retry {attempt}/{n_retries} in {wait}s"
-        )
-        time.sleep(wait)
-    raise AssertionError("unreachable")
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _ensembl_window_records(
     chrom: str, start: int, end: int
 ) -> tuple[list[dict], bool]:
@@ -3542,10 +3536,12 @@ def _ensembl_window_records(
     path = Paths.ENSEMBL_CACHE / f"overlap_{chrom}_{start}_{end}.json.gz"
     if path.exists():
         return list(_read_json_gz(path)), False
-    result = _ensembl_read_with_retry(
-        profile="overlap_region",
-        region=f"{chrom}:{start}-{end}",
-        feature="variation",
+    region = f"{chrom}:{start}-{end}"
+    result = _call_with_retry(
+        lambda: EnsemblReader().read(
+            profile="overlap_region", region=region, feature="variation"
+        ),
+        label=f"Ensembl overlap_region {region}",
     )
     records = [
         {field: record.get(field) for field in _ENSEMBL_VARIANT_FIELDS}
@@ -3637,7 +3633,10 @@ def _ensembl_rsid_variants(rsid: str) -> tuple[list[EnsemblVariant], bool]:
         data = _read_json_gz(path)
     else:
         try:
-            result = _ensembl_read_with_retry(profile="variation", id=rsid)
+            result = _call_with_retry(
+                lambda: EnsemblReader().read(profile="variation", id=rsid),
+                label=f"Ensembl variation {rsid}",
+            )
             record = result.records[0] if result.records else {}
         except ReaderError as err:
             if not _is_not_found(err):
