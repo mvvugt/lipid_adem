@@ -45,6 +45,10 @@ _LIST_OUTPUT_COLUMNS: dict[str, str] = {
     VariantListColumns.A1: VariantListColumns.OUT_A1,
     VariantListColumns.A2: VariantListColumns.OUT_A2,
     VariantListColumns.TRI_CLASS: VariantListColumns.OUT_TRI_CLASS,
+    VariantListColumns.POS_ORIG: VariantListColumns.OUT_POS_ORIG,
+    VariantListColumns.A1_ORIG: VariantListColumns.OUT_A1_ORIG,
+    VariantListColumns.A2_ORIG: VariantListColumns.OUT_A2_ORIG,
+    VariantListColumns.NORM_STATUS: VariantListColumns.OUT_NORM_STATUS,
 }
 
 
@@ -171,8 +175,10 @@ def load_variant_lists() -> pd.DataFrame:
     -------
     variants : `pd.DataFrame`
         Variant-list columns plus `_CHROM_KEY` (no ``chr`` prefix),
-        `_POS_KEY` (`Int64`) and cleaned `a1`/`a2`; only rows with a
-        position and both alleles.
+        `_POS_KEY` (`Int64`) and cleaned `a1`/`a2`, normalised by
+        `_normalise_variant_list` (originals in `pos_orig`/`a1_orig`/
+        `a2_orig`, plus `norm_status`); only rows with a position and
+        both alleles.
 
     Raises
     ------
@@ -219,7 +225,8 @@ def load_variant_lists() -> pd.DataFrame:
         & (variants[VariantListColumns.A1] != "")
         & (variants[VariantListColumns.A2] != "")
     )
-    inside = _in_region(variants, _read_gene_regions())
+    regions = _read_gene_regions()
+    inside = _in_region(variants, regions)
     grouped = variants.groupby(
         [VariantListColumns.GENE, VariantListColumns.SOURCE], sort=True
     )
@@ -229,7 +236,82 @@ def load_variant_lists() -> pd.DataFrame:
             f"{int((~usable[group.index]).sum())} without alleles, "
             f"{int((~inside[group.index]).sum())} outside gene region"
         )
-    return variants[usable].reset_index(drop=True)
+    return _normalise_variant_list(
+        variants[usable].reset_index(drop=True), regions
+    )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _normalise_variant_list(
+    variants: pd.DataFrame, regions: dict[str, tuple[str, int, int]]
+) -> pd.DataFrame:
+    """Left-align and trim the variant-list entries against GRCh38.
+
+    Uses `functions.normalise_variant` (the same normalisation as the
+    final results), with `a1` as other and `a2` as effect allele, so
+    list entries and GWAS rows meet in the same form.
+
+    Parameters
+    ----------
+    variants : `pd.DataFrame`
+        Usable variant-list rows, with `_CHROM_KEY`, `_POS_KEY` and
+        cleaned `a1`/`a2`.
+    regions : `dict[str, tuple[str, int, int]]`
+        From `_read_gene_regions`; their reference sequences are fetched
+        (or read from the Ensembl cache).
+
+    Returns
+    -------
+    normalised : `pd.DataFrame`
+        `variants` with `_POS_KEY`, `a1` and `a2` normalised, the values
+        before in `pos_orig`/`a1_orig`/`a2_orig`, and `norm_status`.
+        Counts per status, and entries where `a2` rather than `a1` is the
+        reference allele, are logged.
+
+    Raises
+    ------
+    ReaderError
+        If a reference sequence cannot be fetched from Ensembl.
+    """
+    vc = VariantListColumns
+    normalised = variants.copy()
+    normalised[vc.POS_ORIG] = normalised[_POS_KEY]
+    normalised[vc.A1_ORIG] = normalised[vc.A1]
+    normalised[vc.A2_ORIG] = normalised[vc.A2]
+    sequences = functions.region_sequences(
+        {
+            gene: functions.GeneRegion(chrom=chrom, start=start, end=end)
+            for gene, (chrom, start, end) in regions.items()
+        }
+    )
+    results = [
+        functions.normalise_variant(chrom, pos, a2, a1, sequences)
+        for chrom, pos, a1, a2 in zip(
+            normalised[_CHROM_KEY],
+            normalised[_POS_KEY],
+            normalised[vc.A1],
+            normalised[vc.A2],
+        )
+    ]
+    normalised[_POS_KEY] = pd.array(
+        [result.pos for result in results], dtype="Int64"
+    )
+    normalised[vc.A2] = [result.effect for result in results]
+    normalised[vc.A1] = [result.other for result in results]
+    normalised[vc.NORM_STATUS] = [result.status for result in results]
+
+    counts = normalised[vc.NORM_STATUS].value_counts()
+    log_info(
+        "normalisation: variant-list rows "
+        + " ".join(f"{k}={n}" for k, n in counts.items())
+    )
+    n_a2_ref = sum(result.effect_is_ref is True for result in results)
+    if n_a2_ref:
+        log_warn(
+            f"variant lists: {n_a2_ref} rows where a2, not a1, is the "
+            "GRCh38 reference allele"
+        )
+    return normalised
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -407,8 +489,11 @@ def _check_a1_is_ref(matched: pd.DataFrame) -> None:
     """Log how often list `a1` differs from the Ensembl reference allele.
 
     Tests the assumption that `a1` is the GRCh38 reference allele, using
-    the ref in `ensembl_variant_id` (``chrom:pos:ref:alt``). Skipped when
-    the final results predate that column.
+    the ref in `ensembl_variant_id` (``chrom:pos:ref:alt``). Only SNVs
+    are checked: Ensembl writes indels in its own (unnormalised) form,
+    so indels are checked against the reference sequence instead (see
+    `_normalise_variant_list`). Skipped when the final results predate
+    that column.
 
     Parameters
     ----------
@@ -424,10 +509,13 @@ def _check_a1_is_ref(matched: pd.DataFrame) -> None:
         log_info(f"no {column} column: a1-vs-Ensembl-ref check skipped")
         return
     ref = matched[column].astype("string").str.split(":").str[2]
-    checked = ref.notna()
-    differs = checked & (ref != matched[VariantListColumns.OUT_A1])
+    a1 = matched[VariantListColumns.OUT_A1]
+    a2 = matched[VariantListColumns.OUT_A2]
+    snv = (a1.str.len() == 1) & (a2.str.len() == 1)
+    checked = ref.notna() & snv
+    differs = checked & (ref != a1)
     message = (
-        f"a1 vs Ensembl ref: {int(checked.sum())} matched rows checked, "
+        f"a1 vs Ensembl ref: {int(checked.sum())} matched SNV rows checked, "
         f"{int(differs.sum())} where a1 is not the Ensembl ref"
     )
     if differs.any():

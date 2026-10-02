@@ -152,6 +152,69 @@ def load_filter_results(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _split_burden_rows(
+    summary: pd.DataFrame, ensembl_ids: dict[str, str]
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Move gene-burden mask rows out of the summary-stats rows.
+
+    Some catalog sumstats files (e.g. UKB exome burden tests) hold one
+    row per gene and mask, written like a variant: effect allele the
+    mask (e.g. "M1.0001"), other allele "ref", and `Name`
+    ``GENE(ENSG...).GENE.<mask>``. Only rows for the region's own gene
+    (by Ensembl id) are kept; rows for neighbouring genes in the region
+    are dropped.
+
+    Parameters
+    ----------
+    summary : `pd.DataFrame`
+        Harmonised summary-stats rows from `load_filter_results`.
+    ensembl_ids : `dict[str, str]`
+        Gene symbol -> Ensembl gene id (gene_list.txt).
+
+    Returns
+    -------
+    variants : `pd.DataFrame`
+        `summary` without the mask rows.
+    burden : `pd.DataFrame`
+        The own-gene mask rows with `source` ``"gene-burden"`` and
+        chrom, pos, rsid, alleles, `variant_id` and `maf_status` cleared
+        (the mask stays in `src_Name`); empty if there are none.
+    """
+    hc = HarmonisedColumns
+    name_column = hc.RAW_PREFIX + "Name"
+    if summary.empty or name_column not in summary.columns:
+        return summary, summary.iloc[0:0]
+    is_mask = summary[hc.EFFECT_ALLELE].map(functions.is_burden_mask_allele)
+    if not is_mask.any():
+        return summary, summary.iloc[0:0]
+    names = summary.loc[is_mask, name_column].astype("string").str.extract(
+        Constants.BURDEN_NAME_PATTERN
+    )
+    own_gene = names["ensembl_id"] == summary.loc[is_mask, hc.GENE].map(
+        ensembl_ids
+    )
+    own_gene = own_gene.fillna(False).astype(bool)
+    burden = summary.loc[is_mask].loc[own_gene].copy()
+    burden[hc.SOURCE] = "gene-burden"
+    for column in (
+        hc.CHROM,
+        hc.POS,
+        hc.RSID,
+        hc.VARIANT_ID,
+        hc.EFFECT_ALLELE,
+        hc.OTHER_ALLELE,
+        hc.MAF_STATUS,
+    ):
+        burden[column] = pd.NA
+    log_info(
+        f"summary-stats: {int(is_mask.sum())} burden mask rows -> "
+        f"{len(burden)} gene-burden rows, {int((~own_gene).sum())} for "
+        "neighbouring genes dropped"
+    )
+    return summary.loc[~is_mask], burden
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _marvel_identity(
     frame: pd.DataFrame, entry: pd.Series, source: str
 ) -> pd.DataFrame:
@@ -666,15 +729,24 @@ def merge_results() -> None:
 
     outcome_desc = _outcome_descriptions(icd_df)
 
+    ensembl_ids = dict(
+        zip(
+            genes_df[ColumnNames.GENE],
+            genes_df[ColumnNames.ENSEMBL_ID].fillna("").astype(str).str.strip(),
+        )
+    )
+
     log_stage("load_sumstats")
     audit = _read_discovery_log()
-    parts = [
+    summary, catalog_burden = _split_burden_rows(
         load_filter_results(
             outcome_desc,
             _study_trait_labels(audit),
             _study_mapped_traits(audit),
-        )
-    ]
+        ),
+        ensembl_ids,
+    )
+    parts = [summary, catalog_burden]
 
     excluded = icd_df[ColumnNames.EFO_ID].isin(Constants.EXCLUDED_EFO_IDS)
     for efo_id, outcome in sorted(
@@ -707,13 +779,6 @@ def merge_results() -> None:
     if marvel_df.empty:
         log_info(f"no own results listed in {FileNames.MARVEL_RESULTS}")
     parts.extend(load_marvel_results(regions, marvel_df))
-
-    ensembl_ids = dict(
-        zip(
-            genes_df[ColumnNames.GENE],
-            genes_df[ColumnNames.ENSEMBL_ID].fillna("").astype(str).str.strip(),
-        )
-    )
 
     # fetch each (efo_id, child_traits) query once and filter it for every
     # gene; only one query's full record list is held in memory at a time
@@ -828,6 +893,10 @@ def merge_results() -> None:
         f"curated: {n_overlap_curated} rows dropped from studies excluded "
         "for cohort overlap"
     )
+    # plus the burden masks found in catalog sumstats files
+    if not catalog_burden.empty:
+        for gene, n in catalog_burden[ColumnNames.GENE].value_counts().items():
+            burden_rows[gene] = burden_rows.get(gene, 0) + int(n)
     n_zero_genes = sum(1 for n in burden_rows.values() if n == 0)
     log_info(
         f"gene-burden rows: {_format_counts(burden_rows)} "
@@ -836,8 +905,13 @@ def merge_results() -> None:
 
     combined = pd.concat([p for p in parts if not p.empty], ignore_index=True)
     combined = _fill_ancestry(combined, _study_ancestry(audit))
+    log_stage("normalise")
+    sequences = functions.region_sequences(regions)
+    combined = functions.normalise_variants(combined, sequences)
     log_stage("ensembl_check")
-    combined = functions.annotate_ensembl_variants(combined, regions)
+    combined = functions.annotate_ensembl_variants(
+        combined, regions, sequences
+    )
     combined = functions.flag_duplicate_variants(combined)
     log_info(
         f"duplicate variants flagged: "

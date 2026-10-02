@@ -128,7 +128,10 @@ def _log_discovery_summary(
         if child_traits
         else "exact"
     )
+    # the overlap check runs before the full-sumstats check (see
+    # functions.classify_studies), so it is reported first
     overlap = ""
+    blank = ""
     if cohorts:
         n_overlap = sum(
             reason.startswith(Constants.COHORT_OVERLAP_REASON_PREFIX)
@@ -140,13 +143,13 @@ def _log_discovery_summary(
             for record in classified
         )
         overlap = (
-            f", {n_overlap} dropped for cohort overlap "
-            f"({', '.join(sorted(cohorts))}), {n_blank} included with "
-            "blank cohort"
+            f" -> {n_overlap} dropped for cohort overlap "
+            f"({', '.join(sorted(cohorts))})"
         )
+        blank = f", {n_blank} included with blank cohort"
     log_info(
-        f"{efo_id} ({scope}): {len(classified)} studies -> {n_eligible} "
-        f"with full sumstats -> {n_included} included{overlap}"
+        f"{efo_id} ({scope}): {len(classified)} studies{overlap} -> "
+        f"{n_eligible} with full sumstats -> {n_included} included{blank}"
     )
 
 

@@ -153,6 +153,17 @@ class Constants:
     )
     # source_db of marvel rows, + cohort key
     MARVEL_SOURCE_DB_PREFIX: str = "marvel_"
+    # sumstats effect allele of a gene-burden mask row (e.g. UKB exome
+    # "M1.0001", "M3.singleton"; other allele "ref"); kept whatever its
+    # MAF and turned into a gene-burden row at merge
+    BURDEN_MASK_ALLELE_PATTERN: str = r"^M\d+\.(?:\d+|singleton)$"
+    # `Name` of a burden mask row, e.g. "PCSK9(ENSG00000169174).GENE.M1.01"
+    BURDEN_NAME_PATTERN: str = (
+        r"^(?P<gene>[^(]+)\((?P<ensembl_id>ENSG\d+)\)\.GENE\.(?P<mask>.+)$"
+    )
+    # bp added on both sides of a gene region when fetching its reference
+    # sequence, so indels can be left-aligned past the region edge
+    INDEL_NORM_PAD_BP: int = 500
 
 
 class RunlogOrder:
@@ -249,9 +260,14 @@ class HarmonisedColumns:
     CHROM: str = ColumnNames.CHROM
     POS: str = "pos"
     RSID: str = "rsid"
-    # canonical chrom:pos:other_allele:effect_allele; the source's own ID
-    # is kept as src_variant_id
+    # canonical chrom:pos:other_allele:effect_allele, left-aligned and
+    # trimmed against GRCh38 (see `NormStatus`); the source's own ID is
+    # kept as src_variant_id
     VARIANT_ID: str = "variant_id"
+    # VARIANT_ID before normalisation (source pos and alleles)
+    VARIANT_ID_ORIG: str = "variant_id_orig"
+    # outcome of the normalisation, see `NormStatus`
+    NORM_STATUS: str = "norm_status"
     # True for rows sharing source/study/outcome/gene/variant_id (e.g. two
     # source variants harmonised to the same site)
     DUPLICATE_VARIANT: str = "duplicate_variant"
@@ -292,6 +308,8 @@ class HarmonisedColumns:
         POS,
         RSID,
         VARIANT_ID,
+        VARIANT_ID_ORIG,
+        NORM_STATUS,
         DUPLICATE_VARIANT,
         ENSEMBL_VARIANT_ID,
         ENSEMBL_ALLELE_CHECK,
@@ -408,6 +426,25 @@ class MafStatus:
     NOT_REPORTED: str = "not_reported"
 
 
+class NormStatus:
+    """Values of the `norm_status` column (variant-list `norm_status` too).
+
+    Variants are left-aligned and trimmed against the GRCh38 reference
+    (`functions.normalise_variant`); NA for rows without a site (gene
+    burden).
+    """
+    # pos and/or alleles changed to the left-aligned, trimmed form
+    NORMALISED: str = "normalised"
+    # already in normalised form (all SNVs, most indels)
+    UNCHANGED: str = "unchanged"
+    # neither allele matches the reference at pos, left as-is
+    REF_MISMATCH: str = "ref_mismatch"
+    # only one allele known (curated), left as-is
+    EFFECT_ONLY: str = "effect_only"
+    # no reference sequence covers the site (outside every gene region)
+    NO_SEQUENCE: str = "no_sequence"
+
+
 class Ancestry:
     """Harmonised (gnomAD-style) ancestry codes, see
     `functions.harmonise_ancestry`.
@@ -481,12 +518,21 @@ class VariantListColumns:
     SOURCE: str = "source"
     GENE: str = "gene"
     TRI_CLASS: str = "tri_class"
+    # pos/a1/a2 before normalisation, and its `NormStatus`
+    POS_ORIG: str = "pos_orig"
+    A1_ORIG: str = "a1_orig"
+    A2_ORIG: str = "a2_orig"
+    NORM_STATUS: str = "norm_status"
     # added to the matched output, after the final-results columns
     OUT_SOURCE: str = "variant_list_source"
     OUT_GENE: str = "variant_list_gene"
     OUT_A1: str = "variant_list_a1"
     OUT_A2: str = "variant_list_a2"
     OUT_TRI_CLASS: str = "variant_list_tri_class"
+    OUT_POS_ORIG: str = "variant_list_pos_orig"
+    OUT_A1_ORIG: str = "variant_list_a1_orig"
+    OUT_A2_ORIG: str = "variant_list_a2_orig"
+    OUT_NORM_STATUS: str = "variant_list_norm_status"
     # "a2" or "a1": which list allele is the GWAS effect allele
     EFFECT_ALLELE_IS: str = "effect_allele_is"
     # "both" (effect + other allele) or "effect_only" (curated rows)

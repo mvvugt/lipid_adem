@@ -102,7 +102,8 @@ def _run_filter_gwas_catalog(
         return None
 
     # maf_col is an effect-allele frequency (may exceed 0.5), so
-    # min(af, 1 - af) is applied, as for FinnGen
+    # min(af, 1 - af) is applied, as for FinnGen; gene-burden mask rows
+    # (effect allele e.g. "M1.0001") are kept whatever their MAF
     if source.is_tabix_indexed:
         return functions.filter_sumstats_regions(
             tabix_source=source.url,
@@ -112,6 +113,7 @@ def _run_filter_gwas_catalog(
             chrom_col=source.chrom_col,
             pos_col=source.pos_col,
             transform_to_maf=True,
+            effect_allele_col="effect_allele",
         )
     return functions.filter_raw_sumstats_regions(
         url=source.url,
@@ -121,6 +123,7 @@ def _run_filter_gwas_catalog(
         chrom_col=source.chrom_col,
         pos_col=source.pos_col,
         transform_to_maf=True,
+        effect_allele_col="effect_allele",
     )
 
 

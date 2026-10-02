@@ -39,6 +39,7 @@ from project_constants import (
     FileNames,
     HarmonisedColumns,
     MafStatus,
+    NormStatus,
     Paths,
     SourceColumnMaps,
 )
@@ -82,6 +83,8 @@ _ANCESTRY_CATEGORY_SPLIT_PATTERN = re.compile(Ancestry.CATEGORY_SPLIT_PATTERN)
 _WARNED_ANCESTRY_CATEGORIES: set[str] = set()
 # server-error status in a biomed-api ReaderError message (no HTTP cause)
 _READER_HTTP_5XX_PATTERN = re.compile(r"HTTP 5\d\d")
+_BURDEN_MASK_ALLELE_PATTERN = re.compile(Constants.BURDEN_MASK_ALLELE_PATTERN)
+_BURDEN_NAME_PATTERN = re.compile(Constants.BURDEN_NAME_PATTERN)
 _T = TypeVar("_T")
 
 
@@ -2554,6 +2557,68 @@ def _passes_maf(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _optional_index(header: list[str], column: str | None) -> int | None:
+    """Look up an optional column's position in a header.
+
+    Parameters
+    ----------
+    header : `list[str]`
+        The sumstats file's column names.
+    column : `str` or `NoneType`
+        Column name, or `None` when not requested.
+
+    Returns
+    -------
+    index : `int` or `NoneType`
+        The column's index, or `None` if not requested or not in `header`.
+    """
+    if column is None or column not in header:
+        return None
+    return header.index(column)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def is_burden_mask_allele(value: object) -> bool:
+    """Check whether an effect allele names a gene-burden mask.
+
+    Parameters
+    ----------
+    value : `object`
+        An effect-allele cell (string, NA or `None`).
+
+    Returns
+    -------
+    is_mask : `bool`
+        `True` if it matches `Constants.BURDEN_MASK_ALLELE_PATTERN` (e.g.
+        "M1.0001", "M3.singleton").
+    """
+    if value is None or pd.isna(value):
+        return False
+    return _BURDEN_MASK_ALLELE_PATTERN.match(str(value).strip()) is not None
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _is_burden_mask_row(fields: list[str], mask_idx: int | None) -> bool:
+    """Check whether a sumstats row is a gene-burden mask result.
+
+    Parameters
+    ----------
+    fields : `list[str]`
+        The row's tab-split fields.
+    mask_idx : `int` or `NoneType`
+        Index of the effect-allele column; `None` disables the check.
+
+    Returns
+    -------
+    is_mask : `bool`
+        `True` if the row's effect allele is a burden mask label.
+    """
+    if mask_idx is None:
+        return False
+    return is_burden_mask_allele(fields[mask_idx])
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _norm_chrom(value: str) -> str:
     """Normalise a sumstats chromosome field to the gene-region form.
 
@@ -2663,6 +2728,7 @@ def filter_sumstats_regions(
     chrom_col: str = "chromosome",
     pos_col: str = "base_pair_location",
     transform_to_maf: bool = False,
+    effect_allele_col: str | None = None,
 ) -> pd.DataFrame:
     """Filter a tabix-indexed sumstats file to gene regions and a MAF cutoff.
 
@@ -2688,14 +2754,18 @@ def filter_sumstats_regions(
         If `True`, `maf_col` is treated as a single-allele frequency
         (which may exceed 0.5) rather than a true minor-allele frequency,
         and `min(af, 1 - af)` is applied before the threshold comparison.
+    effect_allele_col : `str` or `NoneType`, optional, default: `None`
+        Name of the effect-allele column. When set (and in the header),
+        gene-burden mask rows (`is_burden_mask_allele`) are kept
+        whatever their MAF.
 
     Returns
     -------
     filtered : `pd.DataFrame`
         A leading `gene` column plus the file's columns: rows in each
-        gene's region with MAF < `maf_threshold`. A row in overlapping
-        regions appears once per gene. A gene whose chromosome is absent
-        from the index contributes no rows.
+        gene's region with MAF < `maf_threshold`, plus any burden mask
+        rows. A row in overlapping regions appears once per gene. A gene
+        whose chromosome is absent from the index contributes no rows.
 
     Raises
     ------
@@ -2719,6 +2789,7 @@ def filter_sumstats_regions(
         chrom_idx, pos_idx, maf_idx = _header_indices(
             header, tabix_source, [chrom_col, pos_col, maf_col]
         )
+        mask_idx = _optional_index(header, effect_allele_col)
         log_debug(
             f"header columns: chrom={chrom_idx} pos={pos_idx} maf={maf_idx}"
         )
@@ -2726,6 +2797,7 @@ def filter_sumstats_regions(
         records = []
         n_in_region = 0
         n_no_freq = 0
+        n_masks = 0
         contigs = set(tabix_file.contigs)
         for gene, region in regions.items():
             # sparse sumstats can lack whole chromosomes; fetch() on a
@@ -2745,7 +2817,10 @@ def filter_sumstats_regions(
                 # CRLF source files leave a trailing "\r" on the last field
                 fields = line.rstrip("\r\n").split("\t")
                 n_in_region += 1
-                if _parse_freq(fields[maf_idx]) is None:
+                if _is_burden_mask_row(fields, mask_idx):
+                    n_masks += 1
+                    records.append([gene, *fields])
+                elif _parse_freq(fields[maf_idx]) is None:
                     n_no_freq += 1
                 elif _passes_maf(
                     fields, maf_idx, maf_threshold, transform_to_maf
@@ -2759,6 +2834,7 @@ def filter_sumstats_regions(
     log_info(
         f"{tabix_source} @ {len(regions)} regions -> {len(records)} rows "
         f"with MAF < {maf_threshold}"
+        + (f" (incl. {n_masks} burden mask rows)" if n_masks else "")
     )
     _warn_if_empty(
         tabix_source, len(records), n_in_region, n_no_freq, maf_threshold
@@ -2777,6 +2853,7 @@ def filter_raw_sumstats_regions(
     chrom_col: str = "chromosome",
     pos_col: str = "base_pair_location",
     transform_to_maf: bool = False,
+    effect_allele_col: str | None = None,
 ) -> pd.DataFrame:
     """Stream-filter a non-indexed sumstats file to gene regions and MAF.
 
@@ -2804,13 +2881,16 @@ def filter_raw_sumstats_regions(
         If `True`, `maf_col` is treated as a single-allele frequency
         (which may exceed 0.5) rather than a true minor-allele frequency,
         and `min(af, 1 - af)` is applied before the threshold comparison.
+    effect_allele_col : `str` or `NoneType`, optional, default: `None`
+        As in `filter_sumstats_regions`: burden mask rows are kept
+        whatever their MAF.
 
     Returns
     -------
     filtered : `pd.DataFrame`
         A leading `gene` column plus the file's columns: rows in each
-        gene's region with MAF < `maf_threshold`. A row in overlapping
-        regions appears once per gene.
+        gene's region with MAF < `maf_threshold`, plus any burden mask
+        rows. A row in overlapping regions appears once per gene.
 
     Raises
     ------
@@ -2837,6 +2917,7 @@ def filter_raw_sumstats_regions(
         chrom_idx, pos_idx, maf_idx = _header_indices(
             header, url, [chrom_col, pos_col, maf_col]
         )
+        mask_idx = _optional_index(header, effect_allele_col)
         log_debug(
             f"header columns: chrom={chrom_idx} pos={pos_idx} maf={maf_idx}"
         )
@@ -2844,6 +2925,7 @@ def filter_raw_sumstats_regions(
         records = []
         n_in_region = 0
         n_no_freq = 0
+        n_masks = 0
         for line in text_stream:
             fields = line.rstrip("\r\n").split("\t")
             # author files may pad fields (e.g. "   940005") or prefix
@@ -2864,7 +2946,10 @@ def filter_raw_sumstats_regions(
             if not genes:
                 continue
             n_in_region += 1
-            if _parse_freq(fields[maf_idx]) is None:
+            if _is_burden_mask_row(fields, mask_idx):
+                n_masks += 1
+                records.extend([gene, *fields] for gene in genes)
+            elif _parse_freq(fields[maf_idx]) is None:
                 n_no_freq += 1
             elif _passes_maf(
                 fields, maf_idx, maf_threshold, transform_to_maf
@@ -2874,6 +2959,7 @@ def filter_raw_sumstats_regions(
     log_info(
         f"{url} @ {len(regions)} regions -> {len(records)} rows with "
         f"MAF < {maf_threshold} (raw scan)"
+        + (f" (incl. {n_masks} burden mask rows)" if n_masks else "")
     )
     _warn_if_empty(url, len(records), n_in_region, n_no_freq, maf_threshold)
     return pd.DataFrame.from_records(
@@ -3345,6 +3431,390 @@ def _parse_curated_beta(value: object) -> float:
     if "increase" in text:
         return abs(beta)
     return beta
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Variant normalisation
+
+# a plain nucleotide allele (normalisation skips anything else)
+_NUCLEOTIDE_PATTERN = re.compile(r"^[ACGT]+$")
+
+
+@dataclass
+class RegionSequence:
+    """A stretch of GRCh38 reference sequence.
+
+    Attributes
+    ----------
+    chrom : `str`
+        Chromosome name, without "chr".
+    start : `int`
+        1-based position of the first base of `seq`.
+    seq : `str`
+        Upper-case reference bases.
+    """
+    chrom: str
+    start: int
+    seq: str
+
+    @property
+    def end(self) -> int:
+        """1-based position of the last base of `seq`."""
+        return self.start + len(self.seq) - 1
+
+    def bases(self, pos: int, length: int) -> str | None:
+        """Return `length` reference bases starting at `pos`.
+
+        Parameters
+        ----------
+        pos : `int`
+            1-based start position.
+        length : `int`
+            Number of bases.
+
+        Returns
+        -------
+        bases : `str` or `NoneType`
+            The bases, or `None` if any of them lies outside `seq`.
+        """
+        if pos < self.start or pos + length - 1 > self.end:
+            return None
+        offset = pos - self.start
+        return self.seq[offset:offset + length]
+
+
+@dataclass
+class NormalisedVariant:
+    """One variant after `normalise_variant`.
+
+    Attributes
+    ----------
+    pos : `int`
+        Normalised 1-based position.
+    effect : `str` or `NoneType`
+        Normalised effect allele (as given when not normalised).
+    other : `str` or `NoneType`
+        Normalised other allele (as given when not normalised).
+    status : `str`
+        A `NormStatus` value.
+    effect_is_ref : `bool` or `NoneType`
+        `True` if the effect allele is the reference allele, `False` if
+        the other allele is, `None` when unknown.
+    """
+    pos: int
+    effect: str | None
+    other: str | None
+    status: str
+    effect_is_ref: bool | None
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def fetch_region_sequence(region: GeneRegion) -> RegionSequence:
+    """Fetch the GRCh38 reference sequence of a gene region (cached).
+
+    The region is padded by `Constants.INDEL_NORM_PAD_BP` on both sides,
+    so indels near its edges can still be left-aligned. Read from
+    `Paths.ENSEMBL_CACHE` when cached, else fetched through biomed-api
+    (Ensembl `sequence/region`) and cached.
+
+    Parameters
+    ----------
+    region : `GeneRegion`
+        Flanked gene region (GRCh38).
+
+    Returns
+    -------
+    sequence : `RegionSequence`
+        The padded region's reference bases.
+
+    Raises
+    ------
+    ReaderError
+        If the Ensembl request fails.
+    ValueError
+        If the response holds no sequence of the requested length.
+    """
+    chrom = str(region.chrom).removeprefix("chr")
+    start = max(1, region.start - Constants.INDEL_NORM_PAD_BP)
+    end = region.end + Constants.INDEL_NORM_PAD_BP
+    path = Paths.ENSEMBL_CACHE / f"sequence_{chrom}_{start}_{end}.json.gz"
+    if path.exists():
+        data = _read_json_gz(path)
+        return RegionSequence(chrom=chrom, start=start, seq=data["seq"])
+    query = f"{chrom}:{start}-{end}"
+    result = _call_with_retry(
+        lambda: EnsemblReader().read(profile="sequence_region", region=query),
+        label=f"Ensembl sequence_region {query}",
+    )
+    seq = ""
+    if result.records:
+        seq = str(result.records[0].get("seq") or "").upper()
+    if len(seq) != end - start + 1:
+        raise ValueError(
+            f"Ensembl sequence_region {query}: expected {end - start + 1} "
+            f"bases, got {len(seq)}"
+        )
+    _write_json_gz_atomic(path, {"chrom": chrom, "start": start, "seq": seq})
+    return RegionSequence(chrom=chrom, start=start, seq=seq)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def region_sequences(
+    regions: Mapping[str, GeneRegion],
+) -> dict[str, list[RegionSequence]]:
+    """Fetch the reference sequence of every gene region, by chromosome.
+
+    Parameters
+    ----------
+    regions : `Mapping[str, GeneRegion]`
+        Gene -> flanked region.
+
+    Returns
+    -------
+    sequences : `dict[str, list[RegionSequence]]`
+        Chromosome (without "chr") -> the sequences on it.
+
+    Raises
+    ------
+    ReaderError
+        If an Ensembl request fails.
+    """
+    sequences: dict[str, list[RegionSequence]] = {}
+    for region in regions.values():
+        sequence = fetch_region_sequence(region)
+        sequences.setdefault(sequence.chrom, []).append(sequence)
+    return sequences
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _covering_sequence(
+    chrom: str, pos: int, sequences: Mapping[str, list[RegionSequence]]
+) -> RegionSequence | None:
+    """Find a reference sequence that contains a position.
+
+    Parameters
+    ----------
+    chrom : `str`
+        Chromosome name, without "chr".
+    pos : `int`
+        1-based position.
+    sequences : `Mapping[str, list[RegionSequence]]`
+        From `region_sequences`.
+
+    Returns
+    -------
+    sequence : `RegionSequence` or `NoneType`
+        The first sequence containing `pos`, or `None`.
+    """
+    for sequence in sequences.get(chrom, []):
+        if sequence.start <= pos <= sequence.end:
+            return sequence
+    return None
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def normalise_allele_pair(
+    pos: int, ref: str, alt: str, sequence: RegionSequence
+) -> tuple[int, str, str] | None:
+    """Left-align and trim one ref/alt pair (Tan et al. 2015).
+
+    The same indel in a repeat can be written at several positions; this
+    gives the single leftmost, shortest form with one anchor base, as
+    `bcftools norm` / `vt normalize` do. SNVs and pairs already in that
+    form are returned unchanged.
+
+    Parameters
+    ----------
+    pos : `int`
+        1-based position of `ref`.
+    ref : `str`
+        Reference allele (must match `sequence` at `pos`, not checked).
+    alt : `str`
+        Alternate allele.
+    sequence : `RegionSequence`
+        Reference sequence around `pos`.
+
+    Returns
+    -------
+    normalised : `tuple[int, str, str]` or `NoneType`
+        `(pos, ref, alt)`, or `None` if left-alignment would need a base
+        outside `sequence`.
+    """
+    if ref == alt:
+        return pos, ref, alt
+    changed = True
+    while changed:
+        changed = False
+        # drop a shared last base
+        if ref and alt and ref[-1] == alt[-1]:
+            ref, alt = ref[:-1], alt[:-1]
+            changed = True
+        # an emptied allele gets the base to its left
+        if not ref or not alt:
+            base = sequence.bases(pos - 1, 1)
+            if base is None:
+                return None
+            ref, alt, pos = base + ref, base + alt, pos - 1
+            changed = True
+    # drop shared first bases, keeping one
+    while len(ref) > 1 and len(alt) > 1 and ref[0] == alt[0]:
+        ref, alt, pos = ref[1:], alt[1:], pos + 1
+    return pos, ref, alt
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def normalise_variant(
+    chrom: object,
+    pos: object,
+    effect: object,
+    other: object,
+    sequences: Mapping[str, list[RegionSequence]],
+) -> NormalisedVariant:
+    """Normalise one variant's position and alleles against GRCh38.
+
+    The allele that matches the reference at `pos` is taken as ref
+    (`other` is tried first); the effect allele stays the effect allele.
+
+    Parameters
+    ----------
+    chrom : `object`
+        Chromosome name (a "chr" prefix is ignored).
+    pos : `object`
+        1-based position.
+    effect : `object`
+        Effect allele (may be NA).
+    other : `object`
+        Other allele (may be NA).
+    sequences : `Mapping[str, list[RegionSequence]]`
+        From `region_sequences`.
+
+    Returns
+    -------
+    variant : `NormalisedVariant`
+        Status `normalised` or `unchanged` with the normalised pos and
+        alleles; else `effect_only` (an allele missing), `ref_mismatch`
+        (neither allele, or a non-ACGT allele, fits the reference) or
+        `no_sequence` (no sequence covers the site), with pos and alleles
+        as given.
+    """
+    pos = int(pos)
+    effect_text = _clean_allele(effect)
+    other_text = _clean_allele(other)
+
+    def _as_given(status: str) -> NormalisedVariant:
+        """Return the variant unchanged with `status`."""
+        return NormalisedVariant(
+            pos=pos,
+            effect=effect_text,
+            other=other_text,
+            status=status,
+            effect_is_ref=None,
+        )
+
+    if effect_text is None or other_text is None:
+        return _as_given(NormStatus.EFFECT_ONLY)
+    if not (
+        _NUCLEOTIDE_PATTERN.match(effect_text)
+        and _NUCLEOTIDE_PATTERN.match(other_text)
+    ):
+        return _as_given(NormStatus.REF_MISMATCH)
+    sequence = _covering_sequence(
+        str(chrom).removeprefix("chr"), pos, sequences
+    )
+    if sequence is None:
+        return _as_given(NormStatus.NO_SEQUENCE)
+    if sequence.bases(pos, len(other_text)) == other_text:
+        effect_is_ref = False
+        ref, alt = other_text, effect_text
+    elif sequence.bases(pos, len(effect_text)) == effect_text:
+        effect_is_ref = True
+        ref, alt = effect_text, other_text
+    else:
+        return _as_given(NormStatus.REF_MISMATCH)
+    normalised = normalise_allele_pair(pos, ref, alt, sequence)
+    if normalised is None:
+        return _as_given(NormStatus.NO_SEQUENCE)
+    new_pos, new_ref, new_alt = normalised
+    new_effect, new_other = (
+        (new_ref, new_alt) if effect_is_ref else (new_alt, new_ref)
+    )
+    unchanged = (new_pos, new_effect, new_other) == (
+        pos, effect_text, other_text
+    )
+    return NormalisedVariant(
+        pos=new_pos,
+        effect=new_effect,
+        other=new_other,
+        status=NormStatus.UNCHANGED if unchanged else NormStatus.NORMALISED,
+        effect_is_ref=effect_is_ref,
+    )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def normalise_variants(
+    df: pd.DataFrame, sequences: Mapping[str, list[RegionSequence]]
+) -> pd.DataFrame:
+    """Normalise the position, alleles and `variant_id` of every row.
+
+    Each unique (chrom, pos, effect, other) is normalised once, since
+    rows repeat per outcome. Rows whose status is not `normalised` keep
+    their values exactly as they were.
+
+    Parameters
+    ----------
+    df : `pd.DataFrame`
+        Combined harmonised rows (`HarmonisedColumns.CORE_ORDER`
+        columns). Modified in place.
+    sequences : `Mapping[str, list[RegionSequence]]`
+        From `region_sequences`.
+
+    Returns
+    -------
+    df : `pd.DataFrame`
+        The same frame with `variant_id_orig` (the `variant_id` before),
+        `norm_status`, and `pos`, `effect_allele`, `other_allele` and
+        `variant_id` normalised where possible. Rows without chrom/pos
+        (gene burden) get NA `norm_status`. Counts per source and status
+        are logged.
+    """
+    hc = HarmonisedColumns
+    df[hc.VARIANT_ID_ORIG] = df[hc.VARIANT_ID]
+    df[hc.NORM_STATUS] = pd.Series(pd.NA, index=df.index, dtype=object)
+    has_site = df[hc.CHROM].notna() & df[hc.POS].notna()
+    key_columns = [hc.CHROM, hc.POS, hc.EFFECT_ALLELE, hc.OTHER_ALLELE]
+    sites = df.loc[has_site, key_columns].astype(object)
+    sites = sites.where(sites.notna(), None)
+    keys = list(sites.itertuples(index=False, name=None))
+    results = {
+        key: normalise_variant(*key, sequences) for key in dict.fromkeys(keys)
+    }
+    site_index = df.index[has_site]
+    df.loc[site_index, hc.NORM_STATUS] = [results[k].status for k in keys]
+
+    changed = [
+        (index, results[key])
+        for index, key in zip(site_index, keys)
+        if results[key].status == NormStatus.NORMALISED
+    ]
+    if changed:
+        index = [i for i, _ in changed]
+        df.loc[index, hc.POS] = [v.pos for _, v in changed]
+        df.loc[index, hc.EFFECT_ALLELE] = [v.effect for _, v in changed]
+        df.loc[index, hc.OTHER_ALLELE] = [v.other for _, v in changed]
+        df.loc[index, hc.VARIANT_ID] = [
+            f"{chrom}:{v.pos}:{v.other}:{v.effect}"
+            for chrom, (_, v) in zip(df.loc[index, hc.CHROM], changed)
+        ]
+
+    counts = df.loc[has_site].groupby(
+        [hc.SOURCE, hc.NORM_STATUS], sort=False
+    ).size()
+    for source in counts.index.get_level_values(0).unique():
+        log_info(
+            f"normalisation: {source} rows "
+            + " ".join(f"{k}={n}" for k, n in counts[source].items())
+        )
+    return df
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3835,10 +4305,16 @@ def _ensembl_check(
     by_position: Mapping[tuple[str, int], list[EnsemblVariant]],
     by_rsid: Mapping[str, list[EnsemblVariant]],
     lookup_rsid: Callable[[str], list[EnsemblVariant]],
+    by_norm: Mapping[
+        tuple[str, int, str, str], list[tuple[EnsemblVariant, str]]
+    ],
 ) -> tuple[object, str, object]:
     """Match one variant row to Ensembl and classify alleles and rsid.
 
-    Candidates are the Ensembl variants at `chrom:pos` (plus `pos + 1`
+    An indel row is first looked up by its normalised key in `by_norm`
+    (`_ensembl_check_normalised`), since Ensembl writes many repeat
+    indels differently. Otherwise (or when that finds nothing),
+    candidates are the Ensembl variants at `chrom:pos` (plus `pos + 1`
     for VCF-anchored indels). Only when there are none, the row's rsids
     are looked up: first in the region variants, then via
     `lookup_rsid` (Ensembl variation endpoint). The best candidate has
@@ -3862,6 +4338,9 @@ def _ensembl_check(
         Region variants by rsid.
     lookup_rsid : `Callable[[str], list[EnsemblVariant]]`
         Fallback rsid lookup for rsids not among the region variants.
+    by_norm : `Mapping`
+        Normalised `(chrom, pos, ref, alt)` -> `(Ensembl variant, its
+        alt)` pairs, from `_ensembl_normalised_keys`.
 
     Returns
     -------
@@ -3874,6 +4353,11 @@ def _ensembl_check(
     source_rsids = _source_rsids(rsid)
     trimmed = _trim_anchor_base(effect, other)
     chrom, pos = str(chrom), int(pos)
+    normalised = _ensembl_check_normalised(
+        chrom, pos, effect, other, source_rsids, by_norm
+    )
+    if normalised is not None:
+        return normalised
 
     candidates = [
         (v, effect, other) for v in by_position.get((chrom, pos), [])
@@ -3909,20 +4393,144 @@ def _ensembl_check(
     variant_id = (
         f"{variant.chrom}:{variant.start}:{variant.alleles[0]}:{alt_text}"
     )
+    return variant_id, status, _rsid_check(variant, source_rsids, rsid_only)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _rsid_check(
+    variant: EnsemblVariant, source_rsids: list[str], rsid_only: bool
+) -> str:
+    """Classify a row's rsids against its matched Ensembl variant.
+
+    Parameters
+    ----------
+    variant : `EnsemblVariant`
+        The matched Ensembl variant.
+    source_rsids : `list[str]`
+        The row's rsids (`_source_rsids`).
+    rsid_only : `bool`
+        `True` if the variant was found via the rsid, not the position.
+
+    Returns
+    -------
+    rsid_check : `str`
+        An `EnsemblRsidCheck` value.
+    """
     if rsid_only:
-        rsid_check = EnsemblRsidCheck.RSID_ONLY
-    elif variant.rsid in source_rsids:
-        rsid_check = EnsemblRsidCheck.SAME
-    elif source_rsids:
-        rsid_check = EnsemblRsidCheck.DIFFERENT
-    else:
-        rsid_check = EnsemblRsidCheck.NO_SOURCE_RSID
-    return variant_id, status, rsid_check
+        return EnsemblRsidCheck.RSID_ONLY
+    if variant.rsid in source_rsids:
+        return EnsemblRsidCheck.SAME
+    if source_rsids:
+        return EnsemblRsidCheck.DIFFERENT
+    return EnsemblRsidCheck.NO_SOURCE_RSID
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _ensembl_normalised_keys(
+    variant: EnsemblVariant, sequences: Mapping[str, list[RegionSequence]]
+) -> list[tuple[tuple[str, int, str, str], str]]:
+    """Give each alt of an Ensembl variant its normalised key.
+
+    Ensembl writes indels without an anchor base (`"-"` for the empty
+    side, an insertion starting after its left neighbour) and often
+    spans a whole repeat (e.g. `AGA/AGACAGA`); both are brought to the
+    form of `normalise_allele_pair`.
+
+    Parameters
+    ----------
+    variant : `EnsemblVariant`
+        One Ensembl variant (forward strand).
+    sequences : `Mapping[str, list[RegionSequence]]`
+        From `region_sequences`.
+
+    Returns
+    -------
+    keys : `list[tuple[tuple[str, int, str, str], str]]`
+        `((chrom, pos, ref, alt), ensembl_alt)` per alt; alts whose ref
+        does not fit the reference, or that lie outside `sequences`, are
+        left out.
+    """
+    sequence = _covering_sequence(variant.chrom, variant.start, sequences)
+    if sequence is None:
+        return []
+    keys = []
+    for ensembl_alt in variant.alleles[1:]:
+        pos, ref, alt = variant.start, variant.alleles[0], ensembl_alt
+        if "-" in (ref, alt):
+            base = sequence.bases(pos - 1, 1)
+            if base is None:
+                continue
+            ref = base + ref.replace("-", "")
+            alt = base + alt.replace("-", "")
+            pos -= 1
+        if sequence.bases(pos, len(ref)) != ref:
+            continue
+        normalised = normalise_allele_pair(pos, ref, alt, sequence)
+        if normalised is not None:
+            keys.append(((variant.chrom, *normalised), ensembl_alt))
+    return keys
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _ensembl_check_normalised(
+    chrom: str,
+    pos: int,
+    effect: str | None,
+    other: str | None,
+    source_rsids: list[str],
+    by_norm: Mapping[
+        tuple[str, int, str, str], list[tuple[EnsemblVariant, str]]
+    ],
+) -> tuple[object, str, object] | None:
+    """Match a (normalised) indel row to Ensembl by normalised key.
+
+    Parameters
+    ----------
+    chrom : `str`
+        Row chromosome.
+    pos : `int`
+        Row position (normalised).
+    effect : `str` or `NoneType`
+        Cleaned effect allele.
+    other : `str` or `NoneType`
+        Cleaned other allele.
+    source_rsids : `list[str]`
+        The row's rsids.
+    by_norm : `Mapping`
+        Normalised `(chrom, pos, ref, alt)` -> `(Ensembl variant, its
+        alt)` pairs, from `_ensembl_normalised_keys`.
+
+    Returns
+    -------
+    result : `tuple[object, str, object]` or `NoneType`
+        As `_ensembl_check`, with `ensembl_variant_id` in Ensembl's own
+        spelling; `None` if the row is not an indel with both alleles or
+        nothing matches.
+    """
+    if effect is None or other is None or len(effect) == len(other) == 1:
+        return None
+    for key, status in (
+        ((chrom, pos, other, effect), EnsemblAlleleCheck.MATCH),
+        ((chrom, pos, effect, other), EnsemblAlleleCheck.FLIPPED),
+    ):
+        hits = by_norm.get(key)
+        if not hits:
+            continue
+        variant, alt = min(
+            hits, key=lambda hit: hit[0].rsid not in source_rsids
+        )
+        variant_id = (
+            f"{variant.chrom}:{variant.start}:{variant.alleles[0]}:{alt}"
+        )
+        return variant_id, status, _rsid_check(variant, source_rsids, False)
+    return None
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def annotate_ensembl_variants(
-    df: pd.DataFrame, regions: Mapping[str, GeneRegion]
+    df: pd.DataFrame,
+    regions: Mapping[str, GeneRegion],
+    sequences: Mapping[str, list[RegionSequence]],
 ) -> pd.DataFrame:
     """Check every variant row against Ensembl (GRCh38).
 
@@ -3939,6 +4547,9 @@ def annotate_ensembl_variants(
         columns). Modified in place (no copy of the ~600k-row table).
     regions : `Mapping[str, GeneRegion]`
         Gene -> flanked region; Ensembl variants are fetched for these.
+    sequences : `Mapping[str, list[RegionSequence]]`
+        From `region_sequences`; Ensembl indels are normalised against
+        these so normalised rows (`normalise_variants`) can match them.
 
     Returns
     -------
@@ -3953,6 +4564,9 @@ def annotate_ensembl_variants(
     hc = HarmonisedColumns
     by_position: dict[tuple[str, int], list[EnsemblVariant]] = {}
     by_rsid: dict[str, list[EnsemblVariant]] = {}
+    by_norm: dict[
+        tuple[str, int, str, str], list[tuple[EnsemblVariant, str]]
+    ] = {}
     seen: set[tuple[str, int]] = set()
     for gene, region in regions.items():
         variants, n_fetched = fetch_ensembl_region_variants(region)
@@ -3969,6 +4583,8 @@ def annotate_ensembl_variants(
                 (variant.chrom, variant.start), []
             ).append(variant)
             by_rsid.setdefault(variant.rsid.lower(), []).append(variant)
+            for key, alt in _ensembl_normalised_keys(variant, sequences):
+                by_norm.setdefault(key, []).append((variant, alt))
 
     n_rsid_fetched = 0
 
@@ -4002,7 +4618,9 @@ def annotate_ensembl_variants(
     sites = sites.where(sites.notna(), None)
     keys = list(sites.itertuples(index=False, name=None))
     results = {
-        key: _ensembl_check(*key, by_position, by_rsid, lookup_rsid)
+        key: _ensembl_check(
+            *key, by_position, by_rsid, lookup_rsid, by_norm
+        )
         for key in dict.fromkeys(keys)
     }
     log_info(
