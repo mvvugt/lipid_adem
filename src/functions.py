@@ -3155,7 +3155,7 @@ def harmonise_frame(
     has_variants: bool = True,
     parsed: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
-    """Map one source's table onto the shared final-results schema.
+    """Map one source's table onto the shared merged-associations schema.
 
     Parameters
     ----------

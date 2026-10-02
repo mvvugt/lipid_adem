@@ -2,7 +2,7 @@
 """
 Gathers filtered sumstats, adds own UKB/AoU (marvel) results, curated GWAS
 Catalog associations and Open Targets gene-burden evidence, and writes the
-combined final results table.
+merged associations table.
 """
 
 
@@ -703,7 +703,7 @@ def _expand_burden_outcomes(
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def merge_results() -> None:
-    """Merge all evidence sources and write the final results table.
+    """Merge all evidence sources and write the merged associations table.
 
     Sources: filtered summary stats (GWAS Catalog, manual, FinnGen), own
     UKB/AoU marvel results (`load_marvel_results`), curated GWAS Catalog
@@ -920,8 +920,8 @@ def merge_results() -> None:
 
     log_stage("write")
     Paths.RESULTS_OUTPUT.mkdir(parents=True, exist_ok=True)
-    functions.write_table_atomic(combined, FileNames.FINAL_RESULTS)
-    log_info(f"wrote {len(combined)} rows to {FileNames.FINAL_RESULTS}")
+    functions.write_table_atomic(combined, FileNames.MERGED_ASSOCIATIONS)
+    log_info(f"wrote {len(combined)} rows to {FileNames.MERGED_ASSOCIATIONS}")
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

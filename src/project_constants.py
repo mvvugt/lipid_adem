@@ -236,7 +236,7 @@ class ColumnNames:
 
 
 class HarmonisedColumns:
-    """Core columns of the final results table, shared by every source.
+    """Core columns of the merged associations table, shared by every source.
 
     Each source's original columns are kept after the core ones, renamed
     to `RAW_PREFIX + <original name>` so they can never collide with a
@@ -523,7 +523,7 @@ class VariantListColumns:
     A1_ORIG: str = "a1_orig"
     A2_ORIG: str = "a2_orig"
     NORM_STATUS: str = "norm_status"
-    # added to the matched output, after the final-results columns
+    # added to the matched output, after the merged-associations columns
     OUT_SOURCE: str = "variant_list_source"
     OUT_GENE: str = "variant_list_gene"
     OUT_A1: str = "variant_list_a1"
@@ -661,8 +661,10 @@ class FileNames:
     # flanked gene regions, frozen at prep time for the filter tasks
     GENE_REGIONS_FILE: Path = Paths.DATA_TEMP / "gene_regions.tsv"
     STUDY_DISCOVERY_LOG: Path = Paths.DATA_TEMP / "study_discovery_log.tsv.gz"
-    FINAL_RESULTS: Path = Paths.RESULTS_OUTPUT / "final_results.tsv.gz"
-    # final-results rows matching a (non-AM) gene variant-list entry
+    MERGED_ASSOCIATIONS: Path = (
+        Paths.RESULTS_OUTPUT / "merged_associations.tsv.gz"
+    )
+    # merged-associations rows matching a (non-AM) gene variant-list entry
     MATCHED_VARIANTS: Path = Paths.RESULTS_OUTPUT / "matched_variants.tsv.gz"
     # IVW meta-analysis per `MetaColumns.GROUPINGS` name
     META_ANALYSIS_TEMPLATE: str = "meta_{grouping}.tsv.gz"

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Matches the variant-level GWAS lookups in the final results table to the
+Matches the variant-level GWAS lookups in the merged associations table to the
 per-gene variant lists (`data/temp/*_variants.tsv`), excluding the
 AlphaMissense (`AM`) entries, and writes the matched rows.
 """
@@ -248,7 +248,7 @@ def _normalise_variant_list(
     """Left-align and trim the variant-list entries against GRCh38.
 
     Uses `functions.normalise_variant` (the same normalisation as the
-    final results), with `a1` as other and `a2` as effect allele, so
+    merged associations), with `a1` as other and `a2` as effect allele, so
     list entries and GWAS rows meet in the same form.
 
     Parameters
@@ -316,7 +316,7 @@ def _normalise_variant_list(
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def load_gwas_rows() -> pd.DataFrame:
-    """Read the variant-level rows of the final results table.
+    """Read the variant-level rows of the merged associations table.
 
     Returns
     -------
@@ -329,15 +329,15 @@ def load_gwas_rows() -> pd.DataFrame:
     Raises
     ------
     FileNotFoundError
-        If `FileNames.FINAL_RESULTS` does not exist (run merge first).
+        If `FileNames.MERGED_ASSOCIATIONS` does not exist (run merge first).
     """
-    if not FileNames.FINAL_RESULTS.exists():
+    if not FileNames.MERGED_ASSOCIATIONS.exists():
         raise FileNotFoundError(
-            f"{FileNames.FINAL_RESULTS} not found: run "
+            f"{FileNames.MERGED_ASSOCIATIONS} not found: run "
             "merge_associations.py first"
         )
     results = pd.read_csv(
-        FileNames.FINAL_RESULTS,
+        FileNames.MERGED_ASSOCIATIONS,
         sep="\t",
         dtype={
             HarmonisedColumns.CHROM: str,
@@ -350,7 +350,7 @@ def load_gwas_rows() -> pd.DataFrame:
         results[HarmonisedColumns.SOURCE].isin(Constants.VARIANT_LEVEL_SOURCES)
     ].copy()
     log_info(
-        f"{FileNames.FINAL_RESULTS}: {len(results)} rows, {len(gwas)} "
+        f"{FileNames.MERGED_ASSOCIATIONS}: {len(results)} rows, {len(gwas)} "
         f"variant-level ({', '.join(Constants.VARIANT_LEVEL_SOURCES)})"
     )
     del results
@@ -396,9 +396,9 @@ def match_rows(gwas: pd.DataFrame, variants: pd.DataFrame) -> pd.DataFrame:
     Returns
     -------
     matched : `pd.DataFrame`
-        One row per (GWAS row, variant-list row) pair: the final-results
+        One row per (GWAS row, variant-list row) pair: the merged-associations
         columns, then the `VariantListColumns.OUT_*` columns,
-        `effect_allele_is` and `match_alleles`; in final-results row
+        `effect_allele_is` and `match_alleles`; in merged-associations row
         order. Helper columns are removed.
     """
     keys = [_CHROM_KEY, _POS_KEY]
@@ -492,7 +492,7 @@ def _check_a1_is_ref(matched: pd.DataFrame) -> None:
     the ref in `ensembl_variant_id` (``chrom:pos:ref:alt``). Only SNVs
     are checked: Ensembl writes indels in its own (unnormalised) form,
     so indels are checked against the reference sequence instead (see
-    `_normalise_variant_list`). Skipped when the final results predate
+    `_normalise_variant_list`). Skipped when the merged associations predate
     that column.
 
     Parameters
@@ -529,7 +529,7 @@ def _check_a1_is_ref(matched: pd.DataFrame) -> None:
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def match_variants() -> None:
-    """Match final-results GWAS rows to the variant lists and write them.
+    """Match merged-associations GWAS rows to the variant lists and write them.
 
     Returns
     -------
@@ -538,7 +538,7 @@ def match_variants() -> None:
     Raises
     ------
     FileNotFoundError
-        If there are no variant lists or no final results table.
+        If there are no variant lists or no merged associations table.
     """
     log_stage("load_variant_lists")
     variants = load_variant_lists()

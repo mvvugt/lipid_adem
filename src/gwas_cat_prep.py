@@ -342,7 +342,7 @@ def build_tasks() -> None:
     or the FinnGen manifest, so the recency cap can be checked by eye --
     plus `ancestry_group` (`functions.harmonise_ancestry`; FinnGen is
     `Ancestry.FINNGEN`), which `merge_associations.py` carries into the
-    final results.
+    merged associations.
 
     Returns
     -------

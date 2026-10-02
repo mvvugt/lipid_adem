@@ -14,7 +14,7 @@ USAGE=$(cat <<EOF
 Myriad (SGE) job wrapper for merge_associations.py: gathers the filtered
 sumstats listed in data/temp/study_outcomes.tsv, adds curated GWAS Catalog
 associations and Open Targets gene-burden evidence, and writes
-results/output/final_results.tsv.gz.
+results/output/merged_associations.tsv.gz.
 
 USAGE: $(basename "$0") [-r ROOT] [-v]
 
