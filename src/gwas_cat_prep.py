@@ -31,6 +31,7 @@ from log_tools.setup import runlog_setup
 
 import functions
 from project_constants import (
+    Ancestry,
     ColumnNames,
     Constants,
     FileNames,
@@ -49,6 +50,7 @@ META_COLUMNS: list[str] = [
     ColumnNames.TRAIT,
     ColumnNames.SAMPLE_SIZE,
     ColumnNames.ANCESTRY,
+    ColumnNames.ANCESTRY_GROUP,
     ColumnNames.COHORT,
 ]
 FINNGEN_COHORT: str = "FinnGen R13"
@@ -237,10 +239,14 @@ def _manual_meta(
     curated = {
         col: functions.clean_cell(manual_row.get(col, ""))
         for col in META_COLUMNS
-        if col != ColumnNames.TRAIT
+        if col not in (ColumnNames.TRAIT, ColumnNames.ANCESTRY_GROUP)
     }
     curated[ColumnNames.TRAIT] = functions.clean_cell(
         manual_row.get(ColumnNames.DISEASE_TRAIT, "")
+    )
+    # free text or an Ancestry code; NR when blank
+    curated[ColumnNames.ANCESTRY_GROUP] = functions.harmonise_ancestry(
+        curated[ColumnNames.ANCESTRY]
     )
     return {
         col: curated.get(col) or fetched.get(col, "") for col in META_COLUMNS
@@ -263,10 +269,12 @@ def _finngen_meta(
     Returns
     -------
     meta : `dict[str, str]`
-        One value per column in `META_COLUMNS`; all `""` if `phenocode`
-        is not in the manifest.
+        One value per column in `META_COLUMNS`; `ancestry_group` is
+        always `Ancestry.FINNGEN`, the rest `""` if `phenocode` is not in
+        the manifest.
     """
     meta = {col: "" for col in META_COLUMNS}
+    meta[ColumnNames.ANCESTRY_GROUP] = Ancestry.FINNGEN
     matches = manifest_df.loc[manifest_df["phenocode"] == phenocode]
     if matches.empty:
         return meta
@@ -328,7 +336,10 @@ def build_tasks() -> None:
     row also carries display-only metadata (`META_COLUMNS`): publication
     date/first author/journal/title from PubMed, and trait, sample size,
     ancestry and cohort from the GWAS Catalog record, the manual table,
-    or the FinnGen manifest, so the recency cap can be checked by eye.
+    or the FinnGen manifest, so the recency cap can be checked by eye --
+    plus `ancestry_group` (`functions.harmonise_ancestry`; FinnGen is
+    `Ancestry.FINNGEN`), which `merge_associations.py` carries into the
+    final results.
 
     Returns
     -------

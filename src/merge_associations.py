@@ -26,6 +26,7 @@ from log_tools.setup import runlog_setup
 
 import functions
 from project_constants import (
+    Ancestry,
     ColumnNames,
     Constants,
     FileNames,
@@ -168,23 +169,27 @@ def _marvel_identity(
     Returns
     -------
     labelled : `pd.DataFrame`
-        `frame` with `source`, `source_db`, `study_accession`, `outcome`,
-        `efo_id` (NA), `child_traits` (`False`) and `trait_label` set.
+        `frame` with `source`, `source_db`, `study_accession`
+        (``marvel_<cohort>_<ancestry>_<outcome>``, so per-ancestry runs
+        of one cohort stay separate studies), `outcome`, `efo_id` (NA),
+        `child_traits` (`False`), `trait_label` and `ancestry_group` set.
     """
     cohort = entry["cohort"]
     outcome = entry["outcome"]
+    ancestry = entry[ColumnNames.ANCESTRY]
     labelled = frame.copy()
     labelled[ColumnNames.SOURCE] = source
     labelled[ColumnNames.SOURCE_DB] = (
         Constants.MARVEL_SOURCE_DB_PREFIX + cohort
     )
     labelled[ColumnNames.STUDY_ACCESSION] = (
-        f"{Constants.MARVEL_SOURCE_DB_PREFIX}{cohort}_{outcome}"
+        f"{Constants.MARVEL_SOURCE_DB_PREFIX}{cohort}_{ancestry}_{outcome}"
     )
     labelled[ColumnNames.OUTCOME] = outcome
     labelled[ColumnNames.EFO_ID] = pd.NA
     labelled[ColumnNames.CHILD_TRAITS] = False
     labelled[HarmonisedColumns.TRAIT_LABEL] = entry["variable"]
+    labelled[HarmonisedColumns.ANCESTRY_GROUP] = ancestry
     return labelled
 
 
@@ -215,7 +220,8 @@ def load_marvel_results(
     harmonised : `list[pd.DataFrame]`
         Harmonised frames (`functions.harmonise_frame`), `source_db`
         ``marvel_<cohort>`` and `study_accession`
-        ``marvel_<cohort>_<outcome>``. Empty if no entries or rows.
+        ``marvel_<cohort>_<ancestry>_<outcome>``. Empty if no entries or
+        rows.
 
     Raises
     ------
@@ -453,6 +459,79 @@ def _study_mapped_traits(audit: pd.DataFrame) -> dict[str, tuple[str, str]]:
         if trait_id and accession not in traits:
             traits[accession] = (trait_id, trait)
     return traits
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _study_ancestry(audit: pd.DataFrame) -> dict[str, str]:
+    """Map each study in the discovery log to its `Ancestry` code.
+
+    Parameters
+    ----------
+    audit : `pd.DataFrame`
+        The study-discovery log from `_read_discovery_log`.
+
+    Returns
+    -------
+    ancestry : `dict[str, str]`
+        `study_accession` (FinnGen: phenocode) -> `ancestry_group`. A log
+        that predates `ancestry_group` is harmonised from its free-text
+        `ancestry` column (warned; FinnGen rows then get
+        `Ancestry.FINNGEN`). Empty if the log is empty.
+    """
+    if audit.empty:
+        return {}
+    if ColumnNames.ANCESTRY_GROUP in audit.columns:
+        groups = audit[ColumnNames.ANCESTRY_GROUP]
+    else:
+        log_warn(
+            f"{FileNames.STUDY_DISCOVERY_LOG} has no ancestry_group column: "
+            "harmonised from ancestry here (rerun gwas_cat_prep.py)"
+        )
+        groups = audit[ColumnNames.ANCESTRY].map(functions.harmonise_ancestry)
+        groups = groups.where(
+            audit[ColumnNames.SOURCE] != "finngen", Ancestry.FINNGEN
+        )
+    ancestry: dict[str, str] = {}
+    for accession, group in zip(audit[ColumnNames.STUDY_ACCESSION], groups):
+        if group and accession not in ancestry:
+            ancestry[accession] = group
+    return ancestry
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _fill_ancestry(
+    combined: pd.DataFrame, ancestry: dict[str, str]
+) -> pd.DataFrame:
+    """Set `ancestry_group` on rows that do not have one yet.
+
+    Parameters
+    ----------
+    combined : `pd.DataFrame`
+        All harmonised rows; marvel rows already carry `ancestry_group`.
+    ancestry : `dict[str, str]`
+        From `_study_ancestry`.
+
+    Returns
+    -------
+    filled : `pd.DataFrame`
+        `combined` with `ancestry_group` looked up by `study_accession`,
+        else `Ancestry.NR` (e.g. curated hits of studies the discovery
+        log does not list). Counts per source and code are logged.
+    """
+    hc = HarmonisedColumns
+    filled = combined.copy()
+    missing = filled[hc.ANCESTRY_GROUP].isna()
+    looked_up = filled.loc[missing, hc.STUDY_ACCESSION].map(ancestry)
+    n_unknown = int(looked_up.isna().sum())
+    filled.loc[missing, hc.ANCESTRY_GROUP] = looked_up.fillna(Ancestry.NR)
+    log_info(
+        f"ancestry: {n_unknown} rows of studies not in the discovery log "
+        f"labelled {Ancestry.NR}"
+    )
+    counts = filled.groupby([hc.SOURCE, hc.ANCESTRY_GROUP]).size()
+    for (source, group), n in counts.items():
+        log_info(f"ancestry: {source} {group}={n}")
+    return filled
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -756,6 +835,7 @@ def merge_results() -> None:
     )
 
     combined = pd.concat([p for p in parts if not p.empty], ignore_index=True)
+    combined = _fill_ancestry(combined, _study_ancestry(audit))
     log_stage("ensembl_check")
     combined = functions.annotate_ensembl_variants(combined, regions)
     combined = functions.flag_duplicate_variants(combined)

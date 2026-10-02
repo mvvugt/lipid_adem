@@ -30,6 +30,7 @@ from biomed_api.readers.reader_uniprot import UniProtIdMappingReader
 from log_tools.emitter import log_debug, log_info, log_warn
 
 from project_constants import (
+    Ancestry,
     ColumnNames,
     Constants,
     EnsemblAlleleCheck,
@@ -74,6 +75,10 @@ _COHORT_SPLIT_PATTERN = re.compile(Constants.COHORT_SPLIT_PATTERN)
 _MARVEL_VARIANT_PATTERN = re.compile(
     Constants.MARVEL_VARIANT_PATTERN, re.IGNORECASE
 )
+_ANCESTRY_SEGMENT_PATTERN = re.compile(Ancestry.SEGMENT_PATTERN, re.VERBOSE)
+_ANCESTRY_CATEGORY_SPLIT_PATTERN = re.compile(Ancestry.CATEGORY_SPLIT_PATTERN)
+# unmapped ancestry categories already warned about (warn once each)
+_WARNED_ANCESTRY_CATEGORIES: set[str] = set()
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1312,6 +1317,110 @@ def clean_cell(value: object) -> str:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _ancestry_category_code(category: str) -> str:
+    """Map one GWAS Catalog ancestral category to an `Ancestry` code.
+
+    Parameters
+    ----------
+    category : `str`
+        E.g. ``"South Asian"`` (case-insensitive).
+
+    Returns
+    -------
+    code : `str`
+        From `Ancestry.CATEGORY_MAP`; `Ancestry.OTH` (warned once per
+        category) if the category is not listed.
+    """
+    key = category.strip().lower()
+    if key in Ancestry.CATEGORY_MAP:
+        return Ancestry.CATEGORY_MAP[key]
+    if key not in _WARNED_ANCESTRY_CATEGORIES:
+        _WARNED_ANCESTRY_CATEGORIES.add(key)
+        log_warn(
+            f"ancestry category {category!r} not in Ancestry.CATEGORY_MAP, "
+            f"labelled {Ancestry.OTH}"
+        )
+    return Ancestry.OTH
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def harmonise_ancestry(cell: object) -> str:
+    """Harmonise a GWAS Catalog `discovery_ancestry` cell to one code.
+
+    Parameters
+    ----------
+    cell : `object`
+        The ``"; "``-joined cell from `clean_cell`, e.g.
+        ``"11340 South Asian (U.K.); 120241 European (Finland, U.K.)"``,
+        or a single `Ancestry` code (e.g. a manual table entry ``"EUR"``),
+        or `None`/NaN/``""``.
+
+    Returns
+    -------
+    code : `str`
+        One of `Ancestry.CODES`.
+
+    Notes
+    -----
+    Each ``"<n> <categories> (<countries>)"`` segment gets one code: the
+    shared code of its categories, or `Ancestry.MULTI` when they map to
+    different codes (``NR`` counts as a code here, so
+    ``"European,NR"`` is `MULTI`). Then:
+
+    - every segment `NR` (or nothing parsable) -> `NR`;
+    - every segment the same code -> that code;
+    - otherwise, with `n` known for every segment, the most common
+      non-`NR`/non-`MULTI` code if it holds at least
+      `Ancestry.DOMINANT_FRACTION` of the summed `n` (`NR` samples
+      count in that sum, so ``"404128 European (NR); 455258 NR (NR)"``
+      is 47 % EUR -> `MULTI`);
+    - else `MULTI`.
+    """
+    text = clean_cell(cell)
+    if text.upper() in Ancestry.CODES:
+        return text.upper()
+    segments: list[tuple[int | None, str]] = []
+    for segment in text.split(";"):
+        if not segment.strip():
+            continue
+        match = _ANCESTRY_SEGMENT_PATTERN.match(segment)
+        if match is None:
+            continue
+        categories = _ANCESTRY_CATEGORY_SPLIT_PATTERN.split(
+            match.group("categories")
+        )
+        codes = {_ancestry_category_code(c) for c in categories if c.strip()}
+        if not codes:
+            continue
+        code = codes.pop() if len(codes) == 1 else Ancestry.MULTI
+        n = match.group("n")
+        segments.append((int(n) if n and n.isdigit() else None, code))
+
+    codes = {code for _, code in segments}
+    if not codes or codes == {Ancestry.NR}:
+        return Ancestry.NR
+    if len(codes) == 1:
+        return codes.pop()
+    if any(n is None for n, _ in segments):
+        return Ancestry.MULTI
+    totals: dict[str, int] = {}
+    for n, code in segments:
+        totals[code] = totals.get(code, 0) + n
+    total = sum(totals.values())
+    candidates = {
+        code: n
+        for code, n in totals.items()
+        if code not in (Ancestry.NR, Ancestry.MULTI)
+    }
+    if total == 0 or not candidates:
+        return Ancestry.MULTI
+    dominant = max(candidates, key=candidates.get)
+    if candidates[dominant] / total >= Ancestry.DOMINANT_FRACTION:
+        return dominant
+    return Ancestry.MULTI
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def pubmed_summaries(pubmed_ids: list) -> dict[int, dict]:
     """Batch-fetch publication metadata from PubMed via NCBI E-utils.
 
@@ -1505,7 +1614,8 @@ def classify_studies(
         unknown): `pub_date` (YYYY-MM-DD), `first_author`, `journal`,
         `title` (from PubMed), and `trait`, `sample_size`, `ancestry`,
         `cohort`, `mapped_trait_id`, `mapped_trait` (from the GWAS
-        Catalog record). `reason` is one of
+        Catalog record), and `ancestry_group` (`harmonise_ancestry` of
+        `ancestry`). `reason` is one of
         `"included"`, `"over_cap"` (eligible but
         beyond `cap`), `"over_total_cap"` (within its per-term `cap` but
         beyond `total_cap`), `"no_full_sumstats"`, or a
@@ -1590,6 +1700,9 @@ def classify_studies(
             "trait": clean_cell(record.get("disease_trait")),
             "sample_size": clean_cell(record.get("initial_sample_size")),
             "ancestry": clean_cell(record.get("discovery_ancestry")),
+            "ancestry_group": harmonise_ancestry(
+                record.get("discovery_ancestry")
+            ),
             "cohort": clean_cell(record.get("cohort")),
             "mapped_trait_id": trait_ids,
             "mapped_trait": trait_labels,
@@ -1789,21 +1902,32 @@ def load_marvel_table(path: Path = FileNames.MARVEL_RESULTS) -> pd.DataFrame:
         TSV with `cohort` (a `Constants.PREFERRED_COHORT_ALIASES` key,
         e.g. ``ukb``/``aou``), `outcome` (as in `icd_codes.txt`), `path`
         (a marvel `{exposure}_results.tsv.gz`), `variable` and `model`
-        (the marvel `Variable`/`Model` to keep), and an optional `note`.
+        (the marvel `Variable`/`Model` to keep), `ancestry` (an
+        `Ancestry` code, e.g. ``EUR``, or ``MULTI`` for a pooled run) and
+        an optional `note`.
 
     Returns
     -------
     marvel : `pd.DataFrame`
-        The table, all columns as strings, `cohort` lower-cased. Empty
-        (but correctly columned) if `path` does not exist.
+        The table, all columns as strings, `cohort` lower-cased,
+        `ancestry` upper-cased. Empty (but correctly columned) if `path`
+        does not exist.
 
     Raises
     ------
     ValueError
-        If a required column is missing or a `cohort` is not a key of
-        `Constants.PREFERRED_COHORT_ALIASES`.
+        If a required column is missing, a `cohort` is not a key of
+        `Constants.PREFERRED_COHORT_ALIASES` or an `ancestry` is not in
+        `Ancestry.CODES`.
     """
-    required = ["cohort", "outcome", "path", "variable", "model"]
+    required = [
+        "cohort",
+        "outcome",
+        "path",
+        "variable",
+        "model",
+        ColumnNames.ANCESTRY,
+    ]
     columns = [*required, ColumnNames.NOTE]
     if not path.exists():
         return pd.DataFrame(columns=columns)
@@ -1821,6 +1945,17 @@ def load_marvel_table(path: Path = FileNames.MARVEL_RESULTS) -> pd.DataFrame:
         raise ValueError(
             f"{path}: unknown cohort(s) {unknown}, expected one of "
             f"{sorted(Constants.PREFERRED_COHORT_ALIASES)}"
+        )
+    marvel_df[ColumnNames.ANCESTRY] = (
+        marvel_df[ColumnNames.ANCESTRY].str.strip().str.upper()
+    )
+    bad_ancestry = sorted(
+        set(marvel_df[ColumnNames.ANCESTRY]) - Ancestry.CODES
+    )
+    if bad_ancestry:
+        raise ValueError(
+            f"{path}: unknown ancestry value(s) {bad_ancestry}, expected "
+            f"one of {sorted(Ancestry.CODES)}"
         )
     return marvel_df[columns]
 

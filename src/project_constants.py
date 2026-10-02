@@ -204,6 +204,8 @@ class ColumnNames:
     DISEASE_TRAIT: str = "disease_trait"
     SAMPLE_SIZE: str = "sample_size"
     ANCESTRY: str = "ancestry"
+    # harmonised `Ancestry` code derived from ANCESTRY
+    ANCESTRY_GROUP: str = "ancestry_group"
     COHORT: str = "cohort"
     NOTE: str = "note"
     CHILD_TRAITS: str = "child_traits"
@@ -242,6 +244,8 @@ class HarmonisedColumns:
     MAPPED_TRAIT: str = ColumnNames.MAPPED_TRAIT
     OUTCOME_DESC: str = "outcome_desc"
     TRAIT_LABEL: str = "trait_label"
+    # study ancestry as an `Ancestry` code
+    ANCESTRY_GROUP: str = ColumnNames.ANCESTRY_GROUP
     CHROM: str = ColumnNames.CHROM
     POS: str = "pos"
     RSID: str = "rsid"
@@ -283,6 +287,7 @@ class HarmonisedColumns:
         MAPPED_TRAIT,
         OUTCOME_DESC,
         TRAIT_LABEL,
+        ANCESTRY_GROUP,
         CHROM,
         POS,
         RSID,
@@ -319,6 +324,7 @@ class HarmonisedColumns:
         MAPPED_TRAIT,
         OUTCOME_DESC,
         TRAIT_LABEL,
+        ANCESTRY_GROUP,
     )
     # core columns converted to numbers (unparseable values become NA)
     NUMERIC_COLUMNS: tuple[str, ...] = (
@@ -402,6 +408,65 @@ class MafStatus:
     NOT_REPORTED: str = "not_reported"
 
 
+class Ancestry:
+    """Harmonised (gnomAD-style) ancestry codes, see
+    `functions.harmonise_ancestry`.
+    """
+    EUR: str = "EUR"
+    AFR: str = "AFR"
+    AMR: str = "AMR"
+    EAS: str = "EAS"
+    # South and Central Asian
+    CSA: str = "CSA"
+    MID: str = "MID"
+    OTH: str = "OTH"
+    # more than one code, none with >= DOMINANT_FRACTION of the samples
+    MULTI: str = "MULTI"
+    # not reported
+    NR: str = "NR"
+    CODES: frozenset[str] = frozenset(
+        {EUR, AFR, AMR, EAS, CSA, MID, OTH, MULTI, NR}
+    )
+    # share of a study's N one code needs to label a multi-ancestry study
+    DOMINANT_FRACTION: float = 0.9
+    # FinnGen is a Finnish (European) cohort
+    FINNGEN: str = EUR
+    # GWAS Catalog ancestral category (lower case) -> code; categories
+    # not listed map to OTH (warned)
+    CATEGORY_MAP: dict[str, str] = {
+        "european": EUR,
+        "african american or afro-caribbean": AFR,
+        "sub-saharan african": AFR,
+        "african unspecified": AFR,
+        "hispanic or latin american": AMR,
+        "native american": AMR,
+        "east asian": EAS,
+        "south east asian": EAS,
+        "south asian": CSA,
+        "central asian": CSA,
+        "greater middle eastern (middle eastern, north african or persian)": (
+            MID
+        ),
+        "greater middle eastern": MID,
+        "asian unspecified": OTH,
+        "oceanian": OTH,
+        "other": OTH,
+        "other admixed ancestry": OTH,
+        "nr": NR,
+    }
+    # one `discovery_ancestry` segment: "<n> <categories> (<countries>)",
+    # n and countries optional; countries may hold one nested "(...)"
+    SEGMENT_PATTERN: str = r"""
+        ^\s*
+        (?:(?P<n>\d+|NA)\s+)?
+        (?P<categories>.+?)
+        (?:\s+\((?P<countries>(?:[^()]|\([^()]*\))*)\))?
+        \s*$
+    """
+    # comma between categories, not inside "(...)"
+    CATEGORY_SPLIT_PATTERN: str = r",\s*(?![^()]*\))"
+
+
 class VariantListColumns:
     """Columns of the per-gene `*_variants.tsv` lists and the columns
     `match_variants.py` adds to the matched GWAS rows.
@@ -470,10 +535,17 @@ class MetaColumns:
     # "outcome"), to pool at another level
     GROUPINGS: dict[str, tuple[str, ...]] = {
         "variant": (VARIANT_SITE, HarmonisedColumns.OUTCOME),
+        # stratified by `Ancestry` code
+        "variant_ancestry": (
+            VARIANT_SITE,
+            HarmonisedColumns.OUTCOME,
+            HarmonisedColumns.ANCESTRY_GROUP,
+        ),
     }
     DEFAULT_GROUPING: str = "variant"
     # unique values joined with ";" per group in the output
     DESCRIBE_COLUMNS: tuple[str, ...] = (
+        HarmonisedColumns.ANCESTRY_GROUP,
         VariantListColumns.OUT_GENE,
         VariantListColumns.OUT_SOURCE,
         VariantListColumns.OUT_TRI_CLASS,

@@ -27,6 +27,7 @@ from log_tools.setup import runlog_setup
 
 import functions
 from project_constants import (
+    Ancestry,
     Constants,
     FileNames,
     HarmonisedColumns,
@@ -191,7 +192,8 @@ def load_matched() -> pd.DataFrame:
     -------
     matched : `pd.DataFrame`
         `matched_variants.tsv.gz` plus `MetaColumns.VARIANT_SITE`
-        (``chrom:pos:a1:a2`` of the variant-list entry).
+        (``chrom:pos:a1:a2`` of the variant-list entry); missing
+        `ancestry_group` values set to `Ancestry.NR`.
 
     Raises
     ------
@@ -228,6 +230,16 @@ def load_matched() -> pd.DataFrame:
         + ":"
         + matched[VariantListColumns.OUT_A2].astype("string")
     )
+    # matched tables written before ancestry harmonisation have no column
+    if HarmonisedColumns.ANCESTRY_GROUP not in matched.columns:
+        log_warn(
+            f"{FileNames.MATCHED_VARIANTS} has no ancestry_group column, "
+            f"all rows labelled {Ancestry.NR} (rerun merge and match)"
+        )
+        matched[HarmonisedColumns.ANCESTRY_GROUP] = Ancestry.NR
+    matched[HarmonisedColumns.ANCESTRY_GROUP] = matched[
+        HarmonisedColumns.ANCESTRY_GROUP
+    ].fillna(Ancestry.NR)
     log_info(
         f"{FileNames.MATCHED_VARIANTS}: {len(matched)} rows, "
         f"{matched[MetaColumns.VARIANT_SITE].nunique()} variants"
