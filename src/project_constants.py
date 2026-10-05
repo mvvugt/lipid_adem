@@ -139,8 +139,16 @@ class Constants:
     PREFERRED_COHORT_ALIASES: dict[str, frozenset[str]] = {
         "finngen": frozenset({"finngen"}),
         "ukb": frozenset({"ukb", "ukbb", "uk biobank"}),
-        "aou": frozenset({"aou", "all of us"}),
+        "aou": frozenset({"aou", "all of us", "allofus"}),
     }
+    # cohorts excluded from catalog studies for every outcome, whether or
+    # not own (marvel) results exist yet
+    ALWAYS_EXCLUDED_COHORTS: frozenset[str] = frozenset({"ukb", "aou"})
+    # catalog reason prefix for a study_outcome_review.tsv exclusion
+    REVIEW_REASON_PREFIX: str = "review_"
+    # study_outcome_review.tsv `status` the pipeline acts on; any other
+    # value (keep, proposed_exclude, copied audit statuses) is ignored
+    REVIEW_EXCLUDE_STATUS: str = "exclude"
     # separators between cohorts in a GWAS Catalog `cohort` cell
     COHORT_SPLIT_PATTERN: str = r"[;|,]"
     # catalog reason prefix for a cohort-overlap exclusion, + cohort key
@@ -540,8 +548,8 @@ class VariantListColumns:
 
 
 class MetaColumns:
-    """Columns derived and written by `meta_analysis.py`, and the named
-    groupings it can pool by.
+    """Columns derived and written by `meta_analysis.py`, and the columns
+    it pools by.
     """
     # per matched row
     # chrom:pos:a1:a2 of the variant-list entry (chrom without "chr")
@@ -576,19 +584,17 @@ class MetaColumns:
     Q: str = "q"
     Q_DF: str = "q_df"
     I2: str = "i2"
-    # grouping name -> columns pooled over (one output file per grouping);
-    # add an entry, e.g. ("variant_list_gene", "variant_list_source",
-    # "outcome"), to pool at another level
-    GROUPINGS: dict[str, tuple[str, ...]] = {
-        "variant": (VARIANT_SITE, HarmonisedColumns.OUTCOME),
-        # stratified by `Ancestry` code
-        "variant_ancestry": (
-            VARIANT_SITE,
-            HarmonisedColumns.OUTCOME,
-            HarmonisedColumns.ANCESTRY_GROUP,
-        ),
-    }
-    DEFAULT_GROUPING: str = "variant"
+    # columns pooled over; every run is restricted to one `Ancestry` code
+    # (`--ancestry`), so one study's pooled and per-ancestry analyses are
+    # never pooled together
+    KEYS: tuple[str, ...] = (
+        VARIANT_SITE,
+        HarmonisedColumns.OUTCOME,
+        HarmonisedColumns.ANCESTRY_GROUP,
+    )
+    # ancestry pooled when `--ancestry` is not given (FinnGen counts as
+    # EUR, see `Ancestry.FINNGEN`)
+    DEFAULT_ANCESTRY: str = Ancestry.EUR
     # unique values joined with ";" per group in the output
     DESCRIBE_COLUMNS: tuple[str, ...] = (
         HarmonisedColumns.ANCESTRY_GROUP,
@@ -655,6 +661,8 @@ class FileNames:
     )
     # own UKB/AoU association results (marvel), one row per file/outcome
     MARVEL_RESULTS: Path = Paths.DATA_RAW / "marvel_results.tsv"
+    # curated outcome x study exclusions, applied before the recency cap
+    STUDY_OUTCOME_REVIEW: Path = Paths.DATA_RAW / "study_outcome_review.tsv"
     TASKS_FILE: Path = Paths.DATA_TEMP / "tasks.tsv"
     # (study, outcome) labels for the per-study filter outfiles
     STUDY_OUTCOMES_FILE: Path = Paths.DATA_TEMP / "study_outcomes.tsv"
@@ -666,5 +674,5 @@ class FileNames:
     )
     # merged-associations rows matching a (non-AM) gene variant-list entry
     MATCHED_VARIANTS: Path = Paths.RESULTS_OUTPUT / "matched_variants.tsv.gz"
-    # IVW meta-analysis per `MetaColumns.GROUPINGS` name
-    META_ANALYSIS_TEMPLATE: str = "meta_{grouping}.tsv.gz"
+    # IVW meta-analysis per `Ancestry` code
+    META_ANALYSIS_TEMPLATE: str = "meta_{ancestry}.tsv.gz"

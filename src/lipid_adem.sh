@@ -54,7 +54,6 @@ run_mamba biomed-api "${ROOT}"/src/match_variants.py
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # META-ANALYSIS
 
-# [myriad] fixed-effect IVW meta-analysis of the matched variants
-run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --group-by variant
-# [myriad] same, stratified by harmonised ancestry
-run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --group-by variant_ancestry
+# [myriad] fixed-effect IVW meta-analysis of the matched variants, one
+# ancestry group per run (default EUR; e.g. --ancestry MULTI for pooled)
+run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR

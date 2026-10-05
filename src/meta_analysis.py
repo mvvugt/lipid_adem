@@ -4,10 +4,11 @@ Fixed-effect inverse-variance weighted (IVW) meta-analysis of the GWAS
 rows matched to the gene variant lists (`matched_variants.tsv.gz`).
 
 Effects are oriented towards the a2 (alt) allele, flipped to a1 for GoF
-variants. Rows are pooled per named grouping (`MetaColumns.GROUPINGS`),
-after keeping one estimate per study, dropping estimates copied under
-another accession, and dropping effect-allele-only matches whose tested
-alt is unknown.
+variants. Each run pools the rows of one ancestry group (`--ancestry`,
+default `MetaColumns.DEFAULT_ANCESTRY`) per variant and outcome
+(`MetaColumns.KEYS`), after keeping one estimate per study, dropping
+estimates copied under another accession, and dropping
+effect-allele-only matches whose tested alt is unknown.
 """
 
 
@@ -692,13 +693,14 @@ def meta_analyse(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def meta_analysis(grouping: str) -> None:
-    """Run the meta-analysis for one named grouping and write it.
+def meta_analysis(ancestry: str) -> None:
+    """Run the meta-analysis for one ancestry group and write it.
 
     Parameters
     ----------
-    grouping : `str`
-        A key of `MetaColumns.GROUPINGS`.
+    ancestry : `str`
+        An `Ancestry` code; only rows with this `ancestry_group` are
+        pooled (``MULTI`` pools the multi-ancestry studies).
 
     Returns
     -------
@@ -709,11 +711,23 @@ def meta_analysis(grouping: str) -> None:
     FileNotFoundError
         If there is no matched-variants table.
     """
-    keys = list(MetaColumns.GROUPINGS[grouping])
-    log_info(f"grouping {grouping}: {', '.join(keys)}")
+    keys = list(MetaColumns.KEYS)
+    log_info(f"ancestry {ancestry}, pooled by {', '.join(keys)}")
 
     log_stage("load_matched")
     matched = load_matched()
+    is_ancestry = matched[HarmonisedColumns.ANCESTRY_GROUP] == ancestry
+    counts = matched[HarmonisedColumns.ANCESTRY_GROUP].value_counts()
+    log_info(
+        f"{int(is_ancestry.sum())} of {len(matched)} rows are {ancestry} "
+        "(all: "
+        + ", ".join(f"{code}={n}" for code, n in sorted(counts.items()))
+        + ")"
+    )
+    if not is_ancestry.any():
+        log_warn(f"no {ancestry} rows, nothing to pool; no output written")
+        return
+    matched = matched.loc[is_ancestry].copy()
 
     log_stage("prepare_effects")
     rows = prepare_effects(matched)
@@ -742,7 +756,7 @@ def meta_analysis(grouping: str) -> None:
 
     log_stage("write")
     path = Paths.RESULTS_OUTPUT / FileNames.META_ANALYSIS_TEMPLATE.format(
-        grouping=grouping
+        ancestry=ancestry
     )
     Paths.RESULTS_OUTPUT.mkdir(parents=True, exist_ok=True)
     functions.write_table_atomic(pooled, path)
@@ -758,10 +772,11 @@ def _init_cmd_args() -> argparse.ArgumentParser:
         description="Fixed-effect IVW meta-analysis of the matched variants."
     )
     parser.add_argument(
-        "--group-by",
-        choices=sorted(MetaColumns.GROUPINGS),
-        default=MetaColumns.DEFAULT_GROUPING,
-        help="named grouping to pool by (default: %(default)s)",
+        "--ancestry",
+        type=str.upper,
+        choices=sorted(Ancestry.CODES),
+        default=MetaColumns.DEFAULT_ANCESTRY,
+        help="ancestry group to pool (default: %(default)s)",
     )
     return parser
 
@@ -781,7 +796,7 @@ def main() -> None:
     args = _parse_cmd_args(parser)
 
     with runlog_setup(root=Paths.HERE, order=RunlogOrder.META_ANALYSIS):
-        meta_analysis(args.group_by)
+        meta_analysis(args.ancestry)
 
 
 if __name__ == "__main__":

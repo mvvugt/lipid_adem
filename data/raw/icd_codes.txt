@@ -21,11 +21,11 @@ alzheimers_dementia	G30.0	icd10	Alzheimer disease with early onset	G6_ALZHEIMER,
 alzheimers_dementia	G30.1	icd10	Alzheimer disease with late onset	G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT	MONDO_0004975
 alzheimers_dementia	G30.8	icd10	Other Alzheimer disease	G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT	MONDO_0004975
 alzheimers_dementia	G30.9	icd10	Alzheimer disease, unspecified	G6_ALZHEIMER,G6_AD_STRICT,F5_ALZHDEMENT	MONDO_0004975
-hf	I50	icd10	Heart failure	FG_CVD	MONDO_0005252
-stroke	I60	icd10	Subarachnoid haemorrhage	FG_CVD	MONDO_0005099
-stroke	I61	icd10	Intracerebral haemorrhage	FG_CVD	MONDO_0013792
-stroke	I63	icd10	Cerebral infarction	FG_CVD	MONDO_0005394
-stroke	I64	icd10	Stroke, not specified as haemorrhage or infarction	FG_CVD	MONDO_0005098
+hf	I50	icd10	Heart failure	I9_HEARTFAIL	MONDO_0005252
+stroke	I60	icd10	Subarachnoid haemorrhage	I9_STR_SAH	MONDO_0005099
+stroke	I61	icd10	Intracerebral haemorrhage	I9_STR_SAH	MONDO_0013792
+stroke	I63	icd10	Cerebral infarction	I9_STR_SAH	MONDO_0005394
+stroke	I64	icd10	Stroke, not specified as haemorrhage or infarction	I9_STR_SAH	MONDO_0005098
 coronary_heart_disease	I20	icd10	Angina pectoris	I9_CHD	EFO_0003913
 coronary_heart_disease	I21	icd10	Acute myocardial infarction	I9_CHD	MONDO_0004781
 coronary_heart_disease	I22	icd10	Subsequent myocardial infarction	I9_CHD	EFO_0008584
@@ -44,12 +44,12 @@ vascular_dementia	F01.3	icd10	Mixed cortical and subcortical vascular dementia	F
 vascular_dementia	F01.8	icd10	Other vascular dementia	F5_VASCDEM	MONDO_0004648
 vascular_dementia	F01.9	icd10	Vascular dementia, unspecified	F5_VASCDEM	NA
 vascular_dementia	I67.3	icd10	Progressive vascular leukoencephalopathy		MONDO_0011057
-sudden_cardiac_death	I49.0	icd10	Ventricular fibrillation and flutter		EFO_0004269
-sudden_cardiac_death	I46.0	icd10	Cardiac arrest with successful resuscitation		EFO_0009492
-sudden_cardiac_death	I46.9	icd10	Cardiac arrest, unspecified		EFO_0009492
-sudden_cardiac_death	I46.1	icd10	Sudden cardiac death, so described		EFO_0009492
-sudden_cardiac_death	I47.0	icd10	Re-entry ventricular arrhythmia		EFO_0009493
-sudden_cardiac_death	I47.2	icd10	Ventricular tachycardia		EFO_0009493
+sudden_cardiac_death	I49.0	icd10	Ventricular fibrillation and flutter	I9_CARDARR	EFO_0004269
+sudden_cardiac_death	I46.0	icd10	Cardiac arrest with successful resuscitation	I9_CARDARR	EFO_0009492
+sudden_cardiac_death	I46.9	icd10	Cardiac arrest, unspecified	I9_CARDARR	EFO_0009492
+sudden_cardiac_death	I46.1	icd10	Sudden cardiac death, so described	I9_CARDARR	EFO_0009492
+sudden_cardiac_death	I47.0	icd10	Re-entry ventricular arrhythmia	I9_CARDARR	EFO_0009493
+sudden_cardiac_death	I47.2	icd10	Ventricular tachycardia	I9_CARDARR	EFO_0009493
 cardiovascular_disease	I60	icd10	Subarachnoid haemorrhage		MONDO_0005099
 cardiovascular_disease	I61	icd10	Intracerebral haemorrhage		MONDO_0013792
 cardiovascular_disease	I63	icd10	Cerebral infarction		MONDO_0005394

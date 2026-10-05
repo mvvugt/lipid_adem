@@ -1187,7 +1187,7 @@ def symbol_by_uniprot(accession: str) -> str | None:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _fetch_gwas_catalog_study_records(
+def fetch_gwas_catalog_study_records(
     efo_id: str, include_child_traits: bool = False
 ) -> list[dict]:
     """Fetch raw GWAS Catalog study records for an EFO trait.
@@ -1332,6 +1332,8 @@ def discover_studies_with_reasons(
     cap: int = Constants.MAX_STUDIES_PER_OUTCOME,
     include_child_traits: bool = False,
     excluded_cohorts: Collection[str] = frozenset(),
+    excluded_accessions: Mapping[str, str] | None = None,
+    records: list[dict] | None = None,
 ) -> list[dict]:
     """Discover and classify GWAS Catalog studies for an EFO trait.
 
@@ -1352,8 +1354,16 @@ def discover_studies_with_reasons(
         out the studies of `efo_id` itself, with an overall ceiling of
         `Constants.MAX_STUDIES_PER_CHILD_QUERY` included studies.
     excluded_cohorts : `Collection[str]`, optional, default: `frozenset()`
-        Preferred-cohort keys with own results for the outcome; studies
-        listing one are excluded before the cap (see `classify_studies`).
+        Preferred-cohort keys excluded for the outcome; studies listing
+        one are excluded before the cap (see `classify_studies`).
+    excluded_accessions : `Mapping[str, str]` or `NoneType`, optional, \
+default: `None`
+        Accession -> reason for curated exclusions of this outcome
+        (`load_study_outcome_review`), applied before the cap.
+    records : `list[dict]` or `NoneType`, optional, default: `None`
+        Already fetched `fetch_gwas_catalog_study_records` output for
+        (`efo_id`, `include_child_traits`), so outcomes sharing an EFO ID
+        query the GWAS Catalog once; fetched here when `None`.
 
     Returns
     -------
@@ -1361,7 +1371,10 @@ def discover_studies_with_reasons(
         As returned by `classify_studies` -- `accession_id`, `pubmed_id`,
         `reason`, plus publication/trait/sample metadata.
     """
-    records = _fetch_gwas_catalog_study_records(efo_id, include_child_traits)
+    if records is None:
+        records = fetch_gwas_catalog_study_records(
+            efo_id, include_child_traits
+        )
     # printed only; gwas_cat_prep records one summary line per EFO
     log_debug(f"{efo_id} -> {len(records)} studies")
     return classify_studies(
@@ -1374,6 +1387,7 @@ def discover_studies_with_reasons(
             else None
         ),
         excluded_cohorts=excluded_cohorts,
+        excluded_accessions=excluded_accessions,
     )
 
 
@@ -1576,7 +1590,7 @@ def study_exclusion_reason(record: dict) -> str | None:
     ----------
     record : `dict`
         Study record with optional `gxe`, `gxg` and `disease_trait`
-        fields (as returned by `_fetch_gwas_catalog_study_records`).
+        fields (as returned by `fetch_gwas_catalog_study_records`).
 
     Returns
     -------
@@ -1652,24 +1666,55 @@ def cohort_overlap_reason(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _cap_slot(record: dict) -> tuple[str, str]:
+    """Return the recency-cap slot of a GWAS Catalog study record.
+
+    Parameters
+    ----------
+    record : `dict`
+        Study record with `accession_id` and optional `pubmed_id` and
+        `disease_trait`.
+
+    Returns
+    -------
+    slot : `tuple[str, str]`
+        `(pubmed_id, trait)` with the trait lower-cased and
+        whitespace-collapsed, so one paper's analyses of one trait in
+        several ancestries share a slot; `("", accession_id)` when the
+        record has no PubMed ID or trait (a slot of its own).
+    """
+    pubmed_id = clean_cell(record.get("pubmed_id"))
+    trait = " ".join(clean_cell(record.get("disease_trait")).lower().split())
+    if not pubmed_id or not trait:
+        return "", record["accession_id"]
+    return pubmed_id, trait
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def classify_studies(
     records: list[dict],
     cap: int = Constants.MAX_STUDIES_PER_OUTCOME,
     per_term: bool = False,
     total_cap: int | None = None,
     excluded_cohorts: Collection[str] = frozenset(),
+    excluded_accessions: Mapping[str, str] | None = None,
 ) -> list[dict]:
     """Classify candidate GWAS Catalog studies as included or excluded.
 
     Studies with a `study_exclusion_reason` (GxE/GxG interaction, CNV,
-    X-chromosome-only) or a `cohort_overlap_reason` are set aside first,
-    so they never take a cap
-    slot. The rest go through the same eligibility filter (full summary stats available)
-    and recency cap as `filter_and_cap_studies`, but every input record
-    is returned
-    with the reason it was kept or dropped, rather than only
-    the surviving accessions -- the basis for the study-discovery audit
-    log (see `gwas_cat_prep.build_tasks`).
+    X-chromosome-only), a `cohort_overlap_reason` or a curated
+    exclusion (`excluded_accessions`) are set aside first, so they never
+    take a cap slot. The rest go through the same eligibility filter
+    (full summary stats available) and recency cap as
+    `filter_and_cap_studies`, but every input record is returned with
+    the reason it was kept or dropped, rather than only the surviving
+    accessions -- the basis for the study-discovery audit log (see
+    `gwas_cat_prep.build_tasks`).
+
+    The cap counts papers x traits, not accessions: studies sharing a
+    PubMed ID and trait text (`_cap_slot`, e.g. one paper's
+    per-ancestry and pooled analyses of one trait) share one slot and
+    are included or dropped together.
 
     Parameters
     ----------
@@ -1678,20 +1723,24 @@ def classify_studies(
         `full_summary_stats_available`, and `pubmed_id` (as returned by
         the GWAS Catalog studies-list search).
     cap : `int`, optional, default: `Constants.MAX_STUDIES_PER_OUTCOME`
-        Maximum number of eligible studies to mark `"included"`, most
-        recent first.
+        Maximum number of eligible cap slots (`_cap_slot`) to mark
+        `"included"`, most recent first.
     per_term : `bool`, optional, default: `False`
         Apply `cap` per mapped term (each ID in a record's `efo_traits`)
         instead of overall, and include the union. Used with child
         traits, so each term (the queried parent included) keeps its
         own `cap` most recent studies.
     total_cap : `int` or `NoneType`, optional, default: `None`
-        With `per_term`, also stop including once this many studies are
+        With `per_term`, also stop including once this many slots are
         included overall (most recent first); later per-term survivors
         are marked `"over_total_cap"`. `None` means no overall ceiling.
     excluded_cohorts : `Collection[str]`, optional, default: `frozenset()`
-        Preferred-cohort keys with own results for the outcome; studies
-        listing one of them get a `cohort_overlap_reason`.
+        Preferred-cohort keys excluded for the outcome; studies listing
+        one of them get a `cohort_overlap_reason`.
+    excluded_accessions : `Mapping[str, str]` or `NoneType`, optional, \
+default: `None`
+        Accession -> reason (e.g. ``"review_MTAG"``) for curated
+        exclusions; checked after the two reasons above.
 
     Returns
     -------
@@ -1707,17 +1756,22 @@ def classify_studies(
         beyond `cap`), `"over_total_cap"` (within its per-term `cap` but
         beyond `total_cap`), `"no_full_sumstats"`, or a
         `study_exclusion_reason` (`"gxe_interaction"`,
-        `"gxg_interaction"`, `"cnv_study"`, `"x_chromosome_study"`), or
-        a `cohort_overlap_reason` (e.g. `"cohort_overlap_finngen"`).
+        `"gxg_interaction"`, `"cnv_study"`, `"x_chromosome_study"`), a
+        `cohort_overlap_reason` (e.g. `"cohort_overlap_finngen"`), or an
+        `excluded_accessions` reason.
         `"included"`, `"over_cap"`
         and `"over_total_cap"` records appear first, in that order and
         most-recent-publication-date first within each (unresolved dates
         sort last), followed by `"no_full_sumstats"` records and then
         excluded-design records, both in their original input order.
     """
+    curated = excluded_accessions or {}
+
     def _exclusion(record: dict) -> str | None:
-        return study_exclusion_reason(record) or cohort_overlap_reason(
-            record, excluded_cohorts
+        return (
+            study_exclusion_reason(record)
+            or cohort_overlap_reason(record, excluded_cohorts)
+            or curated.get(record["accession_id"])
         )
 
     excluded = [
@@ -1746,19 +1800,31 @@ def classify_studies(
 
     over_total_cap: list[dict] = []
     if per_term:
-        # eligible is sorted, so each term's first `cap` are its most recent
+        # eligible is sorted, so each term's first `cap` slots are its most
+        # recent
         included_ids: set[str] = set()
         over_total_ids: set[str] = set()
-        per_term_counts: dict[str, int] = {}
+        included_slots: set[tuple[str, str]] = set()
+        per_term_slots: dict[str, set[tuple[str, str]]] = {}
         for record in eligible:
+            slot = _cap_slot(record)
             terms = mapped_traits(record.get("efo_traits"))[0].split("; ")
-            if any(per_term_counts.get(term, 0) < cap for term in terms):
-                if total_cap is not None and len(included_ids) >= total_cap:
+            if any(
+                slot in per_term_slots.get(term, set())
+                or len(per_term_slots.get(term, set())) < cap
+                for term in terms
+            ):
+                if (
+                    total_cap is not None
+                    and slot not in included_slots
+                    and len(included_slots) >= total_cap
+                ):
                     over_total_ids.add(record["accession_id"])
                 else:
                     included_ids.add(record["accession_id"])
+                    included_slots.add(slot)
             for term in terms:
-                per_term_counts[term] = per_term_counts.get(term, 0) + 1
+                per_term_slots.setdefault(term, set()).add(slot)
         included = [r for r in eligible if r["accession_id"] in included_ids]
         over_total_cap = [
             r for r in eligible if r["accession_id"] in over_total_ids
@@ -1770,7 +1836,15 @@ def classify_studies(
             and r["accession_id"] not in over_total_ids
         ]
     else:
-        included, over_cap = eligible[:cap], eligible[cap:]
+        included, over_cap = [], []
+        slots: set[tuple[str, str]] = set()
+        for record in eligible:
+            slot = _cap_slot(record)
+            if slot in slots or len(slots) < cap:
+                slots.add(slot)
+                included.append(record)
+            else:
+                over_cap.append(record)
 
     def _row(record: dict, reason: str) -> dict:
         summary = _summary(record)
@@ -1804,7 +1878,8 @@ def classify_studies(
     )
     log_debug(
         f"{len(records)} studies -> {len(usable)} after dropping "
-        f"GxE/GxG/CNV/cohort overlap -> {len(eligible)} with full sumstats "
+        f"GxE/GxG/CNV/cohort overlap/review -> {len(eligible)} with full "
+        "sumstats "
         f"-> {len(included)} included after cap={cap}"
         + (" per term" if per_term else "")
         + (f", total_cap={total_cap}" if total_cap is not None else "")
@@ -1833,8 +1908,9 @@ def filter_and_cap_studies(
     Returns
     -------
     capped : `list[str]`
-        At most `cap` study accessions, all with full summary statistics
-        available, ordered most-recent-publication-date first (studies
+        The study accessions of at most `cap` cap slots (`_cap_slot`),
+        all with full summary statistics available, ordered
+        most-recent-publication-date first (studies
         whose date could not be resolved from PubMed sort last).
     """
     classified = classify_studies(records, cap=cap)
@@ -1975,6 +2051,69 @@ def manual_studies_for_outcome(
     """
     is_outcome = manual_df["outcome"] == outcome
     return manual_df.loc[is_outcome, "accession_id"].tolist()
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def load_study_outcome_review(
+    path: Path = FileNames.STUDY_OUTCOME_REVIEW,
+) -> dict[str, dict[str, str]]:
+    """Load the curated outcome x study exclusions.
+
+    See `data/raw/study_outcome_review.SOURCE.md`. Only rows whose
+    `status` is `Constants.REVIEW_EXCLUDE_STATUS` count; every other
+    status (e.g. ``keep``, ``proposed_exclude``, or the audit statuses
+    copied from the discovery log) is ignored.
+
+    Parameters
+    ----------
+    path : `Path`, optional, default: `FileNames.STUDY_OUTCOME_REVIEW`
+        TSV with `outcome`, `study_accession`, `status` and `reason`
+        columns.
+
+    Returns
+    -------
+    exclusions : `dict[str, dict[str, str]]`
+        Outcome -> {accession: reason}, the reason being
+        `Constants.REVIEW_REASON_PREFIX` + the row's `reason` (or
+        + ``exclude`` when blank). Empty if `path` does not exist.
+
+    Raises
+    ------
+    ValueError
+        If a required column is missing.
+    """
+    if not path.exists():
+        log_info(f"{path} not found, no curated study exclusions")
+        return {}
+    review_df = pd.read_csv(path, sep="\t", dtype=str).fillna("")
+    required = [
+        ColumnNames.OUTCOME,
+        ColumnNames.STUDY_ACCESSION,
+        ColumnNames.STATUS,
+        ColumnNames.REASON,
+    ]
+    missing = [c for c in required if c not in review_df.columns]
+    if missing:
+        raise ValueError(f"{path}: missing column(s) {', '.join(missing)}")
+    is_excluded = (
+        review_df[ColumnNames.STATUS].str.strip()
+        == Constants.REVIEW_EXCLUDE_STATUS
+    )
+    exclusions: dict[str, dict[str, str]] = {}
+    for outcome, accession, reason in zip(
+        review_df.loc[is_excluded, ColumnNames.OUTCOME].str.strip(),
+        review_df.loc[is_excluded, ColumnNames.STUDY_ACCESSION].str.strip(),
+        review_df.loc[is_excluded, ColumnNames.REASON],
+    ):
+        exclusions.setdefault(outcome, {})[accession] = (
+            Constants.REVIEW_REASON_PREFIX
+            + (clean_cell(reason) or Constants.REVIEW_EXCLUDE_STATUS)
+        )
+    log_info(
+        f"{path}: {int(is_excluded.sum())} outcome x study exclusions for "
+        f"{len(exclusions)} outcomes"
+    )
+    return exclusions
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
