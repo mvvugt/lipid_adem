@@ -229,8 +229,8 @@ MACE	GCST90013864	excluded	over_cap
 MACE	GCST011322	exclude	pairwise
 MACE	GCST011330	exclude	pairwise
 MACE	GCST011338	exclude	pairwise
-MACE	GCST010480	excluded	over_cap
-MACE	GCST010479	excluded	over_cap
+MACE	GCST010480	exclude	unusable_format (tar.gz archive)
+MACE	GCST010479	exclude	UKB (blank catalog cohort; trans-ethnic meta incl. UKB)
 MACE	GCST90012176	excluded	over_cap
 MACE	GCST007545	exclude	multivariate
 MACE	GCST007546	exclude	multivariate
@@ -625,10 +625,10 @@ MACE	GCST90473550	exclude	related
 MACE	GCST90246094	excluded	over_cap
 MACE	GCST90246086	excluded	over_cap
 MACE	GCST90246085	excluded	over_cap
-MACE	GCST90128466	excluded	over_cap
-MACE	GCST90128462	excluded	over_cap
-MACE	GCST90128459	excluded	over_cap
-MACE	GCST90128456	excluded	over_cap
+MACE	GCST90128466	exclude	no_eaf_other_allele
+MACE	GCST90128462	exclude	no_eaf_other_allele
+MACE	GCST90128459	exclude	no_eaf_other_allele
+MACE	GCST90128456	exclude	no_eaf_other_allele
 MACE	GCST90081633	excluded	over_cap
 MACE	GCST90081634	excluded	over_cap
 MACE	GCST90077648	excluded	over_cap
@@ -752,8 +752,8 @@ all_cause_dementia	GCST90276158	excluded	over_cap
 all_cause_dementia	GCST90027158	excluded	over_cap
 all_cause_dementia	GCST90083805	excluded	over_cap
 all_cause_dementia	GCST90079819	excluded	over_cap
-all_cause_dementia	GCST009020	excluded	over_cap
-all_cause_dementia	GCST009019	excluded	over_cap
+all_cause_dementia	GCST009020	exclude	unusable_format (non-standard columns)
+all_cause_dementia	GCST009019	exclude	unusable_format (non-standard columns)
 all_cause_dementia	GCST90435837	excluded	over_cap
 all_cause_dementia	GCST002245	excluded	over_cap
 all_cause_dementia	GCST90995082	exclude	related
@@ -1017,8 +1017,8 @@ alzheimers_dementia	GCST90276158	excluded	over_cap
 alzheimers_dementia	GCST90027158	excluded	over_cap
 alzheimers_dementia	GCST90083805	excluded	over_cap
 alzheimers_dementia	GCST90079819	excluded	over_cap
-alzheimers_dementia	GCST009020	excluded	over_cap
-alzheimers_dementia	GCST009019	excluded	over_cap
+alzheimers_dementia	GCST009020	exclude	unusable_format (non-standard columns)
+alzheimers_dementia	GCST009019	exclude	unusable_format (non-standard columns)
 alzheimers_dementia	GCST90435837	excluded	over_cap
 alzheimers_dementia	GCST002245	excluded	over_cap
 alzheimers_dementia	GCST90995082	exclude	related
@@ -1251,11 +1251,11 @@ alzheimers_dementia	GCST000893	excluded	gxe_interaction
 alzheimers_dementia	GCST000889	excluded	gxe_interaction
 alzheimers_dementia	GCST002814	excluded	gxe_interaction
 alzheimers_dementia	GCST002462	excluded	gxg_interaction
-alzheimers_dementia	GCST90861026	exclude	apoe_stratified
-alzheimers_dementia	GCST90861027	exclude	apoe_stratified
+alzheimers_dementia	GCST90861026	keep	thomassen_first_analysis
+alzheimers_dementia	GCST90861027	keep	thomassen_first_analysis
 alzheimers_dementia	GCST90861028	exclude	apoe_stratified
-alzheimers_dementia	GCST90861029	exclude	apoe_stratified
-alzheimers_dementia	GCST90861030	exclude	apoe_stratified
+alzheimers_dementia	GCST90861029	keep	thomassen_first_analysis
+alzheimers_dementia	GCST90861030	keep	thomassen_first_analysis
 alzheimers_dementia	GCST90861031	exclude	interaction
 alzheimers_dementia	F5_ALZHDEMENT	exclude	sample_overlap
 alzheimers_dementia	G6_AD_STRICT	exclude	sample_overlap
@@ -1490,8 +1490,8 @@ cardiovascular_disease	GCST90013864	excluded	over_cap
 cardiovascular_disease	GCST011322	exclude	pairwise
 cardiovascular_disease	GCST011330	exclude	pairwise
 cardiovascular_disease	GCST011338	exclude	pairwise
-cardiovascular_disease	GCST010480	excluded	over_cap
-cardiovascular_disease	GCST010479	excluded	over_cap
+cardiovascular_disease	GCST010480	exclude	unusable_format (tar.gz archive)
+cardiovascular_disease	GCST010479	exclude	UKB (blank catalog cohort; trans-ethnic meta incl. UKB)
 cardiovascular_disease	GCST90012176	excluded	over_cap
 cardiovascular_disease	GCST007545	exclude	multivariate
 cardiovascular_disease	GCST007546	exclude	multivariate
@@ -1809,10 +1809,10 @@ cardiovascular_disease	GCST90473550	exclude	related
 cardiovascular_disease	GCST90246094	excluded	over_cap
 cardiovascular_disease	GCST90246086	excluded	over_cap
 cardiovascular_disease	GCST90246085	excluded	over_cap
-cardiovascular_disease	GCST90128466	excluded	over_cap
-cardiovascular_disease	GCST90128462	excluded	over_cap
-cardiovascular_disease	GCST90128459	excluded	over_cap
-cardiovascular_disease	GCST90128456	excluded	over_cap
+cardiovascular_disease	GCST90128466	exclude	no_eaf_other_allele
+cardiovascular_disease	GCST90128462	exclude	no_eaf_other_allele
+cardiovascular_disease	GCST90128459	exclude	no_eaf_other_allele
+cardiovascular_disease	GCST90128456	exclude	no_eaf_other_allele
 cardiovascular_disease	GCST90081633	excluded	over_cap
 cardiovascular_disease	GCST90081634	excluded	over_cap
 cardiovascular_disease	GCST90077648	excluded	over_cap
@@ -2017,8 +2017,8 @@ coronary_heart_disease	GCST90013864	excluded	over_cap
 coronary_heart_disease	GCST011322	exclude	pairwise
 coronary_heart_disease	GCST011330	exclude	pairwise
 coronary_heart_disease	GCST011338	exclude	pairwise
-coronary_heart_disease	GCST010480	excluded	over_cap
-coronary_heart_disease	GCST010479	excluded	over_cap
+coronary_heart_disease	GCST010480	exclude	unusable_format (tar.gz archive)
+coronary_heart_disease	GCST010479	exclude	UKB (blank catalog cohort; trans-ethnic meta incl. UKB)
 coronary_heart_disease	GCST90012176	excluded	over_cap
 coronary_heart_disease	GCST007545	exclude	multivariate
 coronary_heart_disease	GCST007546	exclude	multivariate
@@ -2183,10 +2183,10 @@ coronary_heart_disease	GCST90473550	exclude	related
 coronary_heart_disease	GCST90246094	excluded	over_cap
 coronary_heart_disease	GCST90246086	excluded	over_cap
 coronary_heart_disease	GCST90246085	excluded	over_cap
-coronary_heart_disease	GCST90128466	excluded	over_cap
-coronary_heart_disease	GCST90128462	excluded	over_cap
-coronary_heart_disease	GCST90128459	excluded	over_cap
-coronary_heart_disease	GCST90128456	excluded	over_cap
+coronary_heart_disease	GCST90128466	exclude	no_eaf_other_allele
+coronary_heart_disease	GCST90128462	exclude	no_eaf_other_allele
+coronary_heart_disease	GCST90128459	exclude	no_eaf_other_allele
+coronary_heart_disease	GCST90128456	exclude	no_eaf_other_allele
 coronary_heart_disease	GCST90081633	excluded	over_cap
 coronary_heart_disease	GCST90081634	excluded	over_cap
 coronary_heart_disease	GCST90077648	excluded	over_cap

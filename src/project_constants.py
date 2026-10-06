@@ -584,6 +584,11 @@ class MetaColumns:
     Q: str = "q"
     Q_DF: str = "q_df"
     I2: str = "i2"
+    # "pooled" (over studies) or "stratum" (one study), see `MetaLevel`
+    LEVEL: str = "level"
+    # burden: distinct variants pooled and their sites (";"-joined)
+    N_VARIANTS: str = "n_variants"
+    VARIANTS: str = "variants"
     # columns pooled over; every run is restricted to one `Ancestry` code
     # (`--ancestry`), so one study's pooled and per-ancestry analyses are
     # never pooled together
@@ -606,7 +611,16 @@ class MetaColumns:
         ORIENTATION,
         EFFECT_SCALE,
         HarmonisedColumns.SOURCE,
+        HarmonisedColumns.TRAIT_LABEL,
     )
+
+
+class MetaLevel:
+    """Values of the `level` column of the meta-analysis outputs."""
+    # pooled over all studies of the run
+    POOLED: str = "pooled"
+    # one study (e.g. one APOE stratum of a stratified GWAS)
+    STRATUM: str = "stratum"
 
 
 class Orientation:
@@ -674,5 +688,8 @@ class FileNames:
     )
     # merged-associations rows matching a (non-AM) gene variant-list entry
     MATCHED_VARIANTS: Path = Paths.RESULTS_OUTPUT / "matched_variants.tsv.gz"
-    # IVW meta-analysis per `Ancestry` code
-    META_ANALYSIS_TEMPLATE: str = "meta_{ancestry}.tsv.gz"
+    # IVW meta-analysis per `Ancestry` code; `{suffix}` is "" or
+    # "_<label>" (`meta_analysis.py --label`)
+    META_ANALYSIS_TEMPLATE: str = "meta_{ancestry}{suffix}.tsv.gz"
+    # gene-level burden (IVW over the oriented variant effects)
+    BURDEN_TEMPLATE: str = "burden_{ancestry}{suffix}.tsv.gz"

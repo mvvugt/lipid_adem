@@ -9,6 +9,12 @@ default `MetaColumns.DEFAULT_ANCESTRY`) per variant and outcome
 (`MetaColumns.KEYS`), after keeping one estimate per study, dropping
 estimates copied under another accession, and dropping
 effect-allele-only matches whose tested alt is unknown.
+
+Optional filters restrict the run to studies, outcomes and variant-list
+sources (`--studies`, `--outcomes`, `--variant-sources`); `--stratified`
+adds each study's own estimate. Next to the per-variant table a gene
+burden table is written: the IVW of the oriented variant effects per gene,
+per study and pooled over studies.
 """
 
 
@@ -33,6 +39,7 @@ from project_constants import (
     FileNames,
     HarmonisedColumns,
     MetaColumns,
+    MetaLevel,
     Orientation,
     Paths,
     RunlogOrder,
@@ -693,14 +700,174 @@ def meta_analyse(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def meta_analysis(ancestry: str) -> None:
+def _keep_values(
+    rows: pd.DataFrame, column: str, values: list[str] | None
+) -> pd.DataFrame:
+    """Keep the rows whose `column` is one of `values`, and log it.
+
+    Parameters
+    ----------
+    rows : `pd.DataFrame`
+        Rows to filter.
+    column : `str`
+        Column to filter on.
+    values : `list[str]` or `None`
+        Values to keep; `None` keeps every row.
+
+    Returns
+    -------
+    kept : `pd.DataFrame`
+        The kept rows; requested values without any row are warned.
+    """
+    if values is None:
+        return rows
+    keep = rows[column].isin(values)
+    log_info(
+        f"{column} in {', '.join(values)}: {int(keep.sum())} of "
+        f"{len(rows)} rows kept"
+    )
+    absent = sorted(set(values) - set(rows.loc[keep, column]))
+    if absent:
+        log_warn(f"no rows with {column} {', '.join(absent)}")
+    return rows.loc[keep].copy()
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def stratified(
+    rows: pd.DataFrame, keys: list[str], copies: pd.DataFrame
+) -> pd.DataFrame:
+    """Describe each study's (stratum's) own estimate per variant.
+
+    Parameters
+    ----------
+    rows : `pd.DataFrame`
+        As for `meta_analyse`; one row per study and group.
+    keys : `list[str]`
+        Grouping columns, without study accession.
+    copies : `pd.DataFrame`
+        As for `meta_analyse`.
+
+    Returns
+    -------
+    per_study : `pd.DataFrame`
+        `meta_analyse` output per group and study accession (one
+        estimate each, so `meta_beta` is the study's oriented beta).
+    """
+    return meta_analyse(
+        rows, [*keys, HarmonisedColumns.STUDY_ACCESSION], copies
+    )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def gene_burden(rows: pd.DataFrame, keys: list[str]) -> pd.DataFrame:
+    """Pool the oriented variant effects per gene, per study and overall.
+
+    Rare variants are taken as independent, so the IVW of the oriented
+    betas over a gene's variants approximates a burden test whose sign
+    is the effect of the function-altering allele.
+
+    Parameters
+    ----------
+    rows : `pd.DataFrame`
+        From `orient`, deduped (one row per study, variant and group).
+    keys : `list[str]`
+        Grouping columns, including `MetaColumns.VARIANT_SITE`, which is
+        replaced by the variant-list gene.
+
+    Returns
+    -------
+    burden : `pd.DataFrame`
+        `level` ``stratum``: per gene, other keys and study, the IVW over
+        variants (`n_estimates` = variants, Q across variants).
+        `level` ``pooled``: per gene and other keys, the IVW of the
+        stratum estimates (identical to pooling all estimates; Q across
+        studies, `n_variants` = distinct variants over studies).
+    """
+    gene = VariantListColumns.OUT_GENE
+    study = HarmonisedColumns.STUDY_ACCESSION
+    site = MetaColumns.VARIANT_SITE
+    gene_keys = [gene, *(key for key in keys if key != site)]
+    study_keys = [*gene_keys, study]
+
+    per_study = ivw(rows, study_keys, MetaColumns.BETA_ORIENTED)
+    grouped = rows.groupby(study_keys, sort=True, dropna=False)
+    extra = pd.DataFrame(
+        {
+            MetaColumns.N_VARIANTS: grouped[site].nunique(),
+            MetaColumns.VARIANTS: grouped[site].agg(_join_unique),
+        }
+    )
+    if HarmonisedColumns.TRAIT_LABEL in rows.columns:
+        extra[HarmonisedColumns.TRAIT_LABEL] = grouped[
+            HarmonisedColumns.TRAIT_LABEL
+        ].agg(_join_unique)
+    per_study = per_study.merge(extra.reset_index(), on=study_keys)
+    per_study.insert(0, MetaColumns.LEVEL, MetaLevel.STRATUM)
+
+    # second stage: the stratum estimates are the inputs
+    stage_two = per_study.rename(
+        columns={
+            MetaColumns.BETA: "_stratum_beta",
+            MetaColumns.SE: MetaColumns.SE_USED,
+        }
+    )
+    pooled = ivw(stage_two, gene_keys, "_stratum_beta")
+    over_genes = rows.groupby(gene_keys, sort=True, dropna=False)
+    extra = pd.DataFrame(
+        {
+            MetaColumns.N_VARIANTS: over_genes[site].nunique(),
+            MetaColumns.VARIANTS: over_genes[site].agg(_join_unique),
+            MetaColumns.N_STUDIES: over_genes[study].nunique(),
+            MetaColumns.STUDIES: over_genes[study].agg(_join_unique),
+        }
+    )
+    pooled = pooled.merge(extra.reset_index(), on=gene_keys)
+    pooled.insert(0, MetaColumns.LEVEL, MetaLevel.POOLED)
+
+    burden = pd.concat([pooled, per_study], ignore_index=True)
+    burden = burden.sort_values(
+        [*gene_keys, MetaColumns.LEVEL, study],
+        kind="stable",
+        na_position="first",
+    ).reset_index(drop=True)
+    log_info(
+        f"gene burden: {len(pooled)} pooled and {len(per_study)} "
+        "per-study rows"
+    )
+    return burden
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def meta_analysis(
+    ancestry: str,
+    studies: list[str] | None = None,
+    outcomes: list[str] | None = None,
+    variant_sources: list[str] | None = None,
+    per_study: bool = False,
+    label: str | None = None,
+) -> None:
     """Run the meta-analysis for one ancestry group and write it.
+
+    Writes the per-variant meta-analysis and the gene burden.
 
     Parameters
     ----------
     ancestry : `str`
         An `Ancestry` code; only rows with this `ancestry_group` are
         pooled (``MULTI`` pools the multi-ancestry studies).
+    studies : `list[str]` or `None`, optional, default: `None`
+        Study accessions to keep; `None` keeps all.
+    outcomes : `list[str]` or `None`, optional, default: `None`
+        Outcomes to keep; `None` keeps all.
+    variant_sources : `list[str]` or `None`, optional, default: `None`
+        Variant-list sources to keep (e.g. ``PTV``, ``ClinVar``); applied
+        after orientation, so GoF flips still see every list. `None`
+        keeps all. ClinVar entries are not filtered on pathogenicity.
+    per_study : `bool`, optional, default: `False`
+        Also write each study's own per-variant estimate (`level`
+        ``stratum``) next to the pooled rows.
+    label : `str` or `None`, optional, default: `None`
+        Appended to the output file names as ``_<label>``.
 
     Returns
     -------
@@ -728,6 +895,13 @@ def meta_analysis(ancestry: str) -> None:
         log_warn(f"no {ancestry} rows, nothing to pool; no output written")
         return
     matched = matched.loc[is_ancestry].copy()
+    matched = _keep_values(
+        matched, HarmonisedColumns.STUDY_ACCESSION, studies
+    )
+    matched = _keep_values(matched, HarmonisedColumns.OUTCOME, outcomes)
+    if matched.empty:
+        log_warn("no rows left after filtering; no output written")
+        return
 
     log_stage("prepare_effects")
     rows = prepare_effects(matched)
@@ -738,6 +912,10 @@ def meta_analysis(ancestry: str) -> None:
 
     log_stage("orient")
     rows = orient(rows)
+    rows = _keep_values(rows, VariantListColumns.OUT_SOURCE, variant_sources)
+    if rows.empty:
+        log_warn("no rows left after filtering; no output written")
+        return
 
     log_stage("dedupe")
     n_before = len(rows)
@@ -753,14 +931,34 @@ def meta_analysis(ancestry: str) -> None:
 
     log_stage("meta_analyse")
     pooled = meta_analyse(rows, keys, copies)
+    pooled.insert(0, MetaColumns.LEVEL, MetaLevel.POOLED)
+    if per_study:
+        per_study_rows = stratified(rows, keys, copies)
+        per_study_rows.insert(0, MetaColumns.LEVEL, MetaLevel.STRATUM)
+        pooled = pd.concat(
+            [pooled, per_study_rows], ignore_index=True
+        ).sort_values(
+            [*keys, MetaColumns.LEVEL, HarmonisedColumns.STUDY_ACCESSION],
+            kind="stable",
+            na_position="first",
+        )
+
+    log_stage("gene_burden")
+    burden = gene_burden(rows, keys)
 
     log_stage("write")
-    path = Paths.RESULTS_OUTPUT / FileNames.META_ANALYSIS_TEMPLATE.format(
-        ancestry=ancestry
-    )
+    suffix = f"_{label}" if label else ""
     Paths.RESULTS_OUTPUT.mkdir(parents=True, exist_ok=True)
-    functions.write_table_atomic(pooled, path)
-    log_info(f"wrote {len(pooled)} rows to {path}")
+    outputs = (
+        (FileNames.META_ANALYSIS_TEMPLATE, pooled),
+        (FileNames.BURDEN_TEMPLATE, burden),
+    )
+    for template, table in outputs:
+        path = Paths.RESULTS_OUTPUT / template.format(
+            ancestry=ancestry, suffix=suffix
+        )
+        functions.write_table_atomic(table, path)
+        log_info(f"wrote {len(table)} rows to {path}")
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -777,6 +975,37 @@ def _init_cmd_args() -> argparse.ArgumentParser:
         choices=sorted(Ancestry.CODES),
         default=MetaColumns.DEFAULT_ANCESTRY,
         help="ancestry group to pool (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--studies",
+        nargs="+",
+        metavar="ACCESSION",
+        help="study accessions to keep (default: all)",
+    )
+    parser.add_argument(
+        "--outcomes",
+        nargs="+",
+        metavar="OUTCOME",
+        help="outcomes to keep (default: all)",
+    )
+    parser.add_argument(
+        "--variant-sources",
+        nargs="+",
+        metavar="SOURCE",
+        help=(
+            "variant-list sources to keep, e.g. PTV ClinVar (default: all); "
+            "ClinVar is not filtered on pathogenicity, so the lists should "
+            "hold P/LP entries only"
+        ),
+    )
+    parser.add_argument(
+        "--stratified",
+        action="store_true",
+        help="also write each study's (stratum's) own per-variant estimate",
+    )
+    parser.add_argument(
+        "--label",
+        help="suffix for the output file names (meta_<ancestry>_<label>)",
     )
     return parser
 
@@ -796,7 +1025,14 @@ def main() -> None:
     args = _parse_cmd_args(parser)
 
     with runlog_setup(root=Paths.HERE, order=RunlogOrder.META_ANALYSIS):
-        meta_analysis(args.ancestry)
+        meta_analysis(
+            args.ancestry,
+            studies=args.studies,
+            outcomes=args.outcomes,
+            variant_sources=args.variant_sources,
+            per_study=args.stratified,
+            label=args.label,
+        )
 
 
 if __name__ == "__main__":

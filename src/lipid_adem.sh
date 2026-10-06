@@ -57,3 +57,12 @@ run_mamba biomed-api "${ROOT}"/src/match_variants.py
 # [myriad] fixed-effect IVW meta-analysis of the matched variants, one
 # ancestry group per run (default EUR; e.g. --ancestry MULTI for pooled)
 run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR
+# [myriad] first analysis: Thomassen 2026 AD, the 4 disjoint APOE strata
+# (e44, e43, e33, e22+e32), PTV + ClinVar variants; pooled and per stratum,
+# plus gene burden. ClinVar is not filtered on pathogenicity: the variant
+# lists should hold P/LP entries only (to move into this repo)
+run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
+    --outcomes alzheimers_dementia \
+    --studies GCST90861026 GCST90861027 GCST90861029 GCST90861030 \
+    --variant-sources PTV ClinVar --stratified \
+    --label thomassen_ad_ptv_clinvar
