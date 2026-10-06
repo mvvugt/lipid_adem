@@ -25,6 +25,19 @@ esac
 # VARIANT ANNOTATION
 # TODO annotate variants using ClinVar, GoF, and VEP+LOFTEE
 
+# [local] query ClinVar for all variants in the curated genes
+mapfile -t genes < <(cut -f1 "${ROOT}/data/raw/gene_list.txt")
+runlog run --id clinvar_filter --order 40 --root "${ROOT}" --                  \
+    mamba run --no-capture-output -n clinvar-build                             \
+    clinvar-filter                                                             \
+    "${HOME}/Documents/work.nosync/data/clinvar/clinvar_vcv.db"                \
+    --rcv-db "${HOME}/Documents/work.nosync/data/clinvar/clinvar_rcv.db"       \
+    -g "${genes[@]}"                                                           \
+    -o "${ROOT}/data/raw/clinvar_variants.tsv"                                 \
+    -vvv
+
+run_mamba marvel "${ROOT}"/src/annotate_variants.py
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # GWAS LOOKUPS
@@ -59,8 +72,10 @@ run_mamba biomed-api "${ROOT}"/src/match_variants.py
 run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR
 # [myriad] first analysis: Thomassen 2026 AD, the 4 disjoint APOE strata
 # (e44, e43, e33, e22+e32), PTV + ClinVar variants; pooled and per stratum,
-# plus gene burden. ClinVar is not filtered on pathogenicity: the variant
-# lists should hold P/LP entries only (to move into this repo)
+# plus gene burden. ClinVar = P/LP list (annotate_variants.py), GoF
+# (raising) variants flipped (data/raw/clinvar_condition_direction.tsv);
+# sensitivity files: *_no_apoe_e2e4 (without APOE e2/e4) and
+# burden_*_directed_only (without ClinVar altered/conflicting/unknown)
 run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
     --outcomes alzheimers_dementia \
     --studies GCST90861026 GCST90861027 GCST90861029 GCST90861030 \

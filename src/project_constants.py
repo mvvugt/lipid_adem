@@ -20,6 +20,7 @@ class Paths:
     HERE: Path = Path(__file__).resolve().parent.parent
     DATA_RAW: Path = HERE / "data" / "raw"
     DATA_TEMP: Path = HERE / "data" / "temp"
+    DATA_PROC: Path = HERE / "data" / "processed"
     GWAS_FILTERED: Path = DATA_TEMP / "gwas_filtered"
     # gzipped JSON per Ensembl overlap window / rsid lookup; delete a file
     # to refetch it
@@ -119,6 +120,32 @@ class Constants:
     # variant-list source flipped in the meta-analysis so the a1 allele's
     # effect is reported
     GOF_VARIANT_SOURCE: str = "GoF"
+    # variant-list source of the ClinVar P/LP entries; in the per-gene
+    # lists it is replaced by `FileNames.PLP_VARIANTS`
+    CLINVAR_VARIANT_SOURCE: str = "ClinVar"
+    # assembly suffix of the P/LP coordinate columns used for matching
+    PLP_ASSEMBLY_SUFFIX: str = "_grch38"
+    # APOE e4 (p.Cys130Arg, rs429358) and e2 (p.Arg176Cys, rs7412) as
+    # `variant_site`; they define APOE-stratified GWAS, so any run that
+    # holds them is repeated without them (APOE_SENSITIVITY_LABEL)
+    APOE_ISOFORM_SITES: tuple[str, ...] = (
+        "19:44908684:T:C",
+        "19:44908822:C:T",
+    )
+    APOE_SENSITIVITY_LABEL: str = "no_apoe_e2e4"
+    # burden sensitivity: ClinVar-only variants without a lowering/raising
+    # direction left out
+    DIRECTED_BURDEN_LABEL: str = "directed_only"
+    # ClinVar `rcv_molecular_consequence` values that make a P/LP variant
+    # `lowering` whatever its conditions
+    TRUNCATING_CONSEQUENCES: frozenset[str] = frozenset(
+        {
+            "frameshift variant",
+            "nonsense",
+            "splice acceptor variant",
+            "splice donor variant",
+        }
+    )
     # meta-analysis dedupe: per study/outcome/variant the first source here
     # is kept (rows from other sources go last)
     GWAS_SOURCE_PREFERENCE: tuple[str, ...] = ("summary-stats", "curated")
@@ -172,6 +199,20 @@ class Constants:
     # bp added on both sides of a gene region when fetching its reference
     # sequence, so indels can be left-aligned past the region edge
     INDEL_NORM_PAD_BP: int = 500
+    # ClinVar pathogenicity
+    PATHOGENIC_CLASSIFICATIONS: frozenset[str] = frozenset(
+        {"Pathogenic", "Likely pathogenic", "Pathogenic/Likely pathogenic"}
+    )
+    CONFLICTING_CLASSIFICATION_LABEL: str = (
+        "Conflicting classifications of pathogenicity"
+    )
+    PATHOGENIC_TERM: str = "pathogenic"
+    REVIEW_STATUS_CORE: str = "reviewed by expert panel"
+    REVIEW_STATUS_STRICTNESS_ORDER: tuple[str, ...] = (
+        "no assertion criteria provided",
+        "criteria provided, single submitter",
+        "criteria provided, multiple submitters, no conflicts",
+    )
 
 
 class RunlogOrder:
@@ -241,6 +282,32 @@ class ColumnNames:
         ENSEMBL_ID,
         UNIPROT,
     )
+
+
+class ClinVarColumnNames:
+    """ClinVar column names"""
+    VCV_ACCESSION_COL: str = "vcv_accession"
+    VARIATION_ID_COL: str = "variation_id"
+    VARIATION_NAME_COL: str = "variation_name"
+    GENE_SYMBOL_COL: str = "gene_symbol"
+    CANONICAL_SPDI_COL: str = "canonical_spdi"
+    ASSEMBLY_COL: str = "assembly"
+    CHR_COL: str = ColumnNames.GENE_CHR
+    START_COL: str = ColumnNames.START
+    STOP_COL: str = "stop"
+    POSITION_VCF_COL: str = "position_vcf"
+    REFERENCE_ALLELE_COL: str = "reference_allele_vcf"
+    ALTERNATE_ALLELE_COL: str = "alternate_allele_vcf"
+    SUBMITTED_CLASSIFICATIONS_COL: str = "submitted_classifications"
+    CLASSIFICATION_COUNT_COL: str = "classification_count"
+    VARIANT_TYPE_COL: str = "variant_type"
+    RCV_MOLECULAR_CONSEQUENCE_COL: str = "rcv_molecular_consequence"
+    RCV_CONDITION_COL: str = "rcv_condition"
+    RCV_CONDITION_DB_COL: str = "rcv_condition_db"
+    RCV_CONDITION_ID_COL: str = "rcv_condition_id"
+    RCV_CLASSIFICATION_COL: str = "rcv_classification"
+    RCV_REVIEW_STATUS_COL: str = "rcv_review_status"
+    REVIEW_FLAG_COL: str = "review_flag"
 
 
 class HarmonisedColumns:
@@ -531,6 +598,8 @@ class VariantListColumns:
     A1_ORIG: str = "a1_orig"
     A2_ORIG: str = "a2_orig"
     NORM_STATUS: str = "norm_status"
+    # ClinVar P/LP rows only: a `ClinVarDirection` value (NA otherwise)
+    CLINVAR_DIRECTION: str = "clinvar_direction"
     # added to the matched output, after the merged-associations columns
     OUT_SOURCE: str = "variant_list_source"
     OUT_GENE: str = "variant_list_gene"
@@ -541,6 +610,7 @@ class VariantListColumns:
     OUT_A1_ORIG: str = "variant_list_a1_orig"
     OUT_A2_ORIG: str = "variant_list_a2_orig"
     OUT_NORM_STATUS: str = "variant_list_norm_status"
+    OUT_CLINVAR_DIRECTION: str = "variant_list_clinvar_direction"
     # "a2" or "a1": which list allele is the GWAS effect allele
     EFFECT_ALLELE_IS: str = "effect_allele_is"
     # "both" (effect + other allele) or "effect_only" (curated rows)
@@ -606,6 +676,7 @@ class MetaColumns:
         VariantListColumns.OUT_GENE,
         VariantListColumns.OUT_SOURCE,
         VariantListColumns.OUT_TRI_CLASS,
+        VariantListColumns.OUT_CLINVAR_DIRECTION,
         HarmonisedColumns.RSID,
         ORIENTED_ALLELE,
         ORIENTATION,
@@ -629,6 +700,33 @@ class Orientation:
     A2: str = "a2"
     # GoF-listed variant: effect of the a1 allele
     A2_GOF_FLIPPED: str = "a2_gof_flipped"
+    # ClinVar variant with a raising condition: effect of the a1 allele
+    A2_CLINVAR_RAISING_FLIPPED: str = "a2_clinvar_raising_flipped"
+
+
+class ClinVarDirection:
+    """Values of `direction` in `FileNames.CLINVAR_CONDITION_DIRECTION`
+    and of the per-variant `clinvar_direction` column.
+    """
+    # less gene product or function, LoF (e.g. FHBL, CETP deficiency, any
+    # truncating variant)
+    LOWERING: str = "lowering"
+    # more gene function, GoF (PCSK9 familial hypercholesterolaemia)
+    RAISING: str = "raising"
+    # qualitatively changed protein, neither less nor more of it (e.g.
+    # APOB p.Arg3527Gln, APOE type III, APOA1 amyloidosis)
+    ALTERED: str = "altered"
+    # per variant only: more than one of lowering/raising/altered
+    CONFLICTING: str = "conflicting"
+    # no lipid direction (e.g. 'not provided')
+    UNKNOWN: str = "unknown"
+
+
+class ConditionDirectionColumns:
+    """Columns of `FileNames.CLINVAR_CONDITION_DIRECTION`."""
+    GENE: str = "gene"
+    CONDITION: str = "rcv_condition"
+    DIRECTION: str = "direction"
 
 
 class EnsemblAlleleCheck:
@@ -672,6 +770,15 @@ class FileNames:
     FINNGEN_MANIFEST: Path = Paths.DATA_RAW / "finngen_r13_manifest.tsv"
     GWAS_CATALOG_MANUAL_STUDIES: Path = (
         Paths.DATA_RAW / "gwas_catalog_manual_studies.tsv"
+    )
+    CLINVAR_VARIANTS: Path = Paths.DATA_RAW / "clinvar_variants.tsv"
+    VARIANTS_REVIEW_STATUS_SUMMARY: Path = (
+        Paths.DATA_PROC / "pah_variants_review_status_summary.tsv"
+    )
+    PLP_VARIANTS: Path = Paths.DATA_PROC / "plp_variants.tsv"
+    # curated gene x ClinVar condition -> `ClinVarDirection`
+    CLINVAR_CONDITION_DIRECTION: Path = (
+        Paths.DATA_RAW / "clinvar_condition_direction.tsv"
     )
     # own UKB/AoU association results (marvel), one row per file/outcome
     MARVEL_RESULTS: Path = Paths.DATA_RAW / "marvel_results.tsv"

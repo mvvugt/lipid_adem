@@ -1,0 +1,87 @@
+gene	rcv_condition	direction
+ANGPTL3	ANGPTL3-related disorder	unknown
+ANGPTL3	Developmental and epileptic encephalopathy, 23	unknown
+ANGPTL3	Familial hypobetalipoproteinemia 2	lowering
+ANGPTL3	Inborn genetic diseases	unknown
+ANGPTL3	not provided	unknown
+APOA1	APOA1-related disorder	unknown
+APOA1	APOLIPOPROTEIN A-I (BALTIMORE)	altered
+APOA1	APOLIPOPROTEIN A-I (GIESSEN)	altered
+APOA1	APOLIPOPROTEIN A-I (MARBURG)	altered
+APOA1	APOLIPOPROTEIN A-I (MILANO)	altered
+APOA1	APOLIPOPROTEIN A-I (MUNSTER3B)	altered
+APOA1	APOLIPOPROTEIN A-I (MUNSTER3C)	altered
+APOA1	APOLIPOPROTEIN A-I (MUNSTER4)	altered
+APOA1	APOLIPOPROTEIN A-I (NORWAY)	altered
+APOA1	Apolipoprotein A-I deficiency	lowering
+APOA1	Cardiovascular phenotype	unknown
+APOA1	Familial amyloid polyneuropathy, Iowa type	altered
+APOA1	Familial visceral amyloidosis, Ostertag type	altered
+APOA1	Hereditary spastic paraplegia 50	unknown
+APOA1	Hypoalphalipoproteinemia, primary, 2	lowering
+APOA1	Hypoalphalipoproteinemia, primary, 2, intermediate	lowering
+APOA1	not provided	unknown
+APOB	APOB-related disorder	unknown
+APOB	Cardiovascular phenotype	unknown
+APOB	Early-onset coronary artery disease	altered
+APOB	Familial hypercholesterolemia	altered
+APOB	Familial hypobetalipoproteinemia	lowering
+APOB	Familial hypobetalipoproteinemia 1	lowering
+APOB	Homozygous familial hypercholesterolemia	altered
+APOB	Hypercholesterolemia	altered
+APOB	Hypercholesterolemia, autosomal dominant, type B	altered
+APOB	Hypercholesterolemia, familial, 1	altered
+APOB	Hypobetalipoproteinemia	lowering
+APOB	Isolated systolic hypertension	unknown
+APOB	Neutrophilia in presence of infection	unknown
+APOB	not provided	unknown
+APOB	not specified	unknown
+APOB	See cases	unknown
+APOB	Triangular shaped proximal phalanx of the thumb	unknown
+APOE	Abnormal circulating lipid concentration	unknown
+APOE	Age related macular degeneration 1	unknown
+APOE	Alzheimer disease	unknown
+APOE	Alzheimer disease 2	unknown
+APOE	Alzheimer disease 3	unknown
+APOE	Alzheimer disease 4	unknown
+APOE	APOE-related disorder	unknown
+APOE	APOE2 VARIANT	unknown
+APOE	APOE2-DUNEDIN	unknown
+APOE	APOE3 ISOFORM	unknown
+APOE	APOE3 VARIANT	unknown
+APOE	APOE3(-)-FREIBURG	unknown
+APOE	APOE4 VARIANT	unknown
+APOE	APOE4(-)-FREIBURG	unknown
+APOE	APOE4(+)	unknown
+APOE	APOE5 VARIANT	unknown
+APOE	Cardiovascular phenotype	unknown
+APOE	Familial hypercholesterolemia	altered
+APOE	Familial type 3 hyperlipoproteinemia	altered
+APOE	Hyperlipoproteinemia due to APOE1	altered
+APOE	HYPERLIPOPROTEINEMIA, TYPE III, AND ATHEROSCLEROSIS ASSOCIATED WITH APOE5	altered
+APOE	HYPERLIPOPROTEINEMIA, TYPE III, AND ATHEROSCLEROSIS ASSOCIATED WITH APOE7	altered
+APOE	HYPERLIPOPROTEINEMIA, TYPE III, ASSOCIATED WITH APOE3(WASHINGTON)	altered
+APOE	Hyperlipoproteinemia, type III, due to APOE2	altered
+APOE	HYPERLIPOPROTEINEMIA, TYPE IV/V, DUE TO APOE2-DUNEDIN	altered
+APOE	Lipoprotein glomerulopathy	unknown
+APOE	not provided	unknown
+APOE	Sea-blue histiocyte syndrome	unknown
+CETP	Abnormal circulating lipid concentration	unknown
+CETP	CETP-related disorder	unknown
+CETP	Cholesterol-ester transfer protein deficiency	lowering
+CETP	Hyperalphalipoproteinemia 1	lowering
+CETP	not provided	unknown
+HMGCR	Basal cell nevus syndrome 1	unknown
+HMGCR	Limb-girdle muscular dystrophy	lowering
+HMGCR	Muscular dystrophy, limb-girdle, autosomal recessive 28	lowering
+HMGCR	not provided	unknown
+PCSK9	Cardiovascular phenotype	unknown
+PCSK9	Familial hypercholesterolemia	raising
+PCSK9	Homozygous familial hypercholesterolemia	raising
+PCSK9	Hypercholesterolemia, autosomal dominant, 3	raising
+PCSK9	Hypercholesterolemia, familial, 1	raising
+PCSK9	Hypocholesterolemia	lowering
+PCSK9	not provided	unknown
+PCSK9	not specified	unknown
+PCSK9	PCSK9-related disorder	unknown
+PCSK9	Short fetal femur length	unknown

@@ -3,6 +3,10 @@
 Matches the variant-level GWAS lookups in the merged associations table to the
 per-gene variant lists (`data/temp/*_variants.tsv`), excluding the
 AlphaMissense (`AM`) entries, and writes the matched rows.
+
+The `ClinVar` entries of the per-gene lists are replaced by the ClinVar P/LP
+list (`data/processed/plp_variants.tsv`), each variant labelled with the
+lipid direction of its conditions (`data/raw/clinvar_condition_direction.tsv`).
 """
 
 
@@ -20,7 +24,10 @@ from log_tools.setup import runlog_setup
 
 import functions
 from project_constants import (
+    ClinVarColumnNames,
+    ClinVarDirection,
     ColumnNames,
+    ConditionDirectionColumns,
     Constants,
     FileNames,
     HarmonisedColumns,
@@ -38,6 +45,7 @@ _CHROM_KEY: str = "_chrom"
 _POS_KEY: str = "_pos"
 _EFFECT_KEY: str = "_effect"
 _OTHER_KEY: str = "_other"
+_CONSEQUENCE_KEY: str = "_consequence"
 # variant-list columns renamed for the output, in output order
 _LIST_OUTPUT_COLUMNS: dict[str, str] = {
     VariantListColumns.SOURCE: VariantListColumns.OUT_SOURCE,
@@ -49,6 +57,9 @@ _LIST_OUTPUT_COLUMNS: dict[str, str] = {
     VariantListColumns.A1_ORIG: VariantListColumns.OUT_A1_ORIG,
     VariantListColumns.A2_ORIG: VariantListColumns.OUT_A2_ORIG,
     VariantListColumns.NORM_STATUS: VariantListColumns.OUT_NORM_STATUS,
+    VariantListColumns.CLINVAR_DIRECTION: (
+        VariantListColumns.OUT_CLINVAR_DIRECTION
+    ),
 }
 
 
@@ -163,11 +174,151 @@ def _in_region(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _collapse_direction(directions: pd.Series) -> str:
+    """Combine the condition directions of one variant into one value.
+
+    Parameters
+    ----------
+    directions : `pd.Series`
+        `ClinVarDirection` values of the variant's conditions.
+
+    Returns
+    -------
+    direction : `str`
+        `lowering`, `raising` or `altered` when only that one occurs among
+        the known directions, `conflicting` when more than one occurs,
+        else `unknown`.
+    """
+    known = set(directions) & {
+        ClinVarDirection.LOWERING,
+        ClinVarDirection.RAISING,
+        ClinVarDirection.ALTERED,
+    }
+    if len(known) > 1:
+        return ClinVarDirection.CONFLICTING
+    if len(known) == 1:
+        return known.pop()
+    return ClinVarDirection.UNKNOWN
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def load_plp_variants() -> pd.DataFrame:
+    """Read the ClinVar P/LP list as variant-list rows with a direction.
+
+    The GRCh38 coordinates are used (`Constants.PLP_ASSEMBLY_SUFFIX`).
+    Each row's condition gets its direction from
+    `FileNames.CLINVAR_CONDITION_DIRECTION`; conditions missing there are
+    `unknown` (warned). The directions are combined per variant by
+    `_collapse_direction`, except that a variant with a consequence in
+    `Constants.TRUNCATING_CONSEQUENCES` is always `lowering` (less gene
+    product, whatever the conditions say).
+
+    Returns
+    -------
+    plp : `pd.DataFrame`
+        One row per variant, with the `VariantListColumns` `chr`, `pos`,
+        `a1` (reference), `a2` (alternate), `source`
+        (`Constants.CLINVAR_VARIANT_SOURCE`), `gene` and
+        `clinvar_direction`, as strings.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the P/LP list or the condition-direction table does not exist.
+    """
+    for path in (FileNames.PLP_VARIANTS, FileNames.CLINVAR_CONDITION_DIRECTION):
+        if not path.exists():
+            raise FileNotFoundError(f"{path} not found")
+    cv = ClinVarColumnNames
+    cd = ConditionDirectionColumns
+    vc = VariantListColumns
+    suffix = Constants.PLP_ASSEMBLY_SUFFIX
+    plp = pd.read_csv(FileNames.PLP_VARIANTS, sep="\t", dtype=str)
+    directions = pd.read_csv(
+        FileNames.CLINVAR_CONDITION_DIRECTION, sep="\t", dtype=str
+    )
+    log_info(
+        f"{FileNames.PLP_VARIANTS}: {len(plp)} rows; "
+        f"{FileNames.CLINVAR_CONDITION_DIRECTION}: {len(directions)} rows"
+    )
+
+    variants = pd.DataFrame(
+        {
+            vc.CHROM: pd.to_numeric(
+                plp[f"{cv.CHR_COL}{suffix}"], errors="coerce"
+            ).astype("Int64"),
+            vc.POS: pd.to_numeric(
+                plp[f"{cv.POSITION_VCF_COL}{suffix}"], errors="coerce"
+            ).astype("Int64"),
+            vc.A1: plp[f"{cv.REFERENCE_ALLELE_COL}{suffix}"],
+            vc.A2: plp[f"{cv.ALTERNATE_ALLELE_COL}{suffix}"],
+            vc.SOURCE: Constants.CLINVAR_VARIANT_SOURCE,
+            vc.GENE: plp[cv.GENE_SYMBOL_COL],
+            cd.CONDITION: plp[cv.RCV_CONDITION_COL],
+            _CONSEQUENCE_KEY: plp[cv.RCV_MOLECULAR_CONSEQUENCE_COL],
+        }
+    )
+    variants[vc.CHROM] = variants[vc.CHROM].astype("string")
+    variants[vc.POS] = variants[vc.POS].astype("string")
+    # reference records (e.g. APOE3 isoform "c.388=") are not variants
+    is_ref = variants[vc.A1].notna() & (variants[vc.A1] == variants[vc.A2])
+    log_info(f"{int(is_ref.sum())} P/LP rows with ref = alt dropped")
+    variants = variants.loc[~is_ref].merge(
+        directions.rename(columns={cd.GENE: vc.GENE}),
+        on=[vc.GENE, cd.CONDITION],
+        how="left",
+    )
+    missing = variants.loc[
+        variants[cd.DIRECTION].isna(), [vc.GENE, cd.CONDITION]
+    ].drop_duplicates()
+    for gene, condition in missing.itertuples(index=False):
+        log_warn(
+            f"{gene} condition '{condition}' not in "
+            f"{FileNames.CLINVAR_CONDITION_DIRECTION}: counted as unknown"
+        )
+    variants[cd.DIRECTION] = variants[cd.DIRECTION].fillna(
+        ClinVarDirection.UNKNOWN
+    )
+
+    site = [vc.CHROM, vc.POS, vc.A1, vc.A2, vc.SOURCE, vc.GENE]
+    collapsed = (
+        variants.groupby(site, dropna=False, sort=True)[cd.DIRECTION]
+        .agg(_collapse_direction)
+        .rename(vc.CLINVAR_DIRECTION)
+        .reset_index()
+    )
+    truncating = (
+        variants[_CONSEQUENCE_KEY]
+        .isin(Constants.TRUNCATING_CONSEQUENCES)
+        .groupby([variants[col] for col in site], dropna=False, sort=True)
+        .any()
+        .to_numpy()
+    )
+    overruled = truncating & (
+        collapsed[vc.CLINVAR_DIRECTION] != ClinVarDirection.LOWERING
+    )
+    log_info(
+        f"{int(truncating.sum())} truncating P/LP variants set to "
+        f"{ClinVarDirection.LOWERING}, {int(overruled.sum())} of them "
+        "against their conditions"
+    )
+    collapsed.loc[truncating, vc.CLINVAR_DIRECTION] = ClinVarDirection.LOWERING
+    counts = collapsed.groupby(
+        [vc.GENE, vc.CLINVAR_DIRECTION], sort=True
+    ).size()
+    for (gene, direction), n in counts.items():
+        log_info(f"{gene} ClinVar P/LP: {n} variants {direction}")
+    return collapsed
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def load_variant_lists() -> pd.DataFrame:
     """Read the per-gene variant lists and keep the matchable entries.
 
     `Constants.EXCLUDED_VARIANT_SOURCES` rows and exact duplicate rows
-    are dropped. Per gene and source the rows, the rows without both
+    are dropped. The lists' `Constants.CLINVAR_VARIANT_SOURCE` rows are
+    replaced by the P/LP list (`load_plp_variants`), the only rows with a
+    `clinvar_direction`. Per gene and source the rows, the rows without both
     alleles (dropped, they cannot be matched) and the rows outside the
     gene region are logged.
 
@@ -207,6 +358,16 @@ def load_variant_lists() -> pd.DataFrame:
         f"{sorted(Constants.EXCLUDED_VARIANT_SOURCES)} skipped"
     )
     variants = variants[~excluded]
+    is_clinvar = (
+        variants[VariantListColumns.SOURCE] == Constants.CLINVAR_VARIANT_SOURCE
+    )
+    log_info(
+        f"{int(is_clinvar.sum())} {Constants.CLINVAR_VARIANT_SOURCE} rows "
+        f"of the lists dropped, replaced by {FileNames.PLP_VARIANTS}"
+    )
+    variants = pd.concat(
+        [variants[~is_clinvar], load_plp_variants()], ignore_index=True
+    )
     n_before = len(variants)
     variants = variants.drop_duplicates().reset_index(drop=True)
     log_info(f"{n_before - len(variants)} duplicate rows removed")

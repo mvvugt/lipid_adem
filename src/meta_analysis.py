@@ -14,7 +14,9 @@ Optional filters restrict the run to studies, outcomes and variant-list
 sources (`--studies`, `--outcomes`, `--variant-sources`); `--stratified`
 adds each study's own estimate. Next to the per-variant table a gene
 burden table is written: the IVW of the oriented variant effects per gene,
-per study and pooled over studies.
+per study and pooled over studies. ClinVar variants with a raising condition
+are flipped like GoF variants. Runs holding the APOE e2/e4 sites are repeated
+without them (sensitivity, `_no_apoe_e2e4` files).
 """
 
 
@@ -35,6 +37,7 @@ from log_tools.setup import runlog_setup
 import functions
 from project_constants import (
     Ancestry,
+    ClinVarDirection,
     Constants,
     FileNames,
     HarmonisedColumns,
@@ -208,11 +211,23 @@ def load_matched() -> pd.DataFrame:
     FileNotFoundError
         If `FileNames.MATCHED_VARIANTS` does not exist (run
         match_variants.py first).
+    ValueError
+        If the table has no ClinVar direction column (written by an older
+        match_variants.py).
     """
     if not FileNames.MATCHED_VARIANTS.exists():
         raise FileNotFoundError(
             f"{FileNames.MATCHED_VARIANTS} not found: run "
             "match_variants.py first"
+        )
+    columns = pd.read_csv(
+        FileNames.MATCHED_VARIANTS, sep="\t", nrows=0
+    ).columns
+    if VariantListColumns.OUT_CLINVAR_DIRECTION not in columns:
+        raise ValueError(
+            f"{FileNames.MATCHED_VARIANTS} has no "
+            f"{VariantListColumns.OUT_CLINVAR_DIRECTION} column, so ClinVar "
+            "raising variants cannot be oriented: rerun match_variants.py"
         )
     matched = pd.read_csv(
         FileNames.MATCHED_VARIANTS,
@@ -592,7 +607,10 @@ def orient(rows: pd.DataFrame) -> pd.DataFrame:
     """Orient every row's effect per variant.
 
     The a2 allele is used, or a1 when any of the variant's list sources
-    is `Constants.GOF_VARIANT_SOURCE`.
+    is `Constants.GOF_VARIANT_SOURCE` (`a2_gof_flipped`) or any of its
+    rows has `clinvar_direction` `raising` (`a2_clinvar_raising_flipped`;
+    GoF wins when both apply). So every effect is that of lower gene
+    function.
 
     Parameters
     ----------
@@ -613,11 +631,22 @@ def orient(rows: pd.DataFrame) -> pd.DataFrame:
         ]
     )
 
+    raising_sites = set(
+        rows.loc[
+            rows[VariantListColumns.OUT_CLINVAR_DIRECTION]
+            == ClinVarDirection.RAISING,
+            site,
+        ]
+    )
+
     is_gof = rows[site].isin(gof_sites)
-    sign = np.where(is_gof, -1.0, 1.0)
+    is_raising = rows[site].isin(raising_sites)
+    sign = np.where(is_gof | is_raising, -1.0, 1.0)
     oriented = rows.copy()
-    oriented[MetaColumns.ORIENTATION] = np.where(
-        is_gof, Orientation.A2_GOF_FLIPPED, Orientation.A2
+    oriented[MetaColumns.ORIENTATION] = np.select(
+        [is_gof, is_raising],
+        [Orientation.A2_GOF_FLIPPED, Orientation.A2_CLINVAR_RAISING_FLIPPED],
+        default=Orientation.A2,
     )
     oriented[MetaColumns.ORIENTED_ALLELE] = np.where(
         sign > 0,
@@ -629,6 +658,11 @@ def orient(rows: pd.DataFrame) -> pd.DataFrame:
     per_variant = oriented.drop_duplicates(site)[MetaColumns.ORIENTATION]
     for orientation, n in per_variant.value_counts().items():
         log_info(f"{n} variants oriented as {orientation}")
+    clinvar = oriented.drop_duplicates(
+        [site, VariantListColumns.OUT_CLINVAR_DIRECTION]
+    )[VariantListColumns.OUT_CLINVAR_DIRECTION].dropna()
+    for direction, n in clinvar.value_counts().items():
+        log_info(f"{n} ClinVar variants with direction {direction}")
     return oriented
 
 
@@ -848,7 +882,10 @@ def meta_analysis(
 ) -> None:
     """Run the meta-analysis for one ancestry group and write it.
 
-    Writes the per-variant meta-analysis and the gene burden.
+    Writes the per-variant meta-analysis and the gene burden. When the
+    rows hold the APOE e2/e4 sites (`Constants.APOE_ISOFORM_SITES`), both
+    are written again without them, with suffix
+    ``_<label>_no_apoe_e2e4``.
 
     Parameters
     ----------
@@ -862,7 +899,7 @@ def meta_analysis(
     variant_sources : `list[str]` or `None`, optional, default: `None`
         Variant-list sources to keep (e.g. ``PTV``, ``ClinVar``); applied
         after orientation, so GoF flips still see every list. `None`
-        keeps all. ClinVar entries are not filtered on pathogenicity.
+        keeps all. ClinVar is the P/LP list of `annotate_variants.py`.
     per_study : `bool`, optional, default: `False`
         Also write each study's own per-variant estimate (`level`
         ``stratum``) next to the pooled rows.
@@ -917,6 +954,86 @@ def meta_analysis(
         log_warn("no rows left after filtering; no output written")
         return
 
+    suffix = f"_{label}" if label else ""
+    _analyse_and_write(rows, keys, ancestry, per_study, suffix)
+
+    is_isoform = rows[MetaColumns.VARIANT_SITE].isin(
+        Constants.APOE_ISOFORM_SITES
+    )
+    if is_isoform.any():
+        log_stage("apoe_sensitivity")
+        log_info(
+            f"{int(is_isoform.sum())} rows at the APOE e2/e4 sites "
+            f"{', '.join(Constants.APOE_ISOFORM_SITES)}: repeating the run "
+            "without them"
+        )
+        _analyse_and_write(
+            rows.loc[~is_isoform].copy(),
+            keys,
+            ancestry,
+            per_study,
+            f"{suffix}_{Constants.APOE_SENSITIVITY_LABEL}",
+        )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _directed_sites(rows: pd.DataFrame) -> set[str]:
+    """Find the variants whose gene-function direction is clear.
+
+    Parameters
+    ----------
+    rows : `pd.DataFrame`
+        From `orient`.
+
+    Returns
+    -------
+    sites : `set[str]`
+        `variant_site` values with at least one row from a list other
+        than ClinVar (PTV, GoF, ...) or with ClinVar direction `lowering`
+        or `raising`.
+    """
+    clear = (
+        rows[VariantListColumns.OUT_SOURCE] != Constants.CLINVAR_VARIANT_SOURCE
+    ) | rows[VariantListColumns.OUT_CLINVAR_DIRECTION].isin(
+        [ClinVarDirection.LOWERING, ClinVarDirection.RAISING]
+    )
+    return set(rows.loc[clear, MetaColumns.VARIANT_SITE])
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _analyse_and_write(
+    rows: pd.DataFrame,
+    keys: list[str],
+    ancestry: str,
+    per_study: bool,
+    suffix: str,
+) -> None:
+    """Dedupe the oriented rows, pool them, add the burden and write both.
+
+    When some variants are ClinVar-only with a direction other than
+    lowering/raising (`_directed_sites`), the burden is also written
+    without them (``<suffix>_directed_only``).
+
+    Parameters
+    ----------
+    rows : `pd.DataFrame`
+        From `orient`, after the variant-source filter.
+    keys : `list[str]`
+        Grouping columns (`MetaColumns.KEYS`).
+    ancestry : `str`
+        The run's `Ancestry` code, used in the file names.
+    per_study : `bool`
+        Also write each study's own per-variant estimate.
+    suffix : `str`
+        Appended to the file names (``""`` or ``_<label>...``).
+
+    Returns
+    -------
+    `None`
+    """
+    # before dedupe, which may keep a variant's ClinVar row over its PTV row
+    directed_sites = _directed_sites(rows)
+
     log_stage("dedupe")
     n_before = len(rows)
     rows = dedupe(rows, keys)
@@ -945,17 +1062,30 @@ def meta_analysis(
 
     log_stage("gene_burden")
     burden = gene_burden(rows, keys)
+    outputs = [
+        (FileNames.META_ANALYSIS_TEMPLATE, pooled, suffix),
+        (FileNames.BURDEN_TEMPLATE, burden, suffix),
+    ]
+    is_directed = rows[MetaColumns.VARIANT_SITE].isin(directed_sites)
+    if not is_directed.all():
+        log_info(
+            f"{rows.loc[~is_directed, MetaColumns.VARIANT_SITE].nunique()} "
+            "variants are ClinVar only without a lowering/raising "
+            "direction: burden repeated without them"
+        )
+        outputs.append(
+            (
+                FileNames.BURDEN_TEMPLATE,
+                gene_burden(rows.loc[is_directed], keys),
+                f"{suffix}_{Constants.DIRECTED_BURDEN_LABEL}",
+            )
+        )
 
     log_stage("write")
-    suffix = f"_{label}" if label else ""
     Paths.RESULTS_OUTPUT.mkdir(parents=True, exist_ok=True)
-    outputs = (
-        (FileNames.META_ANALYSIS_TEMPLATE, pooled),
-        (FileNames.BURDEN_TEMPLATE, burden),
-    )
-    for template, table in outputs:
+    for template, table, file_suffix in outputs:
         path = Paths.RESULTS_OUTPUT / template.format(
-            ancestry=ancestry, suffix=suffix
+            ancestry=ancestry, suffix=file_suffix
         )
         functions.write_table_atomic(table, path)
         log_info(f"wrote {len(table)} rows to {path}")
@@ -994,8 +1124,8 @@ def _init_cmd_args() -> argparse.ArgumentParser:
         metavar="SOURCE",
         help=(
             "variant-list sources to keep, e.g. PTV ClinVar (default: all); "
-            "ClinVar is not filtered on pathogenicity, so the lists should "
-            "hold P/LP entries only"
+            "ClinVar is the P/LP list of annotate_variants.py, raising "
+            "variants flipped"
         ),
     )
     parser.add_argument(
