@@ -115,177 +115,31 @@ Output:
 
 ```
 
-## [20] filter_gwas_cat (`/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py --tasks-file /myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/filter_task_logs/3_1791368010/run_job_array.job --task-id 51 --step 10`)
+## [20] filter_gwas_cat (`/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py --tasks-file /myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/filter_task_logs/4_1791376591/run_job_array.job --task-id 1 --step 10`)
 - first run: 2026-09-21 22:58:26
-- last run: 2026-10-07 13:22:49
-- commit: `56575b9` (dirty)
-- status: failed
+- last run: 2026-10-07 13:43:01
+- commit: `43baa0f`
 
 Output:
 ```text
-[info]  2026-10-07 13:15:43 rows 51-57 of 57, 9 gene regions
-[info]  2026-10-07 13:15:44 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90432001-GCST90433000/GCST90432122/harmonised/GCST90432122.h.tsv.gz @ 9 regions -> 1397 rows (no MAF filter)
-[info]  2026-10-07 13:15:44 GCST90432122: 1397 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90432122_result.tsv.gz
-[info]  2026-10-07 13:16:16 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90480001-GCST90481000/GCST90480188/GCST90480188.tsv.gz @ 9 regions -> 2485 rows (no MAF filter) (raw scan)
-[info]  2026-10-07 13:16:40 GCST90480188: 2485 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90480188_result.tsv.gz
-[info]  2026-10-07 13:16:40 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90477001-GCST90478000/GCST90477978/harmonised/GCST90477978.h.tsv.gz @ 9 regions -> 2768 rows (no MAF filter)
-[info]  2026-10-07 13:17:03 GCST90477978: 2768 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90477978_result.tsv.gz
-[info]  2026-10-07 13:17:04 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90477001-GCST90478000/GCST90477977/harmonised/GCST90477977.h.tsv.gz @ 9 regions -> 5138 rows (no MAF filter)
-[info]  2026-10-07 13:17:20 GCST90477977: 5138 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90477977_result.tsv.gz
-[warn]  2026-10-07 13:17:20 GCST90246096: could not identify a single raw sumstats file in http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90246001-GCST90247000/GCST90246096 (candidates: [])
-[info]  2026-10-07 13:17:30 GCST90246096: empty result -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90246096_result.tsv.gz
-[warn]  2026-10-07 13:17:31 GET https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90018650: HTTP 500, retry 1/3 in 30s
-[warn]  2026-10-07 13:18:01 GET https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90018650: HTTP 500, retry 2/3 in 60s
-[warn]  2026-10-07 13:19:01 GET https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90018650: HTTP 500, retry 3/3 in 120s
-[warn]  2026-10-07 13:21:01 GCST90018650: failed (HTTPError: 500 Server Error: Internal Server Error for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90018650), left for rerun
-[warn]  2026-10-07 13:21:01 GET https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90726750: HTTP 500, retry 1/3 in 30s
-[warn]  2026-10-07 13:21:31 GET https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90726750: HTTP 500, retry 2/3 in 60s
-[info]  2026-10-07 13:22:32 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90726001-GCST90727000/GCST90726750/harmonised/GCST90726750.h.tsv.gz @ 9 regions -> 1059 rows (no MAF filter)
-[info]  2026-10-07 13:22:40 GCST90726750: 1059 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90726750_result.tsv.gz
-
---- error output (raw) ---
-[info]  2026-10-07 13:15:43 rows 51-57 of 57, 9 gene regions
-[debug] 2026-10-07 13:15:43 header columns: chrom=0 pos=1 maf=6
-[debug] 2026-10-07 13:15:43 CETP @ 16:56951980-56993663 -> 128 rows
-[debug] 2026-10-07 13:15:43 HMGCR @ 5:75332606-75370339 -> 94 rows
-[debug] 2026-10-07 13:15:43 NPC1L1 @ 7:44503450-44551259 -> 250 rows
-[debug] 2026-10-07 13:15:43 PCSK9 @ 1:55029838-55073581 -> 176 rows
-[debug] 2026-10-07 13:15:43 ANGPTL3 @ 1:62587567-62614814 -> 44 rows
-[debug] 2026-10-07 13:15:43 PPARA @ 22:46188384-46245377 -> 73 rows
-[debug] 2026-10-07 13:15:43 APOA1 @ 11:116824677-116852065 -> 87 rows
-[debug] 2026-10-07 13:15:44 APOB @ 2:20991305-21054075 -> 428 rows
-[debug] 2026-10-07 13:15:44 APOE @ 19:44893787-44919396 -> 117 rows
-[info]  2026-10-07 13:15:44 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90432001-GCST90433000/GCST90432122/harmonised/GCST90432122.h.tsv.gz @ 9 regions -> 1397 rows (no MAF filter)
-[info]  2026-10-07 13:15:44 GCST90432122: 1397 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90432122_result.tsv.gz
-[debug] 2026-10-07 13:15:44 header columns: chrom=0 pos=1 maf=6
-[info]  2026-10-07 13:16:16 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90480001-GCST90481000/GCST90480188/GCST90480188.tsv.gz @ 9 regions -> 2485 rows (no MAF filter) (raw scan)
-[info]  2026-10-07 13:16:40 GCST90480188: 2485 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90480188_result.tsv.gz
-[debug] 2026-10-07 13:16:40 header columns: chrom=0 pos=1 maf=6
-[debug] 2026-10-07 13:16:40 CETP @ 16:56951980-56993663 -> 466 rows
-[debug] 2026-10-07 13:16:40 HMGCR @ 5:75332606-75370339 -> 212 rows
-[debug] 2026-10-07 13:16:40 NPC1L1 @ 7:44503450-44551259 -> 262 rows
-[debug] 2026-10-07 13:16:40 PCSK9 @ 1:55029838-55073581 -> 415 rows
-[debug] 2026-10-07 13:16:40 ANGPTL3 @ 1:62587567-62614814 -> 93 rows
-[debug] 2026-10-07 13:16:40 PPARA @ 22:46188384-46245377 -> 401 rows
-[debug] 2026-10-07 13:16:40 APOA1 @ 11:116824677-116852065 -> 263 rows
-[debug] 2026-10-07 13:16:40 APOB @ 2:20991305-21054075 -> 469 rows
-[debug] 2026-10-07 13:16:40 APOE @ 19:44893787-44919396 -> 187 rows
-[info]  2026-10-07 13:16:40 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90477001-GCST90478000/GCST90477978/harmonised/GCST90477978.h.tsv.gz @ 9 regions -> 2768 rows (no MAF filter)
-[info]  2026-10-07 13:17:03 GCST90477978: 2768 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90477978_result.tsv.gz
-[debug] 2026-10-07 13:17:03 header columns: chrom=0 pos=1 maf=6
-[debug] 2026-10-07 13:17:03 CETP @ 16:56951980-56993663 -> 767 rows
-[debug] 2026-10-07 13:17:03 HMGCR @ 5:75332606-75370339 -> 418 rows
-[debug] 2026-10-07 13:17:03 NPC1L1 @ 7:44503450-44551259 -> 597 rows
-[debug] 2026-10-07 13:17:03 PCSK9 @ 1:55029838-55073581 -> 746 rows
-[debug] 2026-10-07 13:17:03 ANGPTL3 @ 1:62587567-62614814 -> 246 rows
-[debug] 2026-10-07 13:17:03 PPARA @ 22:46188384-46245377 -> 812 rows
-[debug] 2026-10-07 13:17:03 APOA1 @ 11:116824677-116852065 -> 400 rows
-[debug] 2026-10-07 13:17:04 APOB @ 2:20991305-21054075 -> 833 rows
-[debug] 2026-10-07 13:17:04 APOE @ 19:44893787-44919396 -> 319 rows
-[info]  2026-10-07 13:17:04 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90477001-GCST90478000/GCST90477977/harmonised/GCST90477977.h.tsv.gz @ 9 regions -> 5138 rows (no MAF filter)
-[info]  2026-10-07 13:17:20 GCST90477977: 5138 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90477977_result.tsv.gz
-[warn]  2026-10-07 13:17:20 GCST90246096: could not identify a single raw sumstats file in http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90246001-GCST90247000/GCST90246096 (candidates: [])
-[info]  2026-10-07 13:17:30 GCST90246096: empty result -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90246096_result.tsv.gz
-[warn]  2026-10-07 13:17:31 GET https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90018650: HTTP 500, retry 1/3 in 30s
-[warn]  2026-10-07 13:18:01 GET https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90018650: HTTP 500, retry 2/3 in 60s
-[warn]  2026-10-07 13:19:01 GET https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90018650: HTTP 500, retry 3/3 in 120s
-[warn]  2026-10-07 13:21:01 GCST90018650: failed (HTTPError: 500 Server Error: Internal Server Error for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90018650), left for rerun
-[warn]  2026-10-07 13:21:01 GET https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90726750: HTTP 500, retry 1/3 in 30s
-[warn]  2026-10-07 13:21:31 GET https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90726750: HTTP 500, retry 2/3 in 60s
-[debug] 2026-10-07 13:22:32 header columns: chrom=0 pos=1 maf=6
-[debug] 2026-10-07 13:22:32 CETP @ 16:56951980-56993663 -> 80 rows
-[debug] 2026-10-07 13:22:32 HMGCR @ 5:75332606-75370339 -> 67 rows
-[debug] 2026-10-07 13:22:32 NPC1L1 @ 7:44503450-44551259 -> 182 rows
-[debug] 2026-10-07 13:22:32 PCSK9 @ 1:55029838-55073581 -> 149 rows
-[debug] 2026-10-07 13:22:32 ANGPTL3 @ 1:62587567-62614814 -> 40 rows
-[debug] 2026-10-07 13:22:32 PPARA @ 22:46188384-46245377 -> 54 rows
-[debug] 2026-10-07 13:22:32 APOA1 @ 11:116824677-116852065 -> 60 rows
-[debug] 2026-10-07 13:22:32 APOB @ 2:20991305-21054075 -> 341 rows
-[debug] 2026-10-07 13:22:32 APOE @ 19:44893787-44919396 -> 86 rows
-[info]  2026-10-07 13:22:32 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90726001-GCST90727000/GCST90726750/harmonised/GCST90726750.h.tsv.gz @ 9 regions -> 1059 rows (no MAF filter)
-[info]  2026-10-07 13:22:40 GCST90726750: 1059 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90726750_result.tsv.gz
-Traceback (most recent call last):
-  File "/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py", line 383, in main
-    run_task(args.tasks_file, args.task_id, args.step)
-    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py", line 330, in run_task
-    raise RuntimeError("; ".join(errors))
-RuntimeError: 1 row(s) failed, rerun pyjasub: GCST90018650
+[info]  2026-10-07 13:42:22 rows 1-3 of 3, 9 gene regions
+[info]  2026-10-07 13:42:25 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90476001-GCST90477000/GCST90476595/harmonised/GCST90476595.h.tsv.gz @ 9 regions -> 5086 rows (no MAF filter)
+[info]  2026-10-07 13:42:26 GCST90476595: 5086 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90476595_result.tsv.gz
+[info]  2026-10-07 13:42:29 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90476001-GCST90477000/GCST90476594/harmonised/GCST90476594.h.tsv.gz @ 9 regions -> 3682 rows (no MAF filter)
+[info]  2026-10-07 13:42:36 GCST90476594: 3682 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90476594_result.tsv.gz
+[info]  2026-10-07 13:42:41 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90018001-GCST90019000/GCST90018650/harmonised/GCST90018650.h.tsv.gz @ 9 regions -> 1496 rows (no MAF filter)
+[info]  2026-10-07 13:42:50 GCST90018650: 1496 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90018650_result.tsv.gz
 
 ```
 
 ## [20] filter_gwas_cat_job
 - first run: 2026-09-28 23:45:21
-- last run: 2026-10-07 13:22:49
-- commit: `56575b9` (dirty)
-- status: failed
+- last run: 2026-10-07 13:43:27
+- commit: `43baa0f`
 
 Output:
 ```text
-[info]  2026-10-07 13:15:11 task 51: rows 51-60
-[error] 2026-10-07 13:22:49 run_mamba: '/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py --tasks-file /myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/filter_task_logs/3_1791368010/run_job_array.job --task-id 51 --step 10' failed in env 'biomed-api' (exit 1)
---- error output (raw) ---
-[info]  2026-10-07 13:15:11 repo root=/myriadfs/home/rmgpmva/projects/lipid_adem
-[info]  2026-10-07 13:15:11 === /myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.sh ===
-[info]  2026-10-07 13:15:11 started at Wed  7 Oct 13:15:11 BST 2026
-[info]  2026-10-07 13:15:11 hostname=node-t00a-003.myriad.ucl.ac.uk
-[info]  2026-10-07 13:15:11 job array file=/myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/filter_task_logs/3_1791368010/run_job_array.job
-[info]  2026-10-07 13:15:11 temp location=/myriadfs/home/rmgpmva/Scratch/lipid_adem/filter_task_tmp
-[info]  2026-10-07 13:15:11 step=10
-[info]  2026-10-07 13:15:11 task 51: rows 51-60
-[info]  2026-10-07 13:15:43 rows 51-57 of 57, 9 gene regions
-[debug] 2026-10-07 13:15:43 header columns: chrom=0 pos=1 maf=6
-[debug] 2026-10-07 13:15:43 CETP @ 16:56951980-56993663 -> 128 rows
-[debug] 2026-10-07 13:15:43 HMGCR @ 5:75332606-75370339 -> 94 rows
-[debug] 2026-10-07 13:15:43 NPC1L1 @ 7:44503450-44551259 -> 250 rows
-[debug] 2026-10-07 13:15:43 PCSK9 @ 1:55029838-55073581 -> 176 rows
-[debug] 2026-10-07 13:15:43 ANGPTL3 @ 1:62587567-62614814 -> 44 rows
-[debug] 2026-10-07 13:15:43 PPARA @ 22:46188384-46245377 -> 73 rows
-[debug] 2026-10-07 13:15:43 APOA1 @ 11:116824677-116852065 -> 87 rows
-[debug] 2026-10-07 13:15:44 APOB @ 2:20991305-21054075 -> 428 rows
-[debug] 2026-10-07 13:15:44 APOE @ 19:44893787-44919396 -> 117 rows
-[info]  2026-10-07 13:15:44 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90432001-GCST90433000/GCST90432122/harmonised/GCST90432122.h.tsv.gz @ 9 regions -> 1397 rows (no MAF filter)
-[info]  2026-10-07 13:15:44 GCST90432122: 1397 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90432122_result.tsv.gz
-[debug] 2026-10-07 13:15:44 header columns: chrom=0 pos=1 maf=6
-[info]  2026-10-07 13:16:16 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90480001-GCST90481000/GCST90480188/GCST90480188.tsv.gz @ 9 regions -> 2485 rows (no MAF filter) (raw scan)
-[info]  2026-10-07 13:16:40 GCST90480188: 2485 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90480188_result.tsv.gz
-[debug] 2026-10-07 13:16:40 header columns: chrom=0 pos=1 maf=6
-[debug] 2026-10-07 13:16:40 CETP @ 16:56951980-56993663 -> 466 rows
-[debug] 2026-10-07 13:16:40 HMGCR @ 5:75332606-75370339 -> 212 rows
-[debug] 2026-10-07 13:16:40 NPC1L1 @ 7:44503450-44551259 -> 262 rows
-[debug] 2026-10-07 13:16:40 PCSK9 @ 1:55029838-55073581 -> 415 rows
-[debug] 2026-10-07 13:16:40 ANGPTL3 @ 1:62587567-62614814 -> 93 rows
-[debug] 2026-10-07 13:16:40 PPARA @ 22:46188384-46245377 -> 401 rows
-[debug] 2026-10-07 13:16:40 APOA1 @ 11:116824677-116852065 -> 263 rows
-[debug] 2026-10-07 13:16:40 APOB @ 2:20991305-21054075 -> 469 rows
-[debug] 2026-10-07 13:16:40 APOE @ 19:44893787-44919396 -> 187 rows
-[info]  2026-10-07 13:16:40 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90477001-GCST90478000/GCST90477978/harmonised/GCST90477978.h.tsv.gz @ 9 regions -> 2768 rows (no MAF filter)
-[info]  2026-10-07 13:17:03 GCST90477978: 2768 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90477978_result.tsv.gz
-[debug] 2026-10-07 13:17:03 header columns: chrom=0 pos=1 maf=6
-[debug] 2026-10-07 13:17:03 CETP @ 16:56951980-56993663 -> 767 rows
-[debug] 2026-10-07 13:17:03 HMGCR @ 5:75332606-75370339 -> 418 rows
-[debug] 2026-10-07 13:17:03 NPC1L1 @ 7:44503450-44551259 -> 597 rows
-[debug] 2026-10-07 13:17:03 PCSK9 @ 1:55029838-55073581 -> 746 rows
-[debug] 2026-10-07 13:17:03 ANGPTL3 @ 1:62587567-62614814 -> 246 rows
-[debug] 2026-10-07 13:17:03 PPARA @ 22:46188384-46245377 -> 812 rows
-[debug] 2026-10-07 13:17:03 APOA1 @ 11:116824677-116852065 -> 400 rows
-[debug] 2026-10-07 13:17:04 APOB @ 2:20991305-21054075 -> 833 rows
-[debug] 2026-10-07 13:17:04 APOE @ 19:44893787-44919396 -> 319 rows
-[info]  2026-10-07 13:17:04 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90477001-GCST90478000/GCST90477977/harmonised/GCST90477977.h.tsv.gz @ 9 regions -> 5138 rows (no MAF filter)
-[info]  2026-10-07 13:17:20 GCST90477977: 5138 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90477977_result.tsv.gz
-[info]  2026-10-07 13:17:30 GCST90246096: empty result -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90246096_result.tsv.gz
-[debug] 2026-10-07 13:22:32 header columns: chrom=0 pos=1 maf=6
-[debug] 2026-10-07 13:22:32 CETP @ 16:56951980-56993663 -> 80 rows
-[debug] 2026-10-07 13:22:32 HMGCR @ 5:75332606-75370339 -> 67 rows
-[debug] 2026-10-07 13:22:32 NPC1L1 @ 7:44503450-44551259 -> 182 rows
-[debug] 2026-10-07 13:22:32 PCSK9 @ 1:55029838-55073581 -> 149 rows
-[debug] 2026-10-07 13:22:32 ANGPTL3 @ 1:62587567-62614814 -> 40 rows
-[debug] 2026-10-07 13:22:32 PPARA @ 22:46188384-46245377 -> 54 rows
-[debug] 2026-10-07 13:22:32 APOA1 @ 11:116824677-116852065 -> 60 rows
-[debug] 2026-10-07 13:22:32 APOB @ 2:20991305-21054075 -> 341 rows
-[debug] 2026-10-07 13:22:32 APOE @ 19:44893787-44919396 -> 86 rows
-[info]  2026-10-07 13:22:32 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90726001-GCST90727000/GCST90726750/harmonised/GCST90726750.h.tsv.gz @ 9 regions -> 1059 rows (no MAF filter)
-[info]  2026-10-07 13:22:40 GCST90726750: 1059 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90726750_result.tsv.gz
+[info]  2026-10-07 13:41:55 task 1: rows 1-10
 
 ```
 
@@ -480,6 +334,32 @@ Include: reviewed by expert panel + criteria provided, multiple submitters, no c
 [info]  2026-10-06 17:16:22 Widened 4212 assembly-duplicated rows into 2106 variant/condition rows
 [info]  2026-10-06 17:16:22 431 unique variants identified
 [info]  2026-10-06 17:16:22 Writing 2106 rows to /Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/data/processed/plp_variants.tsv
+
+```
+
+## [50] marvel_assoc_job
+- first run: 2026-10-07 13:49:03
+- last run: 2026-10-07 13:49:51
+- commit: `43baa0f`
+- status: failed
+
+Output:
+```text
+[info]  2026-10-07 13:49:13 task 1: rows 1-1
+[error] 2026-10-07 13:49:51 CETP: config check failed, see marvel output above
+[error] 2026-10-07 13:49:51 task 1: 1 gene(s) failed, rerun to retry
+--- error output (raw) ---
+[info]  2026-10-07 13:49:13 repo root=/myriadfs/home/rmgpmva/projects/lipid_adem
+[info]  2026-10-07 13:49:13 === /myriadfs/home/rmgpmva/projects/lipid_adem/src/marvel_assoc.sh ===
+[info]  2026-10-07 13:49:13 started at Wed  7 Oct 13:49:13 BST 2026
+[info]  2026-10-07 13:49:13 hostname=node-t00a-003.myriad.ucl.ac.uk
+[info]  2026-10-07 13:49:13 job array file=/myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/marvel_task_logs/1_1791376445/run_job_array.job
+[info]  2026-10-07 13:49:13 temp location=/myriadfs/home/rmgpmva/Scratch/lipid_adem/marvel_task_tmp
+[info]  2026-10-07 13:49:13 step=1
+[info]  2026-10-07 13:49:13 marvel env=marvel
+[info]  2026-10-07 13:49:13 task 1: rows 1-1
+[info]  2026-10-07 13:49:41 CETP: dry run
+[info]  2026-10-07 13:49:51 ended at Wed  7 Oct 13:49:51 BST 2026
 
 ```
 
