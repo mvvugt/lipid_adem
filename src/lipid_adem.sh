@@ -23,7 +23,7 @@ esac
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # VARIANT ANNOTATION
-# TODO annotate variants using ClinVar, GoF, and VEP+LOFTEE
+# TODO annotate variants using GoF and VEP+LOFTEE
 
 # [local] query ClinVar for all variants in the curated genes
 mapfile -t genes < <(cut -f1 "${ROOT}/data/raw/gene_list.txt")
@@ -45,8 +45,7 @@ run_mamba marvel "${ROOT}"/src/annotate_variants.py
 # [myriad] resolve gene/outcome lookups, discover studies, write job-array file
 run_mamba biomed-api "${ROOT}"/src/gwas_cat_prep.py
 
-# [myriad] filter GWAS catalog results to the gene regions (no MAF filter:
-# Constants.MAF_THRESHOLD None; delete old gwas_filtered outfiles to redo)
+# [myriad] filter GWAS catalog results to the gene regions
 run_mamba biomed-api pyjasub "${ROOT}"/config/filter_task.cnf
 
 # [myriad] adds GWAS Catalog associations + Open Targets gene-burden evidence
@@ -55,13 +54,11 @@ qsub "${ROOT}"/src/merge_associations.sh -r "${ROOT}"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # NON-AGGREGATED ANALYSES
-
-# [myriad] UKB: marvel association per gene (pyjasub, one task per gene in
-# data/raw/marvel_tasks.tsv; fill the placeholders in that file and in
-# src/create_config.py first, then write one marvel config per gene)
 # TODO AoU
+
+# [myriad] marvel association per gene
 run_mamba marvel "${ROOT}"/src/create_config.py -a
-MARVEL_ENV=marvel run_mamba biomed-api pyjasub "${ROOT}"/config/marvel_task.cnf
+run_mamba biomed-api pyjasub "${ROOT}"/config/marvel_task.cnf
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -77,6 +74,7 @@ run_mamba biomed-api "${ROOT}"/src/match_variants.py
 # [myriad] fixed-effect IVW meta-analysis of the matched variants, one
 # ancestry group per run (default EUR; e.g. --ancestry MULTI for pooled)
 run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR
+
 # [myriad] first analysis: Thomassen 2026 AD, the 4 disjoint APOE strata
 # (e44, e43, e33, e22+e32), PTV + ClinVar variants; pooled and per stratum,
 # plus gene burden. ClinVar = P/LP list (annotate_variants.py), GoF
@@ -92,6 +90,7 @@ run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
     --studies GCST90861026 GCST90861027 GCST90861029 GCST90861030 \
     --variant-sources PTV ClinVar --stratified \
     --label thomassen_ad_ptv_clinvar
+
 # arm B (rare variants: own UKB/AoU, FinnGen R13)
 # TODO list the marvel runs in marvel_results.tsv (apoe_stratum column)
 # and apoe_strata.tsv first; IDs below are placeholders until then
@@ -101,6 +100,7 @@ run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
     marvel_{ukb,aou}_EUR_alzheimers_dementia_{e33,e22_e32} G6_ALZHEIMER \
     --variant-sources PTV ClinVar --stratified \
     --label armb_ad_ptv_clinvar
+
 # EAS (pooled only, no APOE strata): arm A = Cao 2026 + K-ROAD WGS
 # (independent cohorts), arm B = K-ROAD WGS; both via
 # gwas_catalog_manual_studies.tsv, so rerun prep/filter/merge/match first.
@@ -114,6 +114,7 @@ run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EAS \
     --studies GCST90727420 GCST90566388 \
     --variant-sources PTV ClinVar --stratified \
     --label arma_ad_ptv_clinvar
+
 run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EAS \
     --outcomes alzheimers_dementia \
     --studies GCST90566388 \
