@@ -994,7 +994,7 @@ alzheimers_dementia	GCST90838648	exclude	apoe_stratified
 alzheimers_dementia	GCST90838647	exclude	apoe_stratified
 alzheimers_dementia	GCST90704648	included	included
 alzheimers_dementia	GCST90727422	exclude	gene_status
-alzheimers_dementia	GCST90727420	included	included
+alzheimers_dementia	GCST90727420	keep	arm_a_eas_manual
 alzheimers_dementia	GCST90473313	included	included
 alzheimers_dementia	GCST90668052	included	included
 alzheimers_dementia	GCST90668051	included	included
@@ -1008,7 +1008,7 @@ alzheimers_dementia	GCST007511	included	included
 alzheimers_dementia	GCST005922	exclude	UKB
 alzheimers_dementia	GCST003452	exclude	pleiotropy
 alzheimers_dementia	GCST90565439	excluded	over_cap
-alzheimers_dementia	GCST90566388	excluded	over_cap
+alzheimers_dementia	GCST90566388	keep	arm_b_eas_manual
 alzheimers_dementia	GCST90449062	excluded	over_cap
 alzheimers_dementia	GCST90449058	exclude	MTAG
 alzheimers_dementia	GCST90449055	excluded	over_cap
@@ -1259,7 +1259,7 @@ alzheimers_dementia	GCST90861030	keep	thomassen_first_analysis
 alzheimers_dementia	GCST90861031	exclude	interaction
 alzheimers_dementia	F5_ALZHDEMENT	exclude	sample_overlap
 alzheimers_dementia	G6_AD_STRICT	exclude	sample_overlap
-alzheimers_dementia	G6_ALZHEIMER	included	included
+alzheimers_dementia	G6_ALZHEIMER	keep	arm_b
 cardiovascular_disease	GCST90726896	included	included
 cardiovascular_disease	GCST90692884	included	included
 cardiovascular_disease	GCST90692840	included	included

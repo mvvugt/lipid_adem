@@ -136,6 +136,8 @@ class Constants:
     # burden sensitivity: ClinVar-only variants without a lowering/raising
     # direction left out
     DIRECTED_BURDEN_LABEL: str = "directed_only"
+    # file label of the meta-analysis pooled per APOE stratum
+    APOE_STRATA_LABEL: str = "apoe_strata"
     # ClinVar `rcv_molecular_consequence` values that make a P/LP variant
     # `lowering` whatever its conditions
     TRUNCATING_CONSEQUENCES: frozenset[str] = frozenset(
@@ -659,6 +661,10 @@ class MetaColumns:
     # burden: distinct variants pooled and their sites (";"-joined)
     N_VARIANTS: str = "n_variants"
     VARIANTS: str = "variants"
+    # per row, from `FileNames.APOE_STRATA`: an `ApoeStratum` value and
+    # the group of studies (strata + unstratified run) it belongs to
+    APOE_STRATUM: str = "apoe_stratum"
+    STUDY_GROUP: str = "study_group"
     # columns pooled over; every run is restricted to one `Ancestry` code
     # (`--ancestry`), so one study's pooled and per-ancestry analyses are
     # never pooled together
@@ -677,6 +683,8 @@ class MetaColumns:
         VariantListColumns.OUT_SOURCE,
         VariantListColumns.OUT_TRI_CLASS,
         VariantListColumns.OUT_CLINVAR_DIRECTION,
+        STUDY_GROUP,
+        APOE_STRATUM,
         HarmonisedColumns.RSID,
         ORIENTED_ALLELE,
         ORIENTATION,
@@ -692,6 +700,20 @@ class MetaLevel:
     POOLED: str = "pooled"
     # one study (e.g. one APOE stratum of a stratified GWAS)
     STRATUM: str = "stratum"
+
+
+class ApoeStratum:
+    """Values of `apoe_stratum` (`FileNames.APOE_STRATA`, marvel table).
+
+    The strata follow Thomassen et al. 2026; e42 carriers are in none.
+    """
+    E44: str = "e44"
+    E43: str = "e43"
+    E33: str = "e33"
+    E22_E32: str = "e22_e32"
+    # an unstratified run (all APOE genotypes)
+    ALL: str = "all"
+    CODES: frozenset[str] = frozenset({E44, E43, E33, E22_E32})
 
 
 class Orientation:
@@ -782,6 +804,8 @@ class FileNames:
     )
     # own UKB/AoU association results (marvel), one row per file/outcome
     MARVEL_RESULTS: Path = Paths.DATA_RAW / "marvel_results.tsv"
+    # curated study accession -> study group and APOE stratum
+    APOE_STRATA: Path = Paths.DATA_RAW / "apoe_strata.tsv"
     # curated outcome x study exclusions, applied before the recency cap
     STUDY_OUTCOME_REVIEW: Path = Paths.DATA_RAW / "study_outcome_review.tsv"
     TASKS_FILE: Path = Paths.DATA_TEMP / "tasks.tsv"

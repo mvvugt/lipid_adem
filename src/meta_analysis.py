@@ -17,6 +17,10 @@ burden table is written: the IVW of the oriented variant effects per gene,
 per study and pooled over studies. ClinVar variants with a raising condition
 are flipped like GoF variants. Runs holding the APOE e2/e4 sites are repeated
 without them (sensitivity, `_no_apoe_e2e4` files).
+
+APOE strata (`data/raw/apoe_strata.tsv`): the pooled run takes, per study
+group, its unstratified study or else its strata; studies that are strata
+are also pooled per stratum (`_apoe_strata` files).
 """
 
 
@@ -27,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import math
+from pathlib import Path
 from statistics import NormalDist
 
 import numpy as np
@@ -37,6 +42,7 @@ from log_tools.setup import runlog_setup
 import functions
 from project_constants import (
     Ancestry,
+    ApoeStratum,
     ClinVarDirection,
     Constants,
     FileNames,
@@ -887,6 +893,12 @@ def meta_analysis(
     are written again without them, with suffix
     ``_<label>_no_apoe_e2e4``.
 
+    Studies are grouped with `load_apoe_strata`. The pooled run uses per
+    study group its unstratified study, or else its strata
+    (`_pooled_rows`). When strata are present, they are also pooled per
+    `apoe_stratum` (suffix ``_<label>_apoe_strata``, with the same
+    sensitivity files).
+
     Parameters
     ----------
     ancestry : `str`
@@ -954,7 +966,200 @@ def meta_analysis(
         log_warn("no rows left after filtering; no output written")
         return
 
+    log_stage("apoe_strata")
+    rows = _add_apoe_strata(rows, load_apoe_strata())
+
     suffix = f"_{label}" if label else ""
+    log_stage("pooled_run")
+    _run_with_sensitivity(
+        _pooled_rows(rows), keys, ancestry, per_study, suffix
+    )
+
+    is_stratum = rows[MetaColumns.APOE_STRATUM] != ApoeStratum.ALL
+    if is_stratum.any():
+        log_stage("apoe_strata_run")
+        log_info(
+            f"{int(is_stratum.sum())} rows from APOE strata: pooled per "
+            "stratum"
+        )
+        _run_with_sensitivity(
+            rows.loc[is_stratum].copy(),
+            [*keys, MetaColumns.APOE_STRATUM],
+            ancestry,
+            per_study,
+            f"{suffix}_{Constants.APOE_STRATA_LABEL}",
+        )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def load_apoe_strata(path: Path = FileNames.APOE_STRATA) -> pd.DataFrame:
+    """Read the curated study accession -> study group and APOE stratum.
+
+    See `data/raw/apoe_strata.SOURCE.md`.
+
+    Parameters
+    ----------
+    path : `Path`, optional, default: `FileNames.APOE_STRATA`
+        TSV with `study_accession`, `study_group` and `apoe_stratum`.
+
+    Returns
+    -------
+    strata : `pd.DataFrame`
+        The table, all columns as strings, `apoe_stratum` lower-cased.
+        Empty (but correctly columned) if `path` does not exist.
+
+    Raises
+    ------
+    ValueError
+        If a column is missing, an accession is listed twice, a
+        `study_group` is blank or an `apoe_stratum` is not in
+        `ApoeStratum.CODES` or `ApoeStratum.ALL`.
+    """
+    columns = [
+        HarmonisedColumns.STUDY_ACCESSION,
+        MetaColumns.STUDY_GROUP,
+        MetaColumns.APOE_STRATUM,
+    ]
+    if not path.exists():
+        log_warn(f"{path} not found: every study is unstratified")
+        return pd.DataFrame(columns=columns)
+    strata = pd.read_csv(path, sep="\t", dtype=str).fillna("")
+    missing = [column for column in columns if column not in strata.columns]
+    if missing:
+        raise ValueError(f"{path}: missing column(s) {missing}")
+    strata = strata[columns].apply(lambda column: column.str.strip())
+    strata[MetaColumns.APOE_STRATUM] = strata[
+        MetaColumns.APOE_STRATUM
+    ].str.lower()
+    duplicated = sorted(
+        set(
+            strata.loc[
+                strata[HarmonisedColumns.STUDY_ACCESSION].duplicated(),
+                HarmonisedColumns.STUDY_ACCESSION,
+            ]
+        )
+    )
+    if duplicated:
+        raise ValueError(f"{path}: accession(s) listed twice {duplicated}")
+    if (strata[MetaColumns.STUDY_GROUP] == "").any():
+        raise ValueError(f"{path}: blank study_group")
+    allowed = ApoeStratum.CODES | {ApoeStratum.ALL}
+    bad = sorted(set(strata[MetaColumns.APOE_STRATUM]) - allowed)
+    if bad:
+        raise ValueError(
+            f"{path}: unknown apoe_stratum value(s) {bad}, expected one "
+            f"of {sorted(allowed)}"
+        )
+    log_info(f"{path}: {len(strata)} studies with an APOE stratum entry")
+    return strata
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _add_apoe_strata(
+    rows: pd.DataFrame, strata: pd.DataFrame
+) -> pd.DataFrame:
+    """Add each row's study group and APOE stratum.
+
+    Parameters
+    ----------
+    rows : `pd.DataFrame`
+        Rows with `study_accession`.
+    strata : `pd.DataFrame`
+        From `load_apoe_strata`.
+
+    Returns
+    -------
+    labelled : `pd.DataFrame`
+        `rows` plus `study_group` and `apoe_stratum`; a study not in
+        `strata` is its own group (its accession) with stratum
+        `ApoeStratum.ALL`.
+    """
+    accession = HarmonisedColumns.STUDY_ACCESSION
+    lookup = strata.set_index(accession)
+    labelled = rows.copy()
+    labelled[MetaColumns.STUDY_GROUP] = (
+        labelled[accession]
+        .map(lookup[MetaColumns.STUDY_GROUP])
+        .fillna(labelled[accession])
+    )
+    labelled[MetaColumns.APOE_STRATUM] = (
+        labelled[accession]
+        .map(lookup[MetaColumns.APOE_STRATUM])
+        .fillna(ApoeStratum.ALL)
+    )
+    listed_groups = set(strata[MetaColumns.STUDY_GROUP])
+    studies = labelled.drop_duplicates(accession)
+    counts = studies.groupby(
+        [MetaColumns.STUDY_GROUP, MetaColumns.APOE_STRATUM]
+    ).size()
+    for (group, stratum), n in counts.items():
+        if group in listed_groups:
+            log_info(f"study group {group}, stratum {stratum}: {n} studies")
+    return labelled
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _pooled_rows(rows: pd.DataFrame) -> pd.DataFrame:
+    """Keep the rows used for the pooled (all APOE genotypes) run.
+
+    Per study group: its unstratified (`ApoeStratum.ALL`) studies when it
+    has any, otherwise its strata (pooled = the IVW of the strata).
+
+    Parameters
+    ----------
+    rows : `pd.DataFrame`
+        From `_add_apoe_strata`.
+
+    Returns
+    -------
+    pooled_rows : `pd.DataFrame`
+        The kept rows.
+    """
+    group = MetaColumns.STUDY_GROUP
+    is_all = rows[MetaColumns.APOE_STRATUM] == ApoeStratum.ALL
+    groups_with_all = set(rows.loc[is_all, group])
+    keep = is_all | ~rows[group].isin(groups_with_all)
+    stratum_groups = sorted(set(rows.loc[~is_all, group]))
+    for name in stratum_groups:
+        rule = (
+            "unstratified run, strata left out"
+            if name in groups_with_all
+            else "IVW of the strata"
+        )
+        log_info(f"pooled run, study group {name}: {rule}")
+    return rows.loc[keep].copy()
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _run_with_sensitivity(
+    rows: pd.DataFrame,
+    keys: list[str],
+    ancestry: str,
+    per_study: bool,
+    suffix: str,
+) -> None:
+    """Analyse and write the rows, then again without APOE e2/e4.
+
+    The sensitivity run (suffix ``<suffix>_no_apoe_e2e4``) is only done
+    when the rows hold a `Constants.APOE_ISOFORM_SITES` variant.
+
+    Parameters
+    ----------
+    rows : `pd.DataFrame`
+        From `orient`, after the variant-source filter.
+    keys : `list[str]`
+        Grouping columns.
+    ancestry : `str`
+        The run's `Ancestry` code, used in the file names.
+    per_study : `bool`
+        Also write each study's own per-variant estimate.
+    suffix : `str`
+        Appended to the file names.
+
+    Returns
+    -------
+    `None`
+    """
     _analyse_and_write(rows, keys, ancestry, per_study, suffix)
 
     is_isoform = rows[MetaColumns.VARIANT_SITE].isin(

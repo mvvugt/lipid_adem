@@ -32,6 +32,7 @@ from project_constants import (
     FileNames,
     HarmonisedColumns,
     MafStatus,
+    MetaColumns,
     Paths,
     RunlogOrder,
     SourceColumnMaps,
@@ -233,21 +234,26 @@ def _marvel_identity(
     -------
     labelled : `pd.DataFrame`
         `frame` with `source`, `source_db`, `study_accession`
-        (``marvel_<cohort>_<ancestry>_<outcome>``, so per-ancestry runs
-        of one cohort stay separate studies), `outcome`, `efo_id` (NA),
+        (``marvel_<cohort>_<ancestry>_<outcome>``, plus ``_<apoe_stratum>``
+        for a stratified run, so per-ancestry and per-stratum runs of one
+        cohort stay separate studies), `outcome`, `efo_id` (NA),
         `child_traits` (`False`), `trait_label` and `ancestry_group` set.
     """
     cohort = entry["cohort"]
     outcome = entry["outcome"]
     ancestry = entry[ColumnNames.ANCESTRY]
+    stratum = entry[MetaColumns.APOE_STRATUM]
+    accession = (
+        f"{Constants.MARVEL_SOURCE_DB_PREFIX}{cohort}_{ancestry}_{outcome}"
+    )
+    if stratum:
+        accession = f"{accession}_{stratum}"
     labelled = frame.copy()
     labelled[ColumnNames.SOURCE] = source
     labelled[ColumnNames.SOURCE_DB] = (
         Constants.MARVEL_SOURCE_DB_PREFIX + cohort
     )
-    labelled[ColumnNames.STUDY_ACCESSION] = (
-        f"{Constants.MARVEL_SOURCE_DB_PREFIX}{cohort}_{ancestry}_{outcome}"
-    )
+    labelled[ColumnNames.STUDY_ACCESSION] = accession
     labelled[ColumnNames.OUTCOME] = outcome
     labelled[ColumnNames.EFO_ID] = pd.NA
     labelled[ColumnNames.CHILD_TRAITS] = False
@@ -283,8 +289,8 @@ def load_marvel_results(
     harmonised : `list[pd.DataFrame]`
         Harmonised frames (`functions.harmonise_frame`), `source_db`
         ``marvel_<cohort>`` and `study_accession`
-        ``marvel_<cohort>_<ancestry>_<outcome>``. Empty if no entries or
-        rows.
+        ``marvel_<cohort>_<ancestry>_<outcome>[_<apoe_stratum>]``. Empty
+        if no entries or rows.
 
     Raises
     ------

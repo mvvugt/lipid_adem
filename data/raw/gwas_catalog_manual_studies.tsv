@@ -5,3 +5,5 @@ GCST90861028	alzheimers_dementia	42736378	APOE e44+e43 strata GWAS - Alzheimer's
 GCST90861029	alzheimers_dementia	42736378	APOE e33 strata GWAS - Alzheimer's disease						EUR		Thomassen et al. 2026, Nat Genet, DOI:10.1038/s41588-026-02713-9
 GCST90861030	alzheimers_dementia	42736378	APOE e22+e32 strata GWAS - Alzheimer's disease						EUR		Thomassen et al. 2026, Nat Genet, DOI:10.1038/s41588-026-02713-9
 GCST90861031	alzheimers_dementia	42736378	APOE carrier interaction GWAS - Alzheimer's disease								Thomassen et al. 2026, Nat Genet, DOI:10.1038/s41588-026-02713-9
+GCST90566388	alzheimers_dementia	40419521	Alzheimer's disease (WGS)					314 Korean ancestry cases, 655 Korean ancestry controls	EAS	K-ROAD	Kim JP et al. 2025, Nat Commun; WGS, over the recency cap, added for arm B (rare variants)
+GCST90727420	alzheimers_dementia	41700061	Alzheimer's disease					891 Han Chinese ancestry cases, 1,225 Han Chinese ancestry controls	EAS		Cao H et al. 2026, Alzheimers Dement; added so it stays in whatever the recency cap, arm A EAS

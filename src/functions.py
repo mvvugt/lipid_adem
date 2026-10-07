@@ -32,6 +32,7 @@ from log_tools.emitter import log_debug, log_info, log_warn
 
 from project_constants import (
     Ancestry,
+    ApoeStratum,
     ColumnNames,
     Constants,
     EnsemblAlleleCheck,
@@ -39,6 +40,7 @@ from project_constants import (
     FileNames,
     HarmonisedColumns,
     MafStatus,
+    MetaColumns,
     NormStatus,
     Paths,
     SourceColumnMaps,
@@ -2129,22 +2131,24 @@ def load_marvel_table(path: Path = FileNames.MARVEL_RESULTS) -> pd.DataFrame:
         e.g. ``ukb``/``aou``), `outcome` (as in `icd_codes.txt`), `path`
         (a marvel `{exposure}_results.tsv.gz`), `variable` and `model`
         (the marvel `Variable`/`Model` to keep), `ancestry` (an
-        `Ancestry` code, e.g. ``EUR``, or ``MULTI`` for a pooled run) and
-        an optional `note`.
+        `Ancestry` code, e.g. ``EUR``, or ``MULTI`` for a pooled run), an
+        optional `apoe_stratum` (an `ApoeStratum.CODES` value; blank for
+        an unstratified run) and an optional `note`.
 
     Returns
     -------
     marvel : `pd.DataFrame`
-        The table, all columns as strings, `cohort` lower-cased,
-        `ancestry` upper-cased. Empty (but correctly columned) if `path`
-        does not exist.
+        The table, all columns as strings, `cohort` and `apoe_stratum`
+        lower-cased, `ancestry` upper-cased. Empty (but correctly
+        columned) if `path` does not exist.
 
     Raises
     ------
     ValueError
         If a required column is missing, a `cohort` is not a key of
-        `Constants.PREFERRED_COHORT_ALIASES` or an `ancestry` is not in
-        `Ancestry.CODES`.
+        `Constants.PREFERRED_COHORT_ALIASES`, an `ancestry` is not in
+        `Ancestry.CODES` or a non-blank `apoe_stratum` is not in
+        `ApoeStratum.CODES`.
     """
     required = [
         "cohort",
@@ -2154,15 +2158,30 @@ def load_marvel_table(path: Path = FileNames.MARVEL_RESULTS) -> pd.DataFrame:
         "model",
         ColumnNames.ANCESTRY,
     ]
-    columns = [*required, ColumnNames.NOTE]
+    optional = [MetaColumns.APOE_STRATUM, ColumnNames.NOTE]
+    columns = [*required, *optional]
     if not path.exists():
         return pd.DataFrame(columns=columns)
     marvel_df = pd.read_csv(path, sep="\t", dtype=str).fillna("")
     missing = [col for col in required if col not in marvel_df.columns]
     if missing:
         raise ValueError(f"{path}: missing column(s) {missing}")
-    if ColumnNames.NOTE not in marvel_df.columns:
-        marvel_df[ColumnNames.NOTE] = ""
+    for column in optional:
+        if column not in marvel_df.columns:
+            marvel_df[column] = ""
+    marvel_df[MetaColumns.APOE_STRATUM] = (
+        marvel_df[MetaColumns.APOE_STRATUM].str.strip().str.lower()
+    )
+    bad_stratum = sorted(
+        set(marvel_df[MetaColumns.APOE_STRATUM])
+        - ApoeStratum.CODES
+        - {""}
+    )
+    if bad_stratum:
+        raise ValueError(
+            f"{path}: unknown apoe_stratum value(s) {bad_stratum}, "
+            f"expected blank or one of {sorted(ApoeStratum.CODES)}"
+        )
     marvel_df["cohort"] = marvel_df["cohort"].str.strip().str.lower()
     unknown = sorted(
         set(marvel_df["cohort"]) - set(Constants.PREFERRED_COHORT_ALIASES)
