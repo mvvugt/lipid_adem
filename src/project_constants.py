@@ -32,6 +32,27 @@ class Paths:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Effect scales
+
+class EffectScale:
+    """Values of `effect_scale_meta` and `study_effect_scale`: the scale
+    of a study's betas for a binary outcome.
+    """
+    # logistic regression (SAIGE, REGENIE with Firth, PLINK, GLM-Binom)
+    LOG_OR: str = "log_or"
+    # linear model on a 0/1 outcome (BOLT-LMM, linear REGENIE, OLS)
+    LINEAR: str = "linear"
+    # Cox regression
+    LOG_HR: str = "log_hr"
+    UNKNOWN: str = "unknown"
+    # the metadata (or marvel method) and the inference disagree
+    CONFLICT: str = "conflict"
+    CODES: frozenset[str] = frozenset(
+        {LOG_OR, LINEAR, LOG_HR, UNKNOWN, CONFLICT}
+    )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Constants
 
 class Constants:
@@ -194,6 +215,44 @@ class Constants:
     )
     # source_db of marvel rows, + cohort key
     MARVEL_SOURCE_DB_PREFIX: str = "marvel_"
+    # marvel `Stratification name` kept when marvel_results.tsv leaves
+    # `stratification` blank
+    MARVEL_DEFAULT_STRATIFICATION: str = "overall"
+    # marvel `Exposure` naming a gene-level carrier mask, e.g. "CETP PTV"
+    MARVEL_GENE_MASK_PATTERN: str = r"^(?P<gene>\S+)\s+(?P<mask>\S.*)$"
+    # marvel `Model` (regression method) -> `EffectScale`; other methods
+    # are `EffectScale.UNKNOWN`
+    MARVEL_METHOD_SCALE: dict[str, str] = {
+        "GLM-Binom": EffectScale.LOG_OR,
+        "OLS": EffectScale.LINEAR,
+        "Cox": EffectScale.LOG_HR,
+    }
+    # effect-scale inference (`functions.infer_effect_scales`): median of
+    # r = SE * sqrt(2f(1-f)N) over a study's variants with MAF above
+    # EFFECT_SCALE_MIN_MAF; log-OR gives r = 1/sqrt(phi(1-phi)) >= 2,
+    # a linear 0/1 outcome r = sqrt(phi(1-phi)) <= 0.5 (phi: case
+    # fraction), so the cut-off sits in between
+    EFFECT_SCALE_CUTOFF: float = 1.0
+    EFFECT_SCALE_MIN_MAF: float = 0.01
+    # fewer usable variants than this: inferred scale unknown
+    EFFECT_SCALE_MIN_VARIANTS: int = 20
+    # GWAS-SSF `analysis_software` (lower-case substring) -> `EffectScale`;
+    # REGENIE is left out: logistic with Firth or linear, both common
+    SOFTWARE_EFFECT_SCALE: dict[str, str] = {
+        "saige": EffectScale.LOG_OR,
+        "plink": EffectScale.LOG_OR,
+        "snptest": EffectScale.LOG_OR,
+        "bolt": EffectScale.LINEAR,
+        "fastgwa": EffectScale.LINEAR,
+    }
+    # GWAS-SSF `effect_statistic` (lower case) -> `EffectScale`; "beta"
+    # is not listed, it is used for both log-OR and linear effects
+    EFFECT_STATISTIC_SCALE: dict[str, str] = {
+        "odds_ratio": EffectScale.LOG_OR,
+        "hazard_ratio": EffectScale.LOG_HR,
+    }
+    # FinnGen R13 binary endpoints: REGENIE with Firth correction
+    FINNGEN_EFFECT_SCALE: str = EffectScale.LOG_OR
     # sumstats effect allele of a gene-burden mask row (e.g. UKB exome
     # "M1.0001", "M3.singleton"; other allele "ref"); kept whatever its
     # MAF and turned into a gene-burden row at merge
@@ -273,6 +332,19 @@ class ColumnNames:
     # harmonised `Ancestry` code derived from ANCESTRY
     ANCESTRY_GROUP: str = "ancestry_group"
     COHORT: str = "cohort"
+    # marvel_results.tsv: marvel `Stratification name` to keep
+    STRATIFICATION: str = "stratification"
+    # GWAS-SSF `-meta.yaml` fields and the `EffectScale` they imply
+    EFFECT_STATISTIC: str = "effect_statistic"
+    ANALYSIS_SOFTWARE: str = "analysis_software"
+    EFFECT_SCALE_META: str = "effect_scale_meta"
+    # `FileNames.STUDY_EFFECT_SCALE` evidence: marvel method scale, median
+    # of SE*sqrt(2f(1-f)N), the scale it implies, and the final per-study
+    # `EffectScale` (`functions.infer_effect_scales`)
+    EFFECT_SCALE_METHOD: str = "effect_scale_method"
+    R_MEDIAN: str = "r_median"
+    EFFECT_SCALE_INFERRED: str = "effect_scale_inferred"
+    STUDY_EFFECT_SCALE: str = "study_effect_scale"
     NOTE: str = "note"
     CHILD_TRAITS: str = "child_traits"
     MAPPED_TRAIT_ID: str = "mapped_trait_id"
@@ -338,6 +410,8 @@ class HarmonisedColumns:
     TRAIT_LABEL: str = "trait_label"
     # study ancestry as an `Ancestry` code
     ANCESTRY_GROUP: str = ColumnNames.ANCESTRY_GROUP
+    # per-study `EffectScale`; set by the marvel loader, else at merge
+    STUDY_EFFECT_SCALE: str = ColumnNames.STUDY_EFFECT_SCALE
     CHROM: str = ColumnNames.CHROM
     POS: str = "pos"
     RSID: str = "rsid"
@@ -385,6 +459,7 @@ class HarmonisedColumns:
         OUTCOME_DESC,
         TRAIT_LABEL,
         ANCESTRY_GROUP,
+        STUDY_EFFECT_SCALE,
         CHROM,
         POS,
         RSID,
@@ -424,6 +499,7 @@ class HarmonisedColumns:
         OUTCOME_DESC,
         TRAIT_LABEL,
         ANCESTRY_GROUP,
+        STUDY_EFFECT_SCALE,
     )
     # core columns converted to numbers (unparseable values become NA)
     NUMERIC_COLUMNS: tuple[str, ...] = (
@@ -478,10 +554,10 @@ class SourceColumnMaps:
     # chrom/pos/alleles are parsed from `Exposure` in
     # `merge_associations.load_marvel_results` (effect = a2)
     MARVEL: dict[str, str] = {
-        HarmonisedColumns.BETA: "Estimate",
-        HarmonisedColumns.SE: "Std. Error",
-        HarmonisedColumns.P_VALUE: "P-value",
-        HarmonisedColumns.N: "N (Samples)",
+        HarmonisedColumns.BETA: "Point Estimates",
+        HarmonisedColumns.SE: "Standard Error",
+        HarmonisedColumns.P_VALUE: "P-values",
+        HarmonisedColumns.N: "Samples",
     }
     CURATED: dict[str, str] = {
         HarmonisedColumns.STUDY_ACCESSION: "accession_id",
@@ -696,6 +772,7 @@ class MetaColumns:
         ORIENTED_ALLELE,
         ORIENTATION,
         EFFECT_SCALE,
+        HarmonisedColumns.STUDY_EFFECT_SCALE,
         HarmonisedColumns.SOURCE,
         HarmonisedColumns.TRAIT_LABEL,
     )
@@ -823,6 +900,10 @@ class FileNames:
     STUDY_DISCOVERY_LOG: Path = Paths.DATA_TEMP / "study_discovery_log.tsv.gz"
     MERGED_ASSOCIATIONS: Path = (
         Paths.RESULTS_OUTPUT / "merged_associations.tsv.gz"
+    )
+    # per-study effect scale: metadata, inference and final call
+    STUDY_EFFECT_SCALE: Path = (
+        Paths.RESULTS_OUTPUT / "study_effect_scale.tsv.gz"
     )
     # merged-associations rows matching a (non-AM) gene variant-list entry
     MATCHED_VARIANTS: Path = Paths.RESULTS_OUTPUT / "matched_variants.tsv.gz"

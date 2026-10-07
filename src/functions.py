@@ -35,6 +35,7 @@ from project_constants import (
     ApoeStratum,
     ColumnNames,
     Constants,
+    EffectScale,
     EnsemblAlleleCheck,
     EnsemblRsidCheck,
     FileNames,
@@ -46,6 +47,11 @@ from project_constants import (
     SourceColumnMaps,
 )
 
+# integer in free text, with or without thousands commas, not part of a
+# word or decimal (e.g. not the "23" of "23andMe")
+_SAMPLE_SIZE_NUMBER_PATTERN = re.compile(
+    r"(?<![\w.,])(?:\d{1,3}(?:,\d{3})+|\d+)(?![\w.]|,\d{3})"
+)
 # curated GWAS Catalog effect text, e.g. "0.18 g/l increase"
 _CURATED_BETA_PATTERN = re.compile(
     r"""
@@ -2130,17 +2136,20 @@ def load_marvel_table(path: Path = FileNames.MARVEL_RESULTS) -> pd.DataFrame:
         TSV with `cohort` (a `Constants.PREFERRED_COHORT_ALIASES` key,
         e.g. ``ukb``/``aou``), `outcome` (as in `icd_codes.txt`), `path`
         (a marvel `{exposure}_results.tsv.gz`), `variable` and `model`
-        (the marvel `Variable`/`Model` to keep), `ancestry` (an
-        `Ancestry` code, e.g. ``EUR``, or ``MULTI`` for a pooled run), an
-        optional `apoe_stratum` (an `ApoeStratum.CODES` value; blank for
-        an unstratified run) and an optional `note`.
+        (the marvel `Variable`/`Model name` to keep, e.g. ``model_1``),
+        `ancestry` (an `Ancestry` code, e.g. ``EUR``, or ``MULTI`` for a
+        pooled run), an optional `stratification` (the marvel
+        `Stratification name` to keep), an optional `apoe_stratum` (an
+        `ApoeStratum.CODES` value; blank for an unstratified run) and an
+        optional `note`.
 
     Returns
     -------
     marvel : `pd.DataFrame`
         The table, all columns as strings, `cohort` and `apoe_stratum`
-        lower-cased, `ancestry` upper-cased. Empty (but correctly
-        columned) if `path` does not exist.
+        lower-cased, `ancestry` upper-cased, blank `stratification` set
+        to `Constants.MARVEL_DEFAULT_STRATIFICATION`. Empty (but
+        correctly columned) if `path` does not exist.
 
     Raises
     ------
@@ -2158,7 +2167,11 @@ def load_marvel_table(path: Path = FileNames.MARVEL_RESULTS) -> pd.DataFrame:
         "model",
         ColumnNames.ANCESTRY,
     ]
-    optional = [MetaColumns.APOE_STRATUM, ColumnNames.NOTE]
+    optional = [
+        ColumnNames.STRATIFICATION,
+        MetaColumns.APOE_STRATUM,
+        ColumnNames.NOTE,
+    ]
     columns = [*required, *optional]
     if not path.exists():
         return pd.DataFrame(columns=columns)
@@ -2169,6 +2182,10 @@ def load_marvel_table(path: Path = FileNames.MARVEL_RESULTS) -> pd.DataFrame:
     for column in optional:
         if column not in marvel_df.columns:
             marvel_df[column] = ""
+    stratification = marvel_df[ColumnNames.STRATIFICATION].str.strip()
+    marvel_df[ColumnNames.STRATIFICATION] = stratification.where(
+        stratification != "", Constants.MARVEL_DEFAULT_STRATIFICATION
+    )
     marvel_df[MetaColumns.APOE_STRATUM] = (
         marvel_df[MetaColumns.APOE_STRATUM].str.strip().str.lower()
     )
@@ -2385,6 +2402,350 @@ def _list_ftp_dir(url: str) -> list[str]:
     response = _request_with_retry("GET", f"{url}/", timeout=30)
     response.raise_for_status()
     return re.findall(r'href="([^"]+)"', response.text)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _yaml_scalar(text: str, key: str) -> str:
+    """Return a top-level scalar value from a simple YAML document.
+
+    Parameters
+    ----------
+    text : `str`
+        YAML text (a GWAS-SSF `-meta.yaml`).
+    key : `str`
+        Top-level key, e.g. ``effect_statistic``.
+
+    Returns
+    -------
+    value : `str`
+        The value with surrounding quotes and whitespace removed, `""`
+        if the key is absent or has no inline value.
+    """
+    match = re.search(
+        rf"^{re.escape(key)}:[ \t]*(?P<value>[^\n#]*)", text, re.MULTILINE
+    )
+    if match is None:
+        return ""
+    return match.group("value").strip().strip("'\"").strip()
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def effect_scale_from_meta(effect_statistic: str, software: str) -> str:
+    """Map GWAS-SSF metadata to an `EffectScale` value.
+
+    Parameters
+    ----------
+    effect_statistic : `str`
+        GWAS-SSF `effect_statistic` (``beta``/``odds_ratio``/...).
+    software : `str`
+        GWAS-SSF `analysis_software` (free text).
+
+    Returns
+    -------
+    scale : `str`
+        `Constants.EFFECT_STATISTIC_SCALE` of `effect_statistic` if
+        listed, else the scale of the first
+        `Constants.SOFTWARE_EFFECT_SCALE` key found in `software`, else
+        `EffectScale.UNKNOWN`.
+    """
+    statistic = effect_statistic.strip().lower()
+    if statistic in Constants.EFFECT_STATISTIC_SCALE:
+        return Constants.EFFECT_STATISTIC_SCALE[statistic]
+    software_lower = software.lower()
+    for name, scale in Constants.SOFTWARE_EFFECT_SCALE.items():
+        if name in software_lower:
+            return scale
+    return EffectScale.UNKNOWN
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def study_meta_yaml(study_accession: str) -> dict[str, str]:
+    """Fetch a GWAS Catalog study's GWAS-SSF metadata fields.
+
+    Looks for a ``*-meta.yaml`` in the study's FTP directory, then in its
+    ``harmonised/`` subdirectory.
+
+    Parameters
+    ----------
+    study_accession : `str`
+        GWAS Catalog study accession (e.g. "GCST90861026").
+
+    Returns
+    -------
+    meta : `dict[str, str]`
+        `ColumnNames.EFFECT_STATISTIC`, `ANALYSIS_SOFTWARE` and
+        `EFFECT_SCALE_META` (`effect_scale_from_meta`). The two fields
+        are `""` (scale `EffectScale.UNKNOWN`) when the study has no
+        FTP directory or no metadata file, or a request fails (warned).
+    """
+    meta = {
+        ColumnNames.EFFECT_STATISTIC: "",
+        ColumnNames.ANALYSIS_SOFTWARE: "",
+        ColumnNames.EFFECT_SCALE_META: EffectScale.UNKNOWN,
+    }
+    try:
+        location = study_summary_stats_location(study_accession)
+        if location is None:
+            return meta
+        text = ""
+        for directory in (location, f"{location}/harmonised"):
+            entries = _list_ftp_dir(directory)
+            yamls = [e for e in entries if e.endswith("-meta.yaml")]
+            if yamls:
+                response = _request_with_retry(
+                    "GET", f"{directory}/{yamls[0]}", timeout=30
+                )
+                response.raise_for_status()
+                text = response.text
+                break
+            if "harmonised/" not in entries:
+                break
+    except (requests.RequestException, ValueError) as error:
+        log_warn(f"{study_accession}: metadata yaml not read ({error})")
+        return meta
+    if not text:
+        log_debug(f"{study_accession}: no -meta.yaml found")
+        return meta
+    statistic = _yaml_scalar(text, ColumnNames.EFFECT_STATISTIC)
+    software = _yaml_scalar(text, ColumnNames.ANALYSIS_SOFTWARE)
+    meta[ColumnNames.EFFECT_STATISTIC] = statistic
+    meta[ColumnNames.ANALYSIS_SOFTWARE] = software
+    meta[ColumnNames.EFFECT_SCALE_META] = effect_scale_from_meta(
+        statistic, software
+    )
+    return meta
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def parse_total_sample_size(text: object) -> int | None:
+    """Sum the sample counts in a free-text sample-size cell.
+
+    Parameters
+    ----------
+    text : `object`
+        E.g. ``"111,326 European ancestry cases, 677,663 European
+        ancestry controls"`` (GWAS Catalog) or ``"4093 cases, 464389
+        controls"`` (FinnGen).
+
+    Returns
+    -------
+    total : `int` or `NoneType`
+        The sum of the integers in `text` (thousands commas allowed;
+        digits inside words such as "23andMe" or decimals are skipped),
+        `None` if there are none or the sum is 0.
+    """
+    if not isinstance(text, str):
+        return None
+    numbers = [
+        int(match.replace(",", ""))
+        for match in _SAMPLE_SIZE_NUMBER_PATTERN.findall(text)
+    ]
+    total = sum(numbers)
+    return total if total > 0 else None
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _first_known_scale(values: pd.Series) -> str:
+    """Return the first `EffectScale` value that is not unknown.
+
+    Parameters
+    ----------
+    values : `pd.Series`
+        `EffectScale` values (blanks and NA allowed).
+
+    Returns
+    -------
+    scale : `str`
+        The first value other than `""`, NA and `EffectScale.UNKNOWN`, or
+        `EffectScale.UNKNOWN`.
+    """
+    for value in values:
+        if isinstance(value, str) and value not in ("", EffectScale.UNKNOWN):
+            return value
+    return EffectScale.UNKNOWN
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _combine_scales(*scales: str) -> str:
+    """Combine `EffectScale` values from independent evidence.
+
+    Parameters
+    ----------
+    *scales : `str`
+        `EffectScale` values; `EffectScale.UNKNOWN` carries no evidence.
+
+    Returns
+    -------
+    scale : `str`
+        The one known scale, `EffectScale.CONFLICT` if the known scales
+        differ, `EffectScale.UNKNOWN` if none is known.
+    """
+    known = {s for s in scales if s != EffectScale.UNKNOWN}
+    if not known:
+        return EffectScale.UNKNOWN
+    if len(known) > 1:
+        return EffectScale.CONFLICT
+    return known.pop()
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def infer_effect_scales(
+    combined: pd.DataFrame, audit: pd.DataFrame
+) -> pd.DataFrame:
+    """Infer per study whether its betas are log-OR, linear or log-HR.
+
+    Three kinds of evidence are combined (`_combine_scales`):
+
+    - method: `study_effect_scale` already set on the rows (marvel
+      `Model`, see `Constants.MARVEL_METHOD_SCALE`).
+    - metadata: `effect_scale_meta` from the discovery log (GWAS-SSF
+      `-meta.yaml`, FinnGen fixed).
+    - inference: the median of ``r = SE * sqrt(2f(1-f)N)`` over the
+      study's distinct ``summary-stats`` variants with
+      `Constants.EFFECT_SCALE_MIN_MAF` < MAF <= 0.5, SE > 0 and a known
+      N. N is the row's `n`, else the sum of the counts in the discovery
+      log `sample_size` (`parse_total_sample_size`). ``r >=
+      Constants.EFFECT_SCALE_CUTOFF`` is log-OR, below it linear; with
+      fewer than `Constants.EFFECT_SCALE_MIN_VARIANTS` variants it is
+      unknown. A study with only curated rows that report an odds ratio
+      is inferred log-OR.
+
+    Parameters
+    ----------
+    combined : `pd.DataFrame`
+        Harmonised merged associations (`HarmonisedColumns`).
+    audit : `pd.DataFrame`
+        The study-discovery log (may be empty, or predate the scale
+        columns: metadata then unknown).
+
+    Returns
+    -------
+    scales : `pd.DataFrame`
+        One row per `study_accession`, columns `study_accession`,
+        `source_db`, `effect_statistic`, `analysis_software`,
+        `effect_scale_meta`, `effect_scale_method`, `n_variants`,
+        `r_median`, `effect_scale_inferred` and `study_effect_scale` (an
+        `EffectScale` value).
+    """
+    hc = HarmonisedColumns
+    cn = ColumnNames
+    rows = combined[combined[hc.STUDY_ACCESSION].notna()]
+
+    meta_by_study: dict[str, dict[str, str]] = {}
+    sample_size: dict[str, int] = {}
+    if not audit.empty:
+        for accession, group in audit.groupby(cn.STUDY_ACCESSION):
+            meta_by_study[accession] = {
+                col: next(
+                    (v for v in group.get(col, pd.Series(dtype=str)) if v),
+                    "",
+                )
+                for col in (cn.EFFECT_STATISTIC, cn.ANALYSIS_SOFTWARE)
+            }
+            meta_by_study[accession][cn.EFFECT_SCALE_META] = (
+                _first_known_scale(
+                    group.get(cn.EFFECT_SCALE_META, pd.Series(dtype=str))
+                )
+            )
+            n_total = next(
+                (
+                    n
+                    for n in map(
+                        parse_total_sample_size,
+                        group.get(cn.SAMPLE_SIZE, pd.Series(dtype=str)),
+                    )
+                    if n is not None
+                ),
+                None,
+            )
+            if n_total is not None:
+                sample_size[accession] = n_total
+        if cn.EFFECT_SCALE_META not in audit.columns:
+            log_warn(
+                f"{FileNames.STUDY_DISCOVERY_LOG} has no "
+                f"{cn.EFFECT_SCALE_META} column: metadata scale unknown "
+                "(rerun gwas_cat_prep.py)"
+            )
+
+    # inference over distinct variants with a usable SE, MAF and N
+    stats = rows.loc[
+        rows[hc.SOURCE] == "summary-stats",
+        [hc.STUDY_ACCESSION, hc.VARIANT_ID, hc.MAF, hc.SE, hc.N],
+    ].drop_duplicates(subset=[hc.STUDY_ACCESSION, hc.VARIANT_ID])
+    maf = pd.to_numeric(stats[hc.MAF], errors="coerce")
+    se = pd.to_numeric(stats[hc.SE], errors="coerce")
+    n = pd.to_numeric(stats[hc.N], errors="coerce")
+    n = n.where(n > 0, stats[hc.STUDY_ACCESSION].map(sample_size))
+    usable = (
+        (maf > Constants.EFFECT_SCALE_MIN_MAF)
+        & (maf <= 0.5)
+        & (se > 0)
+        & np.isfinite(se)
+        & (n > 0)
+    )
+    ratio = se[usable] * np.sqrt(
+        2 * maf[usable] * (1 - maf[usable]) * n[usable]
+    )
+    by_study = ratio.groupby(stats.loc[usable, hc.STUDY_ACCESSION])
+    r_median = by_study.median()
+    n_variants = by_study.size()
+
+    odds_ratio = pd.to_numeric(rows[hc.ODDS_RATIO], errors="coerce")
+    curated_or = set(
+        rows.loc[
+            (rows[hc.SOURCE] == "curated") & (odds_ratio > 0),
+            hc.STUDY_ACCESSION,
+        ]
+    )
+
+    records: list[dict[str, object]] = []
+    for accession, group in rows.groupby(hc.STUDY_ACCESSION, sort=True):
+        meta = meta_by_study.get(accession, {})
+        meta_scale = meta.get(cn.EFFECT_SCALE_META, EffectScale.UNKNOWN)
+        method_scale = _first_known_scale(group[hc.STUDY_EFFECT_SCALE])
+        k = int(n_variants.get(accession, 0))
+        median = r_median.get(accession, np.nan)
+        if k >= Constants.EFFECT_SCALE_MIN_VARIANTS:
+            inferred = (
+                EffectScale.LOG_OR
+                if median >= Constants.EFFECT_SCALE_CUTOFF
+                else EffectScale.LINEAR
+            )
+        elif k == 0 and accession in curated_or:
+            inferred = EffectScale.LOG_OR
+        else:
+            inferred = EffectScale.UNKNOWN
+        records.append(
+            {
+                cn.STUDY_ACCESSION: accession,
+                cn.SOURCE_DB: ";".join(
+                    sorted(group[hc.SOURCE_DB].dropna().astype(str).unique())
+                ),
+                cn.EFFECT_STATISTIC: meta.get(cn.EFFECT_STATISTIC, ""),
+                cn.ANALYSIS_SOFTWARE: meta.get(cn.ANALYSIS_SOFTWARE, ""),
+                cn.EFFECT_SCALE_META: meta_scale,
+                cn.EFFECT_SCALE_METHOD: method_scale,
+                MetaColumns.N_VARIANTS: k,
+                cn.R_MEDIAN: median,
+                cn.EFFECT_SCALE_INFERRED: inferred,
+                cn.STUDY_EFFECT_SCALE: _combine_scales(
+                    method_scale, meta_scale, inferred
+                ),
+            }
+        )
+    columns = [
+        cn.STUDY_ACCESSION,
+        cn.SOURCE_DB,
+        cn.EFFECT_STATISTIC,
+        cn.ANALYSIS_SOFTWARE,
+        cn.EFFECT_SCALE_META,
+        cn.EFFECT_SCALE_METHOD,
+        MetaColumns.N_VARIANTS,
+        cn.R_MEDIAN,
+        cn.EFFECT_SCALE_INFERRED,
+        cn.STUDY_EFFECT_SCALE,
+    ]
+    return pd.DataFrame(records, columns=columns)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

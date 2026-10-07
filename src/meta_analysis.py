@@ -45,6 +45,7 @@ from project_constants import (
     ApoeStratum,
     ClinVarDirection,
     Constants,
+    EffectScale,
     FileNames,
     HarmonisedColumns,
     MetaColumns,
@@ -295,11 +296,62 @@ def load_matched() -> pd.DataFrame:
     matched[HarmonisedColumns.ANCESTRY_GROUP] = matched[
         HarmonisedColumns.ANCESTRY_GROUP
     ].fillna(Ancestry.NR)
+    # matched tables written before the effect-scale check have no column
+    if HarmonisedColumns.STUDY_EFFECT_SCALE not in matched.columns:
+        log_warn(
+            f"{FileNames.MATCHED_VARIANTS} has no study_effect_scale "
+            f"column, all rows labelled {EffectScale.UNKNOWN} (rerun merge "
+            "and match)"
+        )
+        matched[HarmonisedColumns.STUDY_EFFECT_SCALE] = EffectScale.UNKNOWN
+    matched[HarmonisedColumns.STUDY_EFFECT_SCALE] = matched[
+        HarmonisedColumns.STUDY_EFFECT_SCALE
+    ].fillna(EffectScale.UNKNOWN)
     log_info(
         f"{FileNames.MATCHED_VARIANTS}: {len(matched)} rows, "
         f"{matched[MetaColumns.VARIANT_SITE].nunique()} variants"
     )
     return matched
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def check_effect_scales(
+    matched: pd.DataFrame, require_log_or: bool = False
+) -> pd.DataFrame:
+    """Warn about, or drop, studies whose betas are not log-OR.
+
+    Parameters
+    ----------
+    matched : `pd.DataFrame`
+        Matched rows with `study_effect_scale` (see `load_matched`).
+    require_log_or : `bool`, optional, default: `False`
+        Drop the rows of studies whose scale is not `EffectScale.LOG_OR`
+        (linear, log-HR, unknown, conflict).
+
+    Returns
+    -------
+    kept : `pd.DataFrame`
+        `matched`, or its log-OR rows when `require_log_or`.
+    """
+    hc = HarmonisedColumns
+    is_log_or = matched[hc.STUDY_EFFECT_SCALE] == EffectScale.LOG_OR
+    other = (
+        matched.loc[~is_log_or, [hc.STUDY_ACCESSION, hc.STUDY_EFFECT_SCALE]]
+        .drop_duplicates()
+        .sort_values([hc.STUDY_EFFECT_SCALE, hc.STUDY_ACCESSION])
+    )
+    action = "dropped" if require_log_or else "kept (--require-log-or drops)"
+    for accession, scale in zip(
+        other[hc.STUDY_ACCESSION], other[hc.STUDY_EFFECT_SCALE]
+    ):
+        log_warn(f"{accession}: effect scale {scale}, not log-OR; {action}")
+    if not require_log_or:
+        return matched
+    log_info(
+        f"--require-log-or: {int((~is_log_or).sum())} rows of "
+        f"{other[hc.STUDY_ACCESSION].nunique()} studies dropped"
+    )
+    return matched.loc[is_log_or].copy()
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -916,6 +968,7 @@ def meta_analysis(
     variant_sources: list[str] | None = None,
     per_study: bool = False,
     label: str | None = None,
+    require_log_or: bool = False,
 ) -> None:
     """Run the meta-analysis for one ancestry group and write it.
 
@@ -948,6 +1001,9 @@ def meta_analysis(
         ``stratum``) next to the pooled rows.
     label : `str` or `None`, optional, default: `None`
         Appended to the output file names as ``_<label>``.
+    require_log_or : `bool`, optional, default: `False`
+        Drop studies whose `study_effect_scale` is not log-OR
+        (`check_effect_scales`); otherwise they are only warned about.
 
     Returns
     -------
@@ -979,6 +1035,8 @@ def meta_analysis(
         matched, HarmonisedColumns.STUDY_ACCESSION, studies
     )
     matched = _keep_values(matched, HarmonisedColumns.OUTCOME, outcomes)
+    log_stage("effect_scale")
+    matched = check_effect_scales(matched, require_log_or)
     if matched.empty:
         log_warn("no rows left after filtering; no output written")
         return
@@ -1373,6 +1431,14 @@ def _init_cmd_args() -> argparse.ArgumentParser:
         "--label",
         help="suffix for the output file names (meta_<ancestry>_<label>)",
     )
+    parser.add_argument(
+        "--require-log-or",
+        action="store_true",
+        help=(
+            "drop studies whose effect scale is not log-OR (linear, log-HR, "
+            "unknown, conflict); default: warn and keep them"
+        ),
+    )
     return parser
 
 
@@ -1398,6 +1464,7 @@ def main() -> None:
             variant_sources=args.variant_sources,
             per_study=args.stratified,
             label=args.label,
+            require_log_or=args.require_log_or,
         )
 
 

@@ -34,6 +34,7 @@ from project_constants import (
     Ancestry,
     ColumnNames,
     Constants,
+    EffectScale,
     FileNames,
     Paths,
     RunlogOrder,
@@ -53,7 +54,15 @@ META_COLUMNS: list[str] = [
     ColumnNames.ANCESTRY_GROUP,
     ColumnNames.COHORT,
 ]
+# GWAS-SSF metadata per study, after `META_COLUMNS`; filled for included
+# studies only (`_add_scale_meta`)
+SCALE_META_COLUMNS: list[str] = [
+    ColumnNames.EFFECT_STATISTIC,
+    ColumnNames.ANALYSIS_SOFTWARE,
+    ColumnNames.EFFECT_SCALE_META,
+]
 FINNGEN_COHORT: str = "FinnGen R13"
+FINNGEN_SOFTWARE: str = "REGENIE (Firth)"
 # log_count key for EFO ids whose GWAS Catalog search found no studies
 _NO_STUDIES_COUNT_KEY: str = "efo_no_studies"
 # discovery query: efo_id, child_traits, excluded cohorts, review
@@ -314,6 +323,61 @@ def _finngen_meta(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _add_scale_meta(audit_rows: list[dict[str, str]]) -> None:
+    """Fill `SCALE_META_COLUMNS` in place on every audit row.
+
+    Included GWAS Catalog and manual studies get their GWAS-SSF metadata
+    (`functions.study_meta_yaml`, fetched once per accession); FinnGen
+    rows get `Constants.FINNGEN_EFFECT_SCALE`. Other rows are left blank
+    (scale `EffectScale.UNKNOWN`), which saves the requests for studies
+    that are not analysed.
+
+    Parameters
+    ----------
+    audit_rows : `list[dict[str, str]]`
+        Study-discovery rows with `source`, `study_accession` and
+        `status` set.
+
+    Returns
+    -------
+    `None`
+    """
+    blank = {
+        ColumnNames.EFFECT_STATISTIC: "",
+        ColumnNames.ANALYSIS_SOFTWARE: "",
+        ColumnNames.EFFECT_SCALE_META: EffectScale.UNKNOWN,
+    }
+    finngen = {
+        **blank,
+        ColumnNames.ANALYSIS_SOFTWARE: FINNGEN_SOFTWARE,
+        ColumnNames.EFFECT_SCALE_META: Constants.FINNGEN_EFFECT_SCALE,
+    }
+    fetched: dict[str, dict[str, str]] = {}
+    for row in audit_rows:
+        accession = row[ColumnNames.STUDY_ACCESSION]
+        source = row[ColumnNames.SOURCE]
+        if source == "finngen":
+            row.update(finngen)
+        elif (
+            source in ("gwas_catalog", "manual")
+            and row[ColumnNames.STATUS] == "included"
+        ):
+            if accession not in fetched:
+                fetched[accession] = functions.study_meta_yaml(accession)
+            row.update(fetched[accession])
+        else:
+            row.update(blank)
+    counts: dict[str, int] = {}
+    for meta in fetched.values():
+        scale = meta[ColumnNames.EFFECT_SCALE_META]
+        counts[scale] = counts.get(scale, 0) + 1
+    log_info(
+        f"metadata yaml read for {len(fetched)} included studies, scale: "
+        + ", ".join(f"{k}={n}" for k, n in sorted(counts.items()))
+    )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def build_tasks() -> None:
     """Resolve lookups, discover studies, and write the job-array file.
@@ -369,7 +433,8 @@ def build_tasks() -> None:
     or the FinnGen manifest, so the recency cap can be checked by eye --
     plus `ancestry_group` (`functions.harmonise_ancestry`; FinnGen is
     `Ancestry.FINNGEN`), which `merge_associations.py` carries into the
-    merged associations.
+    merged associations, and the GWAS-SSF effect-scale metadata
+    (`SCALE_META_COLUMNS`, included studies only, see `_add_scale_meta`).
 
     Returns
     -------
@@ -690,6 +755,8 @@ def build_tasks() -> None:
     # pyjasub errors if the job-array file is newer than an existing log dir
     functions.archive_dir(Paths.FILTER_TASK_LOGS)
 
+    log_stage("scale_meta")
+    _add_scale_meta(audit_rows)
     audit_header = [
         ColumnNames.OUTCOME,
         ColumnNames.SOURCE,
@@ -702,6 +769,7 @@ def build_tasks() -> None:
         ColumnNames.REASON,
         ColumnNames.PUBMED_ID,
         *META_COLUMNS,
+        *SCALE_META_COLUMNS,
         ColumnNames.NOTE,
     ]
     audit_tmp = FileNames.STUDY_DISCOVERY_LOG.with_suffix(".tmp")

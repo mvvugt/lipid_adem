@@ -12,6 +12,7 @@ merged associations table.
 from __future__ import annotations
 
 import argparse
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -29,6 +30,7 @@ from project_constants import (
     Ancestry,
     ColumnNames,
     Constants,
+    EffectScale,
     FileNames,
     HarmonisedColumns,
     MafStatus,
@@ -41,6 +43,12 @@ from project_constants import (
 
 # log_count key for EFO ids with no curated associations at all
 _NO_CURATED_COUNT_KEY: str = "efo_no_curated"
+# marvel results columns: regression method (OLS, GLM-Binom, Cox),
+# covariate model (model_1, ...) and stratification (overall, ...)
+_MARVEL_METHOD: str = "Model"
+_MARVEL_MODEL_NAME: str = "Model name"
+_MARVEL_STRATIFICATION_NAME: str = "Stratification name"
+_MARVEL_GENE_MASK_RE = re.compile(Constants.MARVEL_GENE_MASK_PATTERN)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -263,6 +271,34 @@ def _marvel_identity(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _marvel_burden_gene(
+    exposure: str, regions: dict[str, functions.GeneRegion]
+) -> str | None:
+    """Return the gene of a gene-level marvel `Exposure`.
+
+    Parameters
+    ----------
+    exposure : `str`
+        A gene symbol (e.g. ``CETP``) or a gene plus mask (e.g.
+        ``CETP PTV``).
+    regions : `dict[str, functions.GeneRegion]`
+        Gene symbol -> flanked region.
+
+    Returns
+    -------
+    gene : `str` or `NoneType`
+        The gene symbol if it is in `regions`, else `None` (intercept,
+        covariates, other genes).
+    """
+    if exposure in regions:
+        return exposure
+    match = _MARVEL_GENE_MASK_RE.match(str(exposure))
+    if match is not None and match.group("gene") in regions:
+        return match.group("gene")
+    return None
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def load_marvel_results(
     regions: dict[str, functions.GeneRegion],
     marvel_df: pd.DataFrame,
@@ -270,12 +306,17 @@ def load_marvel_results(
     """Load and harmonise own UKB/AoU association results (marvel).
 
     Each entry of `marvel_df` names one marvel results file and the
-    `Variable`/`Model` to keep from it. A row whose `Exposure` is a
-    variant (``chr:pos:a1:a2``, a2 counted) becomes a ``summary-stats``
-    row for every gene region containing it, with effect allele a2 and
-    other allele a1. A row whose `Exposure` is a gene in `regions`
-    becomes a ``gene-burden`` row for that gene. Other rows are dropped
-    (warned).
+    `Variable`, `Model name` (entry `model`) and `Stratification name`
+    (entry `stratification`, if the file has that column) to keep from
+    it. A row whose `Exposure` is a variant (``chr:pos:a1:a2``, a2
+    counted) becomes a ``summary-stats`` row for every gene region
+    containing it, with effect allele a2 and other allele a1. A row
+    whose `Exposure` is a gene in `regions`, or a gene plus a mask
+    (e.g. ``CETP PTV``, `Constants.MARVEL_GENE_MASK_PATTERN`), becomes
+    a ``gene-burden`` row for that gene. Other rows (intercept,
+    covariates) are dropped (counted). Each row's `study_effect_scale`
+    is its `Model` (regression method) mapped by
+    `Constants.MARVEL_METHOD_SCALE`.
 
     Parameters
     ----------
@@ -297,7 +338,8 @@ def load_marvel_results(
     FileNotFoundError
         If a listed results file does not exist.
     ValueError
-        If a results file lacks the `Exposure`/`Variable`/`Model` columns.
+        If a results file lacks the `Exposure`/`Variable`/`Model name`/
+        `Model` columns.
     """
     hc = HarmonisedColumns
     parts: list[pd.DataFrame] = []
@@ -310,15 +352,37 @@ def load_marvel_results(
         results = pd.read_csv(path, sep="\t", dtype=str)
         missing = [
             col
-            for col in ("Exposure", "Variable", "Model")
+            for col in (
+                "Exposure",
+                "Variable",
+                _MARVEL_MODEL_NAME,
+                _MARVEL_METHOD,
+            )
             if col not in results.columns
         ]
         if missing:
             raise ValueError(f"{path}: missing marvel column(s) {missing}")
-        results = results[
-            (results["Variable"] == entry["variable"])
-            & (results["Model"] == entry["model"])
-        ].reset_index(drop=True)
+        keep = (results["Variable"] == entry["variable"]) & (
+            results[_MARVEL_MODEL_NAME] == entry["model"]
+        )
+        if _MARVEL_STRATIFICATION_NAME in results.columns:
+            keep &= (
+                results[_MARVEL_STRATIFICATION_NAME]
+                == entry[ColumnNames.STRATIFICATION]
+            )
+        results = results[keep].reset_index(drop=True)
+        if results.empty:
+            log_warn(
+                f"marvel {entry['cohort']} {entry['outcome']}: no rows for "
+                f"variable {entry['variable']!r}, model {entry['model']!r}, "
+                f"stratification {entry[ColumnNames.STRATIFICATION]!r} in "
+                f"{path.name}"
+            )
+        results[hc.STUDY_EFFECT_SCALE] = (
+            results[_MARVEL_METHOD]
+            .map(Constants.MARVEL_METHOD_SCALE)
+            .fillna(EffectScale.UNKNOWN)
+        )
 
         variant_rows: list[dict] = []
         variant_index: list[int] = []
@@ -328,9 +392,10 @@ def load_marvel_results(
         for index, exposure in results["Exposure"].items():
             variant = functions.parse_marvel_exposure(exposure)
             if variant is None:
-                if exposure in regions:
+                gene = _marvel_burden_gene(exposure, regions)
+                if gene is not None:
                     burden_index.append(index)
-                    burden_genes.append(exposure)
+                    burden_genes.append(gene)
                 else:
                     n_unplaced += 1
                 continue
@@ -382,10 +447,10 @@ def load_marvel_results(
             f"{len(burden_index)} gene-burden rows ({path.name})"
         )
         if n_unplaced:
-            log_warn(
+            log_info(
                 f"marvel {entry['cohort']} {entry['outcome']}: {n_unplaced} "
-                "exposures neither a variant in a gene region nor a gene "
-                "in gene_list.txt, dropped"
+                "exposures (intercept, covariates) neither a variant in a "
+                "gene region nor a gene (mask) in gene_list.txt, dropped"
             )
     return parts
 
@@ -601,6 +666,62 @@ def _fill_ancestry(
     for (source, group), n in counts.items():
         log_info(f"ancestry: {source} {group}={n}")
     return filled
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _set_effect_scales(
+    combined: pd.DataFrame, audit: pd.DataFrame
+) -> pd.DataFrame:
+    """Set `study_effect_scale` per row and write the per-study table.
+
+    Parameters
+    ----------
+    combined : `pd.DataFrame`
+        All harmonised rows; marvel rows carry their method's scale.
+    audit : `pd.DataFrame`
+        From `_read_discovery_log`.
+
+    Returns
+    -------
+    combined : `pd.DataFrame`
+        `combined` with `study_effect_scale` from
+        `functions.infer_effect_scales` (`EffectScale.UNKNOWN` for rows
+        without a study accession). Writes `FileNames.STUDY_EFFECT_SCALE`.
+    """
+    hc = HarmonisedColumns
+    scales = functions.infer_effect_scales(combined, audit)
+    Paths.RESULTS_OUTPUT.mkdir(parents=True, exist_ok=True)
+    functions.write_table_atomic(scales, FileNames.STUDY_EFFECT_SCALE)
+    log_info(
+        f"wrote {len(scales)} studies to {FileNames.STUDY_EFFECT_SCALE}"
+    )
+    lookup = dict(
+        zip(
+            scales[ColumnNames.STUDY_ACCESSION],
+            scales[ColumnNames.STUDY_EFFECT_SCALE],
+        )
+    )
+    labelled = combined.copy()
+    labelled[hc.STUDY_EFFECT_SCALE] = (
+        labelled[hc.STUDY_ACCESSION].map(lookup).fillna(EffectScale.UNKNOWN)
+    )
+    counts = scales[ColumnNames.STUDY_EFFECT_SCALE].value_counts()
+    log_info(
+        "study effect scale: "
+        + ", ".join(f"{scale}={n}" for scale, n in sorted(counts.items()))
+    )
+    for _, row in scales[
+        scales[ColumnNames.STUDY_EFFECT_SCALE] == EffectScale.CONFLICT
+    ].iterrows():
+        log_warn(
+            f"effect scale conflict for {row[ColumnNames.STUDY_ACCESSION]}: "
+            f"method {row[ColumnNames.EFFECT_SCALE_METHOD]}, metadata "
+            f"{row[ColumnNames.EFFECT_SCALE_META]}, inferred "
+            f"{row[ColumnNames.EFFECT_SCALE_INFERRED]} (r_median "
+            f"{row[ColumnNames.R_MEDIAN]:.2f}, "
+            f"{row[MetaColumns.N_VARIANTS]} variants)"
+        )
+    return labelled
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -911,6 +1032,8 @@ def merge_results() -> None:
 
     combined = pd.concat([p for p in parts if not p.empty], ignore_index=True)
     combined = _fill_ancestry(combined, _study_ancestry(audit))
+    log_stage("effect_scale")
+    combined = _set_effect_scales(combined, audit)
     log_stage("normalise")
     sequences = functions.region_sequences(regions)
     combined = functions.normalise_variants(combined, sequences)
