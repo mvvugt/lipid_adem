@@ -112,6 +112,32 @@ def _join_unique(values: pd.Series) -> str:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _join_study_maf(group: pd.DataFrame) -> str:
+    """Join each study's MAF as ``<accession>=<maf>`` pairs with ``;``.
+
+    Parameters
+    ----------
+    group : `pd.DataFrame`
+        Rows of one group with `HarmonisedColumns.STUDY_ACCESSION` and
+        `HarmonisedColumns.MAF`.
+
+    Returns
+    -------
+    joined : `str`
+        Sorted unique pairs, so in the order of `_join_unique` on the
+        accessions; the MAF is given to 3 significant digits, or ``NA``.
+    """
+    maf = pd.to_numeric(group[HarmonisedColumns.MAF], errors="coerce")
+    pairs = [
+        f"{accession}={'NA' if pd.isna(value) else f'{value:.3g}'}"
+        for accession, value in zip(
+            group[HarmonisedColumns.STUDY_ACCESSION].fillna("NA"), maf
+        )
+    ]
+    return ";".join(sorted(set(pairs)))
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _z_from_neg_log10_p(neg_log10_p: float) -> float:
     """Convert a two-sided -log10 p-value to an absolute z-score.
 
@@ -691,7 +717,8 @@ def meta_analyse(
     -------
     pooled : `pd.DataFrame`
         `ivw` output plus `N_STUDIES`, `N_SE_DERIVED`, `STUDIES`,
-        `COPIED_STUDIES` (``""`` when none) and the
+        `STUDY_MAF` (when the rows have a MAF column), `COPIED_STUDIES`
+        (``""`` when none) and the
         `MetaColumns.DESCRIBE_COLUMNS` (unique values joined with ``;``).
     """
     pooled = ivw(rows, keys, MetaColumns.BETA_ORIENTED)
@@ -708,6 +735,10 @@ def meta_analyse(
     extra[MetaColumns.STUDIES] = grouped[
         HarmonisedColumns.STUDY_ACCESSION
     ].agg(_join_unique)
+    if HarmonisedColumns.MAF in rows.columns:
+        extra[MetaColumns.STUDY_MAF] = grouped[
+            [HarmonisedColumns.STUDY_ACCESSION, HarmonisedColumns.MAF]
+        ].apply(_join_study_maf)
     describe = [
         column
         for column in MetaColumns.DESCRIBE_COLUMNS

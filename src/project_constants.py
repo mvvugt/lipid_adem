@@ -649,6 +649,9 @@ class MetaColumns:
     N_ESTIMATES: str = "n_estimates"
     N_STUDIES: str = "n_studies"
     STUDIES: str = "studies"
+    # <accession>=<maf> pairs joined with ";" in the order of `studies`;
+    # NA when the study reports no frequency
+    STUDY_MAF: str = "study_maf"
     # accessions dropped because their (beta, se) copies a kept estimate
     COPIED_STUDIES: str = "copied_studies"
     N_SE_DERIVED: str = "n_se_derived"
