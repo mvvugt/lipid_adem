@@ -182,10 +182,11 @@ run_gene() {
     mkdir -p "$out_stage"
     cp "$config" "${out_stage}/marvel.cnf"
     log_info "${gene}: dry run" no-record
+    # marvelous only logs (console and --log-file) with -v
     ( cd "$STAGE_DIR" && run_mamba "$MARVEL_ENV" marvelous \
-        "${out_stage}/marvel.cnf" --dry-run \
+        "${out_stage}/marvel.cnf" -v --dry-run \
         --log-file "${STAGE_DIR}/dry_run.log" ) || true
-    if ! grep -qF "$DRY_RUN_OK" "${STAGE_DIR}/dry_run.log"; then
+    if ! grep -qsF "$DRY_RUN_OK" "${STAGE_DIR}/dry_run.log"; then
         log_error "${gene}: config check failed, see marvel output above"
         rm -rf "$STAGE_DIR"
         STAGE_DIR=""
@@ -195,7 +196,7 @@ run_gene() {
     ( cd "$STAGE_DIR" && run_mamba "$MARVEL_ENV" marvelous \
         "${out_stage}/marvel.cnf" -v --outpath "$out_stage" \
         --log-file "${out_stage}/marvel.log" ) || true
-    if ! grep -qF "$RUN_OK" "${out_stage}/marvel.log"; then
+    if ! grep -qsF "$RUN_OK" "${out_stage}/marvel.log"; then
         log_error "${gene}: marvel run failed, see marvel output above"
         rm -rf "$STAGE_DIR"
         STAGE_DIR=""
