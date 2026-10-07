@@ -45,7 +45,8 @@ run_mamba marvel "${ROOT}"/src/annotate_variants.py
 # [myriad] resolve gene/outcome lookups, discover studies, write job-array file
 run_mamba biomed-api "${ROOT}"/src/gwas_cat_prep.py
 
-# [myriad] filter GWAS catalog results for MAF
+# [myriad] filter GWAS catalog results to the gene regions (no MAF filter:
+# Constants.MAF_THRESHOLD None; delete old gwas_filtered outfiles to redo)
 run_mamba biomed-api pyjasub "${ROOT}"/config/filter_task.cnf
 
 # [myriad] adds GWAS Catalog associations + Open Targets gene-burden evidence
@@ -96,7 +97,12 @@ run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
     --label armb_ad_ptv_clinvar
 # EAS (pooled only, no APOE strata): arm A = Cao 2026 + K-ROAD WGS
 # (independent cohorts), arm B = K-ROAD WGS; both via
-# gwas_catalog_manual_studies.tsv, so rerun prep/filter/merge/match first
+# gwas_catalog_manual_studies.tsv, so rerun prep/filter/merge/match first.
+# NOTE (2026-10-07): neither has rare PTV/P/LP variants. Deposited
+# sumstats are MAF-filtered: Cao MAF >= ~5% (0 rows with MAF < 0.01 in the
+# gene regions), K-ROAD MAF >= ~0.7% (12 rows with MAF < 0.01, none in the
+# variant lists). Without the MAF filter only common listed variants (e.g.
+# APOE e2/e4) can match. Kept in case of re-deposited full sumstats.
 run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EAS \
     --outcomes alzheimers_dementia \
     --studies GCST90727420 GCST90566388 \

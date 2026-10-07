@@ -36,7 +36,11 @@ class Paths:
 
 class Constants:
     """Pipeline thresholds and external API endpoints (gwas_cat.md)."""
-    MAF_THRESHOLD: float = 0.01
+    # MAF cutoff of the filter step and the curated associations; `None`
+    # keeps every in-region row whatever its frequency (also rows without
+    # one), since listed variants can be common in some ancestries.
+    # match_variants.py keeps only the listed variants.
+    MAF_THRESHOLD: float | None = None
     GENE_COORD_FLANK_BP: int = 10_000
     MAX_STUDIES_PER_OUTCOME: int = 10
     # overall ceiling per child-trait search, on top of the per-term cap

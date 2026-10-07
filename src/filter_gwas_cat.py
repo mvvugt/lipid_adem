@@ -4,8 +4,9 @@ Runs once per pyjasub array task over `--step` rows of the job-array file
 (data/temp/tasks.tsv), one row per study. For each study, remote-queries
 its summary stats (GWAS Catalog harmonised or raw, or FinnGen, per the
 row's `source`) for every gene region in data/temp/gene_regions.tsv in one
-pass, filters to MAF < Constants.MAF_THRESHOLD, and writes the row's
-output file. Rows whose output file already exists are skipped.
+pass, filters to MAF < Constants.MAF_THRESHOLD (no MAF filter when it is
+`None`: every in-region row is kept), and writes the row's output file.
+Rows whose output file already exists are skipped.
 """
 
 

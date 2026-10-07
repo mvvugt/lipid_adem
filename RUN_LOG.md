@@ -1,5 +1,5 @@
 ## [10] gwas_cat_prep (`/home/rmgpmva/projects/lipid_adem/src/gwas_cat_prep.py`)
-- first run: 2026-09-21 22:45:06
+- first run: 2026-10-02 08:25:29
 - last run: 2026-10-02 08:25:29
 - commit: `9f8d050`
 
@@ -68,7 +68,7 @@ Output:
 ```
 
 ## [20] filter_gwas_cat (`/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py --tasks-file /myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/filter_task_logs/3_1790934491/run_job_array.job --task-id 1 --step 10`)
-- first run: 2026-09-21 22:58:26
+- first run: 2026-10-02 10:52:11
 - last run: 2026-10-02 10:52:11
 - commit: `9f8d050`
 
@@ -99,7 +99,7 @@ Output:
 ```
 
 ## [20] filter_gwas_cat_job
-- first run: 2026-09-28 23:45:21
+- first run: 2026-10-02 10:52:11
 - last run: 2026-10-02 10:52:11
 - commit: `9f8d050`
 
@@ -110,7 +110,7 @@ Output:
 ```
 
 ## [30] merge_associations (`/home/rmgpmva/projects/lipid_adem/src/merge_associations.py`)
-- first run: 2026-09-22 15:24:19
+- first run: 2026-10-02 11:17:42
 - last run: 2026-10-02 11:17:42
 - commit: `9f8d050`
 
@@ -187,7 +187,7 @@ Output:
 ```
 
 ## [30] merge_associations_job
-- first run: 2026-09-30 11:30:47
+- first run: 2026-10-02 11:18:03
 - last run: 2026-10-02 11:18:03
 - commit: `9f8d050`
 
@@ -197,8 +197,18 @@ Output:
 
 ```
 
+## [40] clinvar_filter (`mamba run --no-capture-output -n clinvar-build clinvar-filter /Users/marionvanvugt/Documents/work.nosync/data/clinvar/clinvar_vcv.db --rcv-db /Users/marionvanvugt/Documents/work.nosync/data/clinvar/clinvar_rcv.db -g gene CETP HMGCR NPC1L1 PCSK9 ANGPTL3 PPARA APOA1 APOB APOE -o /Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/data/raw/clinvar_variants.tsv -vvv`)
+- first run: 2026-10-06 17:09:48
+- last run: 2026-10-06 17:09:48
+- commit: `7e96ca6` (dirty)
+
+Output:
+```text
+2026-10-06 17:09:48,842 - INFO - Wrote 313818 rows to /Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/data/raw/clinvar_variants.tsv
+```
+
 ## [40] match_variants (`/home/rmgpmva/projects/lipid_adem/src/match_variants.py`)
-- first run: 2026-10-01 09:59:12
+- first run: 2026-10-01 11:50:12
 - last run: 2026-10-01 11:50:12
 - commit: `d6729b1`
 
@@ -247,8 +257,53 @@ Output:
 
 ```
 
+## [50] annotate_variants (`/Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/src/annotate_variants.py`)
+- first run: 2026-10-06 17:13:43
+- last run: 2026-10-06 17:16:22
+- commit: `7e96ca6` (dirty)
+
+Δ vs previous run (was `7e96ca6` (dirty)):
+- error resolved
+```diff
+@@ -4,3 +4,13 @@
+ [info]  2026-10-06 17:16:22 950 of those are rescued from a Conflicting classification because submitted_classifications contains a pathogenic-tier term
+ [info]  2026-10-06 17:16:22 Kept 14070 rows after filtering
+ [info]  2026-10-06 17:16:22 950 rows carry a review_flag
++[info]  2026-10-06 17:16:22 Review-status scope-reduction summary:
++                                                                                                                         scope  n_unique_variants  n_variants_removed_cumulative  n_variants_removed_this_step
++                                                                                     All review statuses (every tier included)                431                              0                             0
++Include: reviewed by expert panel + criteria provided, multiple submitters, no conflicts + criteria provided, single submitter                311                            120                           120
++                                      Include: reviewed by expert panel + criteria provided, multiple submitters, no conflicts                 59                            372                           252
++                                                                                             Include: reviewed by expert panel                 24                            407                            35
++[info]  2026-10-06 17:16:22 Wrote review-status summary to /Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/data/processed/pah_variants_review_status_summary.tsv
++[info]  2026-10-06 17:16:22 Widened 4212 assembly-duplicated rows into 2106 variant/condition rows
++[info]  2026-10-06 17:16:22 431 unique variants identified
++[info]  2026-10-06 17:16:22 Writing 2106 rows to /Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/data/processed/plp_variants.tsv
+```
+
+Output:
+```text
+[info]  2026-10-06 17:16:21 Reading ClinVar variants from /Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/data/raw/clinvar_variants.tsv
+[info]  2026-10-06 17:16:22 Read 313818 rows
+[info]  2026-10-06 17:16:22 13120 rows have a clean LP/P rcv_classification.
+[info]  2026-10-06 17:16:22 950 of those are rescued from a Conflicting classification because submitted_classifications contains a pathogenic-tier term
+[info]  2026-10-06 17:16:22 Kept 14070 rows after filtering
+[info]  2026-10-06 17:16:22 950 rows carry a review_flag
+[info]  2026-10-06 17:16:22 Review-status scope-reduction summary:
+                                                                                                                         scope  n_unique_variants  n_variants_removed_cumulative  n_variants_removed_this_step
+                                                                                     All review statuses (every tier included)                431                              0                             0
+Include: reviewed by expert panel + criteria provided, multiple submitters, no conflicts + criteria provided, single submitter                311                            120                           120
+                                      Include: reviewed by expert panel + criteria provided, multiple submitters, no conflicts                 59                            372                           252
+                                                                                             Include: reviewed by expert panel                 24                            407                            35
+[info]  2026-10-06 17:16:22 Wrote review-status summary to /Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/data/processed/pah_variants_review_status_summary.tsv
+[info]  2026-10-06 17:16:22 Widened 4212 assembly-duplicated rows into 2106 variant/condition rows
+[info]  2026-10-06 17:16:22 431 unique variants identified
+[info]  2026-10-06 17:16:22 Writing 2106 rows to /Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/data/processed/plp_variants.tsv
+
+```
+
 ## [50] meta_analysis (`/home/rmgpmva/projects/lipid_adem/src/meta_analysis.py --group-by variant`)
-- first run: 2026-10-01 10:26:24
+- first run: 2026-10-01 12:01:23
 - last run: 2026-10-01 12:01:23
 - commit: `d6729b1`
 

@@ -2513,7 +2513,7 @@ def fetch_curated_associations(
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def filter_curated_associations(
-    records: list[dict], region: GeneRegion, maf_threshold: float
+    records: list[dict], region: GeneRegion, maf_threshold: float | None
 ) -> pd.DataFrame:
     """Restrict curated association records to a region and MAF threshold.
 
@@ -2523,8 +2523,9 @@ def filter_curated_associations(
         Association records from `fetch_curated_associations`.
     region : `GeneRegion`
         Gene region to restrict associations to.
-    maf_threshold : `float`
-        Only associations with a reported MAF below this are kept.
+    maf_threshold : `float` or `NoneType`
+        Only associations with a reported MAF below this are kept; `None`
+        keeps every in-region association.
 
     Returns
     -------
@@ -2539,7 +2540,9 @@ def filter_curated_associations(
         location = _region_location(row.get("locations"), region)
         if location is None:
             continue
-        if _maf_at_or_above_threshold(row.get("risk_frequency"), maf_threshold):
+        if maf_threshold is not None and _maf_at_or_above_threshold(
+            row.get("risk_frequency"), maf_threshold
+        ):
             continue
         kept.append({**row, "region_location": location})
     return pd.DataFrame.from_records(kept)
@@ -2777,6 +2780,110 @@ def _is_burden_mask_row(fields: list[str], mask_idx: int | None) -> bool:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _region_column_indices(
+    header: list[str],
+    source: str,
+    chrom_col: str,
+    pos_col: str,
+    maf_col: str,
+    maf_threshold: float | None,
+) -> tuple[int, int, int | None]:
+    """Look up the chrom, pos and frequency columns of a sumstats header.
+
+    Parameters
+    ----------
+    header : `list[str]`
+        The sumstats file's column names.
+    source : `str`
+        Path or URL of the file (error message only).
+    chrom_col, pos_col, maf_col : `str`
+        Column names.
+    maf_threshold : `float` or `NoneType`
+        MAF cutoff; with `None` the frequency column is optional.
+
+    Returns
+    -------
+    indices : `tuple[int, int, int | None]`
+        Chrom, pos and frequency index (`None` if not filtering on MAF and
+        the column is absent).
+
+    Raises
+    ------
+    SumstatsColumnError
+        If `chrom_col` or `pos_col` (or, when filtering on MAF, `maf_col`)
+        is not in `header`.
+    """
+    if maf_threshold is None:
+        chrom_idx, pos_idx = _header_indices(
+            header, source, [chrom_col, pos_col]
+        )
+        return chrom_idx, pos_idx, _optional_index(header, maf_col)
+    chrom_idx, pos_idx, maf_idx = _header_indices(
+        header, source, [chrom_col, pos_col, maf_col]
+    )
+    return chrom_idx, pos_idx, maf_idx
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _maf_label(maf_threshold: float | None) -> str:
+    """Describe the MAF filter for log messages.
+
+    Parameters
+    ----------
+    maf_threshold : `float` or `NoneType`
+        MAF cutoff, or `None` for no MAF filter.
+
+    Returns
+    -------
+    label : `str`
+        E.g. ``"with MAF < 0.01"`` or ``"(no MAF filter)"``.
+    """
+    if maf_threshold is None:
+        return "(no MAF filter)"
+    return f"with MAF < {maf_threshold}"
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _classify_region_row(
+    fields: list[str],
+    mask_idx: int | None,
+    maf_idx: int | None,
+    maf_threshold: float | None,
+    transform_to_maf: bool,
+) -> str:
+    """Decide what happens to one in-region sumstats row.
+
+    Parameters
+    ----------
+    fields : `list[str]`
+        The row's tab-split fields.
+    mask_idx : `int` or `NoneType`
+        Index of the effect-allele column (burden mask check).
+    maf_idx : `int` or `NoneType`
+        Index of the frequency column; only used with a `maf_threshold`.
+    maf_threshold : `float` or `NoneType`
+        MAF cutoff; `None` keeps every row.
+    transform_to_maf : `bool`
+        Apply `min(af, 1 - af)` before comparing.
+
+    Returns
+    -------
+    outcome : `str`
+        ``"mask"`` (burden mask row, kept), ``"keep"``, ``"no_freq"``
+        (dropped, missing frequency) or ``"drop"`` (MAF too high).
+    """
+    if _is_burden_mask_row(fields, mask_idx):
+        return "mask"
+    if maf_threshold is None:
+        return "keep"
+    if _parse_freq(fields[maf_idx]) is None:
+        return "no_freq"
+    if _passes_maf(fields, maf_idx, maf_threshold, transform_to_maf):
+        return "keep"
+    return "drop"
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _norm_chrom(value: str) -> str:
     """Normalise a sumstats chromosome field to the gene-region form.
 
@@ -2803,7 +2910,7 @@ def _warn_if_empty(
     n_rows: int,
     n_in_region: int,
     n_no_freq: int,
-    maf_threshold: float,
+    maf_threshold: float | None,
 ) -> None:
     """Warn with a likely cause when a sumstats file yields 0 rows.
 
@@ -2817,8 +2924,9 @@ def _warn_if_empty(
         Rows inside any gene region, before the MAF filter.
     n_no_freq : `int`
         Of `n_in_region`, rows with a missing/non-numeric frequency.
-    maf_threshold : `float`
-        MAF cutoff used (message only).
+    maf_threshold : `float` or `NoneType`
+        MAF cutoff used (message only); with `None` every in-region row
+        is kept, so only the 0-in-region case can occur.
 
     Returns
     -------
@@ -2882,7 +2990,7 @@ def filter_sumstats_regions(
     tabix_source: str,
     regions: dict[str, GeneRegion],
     maf_col: str,
-    maf_threshold: float,
+    maf_threshold: float | None,
     chrom_col: str = "chromosome",
     pos_col: str = "base_pair_location",
     transform_to_maf: bool = False,
@@ -2901,9 +3009,11 @@ def filter_sumstats_regions(
     regions : `dict[str, GeneRegion]`
         Gene symbol -> region to query.
     maf_col : `str`
-        Name of the allele-frequency column.
-    maf_threshold : `float`
-        Only rows with MAF below this are kept.
+        Name of the allele-frequency column (optional in the file when
+        `maf_threshold` is `None`).
+    maf_threshold : `float` or `NoneType`
+        Only rows with MAF below this are kept; `None` keeps every
+        in-region row, also those without a frequency.
     chrom_col : `str`, optional, default: `"chromosome"`
         Name of the chromosome column in the file header.
     pos_col : `str`, optional, default: `"base_pair_location"`
@@ -2921,9 +3031,10 @@ def filter_sumstats_regions(
     -------
     filtered : `pd.DataFrame`
         A leading `gene` column plus the file's columns: rows in each
-        gene's region with MAF < `maf_threshold`, plus any burden mask
-        rows. A row in overlapping regions appears once per gene. A gene
-        whose chromosome is absent from the index contributes no rows.
+        gene's region with MAF < `maf_threshold` (all of them when it is
+        `None`), plus any burden mask rows. A row in overlapping regions
+        appears once per gene. A gene whose chromosome is absent from the
+        index contributes no rows.
 
     Raises
     ------
@@ -2932,8 +3043,8 @@ def filter_sumstats_regions(
         implemented here -- see gwas_cat.md's caveat on falling back to a
         full-file download).
     SumstatsColumnError
-        If `chrom_col`, `pos_col`, or `maf_col` are not in the file's
-        header.
+        If `chrom_col` or `pos_col` (or, with a `maf_threshold`,
+        `maf_col`) are not in the file's header.
     """
     import pysam
 
@@ -2944,8 +3055,8 @@ def filter_sumstats_regions(
             if header_lines
             else _plain_header(tabix_source)
         )
-        chrom_idx, pos_idx, maf_idx = _header_indices(
-            header, tabix_source, [chrom_col, pos_col, maf_col]
+        chrom_idx, pos_idx, maf_idx = _region_column_indices(
+            header, tabix_source, chrom_col, pos_col, maf_col, maf_threshold
         )
         mask_idx = _optional_index(header, effect_allele_col)
         log_debug(
@@ -2975,14 +3086,15 @@ def filter_sumstats_regions(
                 # CRLF source files leave a trailing "\r" on the last field
                 fields = line.rstrip("\r\n").split("\t")
                 n_in_region += 1
-                if _is_burden_mask_row(fields, mask_idx):
-                    n_masks += 1
-                    records.append([gene, *fields])
-                elif _parse_freq(fields[maf_idx]) is None:
+                outcome = _classify_region_row(
+                    fields, mask_idx, maf_idx, maf_threshold, transform_to_maf
+                )
+                if outcome == "no_freq":
                     n_no_freq += 1
-                elif _passes_maf(
-                    fields, maf_idx, maf_threshold, transform_to_maf
-                ):
+                    continue
+                if outcome == "mask":
+                    n_masks += 1
+                if outcome in ("mask", "keep"):
                     records.append([gene, *fields])
             log_debug(
                 f"{gene} @ {region.chrom}:{region.start}-{region.end} -> "
@@ -2991,7 +3103,7 @@ def filter_sumstats_regions(
 
     log_info(
         f"{tabix_source} @ {len(regions)} regions -> {len(records)} rows "
-        f"with MAF < {maf_threshold}"
+        f"{_maf_label(maf_threshold)}"
         + (f" (incl. {n_masks} burden mask rows)" if n_masks else "")
     )
     _warn_if_empty(
@@ -3007,7 +3119,7 @@ def filter_raw_sumstats_regions(
     url: str,
     regions: dict[str, GeneRegion],
     maf_col: str,
-    maf_threshold: float,
+    maf_threshold: float | None,
     chrom_col: str = "chromosome",
     pos_col: str = "base_pair_location",
     transform_to_maf: bool = False,
@@ -3028,9 +3140,11 @@ def filter_raw_sumstats_regions(
     regions : `dict[str, GeneRegion]`
         Gene symbol -> region to filter to.
     maf_col : `str`
-        Name of the allele-frequency column.
-    maf_threshold : `float`
-        Only rows with MAF below this are kept.
+        Name of the allele-frequency column (optional in the file when
+        `maf_threshold` is `None`).
+    maf_threshold : `float` or `NoneType`
+        Only rows with MAF below this are kept; `None` keeps every
+        in-region row, also those without a frequency.
     chrom_col : `str`, optional, default: `"chromosome"`
         Name of the chromosome column in the file header.
     pos_col : `str`, optional, default: `"base_pair_location"`
@@ -3047,14 +3161,15 @@ def filter_raw_sumstats_regions(
     -------
     filtered : `pd.DataFrame`
         A leading `gene` column plus the file's columns: rows in each
-        gene's region with MAF < `maf_threshold`, plus any burden mask
-        rows. A row in overlapping regions appears once per gene.
+        gene's region with MAF < `maf_threshold` (all of them when it is
+        `None`), plus any burden mask rows. A row in overlapping regions
+        appears once per gene.
 
     Raises
     ------
     SumstatsColumnError
-        If `chrom_col`, `pos_col`, or `maf_col` are not in the file's
-        header.
+        If `chrom_col` or `pos_col` (or, with a `maf_threshold`,
+        `maf_col`) are not in the file's header.
     """
     # chrom -> [(gene, region)], so each line is only tested against the
     # regions on its own chromosome
@@ -3072,8 +3187,8 @@ def filter_raw_sumstats_regions(
         text_stream = io.TextIOWrapper(raw_stream, encoding="utf-8")
 
         header = next(text_stream).rstrip("\r\n").split("\t")
-        chrom_idx, pos_idx, maf_idx = _header_indices(
-            header, url, [chrom_col, pos_col, maf_col]
+        chrom_idx, pos_idx, maf_idx = _region_column_indices(
+            header, url, chrom_col, pos_col, maf_col, maf_threshold
         )
         mask_idx = _optional_index(header, effect_allele_col)
         log_debug(
@@ -3104,19 +3219,20 @@ def filter_raw_sumstats_regions(
             if not genes:
                 continue
             n_in_region += 1
-            if _is_burden_mask_row(fields, mask_idx):
-                n_masks += 1
-                records.extend([gene, *fields] for gene in genes)
-            elif _parse_freq(fields[maf_idx]) is None:
+            outcome = _classify_region_row(
+                fields, mask_idx, maf_idx, maf_threshold, transform_to_maf
+            )
+            if outcome == "no_freq":
                 n_no_freq += 1
-            elif _passes_maf(
-                fields, maf_idx, maf_threshold, transform_to_maf
-            ):
+                continue
+            if outcome == "mask":
+                n_masks += 1
+            if outcome in ("mask", "keep"):
                 records.extend([gene, *fields] for gene in genes)
 
     log_info(
-        f"{url} @ {len(regions)} regions -> {len(records)} rows with "
-        f"MAF < {maf_threshold} (raw scan)"
+        f"{url} @ {len(regions)} regions -> {len(records)} rows "
+        f"{_maf_label(maf_threshold)} (raw scan)"
         + (f" (incl. {n_masks} burden mask rows)" if n_masks else "")
     )
     _warn_if_empty(url, len(records), n_in_region, n_no_freq, maf_threshold)
