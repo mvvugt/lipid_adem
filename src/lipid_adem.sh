@@ -55,7 +55,13 @@ qsub "${ROOT}"/src/merge_associations.sh -r "${ROOT}"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # NON-AGGREGATED ANALYSES
-# TODO analyse variants in UKB and AoU
+
+# [snellius] UKB: marvel association per gene (pyjasub, one task per gene in
+# data/raw/marvel_tasks.tsv; fill the placeholders in that file,
+# config/marvel_task.cnf and config/marvel_assoc.cnf first)
+# TODO AoU
+MARVEL_ENV=marvel run_mamba "<pyjasub_env>" pyjasub                            \
+    "${ROOT}"/config/marvel_task.cnf
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

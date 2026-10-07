@@ -1,0 +1,33 @@
+# pyjasub config -- per-gene marvel association runs on Snellius (UKB).
+# One job-array row = one gene (data/raw/marvel_tasks.tsv); each task runs
+# marvel on that gene's carriers file (config/marvel_assoc.cnf) and moves
+# the results to the row's `outdir` only on success; genes whose `outdir`
+# exists are skipped. Set MARVEL_ENV (default `marvel`) in the submitting
+# shell if the env has another name.
+# NOTE: section/key names mirror the SGE config (filter_task.cnf); check
+# them against pyjasub's SLURM config format before submitting.
+# Resources are estimates (marvel tests serially and re-reads the carriers
+# file per variant): tune after the first gene.
+
+[qsub]
+step=1
+batch=9
+mem=14G
+shell=/bin/bash
+time=12:00:00
+nodes=None
+tmp_size=10G
+tmp_dir=<scratch_dir>/lipid_adem/marvel_task_tmp
+
+[logs]
+log_dir=<root>/src/logs/marvel_task_logs
+
+[job_array]
+ja_file=<root>/data/raw/marvel_tasks.tsv
+task_script=<root>/src/marvel_assoc.sh
+
+# column to verify.
+outfiles=outdir
+
+[script]
+verbose=true
