@@ -888,6 +888,9 @@ class FileNames:
     )
     # own UKB/AoU association results (marvel), one row per file/outcome
     MARVEL_RESULTS: Path = Paths.DATA_RAW / "marvel_results.tsv"
+    # pyjasub job array for the per-gene marvel runs (one cnf per gene,
+    # written by src/create_config.py)
+    MARVEL_TASKS: Path = Paths.DATA_RAW / "marvel_tasks.tsv"
     # curated study accession -> study group and APOE stratum
     APOE_STRATA: Path = Paths.DATA_RAW / "apoe_strata.tsv"
     # curated outcome x study exclusions, applied before the recency cap

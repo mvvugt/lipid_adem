@@ -6,7 +6,9 @@
 # Parameters
 # ----------
 #   $1 - ja_file  : Path to data/raw/marvel_tasks.tsv (pyjasub job-array
-#                   file, one row per gene: rowidx, gene, carriers, outdir).
+#                   file, one row per gene: rowidx, gene, carriers, outdir,
+#                   config). The configs are written by
+#                   src/create_config.py -a.
 #   $2 - tmp_loc  : Temp/scratch location; each gene is staged in a
 #                   subdirectory and only moved to `outdir` on success.
 #   $3 - step     : Number of rows (genes) this task processes.
@@ -39,7 +41,6 @@ runlog_setup
 set -Eeuo pipefail
 
 readonly MARVEL_ENV="${MARVEL_ENV:-marvel}"
-readonly BASE_CONFIG="${REPO_ROOT}/config/marvel_assoc.cnf"
 # marvelous exits 0 even when the pipeline fails (main() drops the
 # return code), so success is read from its log instead
 readonly DRY_RUN_OK="Configuration is valid!"
@@ -92,22 +93,18 @@ if [[ ! "$IDX" =~ ^[1-9][0-9]*$ ]]; then
     exit 1
 fi
 
-if [[ ! -r "$BASE_CONFIG" ]]; then
-    log_error "marvel config not readable: $BASE_CONFIG"
-    exit 1
-fi
-
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # FUNCTIONS
 
 # -----------------------------------------------------------------------
-# Print the gene, carriers and outdir of job-array rows, tab-separated.
+# Print the gene, carriers, outdir and config of job-array rows,
+# tab-separated.
 #
 # Parameters
 # ----------
 #   $1 - ja_file : Job-array file with a header holding `rowidx`, `gene`,
-#                  `carriers` and `outdir`.
+#                  `carriers`, `outdir` and `config`.
 #   $2 - first   : First `rowidx` to print.
 #   $3 - last    : Last `rowidx` to print.
 #
@@ -117,7 +114,7 @@ fi
 #
 # Outputs
 # -------
-#   One `gene<TAB>carriers<TAB>outdir` line per row on stdout.
+#   One `gene<TAB>carriers<TAB>outdir<TAB>config` line per row on stdout.
 # -----------------------------------------------------------------------
 read_task_rows() {
     local ja_file="${1:?Error: ja_file required}"
@@ -127,45 +124,15 @@ read_task_rows() {
         NR == 1 {
             for (i = 1; i <= NF; i++) col[$i] = i
             if (!("rowidx" in col) || !("gene" in col) ||
-                !("carriers" in col) || !("outdir" in col)) exit 1
+                !("carriers" in col) || !("outdir" in col) ||
+                !("config" in col)) exit 1
             next
         }
         $col["rowidx"] >= first && $col["rowidx"] <= last {
-            print $col["gene"], $col["carriers"], $col["outdir"]
+            print $col["gene"], $col["carriers"], $col["outdir"],
+                $col["config"]
         }
     ' "$ja_file"
-}
-
-# -----------------------------------------------------------------------
-# Write a gene's marvel config: [ExpInput] + the shared config + the
-# per-task [Options] paths.
-#
-# Parameters
-# ----------
-#   $1 - carriers  : Path to the gene's marvel carriers file.
-#   $2 - stage_dir : Staging directory for marvel's tmp/checkpoint dirs.
-#   $3 - out_cnf   : Path of the config to write.
-#
-# Returns
-# -------
-#   0 on success, non-zero on failure.
-#
-# Outputs
-# -------
-#   Writes `out_cnf`. marvel's parser reopens a repeated section, so the
-#   second [Options] block adds to the one in the shared config.
-# -----------------------------------------------------------------------
-write_task_config() {
-    local carriers="${1:?Error: carriers required}"
-    local stage_dir="${2:?Error: stage_dir required}"
-    local out_cnf="${3:?Error: out_cnf required}"
-    {
-        printf '[ExpInput]\ncarriers\t%s\n\n' "$carriers"
-        cat "$BASE_CONFIG"
-        printf '\n[Options]\n'
-        printf 'tmp_dir\t%s\n' "${stage_dir}/tmp"
-        printf 'checkpoint_dir\t%s\n' "${stage_dir}/checkpoint"
-    } > "$out_cnf"
 }
 
 # -----------------------------------------------------------------------
@@ -175,8 +142,10 @@ write_task_config() {
 # Parameters
 # ----------
 #   $1 - gene     : Gene symbol (used in log lines and staging dir name).
-#   $2 - carriers : Path to the gene's marvel carriers file.
+#   $2 - carriers : Path to the gene's marvel carriers file (checked
+#                   here; marvel reads it from the config).
 #   $3 - outdir   : Final results directory; skipped when it exists.
+#   $4 - config   : The gene's marvel config (src/create_config.py).
 #
 # Returns
 # -------
@@ -185,12 +154,15 @@ write_task_config() {
 # Outputs
 # -------
 #   `outdir` with marvel's `{exposure}_results.tsv.gz` and baseline
-#   files, plus `marvel.log` and the `marvel.cnf` used.
+#   files, plus `marvel.log` and a copy of the `marvel.cnf` used.
+#   marvel runs inside the staging dir, so the config's relative
+#   tmp_dir/checkpoint_dir end up there and are removed with it.
 # -----------------------------------------------------------------------
 run_gene() {
     local gene="${1:?Error: gene required}"
     local carriers="${2:?Error: carriers required}"
     local outdir="${3:?Error: outdir required}"
+    local config="${4:?Error: config required}"
     local out_stage
     if [[ -d "$outdir" ]]; then
         log_info "${gene}: ${outdir} exists, skipping" no-record
@@ -200,13 +172,19 @@ run_gene() {
         log_error "${gene}: carriers file not readable: ${carriers}"
         return 1
     fi
+    if [[ ! -r "$config" ]]; then
+        log_error "${gene}: config not readable (run create_config.py -a):"\
+            "${config}"
+        return 1
+    fi
     STAGE_DIR="$(mktemp -d "${TMP_LOC}/marvel_${gene}_XXXXXX")"
     out_stage="${STAGE_DIR}/out"
     mkdir -p "$out_stage"
-    write_task_config "$carriers" "$STAGE_DIR" "${out_stage}/marvel.cnf"
+    cp "$config" "${out_stage}/marvel.cnf"
     log_info "${gene}: dry run" no-record
-    run_mamba "$MARVEL_ENV" marvelous "${out_stage}/marvel.cnf" --dry-run \
-        --log-file "${STAGE_DIR}/dry_run.log" || true
+    ( cd "$STAGE_DIR" && run_mamba "$MARVEL_ENV" marvelous \
+        "${out_stage}/marvel.cnf" --dry-run \
+        --log-file "${STAGE_DIR}/dry_run.log" ) || true
     if ! grep -qF "$DRY_RUN_OK" "${STAGE_DIR}/dry_run.log"; then
         log_error "${gene}: config check failed, see marvel output above"
         rm -rf "$STAGE_DIR"
@@ -214,8 +192,9 @@ run_gene() {
         return 1
     fi
     log_info "${gene}: association run" no-record
-    run_mamba "$MARVEL_ENV" marvelous "${out_stage}/marvel.cnf" -v \
-        --outpath "$out_stage" --log-file "${out_stage}/marvel.log" || true
+    ( cd "$STAGE_DIR" && run_mamba "$MARVEL_ENV" marvelous \
+        "${out_stage}/marvel.cnf" -v --outpath "$out_stage" \
+        --log-file "${out_stage}/marvel.log" ) || true
     if ! grep -qF "$RUN_OK" "${out_stage}/marvel.log"; then
         log_error "${gene}: marvel run failed, see marvel output above"
         rm -rf "$STAGE_DIR"
@@ -245,17 +224,17 @@ log_info "task ${IDX}: rows ${IDX}-${LAST}"
 mkdir -p "$TMP_LOC"
 
 if ! ROWS="$(read_task_rows "$JA" "$IDX" "$LAST")"; then
-    log_error "'$JA' lacks rowidx/gene/carriers/outdir columns"
+    log_error "'$JA' lacks rowidx/gene/carriers/outdir/config columns"
     exit 1
 fi
 
 N_FAILED=0
-while IFS=$'\t' read -r gene carriers outdir; do
+while IFS=$'\t' read -r gene carriers outdir config; do
     if [[ -z "$gene" ]]; then
         log_info "task ${IDX}: no job-array row in ${IDX}-${LAST}" no-record
         continue
     fi
-    if ! run_gene "$gene" "$carriers" "$outdir"; then
+    if ! run_gene "$gene" "$carriers" "$outdir" "$config"; then
         N_FAILED=$(( N_FAILED + 1 ))
     fi
 done <<< "$ROWS"

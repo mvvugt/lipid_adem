@@ -58,8 +58,9 @@ qsub "${ROOT}"/src/merge_associations.sh -r "${ROOT}"
 
 # [myriad] UKB: marvel association per gene (pyjasub, one task per gene in
 # data/raw/marvel_tasks.tsv; fill the placeholders in that file and in
-# config/marvel_assoc.cnf first)
+# src/create_config.py first, then write one marvel config per gene)
 # TODO AoU
+run_mamba marvel "${ROOT}"/src/create_config.py -a
 MARVEL_ENV=marvel run_mamba biomed-api pyjasub "${ROOT}"/config/marvel_task.cnf
 
 

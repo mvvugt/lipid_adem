@@ -1,6 +1,7 @@
 # pyjasub config -- per-gene marvel association runs on Myriad (UKB).
 # One job-array row = one gene (data/raw/marvel_tasks.tsv); each task runs
-# marvel on that gene's carriers file (config/marvel_assoc.cnf) and moves
+# marvel with the gene's config (`config` column, written by
+# src/create_config.py -a) and moves
 # the results to the row's `outdir` only on success; genes whose `outdir`
 # exists are skipped. Set MARVEL_ENV (default `marvel`) in the submitting
 # shell if the env has another name.
