@@ -54,43 +54,42 @@ if not args.association:
 ## Define files
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# UKB phenotype and covariates file (Myriad paths)
+# UKB phenotype and covariates file
 pheno_input = {
-    CFLhs.PhenoFile : '<phenotype_file>',
-    CFLhs.CovFile   : '<covariate_file>',
+    CFLhs.PhenoFile : FileNames.UKB_PHENO,
+    CFLhs.CovFile   : FileNames.UKB_PHENO,
     }
-id_column = '<id_col>'
 
 # the dementia outcomes in data/raw/icd_codes.txt, one binary (0/1) column
 # each; GLM-Binom gives log-OR (Constants.MARVEL_METHOD_SCALE)
 bin_list = ['GLM-Binom', ]
 outcomes = [
-    'all_cause_dementia',
-    'alzheimers_dementia',
-    'vascular_dementia',
-    'frontotemporal_dementia',
-    'lewy_body_dementia',
-    'parkinsons_disease_dementia',
+    'all_cause_dementia_algo',
+    'all_cause_dementia_combined',
+    'alzheimers_dementia_algo',
+    'alzheimers_dementia_combined',
+    'vascular_dementia_algo',
+    'frontotemporal_dementia_algo',
     ]
-icd_outcomes = set(pd.read_csv(FileNames.ICD_CODE_LIST, sep='\t')['outcome'])
-missing = sorted(set(outcomes) - icd_outcomes)
-if missing:
-    raise ValueError(f'outcomes not in {FileNames.ICD_CODE_LIST}: {missing}')
 bin_tests = {outcome: list(bin_list) for outcome in outcomes}
 
 # `model_1` is the `model` value in data/raw/marvel_results.tsv
-pcs = [f'<PC{i}>' for i in range(1, 11)]
-covs = {'model_1' : ['<age>', '<sex>'] + pcs}
-
-# Thomassen 2026 APOE strata (data/raw/apoe_strata.tsv); e42 in none. The
-# unstratified run (`overall`, stratify_overall) is the pooled result.
-apoe_col = '<apoe_col>'
-stratify = {
-    'e44'     : f'{apoe_col}=<e4e4>',
-    'e43'     : f'{apoe_col}=<e3e4>',
-    'e33'     : f'{apoe_col}=<e3e3>',
-    'e22_e32' : f'{apoe_col}=<e2e2>,<e2e3>',
+pcs = [f'PC{i}' for i in range(1, 7)]
+covs = {
+    'model_1' : 'None',
+    'model_2' : pcs,
+    'model_3' : ['Sex'] + pcs,
     }
+
+# # Thomassen 2026 APOE strata (data/raw/apoe_strata.tsv); e42 in none. The
+# # unstratified run (`overall`, stratify_overall) is the pooled result.
+# apoe_col = '<apoe_col>'
+# stratify = {
+#     'e44'     : f'{apoe_col}=<e4e4>',
+#     'e43'     : f'{apoe_col}=<e3e4>',
+#     'e33'     : f'{apoe_col}=<e3e3>',
+#     'e22_e32' : f'{apoe_col}=<e2e2>,<e2e3>',
+#     }
 
 # one row per gene: the gene's carriers file (earlier marvel extraction
 # output; every column is tested) and the configuration file to write
@@ -113,11 +112,7 @@ for row in tasks.itertuples(index = False):
         pheno_input          = pheno_input,
         bin_tests            = bin_tests,
         covs                 = covs,
-        stratify             = stratify,
-        id_column            = id_column,
-        stratify_overall     = True,
-        # failed fits go to `remarks` instead of stopping the run (the APOE
-        # e2/e4 sites are constant within a stratum)
+        id_column            = 'f.eid',
         raise_on_error       = False,
         tmp_dir              = './tmp',
         checkpoint_dir       = './checkpoint',
