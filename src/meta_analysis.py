@@ -5,7 +5,8 @@ rows matched to the gene variant lists (`matched_variants.tsv.gz`).
 
 Effects are oriented towards the a2 (alt) allele, flipped to a1 for GoF
 variants. Each run pools the rows of one ancestry group (`--ancestry`,
-default `MetaColumns.DEFAULT_ANCESTRY`) per variant and outcome
+default `MetaColumns.DEFAULT_ANCESTRY`; ``MULTI`` pools every ancestry
+together) per variant and outcome
 (`MetaColumns.KEYS`), after keeping one estimate per study, dropping
 estimates copied under another accession, and dropping
 effect-allele-only matches whose tested alt is unknown.
@@ -994,7 +995,8 @@ def meta_analysis(
     ----------
     ancestry : `str`
         An `Ancestry` code; only rows with this `ancestry_group` are
-        pooled (``MULTI`` pools the multi-ancestry studies).
+        pooled. ``MULTI`` pools every row, whatever its ancestry (after
+        the study/outcome filters, relabelled ``MULTI``).
     studies : `list[str]` or `None`, optional, default: `None`
         Study accessions to keep; `None` keeps all.
     outcomes : `list[str]` or `None`, optional, default: `None`
@@ -1036,11 +1038,18 @@ def meta_analysis(
         if region_rare
         else FileNames.MATCHED_VARIANTS
     )
-    is_ancestry = matched[HarmonisedColumns.ANCESTRY_GROUP] == ancestry
-    counts = matched[HarmonisedColumns.ANCESTRY_GROUP].value_counts()
+    ancestry_col = HarmonisedColumns.ANCESTRY_GROUP
+    pool_all = ancestry == Ancestry.MULTI
+    if pool_all:
+        is_ancestry = pd.Series(True, index=matched.index)
+    else:
+        is_ancestry = matched[ancestry_col] == ancestry
+    counts = matched[ancestry_col].value_counts()
     log_info(
-        f"{int(is_ancestry.sum())} of {len(matched)} rows are {ancestry} "
-        "(all: "
+        f"{int(is_ancestry.sum())} of {len(matched)} rows "
+        + ("kept (MULTI pools every ancestry) " if pool_all else
+           f"are {ancestry} ")
+        + "(all: "
         + ", ".join(f"{code}={n}" for code, n in sorted(counts.items()))
         + ")"
     )
@@ -1052,6 +1061,17 @@ def meta_analysis(
         matched, HarmonisedColumns.STUDY_ACCESSION, studies
     )
     matched = _keep_values(matched, HarmonisedColumns.OUTCOME, outcomes)
+    if pool_all:
+        # one ancestry_group so every study is pooled together
+        kept = matched[ancestry_col].value_counts()
+        log_info(
+            f"MULTI: {len(matched)} rows pooled across ancestries ("
+            + ", ".join(f"{code}={n}" for code, n in sorted(kept.items()))
+            + f"), relabelled {Ancestry.MULTI}; a study reported both per "
+            "ancestry and combined is counted twice unless --studies "
+            "excludes one"
+        )
+        matched[ancestry_col] = Ancestry.MULTI
     log_stage("effect_scale")
     matched = check_effect_scales(matched, require_log_or)
     if matched.empty:

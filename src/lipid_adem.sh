@@ -60,10 +60,10 @@ run_mamba biomed-api pyjasub "${ROOT}"/config/marvel_task.cnf
 # [myriad] once all marvel tasks finished: loose per-variant results into
 # per-gene stores (results/marvel/<GENE>_results.tsv.gz; new rows warned,
 # conflicting rows stop the run), then marvel_results.tsv (+ apoe_strata.tsv
-# for stratified runs). --ancestry: EUR only if the phenotype file is
-# EUR-restricted, else MULTI. Add --archive to tar the loose files,
+# for stratified runs). --ancestry MULTI: the phenotype file holds all UKB
+# ancestries (468,993 samples). Add --archive to tar the loose files,
 # --refresh to rebuild the stores (old ones kept)
-run_mamba biomed-api "${ROOT}"/src/marvel_results_table.py --ancestry EUR
+run_mamba biomed-api "${ROOT}"/src/marvel_results_table.py --ancestry MULTI
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -91,7 +91,8 @@ run_mamba biomed-api "${ROOT}"/src/match_variants.py --region-rare \
 # META-ANALYSIS
 
 # [myriad] fixed-effect IVW meta-analysis of the matched variants, one
-# ancestry group per run (default EUR; e.g. --ancestry MULTI for pooled)
+# ancestry group per run (default EUR; --ancestry MULTI pools every
+# ancestry together, so restrict it with --studies)
 run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR
 
 # [myriad] first analysis: Thomassen 2026 AD, the 4 disjoint APOE strata
@@ -113,22 +114,25 @@ run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
 
 # arm B (rare variants: own UKB + FinnGen R13; AoU TODO), the 4 dementia
 # outcomes, pooled per outcome (input of the forest plots and the gene x
-# outcome heatmap). UKB accessions are written by marvel_results_table.py;
-# once the APOE-stratified marvel runs exist, add
-# marvel_ukb_EUR_alzheimers_dementia_{e44,e43,e33,e22_e32}
+# outcome heatmap). UKB (MULTI) + FinnGen (EUR), so --ancestry MULTI.
+# UKB accessions are written by marvel_results_table.py; once the
+# APOE-stratified marvel runs exist, add
+# marvel_ukb_MULTI_alzheimers_dementia_{e44,e43,e33,e22_e32}
+UKB_STUDIES=(
+    marvel_ukb_MULTI_{all_cause,alzheimers,vascular,frontotemporal}_dementia
+)
 ARMB_STUDIES=(
-    marvel_ukb_EUR_{all_cause,alzheimers,vascular,frontotemporal}_dementia
+    "${UKB_STUDIES[@]}"
     F5_DEMENTIA_INCLAVO G6_ALZHEIMER F5_VASCDEM FTD
 )
-run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
+run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry MULTI \
     --studies "${ARMB_STUDIES[@]}" \
     --variant-sources PTV ClinVar GoF landfors_paper --stratified \
     --label armb_dementia_lists
 
 # UKB only, the 4 dementia outcomes (sensitivity: without FinnGen)
-run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
-    --studies marvel_ukb_EUR_{all_cause,alzheimers,vascular}_dementia \
-    marvel_ukb_EUR_frontotemporal_dementia \
+run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry MULTI \
+    --studies "${UKB_STUDIES[@]}" \
     --variant-sources PTV ClinVar GoF landfors_paper --stratified \
     --label ukb_dementia_lists
 
@@ -139,12 +143,11 @@ run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
     --outcomes alzheimers_dementia \
     --studies GCST90861026 GCST90861027 GCST90861029 GCST90861030 \
     --region-rare --stratified --label thomassen_ad_region_rare
-run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
+run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry MULTI \
     --studies "${ARMB_STUDIES[@]}" \
     --region-rare --stratified --label armb_dementia_region_rare
-run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
-    --studies marvel_ukb_EUR_{all_cause,alzheimers,vascular}_dementia \
-    marvel_ukb_EUR_frontotemporal_dementia \
+run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry MULTI \
+    --studies "${UKB_STUDIES[@]}" \
     --region-rare --stratified --label ukb_dementia_region_rare
 
 
@@ -153,7 +156,7 @@ run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
 
 # [local] copy results/output/burden_EUR_*.tsv.gz from Myriad first
 for analysis in lists region_rare; do
-    run_mamba plot-misc "${ROOT}"/src/figures.py --ancestry EUR \
+    run_mamba plot-misc "${ROOT}"/src/figures.py --ancestry MULTI \
         --forest-label "armb_dementia_${analysis}" \
         --heatmap-label "armb_dementia_${analysis}"
     run_mamba plot-misc "${ROOT}"/src/figures.py --ancestry EUR \
