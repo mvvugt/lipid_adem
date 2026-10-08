@@ -34,6 +34,7 @@ from project_constants import (
     FileNames,
     HarmonisedColumns,
     MafStatus,
+    MarvelColumns,
     MetaColumns,
     Paths,
     RunlogOrder,
@@ -316,7 +317,10 @@ def load_marvel_results(
     a ``gene-burden`` row for that gene. Other rows (intercept,
     covariates) are dropped (counted). Each row's `study_effect_scale`
     is its `Model` (regression method) mapped by
-    `Constants.MARVEL_METHOD_SCALE`.
+    `Constants.MARVEL_METHOD_SCALE`. Rows with fewer than
+    `Constants.MARVEL_MIN_CARRIERS` exposed (`Exposed`) are dropped
+    (counted). A file listed for several entries (a per-gene store) is
+    read once.
 
     Parameters
     ----------
@@ -343,13 +347,17 @@ def load_marvel_results(
     """
     hc = HarmonisedColumns
     parts: list[pd.DataFrame] = []
+    cache: dict[Path, pd.DataFrame] = {}
     for _, entry in marvel_df.iterrows():
         path = Path(entry["path"])
-        if not path.exists():
-            raise FileNotFoundError(
-                f"{FileNames.MARVEL_RESULTS}: results file not found: {path}"
-            )
-        results = pd.read_csv(path, sep="\t", dtype=str)
+        if path not in cache:
+            if not path.exists():
+                raise FileNotFoundError(
+                    f"{FileNames.MARVEL_RESULTS}: results file not found: "
+                    f"{path}"
+                )
+            cache[path] = pd.read_csv(path, sep="\t", dtype=str)
+        results = cache[path]
         missing = [
             col
             for col in (
@@ -371,6 +379,19 @@ def load_marvel_results(
                 == entry[ColumnNames.STRATIFICATION]
             )
         results = results[keep].reset_index(drop=True)
+        if MarvelColumns.EXPOSED in results.columns:
+            exposed = pd.to_numeric(
+                results[MarvelColumns.EXPOSED], errors="coerce"
+            )
+            few = exposed < Constants.MARVEL_MIN_CARRIERS
+            if few.any():
+                log_info(
+                    f"marvel {entry['cohort']} {entry['outcome']}: "
+                    f"{int(few.sum())} rows with < "
+                    f"{Constants.MARVEL_MIN_CARRIERS} exposed dropped "
+                    f"({path.name})"
+                )
+            results = results[~few].reset_index(drop=True)
         if results.empty:
             log_warn(
                 f"marvel {entry['cohort']} {entry['outcome']}: no rows for "

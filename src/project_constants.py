@@ -26,6 +26,9 @@ class Paths:
     # to refetch it
     ENSEMBL_CACHE: Path = DATA_TEMP / "ensembl_cache"
     RESULTS_OUTPUT: Path = HERE / "results" / "output"
+    # per-gene marvel result stores (`marvel_results_table.py`)
+    MARVEL_STORE: Path = HERE / "results" / "marvel"
+    RESULTS_FIGURES: Path = HERE / "results" / "figures"
     LOGS: Path = HERE / "logs"
     # must match `log_dir` in config/filter_task.cnf
     FILTER_TASK_LOGS: Path = HERE / "src" / "logs" / "filter_task_logs"
@@ -227,6 +230,17 @@ class Constants:
         "OLS": EffectScale.LINEAR,
         "Cox": EffectScale.LOG_HR,
     }
+    # marvel rows with fewer exposed (carriers) are dropped at merge
+    MARVEL_MIN_CARRIERS: int = 5
+    # UKB marvel `Variable` -> `outcome` in icd_codes.txt; `_combined`
+    # (algorithm + ICD) where UKB has it, else `_algo`. Other variables
+    # are left out of marvel_results.tsv
+    MARVEL_UKB_OUTCOMES: dict[str, str] = {
+        "all_cause_dementia_combined": "all_cause_dementia",
+        "alzheimers_disease_combined": "alzheimers_dementia",
+        "vascular_dementia_algo": "vascular_dementia",
+        "frontotemporal_dementia_algo": "frontotemporal_dementia",
+    }
     # effect-scale inference (`functions.infer_effect_scales`): median of
     # r = SE * sqrt(2f(1-f)N) over a study's variants with MAF above
     # EFFECT_SCALE_MIN_MAF; log-OR gives r = 1/sqrt(phi(1-phi)) >= 2,
@@ -290,6 +304,7 @@ class RunlogOrder:
     """
     GWAS_CAT_PREP: int = 10
     FILTER_GWAS_CAT: int = 20
+    MARVEL_RESULTS_TABLE: int = 25
     MERGE_ASSOCIATIONS: int = 30
     MATCH_VARIANTS: int = 40
     META_ANALYSIS: int = 50
@@ -778,6 +793,49 @@ class MetaColumns:
     )
 
 
+class MarvelColumns:
+    """Columns of marvel `{exposure}_results.tsv.gz` files and of the
+    per-gene stores built from them (`marvel_results_table.py`).
+    """
+    METHOD: str = "Model"
+    MODEL_NAME: str = "Model name"
+    STRATIFICATION_NAME: str = "Stratification name"
+    VARIABLE: str = "Variable"
+    EXPOSURE: str = "Exposure"
+    CASES: str = "Cases"
+    SAMPLES: str = "Samples"
+    EXPOSED: str = "Exposed"
+    NON_EXPOSED: str = "Non-exposed"
+    ESTIMATE: str = "Point Estimates"
+    SE: str = "Standard Error"
+    P_VALUE: str = "P-values"
+    # store only: name of the per-variant file a row was read from; marvel
+    # names it after the tested exposure, so it tells apart the intercept
+    # and covariate rows of different exposures' models
+    RESULT_FILE: str = "result_file"
+    # store only: full path of that file
+    SOURCE_FILE: str = "source_file"
+    # one analysis result: the same key in two files is the same analysis
+    KEY: tuple[str, ...] = (
+        RESULT_FILE,
+        METHOD,
+        MODEL_NAME,
+        STRATIFICATION_NAME,
+        VARIABLE,
+        EXPOSURE,
+    )
+    # compared (as numbers) between rows with the same key
+    VALUES: tuple[str, ...] = (
+        CASES,
+        SAMPLES,
+        EXPOSED,
+        NON_EXPOSED,
+        ESTIMATE,
+        SE,
+        P_VALUE,
+    )
+
+
 class MetaLevel:
     """Values of the `level` column of the meta-analysis outputs."""
     # pooled over all studies of the run
@@ -892,6 +950,12 @@ class FileNames:
     # pyjasub job array for the per-gene marvel runs (one cnf per gene,
     # written by src/create_config.py)
     MARVEL_TASKS: Path = Paths.DATA_RAW / "marvel_tasks.tsv"
+    # per-gene store of all marvel results (in `Paths.MARVEL_STORE`)
+    MARVEL_STORE_TEMPLATE: str = "{gene}_results.tsv.gz"
+    # loose per-variant marvel result files in a gene's outdir
+    MARVEL_LOOSE_GLOB: str = "*_results.tsv.gz"
+    # tar of an outdir's loose files (`marvel_results_table.py --archive`)
+    MARVEL_ARCHIVE_TEMPLATE: str = "per_variant_results_{stamp}.tar"
     # curated study accession -> study group and APOE stratum
     APOE_STRATA: Path = Paths.DATA_RAW / "apoe_strata.tsv"
     # curated outcome x study exclusions, applied before the recency cap

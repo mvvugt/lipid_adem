@@ -48,9 +48,6 @@ run_mamba biomed-api "${ROOT}"/src/gwas_cat_prep.py
 # [myriad] filter GWAS catalog results to the gene regions
 run_mamba biomed-api pyjasub "${ROOT}"/config/filter_task.cnf
 
-# [myriad] adds GWAS Catalog associations + Open Targets gene-burden evidence
-qsub "${ROOT}"/src/merge_associations.sh -r "${ROOT}"
-
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # NON-AGGREGATED ANALYSES
@@ -59,6 +56,23 @@ qsub "${ROOT}"/src/merge_associations.sh -r "${ROOT}"
 # [myriad] marvel association per gene
 run_mamba marvel "${ROOT}"/src/create_config.py -a
 run_mamba biomed-api pyjasub "${ROOT}"/config/marvel_task.cnf
+
+# [myriad] once all marvel tasks finished: loose per-variant results into
+# per-gene stores (results/marvel/<GENE>_results.tsv.gz; new rows warned,
+# conflicting rows stop the run), then marvel_results.tsv (+ apoe_strata.tsv
+# for stratified runs). --ancestry: EUR only if the phenotype file is
+# EUR-restricted, else MULTI. Add --archive to tar the loose files,
+# --refresh to rebuild the stores (old ones kept)
+run_mamba biomed-api "${ROOT}"/src/marvel_results_table.py --ancestry EUR
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# MERGE
+
+# [myriad] adds GWAS Catalog associations + Open Targets gene-burden evidence
+# and the marvel results listed in marvel_results.tsv (rows with < 5 carriers
+# dropped); rerun merge and match after every marvel_results_table.py run
+qsub "${ROOT}"/src/merge_associations.sh -r "${ROOT}"
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -91,15 +105,30 @@ run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
     --variant-sources PTV ClinVar --stratified \
     --label thomassen_ad_ptv_clinvar
 
-# arm B (rare variants: own UKB/AoU, FinnGen R13)
-# TODO list the marvel runs in marvel_results.tsv (apoe_stratum column)
-# and apoe_strata.tsv first; IDs below are placeholders until then
+# arm B (rare variants: own UKB, FinnGen R13; AoU TODO). Accessions are
+# written by marvel_results_table.py; once the APOE-stratified marvel runs
+# exist, add marvel_ukb_EUR_alzheimers_dementia_{e44,e43,e33,e22_e32}
 run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
     --outcomes alzheimers_dementia \
-    --studies marvel_{ukb,aou}_EUR_alzheimers_dementia{,_e44,_e43} \
-    marvel_{ukb,aou}_EUR_alzheimers_dementia_{e33,e22_e32} G6_ALZHEIMER \
+    --studies marvel_ukb_EUR_alzheimers_dementia G6_ALZHEIMER \
     --variant-sources PTV ClinVar --stratified \
     --label armb_ad_ptv_clinvar
+
+# UKB only, the 4 dementia outcomes (input of the gene x outcome heatmap)
+run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
+    --studies marvel_ukb_EUR_{all_cause,alzheimers,vascular}_dementia \
+    marvel_ukb_EUR_frontotemporal_dementia \
+    --variant-sources PTV ClinVar --stratified \
+    --label ukb_dementia_ptv_clinvar
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# FIGURES
+
+# [local] copy results/output/burden_EUR_*.tsv.gz from Myriad first
+run_mamba plot-misc "${ROOT}"/src/figures.py --ancestry EUR \
+    --forest-label armb_ad_ptv_clinvar \
+    --heatmap-label ukb_dementia_ptv_clinvar
 
 # EAS (pooled only, no APOE strata): arm A = Cao 2026 + K-ROAD WGS
 # (independent cohorts), arm B = K-ROAD WGS; both via
