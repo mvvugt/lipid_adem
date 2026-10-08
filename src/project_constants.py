@@ -945,7 +945,7 @@ class FileNames:
         Paths.DATA_RAW / "clinvar_condition_direction.tsv"
     )
     # own UKB/AoU association results (marvel), one row per file/outcome
-    UKB_PHENO: Path = Paths.DATA_PROC / "pheno_covs.tsv.gz"
+    UKB_PHENO: Path = Paths.DATA_PROC / "pheno_cov.tsv.gz"
     MARVEL_RESULTS: Path = Paths.DATA_RAW / "marvel_results.tsv"
     # pyjasub job array for the per-gene marvel runs (one cnf per gene,
     # written by src/create_config.py)
