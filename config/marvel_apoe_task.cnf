@@ -1,0 +1,26 @@
+# pyjasub config -- marvel association of APOE genotype on Myriad (UKB).
+# Set MARVEL_ENV (default `marvel`) in the submitting shell if the env
+# has another name.
+[qsub]
+step=1
+batch=2
+mem=14G
+shell=/bin/bash
+time=12:00:00
+nodes=None
+tmp_size=10G
+tmp_dir=/home/rmgpmva/Scratch/lipid_adem/marvel_apoe_task_tmp
+
+[logs]
+log_dir=/myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/marvel_apoe_task_logs
+
+[job_array]
+ja_file=/myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/marvel_apoe_tasks.tsv
+task_script=/myriadfs/home/rmgpmva/projects/lipid_adem/src/marvel_assoc.sh
+
+# columns to verify.
+infiles=carriers
+outfiles=outdir
+
+[script]
+verbose=true

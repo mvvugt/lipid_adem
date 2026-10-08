@@ -6,13 +6,24 @@ Run locally in the `plot-misc` env on burden files copied from Myriad
 into `results/output/`. Writes PDF and PNG files to `results/figures/`:
 
 - ``forest_burden_<label>_<outcome>``: per gene the pooled odds ratio
-  (diamond) and each study's own estimate (circles), 95% CI;
+  and each study's own estimate, 95% CI, with side tables (study,
+  OR (95% CI), p-value);
 - ``forest_apoe_<label>_<outcome>``: per gene the pooled odds ratio over
   all APOE genotypes and per APOE stratum; skipped (logged) until the
   ``_apoe_strata`` burden file exists;
-- ``heatmap_burden_<label>``: pooled log odds ratio per gene and outcome,
-  ``*`` p < 0.05, ``**`` p below the Bonferroni threshold over the cells
-  shown.
+- ``heatmap_burden_<label>``: pooled log odds ratio per gene and outcome;
+- ``forest_sources_<label>_<outcome>``: per gene each source's estimate
+  (Thomassen, as the IVW of its APOE strata; FinnGen; UK Biobank, each
+  over the variants it contributes) and the pooled one last; for a
+  `meta_analysis.py --prefer-groups` run;
+- ``forest_pooled_<label>``: the pooled estimates of that run, per gene
+  one row per outcome.
+
+Layout follows `cox_forest.py` (small cm-sized panels, black CIs, dashed
+OR = 1 line, shaded gene bands, plot_misc side tables). Significance is
+shown by marker shape: circle p >= 0.05, square p < 0.05, diamond p below
+the Bonferroni threshold 0.05 / (genes x outcomes with a pooled estimate
+in the run's burden file). The heatmap uses the same glyphs.
 
 Only `project_constants` is imported from the pipeline; `functions.py`
 needs the Myriad biomed-api env.
@@ -26,16 +37,18 @@ from __future__ import annotations
 
 import argparse
 import logging
+import math
 import os
 import warnings
 from pathlib import Path
 
+import matplotlib
+import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.colors import to_hex
 from matplotlib.lines import Line2D
-from plot_misc.forest import ForestPlot
+from plot_misc.forest import ForestPlot, plot_table
 from plot_misc.heatmap import annotate_heatmap, heatmap
 
 from project_constants import (
@@ -56,13 +69,25 @@ _Z_95: float = 1.959963984540054
 _OR: str = "odds_ratio"
 _LB: str = "or_lower"
 _UB: str = "or_upper"
-_Y: str = "y"
+_Y: str = "y_axis"
 _MARKER: str = "marker"
 _COLOUR: str = "colour"
 _SIZE: str = "size"
+_ROW_NAME: str = "row_name"
+_OR_TEXT: str = "or_text"
+_P_TEXT: str = "p_text"
+# colours: pooled estimate vs single study / stratum
 _POOLED_COLOUR: str = "black"
-_POOLED_MARKER: str = "D"
-_STUDY_MARKER: str = "o"
+_STUDY_COLOUR: str = "#bdbdbd"
+_POOLED_SIZE: float = 14
+_STUDY_SIZE: float = 9
+# significance -> marker shape, and the matching heatmap glyph
+_MARKER_NS: str = "o"
+_MARKER_NOMINAL: str = "s"
+_MARKER_STRICT: str = "D"
+_GLYPH_NOMINAL: str = "■"
+_GLYPH_STRICT: str = "◆"
+_P_NOMINAL: float = 0.05
 # APOE strata in plotting order, `ApoeStratum.ALL` = all genotypes
 _STRATUM_ORDER: tuple[str, ...] = (
     ApoeStratum.ALL,
@@ -71,8 +96,37 @@ _STRATUM_ORDER: tuple[str, ...] = (
     ApoeStratum.E33,
     ApoeStratum.E22_E32,
 )
+_STRATUM_NAMES: dict[str, str] = {
+    ApoeStratum.ALL: "All genotypes",
+    ApoeStratum.E44: "ε4/ε4",
+    ApoeStratum.E43: "ε4/ε3",
+    ApoeStratum.E33: "ε3/ε3",
+    ApoeStratum.E22_E32: "ε2/ε2 + ε3/ε2",
+}
+_OUTCOME_NAMES: dict[str, str] = {
+    "all_cause_dementia": "All-cause dementia",
+    "alzheimers_dementia": "Alzheimer's disease",
+    "vascular_dementia": "Vascular dementia",
+    "frontotemporal_dementia": "Frontotemporal dementia",
+}
+_UKB_PREFIX: str = "marvel_ukb_"
+_FINNGEN_NAME: str = "FinnGen R13"
+_UKB_NAME: str = "UK Biobank"
+_POOLED_NAME: str = "Pooled (IVW)"
+# x-axis tick candidates (odds ratio), coarse first
+_TICKS_COARSE: tuple[float, ...] = (0.05, 0.1, 0.25, 0.5, 1, 2, 4, 10, 20)
+_TICKS_FINE: tuple[float, ...] = (0.5, 0.75, 1, 1.5, 2)
+_TICKS_FINER: tuple[float, ...] = (0.8, 0.9, 1, 1.1, 1.2)
+# sizes, as in cox_forest.py (points, cm)
+_CM: float = 1 / 2.54
+_TITLE_SIZE: float = 3.5
+_LAB_SIZE: float = 3
+_LWD: float = 0.5
+_AX_LAB_SZ: float = 2.7
+_STEXT_SIZE: float = 2.7
+_WIDTH_CM: float = 9.0
+_CM_PER_Y: float = 0.12
 _DPI: int = 300
-_P_NOMINAL: float = 0.05
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -112,14 +166,24 @@ def load_burden(path: Path) -> pd.DataFrame | None:
     Returns
     -------
     burden : `pd.DataFrame` or `None`
-        Rows with a finite beta and SE, plus `_OR`, `_LB` and `_UB`;
-        `None` (logged) when the file does not exist.
+        Rows with a finite beta and SE, plus `_OR`, `_LB`, `_UB`,
+        `_OR_TEXT` and `_P_TEXT`; `None` (logged) when the file does not
+        exist.
     """
     if not path.exists():
         _LOGGER.info(f"{path} not found, skipped")
         return None
     burden = pd.read_csv(path, sep="\t", low_memory=False)
-    beta = pd.to_numeric(burden[MetaColumns.BETA], errors="coerce")
+    is_excluded = burden[VariantListColumns.OUT_GENE].isin(
+        Constants.EXCLUDED_GENES
+    )
+    if is_excluded.any():
+        _LOGGER.info(
+            f"{path.name}: {int(is_excluded.sum())} rows of excluded "
+            f"gene(s) {', '.join(Constants.EXCLUDED_GENES)} dropped"
+        )
+        burden = burden.loc[~is_excluded]
+    beta =pd.to_numeric(burden[MetaColumns.BETA], errors="coerce")
     se = pd.to_numeric(burden[MetaColumns.SE], errors="coerce")
     usable = np.isfinite(beta) & np.isfinite(se)
     if not usable.all():
@@ -127,17 +191,257 @@ def load_burden(path: Path) -> pd.DataFrame | None:
             f"{path.name}: {int((~usable).sum())} rows without beta/SE"
         )
     burden = burden.loc[usable].copy()
-    beta, se = beta[usable], se[usable]
-    burden[_OR] = np.exp(beta)
-    burden[_LB] = np.exp(beta - _Z_95 * se)
-    burden[_UB] = np.exp(beta + _Z_95 * se)
+    burden[MetaColumns.BETA] = beta[usable]
+    burden[MetaColumns.SE] = se[usable]
+    burden[MetaColumns.P] = pd.to_numeric(
+        burden[MetaColumns.P], errors="coerce"
+    )
+    burden = _add_or(burden)
     _LOGGER.info(f"{path.name}: {len(burden)} rows")
     return burden
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _add_or(burden: pd.DataFrame) -> pd.DataFrame:
+    """Add the odds ratio, its 95% CI and the side-table texts.
+
+    Parameters
+    ----------
+    burden : `pd.DataFrame`
+        Rows with a finite numeric beta and SE, and a numeric p-value.
+
+    Returns
+    -------
+    burden : `pd.DataFrame`
+        Copy with `_OR`, `_LB`, `_UB`, `_OR_TEXT` and `_P_TEXT`.
+    """
+    burden = burden.copy()
+    beta, se = burden[MetaColumns.BETA], burden[MetaColumns.SE]
+    burden[_OR] = np.exp(beta)
+    burden[_LB] = np.exp(beta - _Z_95 * se)
+    burden[_UB] = np.exp(beta + _Z_95 * se)
+    # text before any axis clipping, so the tables show the real CI
+    burden[_OR_TEXT] = [
+        f"{point:.2f} ({low:.2f}; {high:.2f})"
+        for point, low, high in zip(burden[_OR], burden[_LB], burden[_UB])
+    ]
+    burden[_P_TEXT] = burden[MetaColumns.P].map(_format_p)
+    return burden
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _format_p(p: float) -> str:
+    """Format a p-value for a side table.
+
+    Parameters
+    ----------
+    p : `float`
+        P-value, may be NaN.
+
+    Returns
+    -------
+    text : `str`
+        ``"0.034"`` style from 0.001 up, ``"1.2e-04"`` below,
+        ``"< 1e-300"`` for 0; empty for NaN.
+    """
+    if not np.isfinite(p):
+        return ""
+    if p == 0:
+        # below double precision
+        return "< 1e-300"
+    if p < 0.001:
+        return f"{p:.1e}"
+    return f"{p:.3f}"
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def study_names() -> dict[str, str]:
+    """Readable names of the APOE-stratum studies and FinnGen phenocodes.
+
+    Returns
+    -------
+    names : `dict[str, str]`
+        Accession -> name: ``"Thomassen ε4/ε4"`` from
+        `FileNames.APOE_STRATA`, `_FINNGEN_NAME` for every phenocode in
+        `FileNames.FINNGEN_MANIFEST`. UKB accessions are named in
+        `_study_name`.
+    """
+    names: dict[str, str] = {}
+    if FileNames.FINNGEN_MANIFEST.exists():
+        manifest = pd.read_csv(
+            FileNames.FINNGEN_MANIFEST, sep="\t", usecols=["phenocode"]
+        )
+        names.update(dict.fromkeys(manifest["phenocode"], _FINNGEN_NAME))
+    if FileNames.APOE_STRATA.exists():
+        strata = pd.read_csv(FileNames.APOE_STRATA, sep="\t")
+        for _, row in strata.iterrows():
+            stratum = _STRATUM_NAMES.get(
+                row[MetaColumns.APOE_STRATUM], row[MetaColumns.APOE_STRATUM]
+            )
+            names[row[HarmonisedColumns.STUDY_ACCESSION]] = (
+                f"{str(row[MetaColumns.STUDY_GROUP]).capitalize()} {stratum}"
+            )
+    return names
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _study_name(accession: str, names: dict[str, str]) -> str:
+    """Readable name of one study.
+
+    Parameters
+    ----------
+    accession : `str`
+        Study accession of a burden row.
+    names : `dict[str, str]`
+        From `study_names`.
+
+    Returns
+    -------
+    name : `str`
+        `_UKB_NAME` for marvel UKB accessions, else the `names` entry,
+        else the accession itself.
+    """
+    if accession.startswith(_UKB_PREFIX):
+        return _UKB_NAME
+    return names.get(accession, accession)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def source_names() -> dict[str, str]:
+    """Readable source (study group) name per accession.
+
+    Returns
+    -------
+    names : `dict[str, str]`
+        Accession -> name: the capitalised `study_group` of
+        `FileNames.APOE_STRATA` (e.g. all Thomassen strata ->
+        ``"Thomassen"``), `_FINNGEN_NAME` for every FinnGen phenocode.
+        UKB accessions are named in `_study_name`.
+    """
+    names = {
+        accession: name
+        for accession, name in study_names().items()
+        if name == _FINNGEN_NAME
+    }
+    if FileNames.APOE_STRATA.exists():
+        strata = pd.read_csv(FileNames.APOE_STRATA, sep="\t")
+        names.update(
+            zip(
+                strata[HarmonisedColumns.STUDY_ACCESSION],
+                strata[MetaColumns.STUDY_GROUP].astype(str).str.capitalize(),
+            )
+        )
+    return names
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def source_rows(per_study: pd.DataFrame) -> pd.DataFrame:
+    """One estimate per gene, outcome and source.
+
+    A source with several studies (the Thomassen APOE strata) is the
+    fixed-effect IVW of their estimates, the same pooling as
+    `meta_analysis.py`.
+
+    Parameters
+    ----------
+    per_study : `pd.DataFrame`
+        Burden rows of level ``stratum`` (one per gene, outcome and study),
+        from `load_burden`.
+
+    Returns
+    -------
+    sources : `pd.DataFrame`
+        Gene, outcome, `_ROW_NAME` (source name), beta, SE, p and the
+        `_add_or` columns.
+    """
+    gene = VariantListColumns.OUT_GENE
+    outcome = HarmonisedColumns.OUTCOME
+    names = source_names()
+    rows = per_study.copy()
+    rows[_ROW_NAME] = [
+        _study_name(str(accession), names)
+        for accession in rows[HarmonisedColumns.STUDY_ACCESSION]
+    ]
+    rows["_weight"] = 1.0 / rows[MetaColumns.SE] ** 2
+    rows["_weighted"] = rows["_weight"] * rows[MetaColumns.BETA]
+    sums = (
+        rows.groupby([gene, outcome, _ROW_NAME], sort=False)[
+            ["_weight", "_weighted"]
+        ]
+        .sum()
+        .reset_index()
+    )
+    sums[MetaColumns.BETA] = sums["_weighted"] / sums["_weight"]
+    sums[MetaColumns.SE] = 1.0 / np.sqrt(sums["_weight"])
+    z = (sums[MetaColumns.BETA] / sums[MetaColumns.SE]).abs()
+    sums[MetaColumns.P] = [math.erfc(value / math.sqrt(2)) for value in z]
+    return _add_or(sums.drop(columns=["_weight", "_weighted"]))
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _outcome_name(outcome: str) -> str:
+    """Readable outcome name.
+
+    Parameters
+    ----------
+    outcome : `str`
+        `outcome` value of a burden row.
+
+    Returns
+    -------
+    name : `str`
+        From `_OUTCOME_NAMES`, else underscores replaced by spaces.
+    """
+    return _OUTCOME_NAMES.get(outcome, outcome.replace("_", " "))
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def strict_threshold(burden: pd.DataFrame) -> tuple[float, int]:
+    """Bonferroni threshold over the pooled gene x outcome estimates.
+
+    Parameters
+    ----------
+    burden : `pd.DataFrame`
+        From `load_burden`, the run's main burden file.
+
+    Returns
+    -------
+    threshold : `float`
+        `_P_NOMINAL` / number of tests.
+    n_tests : `int`
+        Pooled rows with a finite p-value (one per gene and outcome).
+    """
+    pooled = burden[burden[MetaColumns.LEVEL] == MetaLevel.POOLED]
+    n_tests = int(np.isfinite(pooled[MetaColumns.P]).sum())
+    return _P_NOMINAL / max(n_tests, 1), n_tests
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # drawing
 
+def _significance_marker(p: pd.Series, strict: float) -> np.ndarray:
+    """Marker shape per row from its p-value.
+
+    Parameters
+    ----------
+    p : `pd.Series`
+        P-values.
+    strict : `float`
+        Bonferroni threshold.
+
+    Returns
+    -------
+    markers : `np.ndarray`
+        `_MARKER_STRICT`, `_MARKER_NOMINAL` or `_MARKER_NS`.
+    """
+    return np.select(
+        [p < strict, p < _P_NOMINAL],
+        [_MARKER_STRICT, _MARKER_NOMINAL],
+        default=_MARKER_NS,
+    )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _clip_ci(data: pd.DataFrame, max_or: float) -> int:
     """Clip CI bounds to ``[1/max_or, max_or]``, in place.
 
@@ -161,24 +465,164 @@ def _clip_ci(data: pd.DataFrame, max_or: float) -> int:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def draw_forest(
-    data: pd.DataFrame,
-    title: str,
-    legend: list[Line2D],
-    max_or: float,
-) -> plt.Figure:
-    """Draw a log-scale odds-ratio forest plot with plot_misc.
+def _x_axis(data: pd.DataFrame) -> tuple[tuple[float, float], list[float]]:
+    """Log x limits and ticks that fit the (clipped) CIs.
 
     Parameters
     ----------
     data : `pd.DataFrame`
-        Rows with `_OR`, `_LB`, `_UB`, `_Y` (numeric, unique per row),
-        `_MARKER`, `_COLOUR`, `_SIZE` and the gene column (y tick labels,
-        one per gene).
+        With `_LB` and `_UB`.
+
+    Returns
+    -------
+    limits : `tuple[float, float]`
+        Lowest CI bound / 1.15 and highest * 1.15, always around 1.
+    ticks : `list[float]`
+        The first of `_TICKS_COARSE`, `_TICKS_FINE`, `_TICKS_FINER` with
+        at least three ticks within the limits (else `_TICKS_FINER`).
+    """
+    low = min(float(data[_LB].min()), 1.0) / 1.15
+    high = max(float(data[_UB].max()), 1.0) * 1.15
+    for candidates in (_TICKS_COARSE, _TICKS_FINE, _TICKS_FINER):
+        ticks = [t for t in candidates if low <= t <= high]
+        if len(ticks) >= 3:
+            break
+    return (low, high), ticks
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _significance_legend(strict: float, n_tests: int) -> list[Line2D]:
+    """Legend handles of the three marker shapes.
+
+    Parameters
+    ----------
+    strict : `float`
+        Bonferroni threshold.
+    n_tests : `int`
+        Number of tests behind `strict`.
+
+    Returns
+    -------
+    handles : `list[Line2D]`
+    """
+    labels = (
+        (_MARKER_NS, f"p ≥ {_P_NOMINAL:g}"),
+        (_MARKER_NOMINAL, f"p < {_P_NOMINAL:g}"),
+        (
+            _MARKER_STRICT,
+            f"p < {strict:.1e} (Bonferroni, {n_tests} tests)",
+        ),
+    )
+    return [
+        Line2D(
+            [0],
+            [0],
+            marker=marker,
+            color=_POOLED_COLOUR,
+            markeredgecolor="black",
+            markeredgewidth=0.3,
+            markersize=2.5,
+            lw=0,
+            label=label,
+        )
+        for marker, label in labels
+    ]
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _plot_points(data: pd.DataFrame, ax: plt.Axes, ylim: tuple) -> dict:
+    """Draw points and CIs per gene, shaded gene bands.
+
+    Parameters
+    ----------
+    data : `pd.DataFrame`
+        Rows with `_OR`, `_LB`, `_UB`, `_Y`, `_MARKER`, `_COLOUR`,
+        `_SIZE` and the gene column.
+    ax : `plt.Axes`
+        Forest axes.
+    ylim : `tuple`
+        Y limits (before inversion).
+
+    Returns
+    -------
+    span : `dict`
+        `ForestPlot.span_dict`, for the side tables; empty for one row.
+    """
+    gene = VariantListColumns.OUT_GENE
+    scatter_kwargs = {"edgecolors": "black", "linewidth": 0.3}
+    ci_kwargs = {
+        "zorder": 1,
+        "solid_capstyle": "round",
+        "linestyle": "-",
+    }
+    if len(data) < 2:
+        # ForestPlot needs two rows to set its y margins
+        for _, row in data.iterrows():
+            ax.plot(
+                [row[_LB], row[_UB]],
+                [row[_Y]] * 2,
+                c="black",
+                linewidth=_LWD,
+                **ci_kwargs,
+            )
+            ax.scatter(
+                row[_OR],
+                row[_Y],
+                marker=row[_MARKER],
+                c=row[_COLOUR],
+                s=row[_SIZE],
+                zorder=2,
+                **scatter_kwargs,
+            )
+        ax.set_yticks(data[_Y], data[gene])
+        ax.set_ylim(ylim)
+        ax.invert_yaxis()
+        return {}
+    forest = ForestPlot(
+        data,
+        x_col=_OR,
+        y_col=_Y,
+        lb_col=_LB,
+        ub_col=_UB,
+        g_col=gene,
+        ax=ax,
+    )
+    forest.plot(
+        s_col=_MARKER,
+        c_col=_COLOUR,
+        s_size_col=_SIZE,
+        ci_colour="black",
+        ci_lwd=_LWD,
+        span=True,
+        ylim=ylim,
+        kwargs_scatter_dict=scatter_kwargs,
+        kwargs_plot_ci_dict=ci_kwargs,
+    )
+    return forest.span_dict
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def draw_forest(
+    data: pd.DataFrame,
+    title: str,
+    row_header: str,
+    legend: list[Line2D],
+    max_or: float,
+) -> plt.Figure:
+    """Draw a log-scale odds-ratio forest plot with side tables.
+
+    Parameters
+    ----------
+    data : `pd.DataFrame`
+        Rows sorted in plotting order with `_OR`, `_LB`, `_UB`,
+        `_MARKER`, `_COLOUR`, `_SIZE`, `_ROW_NAME`, `_OR_TEXT`, `_P_TEXT`
+        and the gene column (y tick labels, one per gene).
     title : `str`
-        Axes title.
+        Panel title.
+    row_header : `str`
+        Header of the `_ROW_NAME` table, e.g. ``"Study"``.
     legend : `list[Line2D]`
-        Legend handles.
+        Legend handles (marker shapes).
     max_or : `float`
         Odds ratios and CI bounds are shown within ``[1/max_or, max_or]``.
 
@@ -195,94 +639,109 @@ def draw_forest(
         )
         data = data.loc[~points_out]
     n_clipped = _clip_ci(data, max_or)
-    height = 1.0 + 0.28 * len(data)
-    figure, ax = plt.subplots(figsize=(6.5, height))
-    if len(data) < 2:
-        # ForestPlot needs two rows to set its y margins
-        for _, row in data.iterrows():
-            ax.plot([row[_LB], row[_UB]], [row[_Y]] * 2, c="indianred")
-            ax.scatter(row[_OR], row[_Y], marker=row[_MARKER], c=row[_COLOUR])
-        ax.set_yticks(data[_Y], data[VariantListColumns.OUT_GENE])
-    else:
-        ForestPlot(
-            data,
-            x_col=_OR,
-            y_col=_Y,
-            lb_col=_LB,
-            ub_col=_UB,
-            g_col=VariantListColumns.OUT_GENE,
-            ax=ax,
-        ).plot(
-            s_col=_MARKER,
-            c_col=_COLOUR,
-            s_size_col=_SIZE,
-            ci_lwd=1.5,
-            ci_colour="grey",
-        )
-    ax.set_xscale("log")
-    ax.set_xlim(1.0 / max_or, max_or)
-    ax.axvline(1.0, color="black", linestyle="--", linewidth=0.8, zorder=1)
-    xlabel = "Odds ratio (95% CI), lower gene function"
-    if n_clipped:
-        xlabel += f"\n{n_clipped} CIs truncated at the axis limits"
-    ax.set_xlabel(xlabel)
-    ax.set_title(title, fontsize=10)
-    ax.legend(
-        handles=legend,
-        loc="upper left",
-        bbox_to_anchor=(1.01, 1.0),
-        frameon=False,
-        fontsize=8,
+    data = data.reset_index(drop=True)
+    data = _set_y(data)
+    ylim = (data[_Y].min() - 3, data[_Y].max() + 3)
+    height_cm = 1.6 + _CM_PER_Y * (ylim[1] - ylim[0])
+    matplotlib.rcParams["axes.linewidth"] = _LWD
+    figure = plt.figure(figsize=(_WIDTH_CM * _CM, height_cm * _CM))
+    grid = gridspec.GridSpec(
+        nrows=1,
+        ncols=4,
+        width_ratios=[1.3, 0.7, 0.8, 0.35],
+        figure=figure,
+        wspace=0.0,
+        bottom=1.0 / height_cm,
+        top=1 - 0.35 / height_cm,
     )
-    figure.tight_layout()
+    ax = figure.add_subplot(grid[0])
+    ax.set_xscale("log")
+    ax.set_zorder(1)
+    span = _plot_points(data, ax, ylim)
+    limits, ticks = _x_axis(data)
+    ax.set_xlim(limits)
+    ax.axvline(1, linewidth=_LWD, linestyle="--", c="black", zorder=0.5)
+    ax.spines[["right", "top"]].set_visible(False)
+    ax.set_xticks(ticks)
+    ax.xaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter("%g"))
+    ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+    ax.tick_params(
+        axis="both",
+        which="minor",
+        bottom=False,
+        labelsize=_AX_LAB_SZ,
+        width=_LWD,
+    )
+    ax.tick_params(axis="both", labelsize=_AX_LAB_SZ, width=_LWD)
+    for label in ax.get_yticklabels():
+        label.set_fontstyle("italic")
+    xlabel = "Odds ratio (95% CI)"
+    if n_clipped:
+        xlabel += f"\n{n_clipped} CIs truncated at {1 / max_or:g}-{max_or:g}"
+    ax.set_xlabel(xlabel, fontsize=_LAB_SIZE)
+    ax.set_title(
+        title, fontweight="bold", fontsize=_TITLE_SIZE, loc="left", pad=6
+    )
+    tables = (
+        (_ROW_NAME, row_header, "left", 0.05),
+        (_OR_TEXT, "OR (95% CI)", "center", 0.5),
+        (_P_TEXT, "P-value", "center", 0.5),
+    )
+    for i, (column, header, align, xloc) in enumerate(tables, start=1):
+        table_ax = figure.add_subplot(grid[i])
+        table_ax.set_ylim(ax.get_ylim())
+        table_ax.set_zorder(1 - 0.1 * i)
+        plot_table(
+            data,
+            ax=table_ax,
+            string_col=column,
+            y_col=_Y,
+            annoteheader=header,
+            xloc=xloc,
+            xloc_header=xloc,
+            halignment_text=align,
+            halignment_header=align,
+            size_text=_STEXT_SIZE,
+            size_header=_STEXT_SIZE,
+            negative_padding=1,
+            span=span or None,
+        )
+    figure.legend(
+        handles=legend,
+        loc="lower left",
+        bbox_to_anchor=(0.02, 0.0),
+        ncol=3,
+        frameon=False,
+        fontsize=_STEXT_SIZE,
+        handletextpad=0.2,
+        columnspacing=1.0,
+    )
     return figure
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _y_positions(data: pd.DataFrame, order: list[str]) -> pd.Series:
-    """Give each row a y position: genes one after the other, a gap of one
-    row between genes.
+def _set_y(data: pd.DataFrame) -> pd.DataFrame:
+    """Y coordinates: rows 2 apart within a gene, 4 between genes.
 
     Parameters
     ----------
     data : `pd.DataFrame`
-        Rows sorted within gene in plotting order.
-    order : `list[str]`
-        Genes in plotting order.
+        Rows sorted in plotting order, unique index.
 
     Returns
     -------
-    y : `pd.Series`
-        Float y per row, aligned to `data`.
+    data : `pd.DataFrame`
+        Copy with `_Y`.
     """
     y = pd.Series(np.nan, index=data.index)
-    position = 0.0
-    for gene in order:
+    position = 1.0
+    for gene in dict.fromkeys(data[VariantListColumns.OUT_GENE]):
         rows = data.index[data[VariantListColumns.OUT_GENE] == gene]
-        y[rows] = position + np.arange(len(rows))
-        position += len(rows) + 1
-    return y
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _study_colours(studies: list[str]) -> dict[str, str]:
-    """Assign a tab10 colour to each study.
-
-    Parameters
-    ----------
-    studies : `list[str]`
-        Study accessions.
-
-    Returns
-    -------
-    colours : `dict[str, str]`
-        Accession -> hex colour (cycling after 10 studies).
-    """
-    cmap = plt.get_cmap("tab10")
-    return {
-        study: to_hex(cmap(i % cmap.N))
-        for i, study in enumerate(sorted(studies))
-    }
+        y[rows] = position + 2 * np.arange(len(rows))
+        position = y[rows].max() + 4
+    data = data.copy()
+    data[_Y] = y
+    return data
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -314,7 +773,11 @@ def save(figure: plt.Figure, stem: Path) -> None:
 # figures
 
 def forest_burden(
-    burden: pd.DataFrame, label: str, out_dir: Path, max_or: float
+    burden: pd.DataFrame,
+    label: str,
+    out_dir: Path,
+    max_or: float,
+    strict: tuple[float, int],
 ) -> None:
     """Per outcome: pooled and per-study gene-burden odds ratios.
 
@@ -323,11 +786,13 @@ def forest_burden(
     burden : `pd.DataFrame`
         From `load_burden` (pooled run, levels pooled and stratum).
     label : `str`
-        Run label, used in titles and file names.
+        Run label, used in file names.
     out_dir : `Path`
         Output directory.
     max_or : `float`
         Axis limit, see `draw_forest`.
+    strict : `tuple[float, int]`
+        From `strict_threshold`.
 
     Returns
     -------
@@ -335,49 +800,24 @@ def forest_burden(
     """
     gene = VariantListColumns.OUT_GENE
     study = HarmonisedColumns.STUDY_ACCESSION
-    is_study = burden[MetaColumns.LEVEL] == MetaLevel.STRATUM
-    colours = _study_colours(
-        sorted(set(burden.loc[is_study, study].dropna()))
-    )
+    names = study_names()
+    legend = _significance_legend(*strict)
     for outcome, rows in burden.groupby(HarmonisedColumns.OUTCOME):
         rows = rows.copy()
         is_pooled = rows[MetaColumns.LEVEL] == MetaLevel.POOLED
         rows["_order"] = np.where(is_pooled, 0, 1)
         rows = rows.sort_values([gene, "_order", study], na_position="first")
-        genes = list(dict.fromkeys(rows[gene]))
-        rows[_Y] = _y_positions(rows, genes)
-        rows[_MARKER] = np.where(
-            is_pooled.loc[rows.index], _POOLED_MARKER, _STUDY_MARKER
+        is_pooled = rows[MetaColumns.LEVEL] == MetaLevel.POOLED
+        rows[_MARKER] = _significance_marker(rows[MetaColumns.P], strict[0])
+        rows[_COLOUR] = np.where(is_pooled, _POOLED_COLOUR, _STUDY_COLOUR)
+        rows[_SIZE] = np.where(is_pooled, _POOLED_SIZE, _STUDY_SIZE)
+        rows[_ROW_NAME] = [
+            _POOLED_NAME if pooled else _study_name(str(accession), names)
+            for pooled, accession in zip(is_pooled, rows[study])
+        ]
+        figure = draw_forest(
+            rows, _outcome_name(str(outcome)), "Study", legend, max_or
         )
-        rows[_COLOUR] = [
-            _POOLED_COLOUR if pooled else colours[accession]
-            for pooled, accession in zip(
-                is_pooled.loc[rows.index], rows[study]
-            )
-        ]
-        rows[_SIZE] = np.where(is_pooled.loc[rows.index], 50, 25)
-        shown = sorted(set(rows.loc[~is_pooled.loc[rows.index], study]))
-        legend = [
-            Line2D(
-                [],
-                [],
-                marker=_POOLED_MARKER,
-                color=_POOLED_COLOUR,
-                linestyle="",
-                label="pooled (IVW)",
-            )
-        ] + [
-            Line2D(
-                [],
-                [],
-                marker=_STUDY_MARKER,
-                color=colours[accession],
-                linestyle="",
-                label=accession,
-            )
-            for accession in shown
-        ]
-        figure = draw_forest(rows, f"{outcome} ({label})", legend, max_or)
         save(figure, out_dir / f"forest_burden_{label}_{outcome}")
 
 
@@ -388,6 +828,7 @@ def forest_apoe(
     label: str,
     out_dir: Path,
     max_or: float,
+    strict: tuple[float, int],
 ) -> None:
     """Per outcome: pooled gene-burden odds ratio overall and per stratum.
 
@@ -398,11 +839,13 @@ def forest_apoe(
     strata : `pd.DataFrame`
         From `load_burden`, the ``_apoe_strata`` run.
     label : `str`
-        Run label, used in titles and file names.
+        Run label, used in file names.
     out_dir : `Path`
         Output directory.
     max_or : `float`
         Axis limit, see `draw_forest`.
+    strict : `tuple[float, int]`
+        From `strict_threshold` of the pooled run.
 
     Returns
     -------
@@ -416,47 +859,136 @@ def forest_apoe(
     rows_all = pd.concat([overall, per_stratum], ignore_index=True)
     rank = {name: i for i, name in enumerate(_STRATUM_ORDER)}
     rows_all["_order"] = rows_all[stratum].map(rank)
-    cmap = plt.get_cmap("tab10")
-    colours = {
-        name: to_hex(
-            _POOLED_COLOUR if name == ApoeStratum.ALL else cmap(i)
-        )
-        for i, name in enumerate(_STRATUM_ORDER)
-    }
+    legend = _significance_legend(*strict)
     for outcome, rows in rows_all.groupby(HarmonisedColumns.OUTCOME):
         has_strata = rows[stratum] != ApoeStratum.ALL
         if not has_strata.any():
             _LOGGER.info(f"{outcome}: no APOE strata, forest skipped")
             continue
         rows = rows.sort_values([gene, "_order"]).copy()
-        genes = list(dict.fromkeys(rows[gene]))
-        rows[_Y] = _y_positions(rows, genes)
-        rows[_MARKER] = np.where(
-            rows[stratum] == ApoeStratum.ALL, _POOLED_MARKER, _STUDY_MARKER
-        )
-        rows[_COLOUR] = rows[stratum].map(colours)
-        rows[_SIZE] = 35
-        legend = [
-            Line2D(
-                [],
-                [],
-                marker=_POOLED_MARKER if name == ApoeStratum.ALL
-                else _STUDY_MARKER,
-                color=colours[name],
-                linestyle="",
-                label="all genotypes" if name == ApoeStratum.ALL else name,
-            )
-            for name in _STRATUM_ORDER
-            if name in set(rows[stratum])
-        ]
+        is_all = rows[stratum] == ApoeStratum.ALL
+        rows[_MARKER] = _significance_marker(rows[MetaColumns.P], strict[0])
+        rows[_COLOUR] = np.where(is_all, _POOLED_COLOUR, _STUDY_COLOUR)
+        rows[_SIZE] = np.where(is_all, _POOLED_SIZE, _STUDY_SIZE)
+        rows[_ROW_NAME] = rows[stratum].map(_STRATUM_NAMES)
         figure = draw_forest(
-            rows, f"{outcome} by APOE stratum ({label})", legend, max_or
+            rows,
+            f"{_outcome_name(str(outcome))} by APOE genotype",
+            "APOE",
+            legend,
+            max_or,
         )
         save(figure, out_dir / f"forest_apoe_{label}_{outcome}")
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def burden_heatmap(burden: pd.DataFrame, label: str, out_dir: Path) -> None:
+def forest_sources(
+    burden: pd.DataFrame,
+    label: str,
+    out_dir: Path,
+    max_or: float,
+    strict: tuple[float, int],
+) -> None:
+    """Per outcome: per gene each source's estimate, then the pooled one.
+
+    Row order per gene: other sources (FinnGen, Thomassen), UK Biobank,
+    pooled (IVW) last.
+
+    Parameters
+    ----------
+    burden : `pd.DataFrame`
+        From `load_burden` (a `--prefer-groups` run, levels pooled and
+        stratum).
+    label : `str`
+        Run label, used in file names.
+    out_dir : `Path`
+        Output directory.
+    max_or : `float`
+        Axis limit, see `draw_forest`.
+    strict : `tuple[float, int]`
+        From `strict_threshold`.
+
+    Returns
+    -------
+    `None`
+    """
+    gene = VariantListColumns.OUT_GENE
+    is_pooled = burden[MetaColumns.LEVEL] == MetaLevel.POOLED
+    sources = source_rows(burden.loc[~is_pooled])
+    sources["_order"] = np.where(sources[_ROW_NAME] == _UKB_NAME, 1, 0)
+    pooled = burden.loc[is_pooled].copy()
+    pooled[_ROW_NAME] = _POOLED_NAME
+    pooled["_order"] = 2
+    rows_all = pd.concat([sources, pooled], ignore_index=True)
+    legend = _significance_legend(*strict)
+    for outcome, rows in rows_all.groupby(HarmonisedColumns.OUTCOME):
+        rows = rows.sort_values([gene, "_order", _ROW_NAME]).copy()
+        is_pooled_row = rows["_order"] == 2
+        rows[_MARKER] = _significance_marker(rows[MetaColumns.P], strict[0])
+        rows[_COLOUR] = np.where(
+            is_pooled_row, _POOLED_COLOUR, _STUDY_COLOUR
+        )
+        rows[_SIZE] = np.where(is_pooled_row, _POOLED_SIZE, _STUDY_SIZE)
+        figure = draw_forest(
+            rows, _outcome_name(str(outcome)), "Source", legend, max_or
+        )
+        save(figure, out_dir / f"forest_sources_{label}_{outcome}")
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def forest_pooled(
+    burden: pd.DataFrame,
+    label: str,
+    out_dir: Path,
+    max_or: float,
+    strict: tuple[float, int],
+) -> None:
+    """One forest of the pooled estimates: per gene one row per outcome.
+
+    Parameters
+    ----------
+    burden : `pd.DataFrame`
+        From `load_burden`.
+    label : `str`
+        Run label, used in the file name.
+    out_dir : `Path`
+        Output directory.
+    max_or : `float`
+        Axis limit, see `draw_forest`.
+    strict : `tuple[float, int]`
+        From `strict_threshold`.
+
+    Returns
+    -------
+    `None`
+    """
+    gene = VariantListColumns.OUT_GENE
+    outcome = HarmonisedColumns.OUTCOME
+    rows = burden[burden[MetaColumns.LEVEL] == MetaLevel.POOLED].copy()
+    rank = {name: i for i, name in enumerate(_OUTCOME_NAMES)}
+    rows["_order"] = rows[outcome].map(rank).fillna(len(rank))
+    rows = rows.sort_values([gene, "_order", outcome])
+    rows[_MARKER] = _significance_marker(rows[MetaColumns.P], strict[0])
+    rows[_COLOUR] = _POOLED_COLOUR
+    rows[_SIZE] = _POOLED_SIZE
+    rows[_ROW_NAME] = [_outcome_name(str(name)) for name in rows[outcome]]
+    figure = draw_forest(
+        rows,
+        "Gene burden, pooled (IVW)",
+        "Outcome",
+        _significance_legend(*strict),
+        max_or,
+    )
+    save(figure, out_dir / f"forest_pooled_{label}")
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def burden_heatmap(
+    burden: pd.DataFrame,
+    label: str,
+    out_dir: Path,
+    strict: tuple[float, int],
+) -> None:
     """Pooled gene-burden log odds ratio per gene and outcome.
 
     Parameters
@@ -464,9 +996,11 @@ def burden_heatmap(burden: pd.DataFrame, label: str, out_dir: Path) -> None:
     burden : `pd.DataFrame`
         From `load_burden`.
     label : `str`
-        Run label, used in the title and file name.
+        Run label, used in the file name.
     out_dir : `Path`
         Output directory.
+    strict : `tuple[float, int]`
+        From `strict_threshold`.
 
     Returns
     -------
@@ -478,37 +1012,54 @@ def burden_heatmap(burden: pd.DataFrame, label: str, out_dir: Path) -> None:
     beta = pooled.pivot(index=gene, columns=outcome, values=MetaColumns.BETA)
     p = pooled.pivot(index=gene, columns=outcome, values=MetaColumns.P)
     p = p.reindex_like(beta)
+    glyphs = pd.DataFrame("", index=beta.index, columns=beta.columns)
+    glyphs = glyphs.mask(p < _P_NOMINAL, _GLYPH_NOMINAL)
+    glyphs = glyphs.mask(p < strict[0], _GLYPH_STRICT)
     n_cells = int(beta.notna().sum().sum())
-    bonferroni = _P_NOMINAL / max(n_cells, 1)
-    stars = pd.DataFrame("", index=beta.index, columns=beta.columns)
-    stars = stars.mask(p < _P_NOMINAL, "*").mask(p < bonferroni, "**")
     limit = float(np.nanmax(np.abs(beta.to_numpy()))) if n_cells else 1.0
+    matplotlib.rcParams["axes.linewidth"] = _LWD
     figure, ax = plt.subplots(
-        figsize=(3.0 + 1.1 * beta.shape[1], 2.0 + 0.5 * beta.shape[0])
+        figsize=(
+            (2.5 + 1.0 * beta.shape[1]) * _CM,
+            (2.0 + 0.6 * beta.shape[0]) * _CM,
+        )
     )
-    im, _ = heatmap(
+    im, cbar = heatmap(
         beta.to_numpy(dtype=float),
         row_labels=list(beta.index),
-        col_labels=[name.replace("_", " ") for name in beta.columns],
+        col_labels=[_outcome_name(str(name)) for name in beta.columns],
         ax=ax,
         cbar_bool=True,
-        cbar_label="pooled log odds ratio",
+        cbar_label="Pooled log odds ratio",
         cmap="RdBu_r",
         vmin=-limit,
         vmax=limit,
+        grid_linewidth=1,
     )
     with warnings.catch_warnings():
         # empty (NaN) cells are masked; matplotlib warns per masked cell
         warnings.simplefilter("ignore", UserWarning)
-        annotate_heatmap(im, data=stars, threshold=limit / 2, fontsize=12)
-    ax.set_title(f"Gene burden ({label})", fontsize=10)
-    figure.tight_layout()
+        annotate_heatmap(
+            im, data=glyphs, threshold=limit / 2, fontsize=_STEXT_SIZE
+        )
+    ax.tick_params(
+        axis="both", labelsize=_AX_LAB_SZ, width=_LWD, length=2
+    )
+    for tick in ax.get_yticklabels():
+        tick.set_fontstyle("italic")
+    cbar.ax.tick_params(labelsize=_AX_LAB_SZ, width=_LWD, length=2)
+    cbar.outline.set_linewidth(_LWD)
+    cbar.set_label("Pooled log odds ratio", fontsize=_LAB_SIZE)
+    ax.set_title(
+        "Gene burden", fontweight="bold", fontsize=_TITLE_SIZE, loc="left"
+    )
     figure.text(
-        0.01,
-        0.01,
-        f"* p < {_P_NOMINAL:g}; ** p < {bonferroni:.1e} (Bonferroni, "
-        f"{n_cells} cells); blank: no estimate",
-        fontsize=7,
+        0.0,
+        -0.08,
+        f"{_GLYPH_NOMINAL} p < {_P_NOMINAL:g}; {_GLYPH_STRICT} p < "
+        f"{strict[0]:.1e} (Bonferroni, {strict[1]} tests); "
+        "blank: no estimate",
+        fontsize=_STEXT_SIZE,
     )
     save(figure, out_dir / f"heatmap_burden_{label}")
 
@@ -520,6 +1071,7 @@ def figures(
     heatmap_label: str | None,
     out_dir: Path,
     max_or: float,
+    sources_label: str | None = None,
 ) -> None:
     """Draw every figure whose input exists.
 
@@ -535,6 +1087,9 @@ def figures(
         Output directory.
     max_or : `float`
         Forest-plot axis limit.
+    sources_label : `str` or `None`, optional, default: `None`
+        Label of a `--prefer-groups` run for `forest_sources` and
+        `forest_pooled`; `None` skips them.
 
     Returns
     -------
@@ -543,18 +1098,29 @@ def figures(
     if forest_label:
         burden = load_burden(burden_path(ancestry, forest_label))
         if burden is not None:
-            forest_burden(burden, forest_label, out_dir, max_or)
+            strict = strict_threshold(burden)
+            forest_burden(burden, forest_label, out_dir, max_or, strict)
             strata = load_burden(
                 burden_path(
                     ancestry, forest_label, f"_{Constants.APOE_STRATA_LABEL}"
                 )
             )
             if strata is not None:
-                forest_apoe(burden, strata, forest_label, out_dir, max_or)
+                forest_apoe(
+                    burden, strata, forest_label, out_dir, max_or, strict
+                )
     if heatmap_label:
         burden = load_burden(burden_path(ancestry, heatmap_label))
         if burden is not None:
-            burden_heatmap(burden, heatmap_label, out_dir)
+            burden_heatmap(
+                burden, heatmap_label, out_dir, strict_threshold(burden)
+            )
+    if sources_label:
+        burden = load_burden(burden_path(ancestry, sources_label))
+        if burden is not None:
+            strict = strict_threshold(burden)
+            forest_sources(burden, sources_label, out_dir, max_or, strict)
+            forest_pooled(burden, sources_label, out_dir, max_or, strict)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -580,6 +1146,13 @@ def _init_cmd_args() -> argparse.ArgumentParser:
         help="meta_analysis.py --label of the run for the heatmap",
     )
     parser.add_argument(
+        "--sources-label",
+        help=(
+            "meta_analysis.py --label of a --prefer-groups run: forest per "
+            "outcome by source and a forest of the pooled estimates"
+        ),
+    )
+    parser.add_argument(
         "--out-dir",
         type=Path,
         default=Paths.RESULTS_FIGURES,
@@ -598,8 +1171,10 @@ def _init_cmd_args() -> argparse.ArgumentParser:
 def _parse_cmd_args(parser: argparse.ArgumentParser) -> argparse.Namespace:
     """Parse and validate command-line arguments."""
     args = parser.parse_args()
-    if not (args.forest_label or args.heatmap_label):
-        parser.error("give --forest-label and/or --heatmap-label")
+    if not (args.forest_label or args.heatmap_label or args.sources_label):
+        parser.error(
+            "give --forest-label, --heatmap-label and/or --sources-label"
+        )
     if args.max_or <= 1:
         parser.error("--max-or must be > 1")
     return args
@@ -621,6 +1196,7 @@ def main() -> None:
         args.heatmap_label,
         args.out_dir,
         args.max_or,
+        sources_label=args.sources_label,
     )
 
 

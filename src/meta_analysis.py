@@ -977,6 +977,8 @@ def meta_analysis(
     label: str | None = None,
     require_log_or: bool = False,
     region_rare: bool = False,
+    prefer_groups: list[str] | None = None,
+    fallback_groups: list[str] | None = None,
 ) -> None:
     """Run the meta-analysis for one ancestry group and write it.
 
@@ -1019,6 +1021,14 @@ def meta_analysis(
         the list matches. Effects are those of the GRCh38 alt allele, not
         oriented by gene function, so the burden pools variants that lower
         and raise function alike.
+    prefer_groups : `list[str]` or `None`, optional, default: `None`
+        Study groups (`load_apoe_strata`; an unlisted study is its own
+        group, named by its accession) used per variant (gene, outcome,
+        site) when they have it; see `choose_groups`. `None` keeps every
+        group.
+    fallback_groups : `list[str]` or `None`, optional, default: `None`
+        Study groups used for a variant only when no `prefer_groups`
+        group has it.
 
     Returns
     -------
@@ -1038,6 +1048,14 @@ def meta_analysis(
         if region_rare
         else FileNames.MATCHED_VARIANTS
     )
+    is_excluded = matched[VariantListColumns.OUT_GENE].isin(
+        Constants.EXCLUDED_GENES
+    )
+    log_info(
+        f"{int(is_excluded.sum())} rows of excluded gene(s) "
+        f"{', '.join(Constants.EXCLUDED_GENES)} dropped"
+    )
+    matched = matched.loc[~is_excluded].copy()
     ancestry_col = HarmonisedColumns.ANCESTRY_GROUP
     pool_all = ancestry == Ancestry.MULTI
     if pool_all:
@@ -1094,6 +1112,12 @@ def meta_analysis(
 
     log_stage("apoe_strata")
     rows = _add_apoe_strata(rows, load_apoe_strata())
+    if prefer_groups:
+        log_stage("choose_groups")
+        rows = choose_groups(rows, prefer_groups, fallback_groups or [])
+        if rows.empty:
+            log_warn("no rows left after choosing groups; no output written")
+            return
 
     suffix = f"_{label}" if label else ""
     log_stage("pooled_run")
@@ -1253,6 +1277,73 @@ def _pooled_rows(rows: pd.DataFrame) -> pd.DataFrame:
             else "IVW of the strata"
         )
         log_info(f"pooled run, study group {name}: {rule}")
+    return rows.loc[keep].copy()
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def choose_groups(
+    rows: pd.DataFrame, prefer: list[str], fallback: list[str]
+) -> pd.DataFrame:
+    """Per variant, keep the preferred or else the fallback groups.
+
+    For each variant-list gene, outcome and variant site: when any row
+    (any APOE stratum) comes from a `prefer` study group, the `fallback`
+    groups' rows are dropped; otherwise the `fallback` rows are kept.
+    Rows of other groups are always kept. Used to avoid sample overlap:
+    Thomassen (prefer) holds UKB and FinnGen (fallback), so these add
+    only the variants Thomassen does not have.
+
+    Parameters
+    ----------
+    rows : `pd.DataFrame`
+        From `_add_apoe_strata`, after orientation and the variant-source
+        filter.
+    prefer : `list[str]`
+        Preferred `study_group` values.
+    fallback : `list[str]`
+        Fallback `study_group` values.
+
+    Returns
+    -------
+    chosen : `pd.DataFrame`
+        The kept rows.
+
+    Raises
+    ------
+    ValueError
+        If a group is in both `prefer` and `fallback`.
+    """
+    both = sorted(set(prefer) & set(fallback))
+    if both:
+        raise ValueError(f"group(s) both preferred and fallback: {both}")
+    group = rows[MetaColumns.STUDY_GROUP]
+    absent = sorted((set(prefer) | set(fallback)) - set(group))
+    if absent:
+        log_warn(f"no rows from study group(s) {', '.join(absent)}")
+    keys = [
+        VariantListColumns.OUT_GENE,
+        HarmonisedColumns.OUTCOME,
+        MetaColumns.VARIANT_SITE,
+    ]
+    is_prefer = group.isin(prefer)
+    is_fallback = group.isin(fallback)
+    has_prefer = is_prefer.groupby(
+        [rows[key] for key in keys], dropna=False
+    ).transform("any")
+    keep = ~is_fallback | ~has_prefer
+    used = rows.loc[keep & (is_prefer | is_fallback)]
+    for (gene, outcome), part in used.groupby(keys[:2], dropna=False):
+        sites = part.groupby(MetaColumns.STUDY_GROUP)[
+            MetaColumns.VARIANT_SITE
+        ].nunique()
+        log_info(
+            f"{gene}, {outcome}: "
+            + ", ".join(f"{name} {n} variants" for name, n in sites.items())
+        )
+    log_info(
+        f"{int((~keep).sum())} fallback rows dropped for variants a "
+        "preferred group has"
+    )
     return rows.loc[keep].copy()
 
 
@@ -1485,13 +1576,35 @@ def _init_cmd_args() -> argparse.ArgumentParser:
             "effects of the alt allele, not oriented by gene function"
         ),
     )
+    parser.add_argument(
+        "--prefer-groups",
+        nargs="+",
+        metavar="GROUP",
+        help=(
+            "study groups (apoe_strata.tsv study_group, else the accession) "
+            "used per variant (gene, outcome, site) when they have it; "
+            "needs --fallback-groups"
+        ),
+    )
+    parser.add_argument(
+        "--fallback-groups",
+        nargs="+",
+        metavar="GROUP",
+        help=(
+            "study groups used for a variant only when no "
+            "--prefer-groups group has it"
+        ),
+    )
     return parser
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _parse_cmd_args(parser: argparse.ArgumentParser) -> argparse.Namespace:
     """Parse and validate command-line arguments."""
-    return parser.parse_args()
+    args = parser.parse_args()
+    if bool(args.prefer_groups) != bool(args.fallback_groups):
+        parser.error("--prefer-groups and --fallback-groups go together")
+    return args
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1512,6 +1625,8 @@ def main() -> None:
             label=args.label,
             require_log_or=args.require_log_or,
             region_rare=args.region_rare,
+            prefer_groups=args.prefer_groups,
+            fallback_groups=args.fallback_groups,
         )
 
 

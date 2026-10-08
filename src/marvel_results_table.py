@@ -23,9 +23,13 @@ only then deletes them.
 
 `marvel_results.tsv` then gets one row per store, outcome
 (`Constants.MARVEL_UKB_OUTCOMES`) and stratification for `--model`. Its
-non-UKB rows are kept. APOE-stratified runs (`Stratification name` an
-`ApoeStratum` code) are added to `data/raw/apoe_strata.tsv` when they are
-missing there, so `meta_analysis.py` pools them per stratum.
+non-UKB rows are kept. The `Stratification name` gives each row's
+ancestry and APOE stratum (`parse_stratification`): ``overall`` and an
+`ApoeStratum` code (e.g. ``e44``) are `--ancestry` samples, an `Ancestry`
+code (``EUR``) and ``<ancestry>_<stratum>`` (``EUR_e44``) that ancestry
+(`create_config.py` subsets). APOE-stratified runs are added to
+`data/raw/apoe_strata.tsv` when they are missing there, so
+`meta_analysis.py` pools them per stratum.
 """
 
 
@@ -585,6 +589,39 @@ def archive_outdir(outdir: Path, files: list[Path], stamp: str) -> Path:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # marvel_results.tsv and apoe_strata.tsv
 
+def parse_stratification(
+    name: str, ancestry: str
+) -> tuple[str, str] | None:
+    """Ancestry and APOE stratum of a marvel `Stratification name`.
+
+    Parameters
+    ----------
+    name : `str`
+        ``overall``, an `ApoeStratum` code (``e44``), an `Ancestry` code
+        (``EUR``) or ``<ancestry>_<stratum>`` (``EUR_e44``), as written by
+        `create_config.py`.
+    ancestry : `str`
+        `Ancestry` code of the runs without an ancestry in the name.
+
+    Returns
+    -------
+    parsed : `tuple[str, str]` or `None`
+        (`Ancestry` code, `ApoeStratum` code or ``""`` when unstratified);
+        `None` for any other name.
+    """
+    if name == Constants.MARVEL_DEFAULT_STRATIFICATION:
+        return ancestry, ""
+    if name in ApoeStratum.CODES:
+        return ancestry, name
+    if name in Ancestry.CODES:
+        return name, ""
+    prefix, _, stratum = name.partition(Constants.MARVEL_ANCESTRY_SEP)
+    if prefix in Ancestry.CODES and stratum in ApoeStratum.CODES:
+        return prefix, stratum
+    return None
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def build_marvel_table(
     stores: dict[str, Path], model: str, ancestry: str
 ) -> pd.DataFrame:
@@ -597,16 +634,16 @@ def build_marvel_table(
     model : `str`
         marvel `Model name` to use.
     ancestry : `str`
-        `Ancestry` code of the samples analysed.
+        `Ancestry` code of the runs without an ancestry in their
+        stratification name (`parse_stratification`).
 
     Returns
     -------
     table : `pd.DataFrame`
         `marvel_results.tsv` rows (cohort, outcome, path, variable,
         model, ancestry, stratification, apoe_stratum, note). A
-        stratification that is neither `overall` nor an `ApoeStratum`
-        code is left out (warned), as it would share the overall run's
-        study accession.
+        stratification `parse_stratification` cannot read is left out
+        (warned), as it would share the overall run's study accession.
     """
     mc = MarvelColumns
     rows: list[dict[str, str]] = []
@@ -634,16 +671,14 @@ def build_marvel_table(
             outcome = Constants.MARVEL_UKB_OUTCOMES.get(variable)
             if outcome is None:
                 continue
-            if stratification in ApoeStratum.CODES:
-                stratum = stratification
-            elif stratification == Constants.MARVEL_DEFAULT_STRATIFICATION:
-                stratum = ""
-            else:
+            parsed = parse_stratification(stratification, ancestry)
+            if parsed is None:
                 log_warn(
-                    f"{gene}: stratification {stratification!r} is not an "
-                    "APOE stratum, left out"
+                    f"{gene}: stratification {stratification!r} is neither "
+                    "an ancestry nor an APOE stratum, left out"
                 )
                 continue
+            row_ancestry, stratum = parsed
             rows.append(
                 {
                     "cohort": _COHORT,
@@ -651,7 +686,7 @@ def build_marvel_table(
                     "path": str(path),
                     "variable": variable,
                     "model": model,
-                    ColumnNames.ANCESTRY: ancestry,
+                    ColumnNames.ANCESTRY: row_ancestry,
                     ColumnNames.STRATIFICATION: stratification,
                     MetaColumns.APOE_STRATUM: stratum,
                     ColumnNames.NOTE: gene,
@@ -683,10 +718,10 @@ def write_marvel_table(table: pd.DataFrame) -> None:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def add_apoe_strata(table: pd.DataFrame, ancestry: str) -> None:
+def add_apoe_strata(table: pd.DataFrame) -> None:
     """Add missing APOE-stratum study rows to `apoe_strata.tsv`.
 
-    Per outcome with stratified rows, the study group
+    Per ancestry and outcome with stratified rows, the study group
     ``marvel_ukb_<ancestry>_<outcome>`` gets its unstratified run
     (`ApoeStratum.ALL`) and each stratum (accession + ``_<stratum>``,
     as in `merge_associations._marvel_identity`). Listed accessions are
@@ -697,8 +732,6 @@ def add_apoe_strata(table: pd.DataFrame, ancestry: str) -> None:
     ----------
     table : `pd.DataFrame`
         From `build_marvel_table`.
-    ancestry : `str`
-        `Ancestry` code of the run.
 
     Returns
     -------
@@ -710,7 +743,9 @@ def add_apoe_strata(table: pd.DataFrame, ancestry: str) -> None:
         return
     accession = ColumnNames.STUDY_ACCESSION
     wanted: list[dict[str, str]] = []
-    for outcome, rows in stratified.groupby("outcome"):
+    for (ancestry, outcome), rows in stratified.groupby(
+        [ColumnNames.ANCESTRY, "outcome"]
+    ):
         group = f"{Constants.MARVEL_SOURCE_DB_PREFIX}{_COHORT}_{ancestry}_" + (
             outcome
         )
@@ -780,7 +815,8 @@ def marvel_results_table(
     tasks : `Path`
         The marvel job-array file (`gene`, `outdir`).
     ancestry : `str`
-        `Ancestry` code of the samples analysed.
+        `Ancestry` code of the runs without an ancestry in their
+        stratification name (all samples: ``MULTI``).
     model : `str`, optional, default: `"model_3"`
         marvel `Model name` listed in `marvel_results.tsv`.
     refresh : `bool`, optional, default: `False`
@@ -846,7 +882,7 @@ def marvel_results_table(
         log_warn(f"no store yet for: {', '.join(missing)}")
     table = build_marvel_table(stores, model, ancestry)
     write_marvel_table(table)
-    add_apoe_strata(table, ancestry)
+    add_apoe_strata(table)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -865,7 +901,10 @@ def _init_cmd_args() -> argparse.ArgumentParser:
         required=True,
         type=str.upper,
         choices=sorted(Ancestry.CODES),
-        help="ancestry code of the samples analysed (e.g. EUR, MULTI)",
+        help=(
+            "ancestry code of the runs whose stratification name has no "
+            "ancestry (overall, e44, ...): all samples, MULTI"
+        ),
     )
     parser.add_argument(
         "--model",

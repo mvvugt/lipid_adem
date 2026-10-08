@@ -166,6 +166,26 @@ class Constants:
         "19:44908822:C:T",
     )
     APOE_SENSITIVITY_LABEL: str = "no_apoe_e2e4"
+    # variant-list genes left out of meta_analysis.py and figures.py.
+    # APOE is out of gene_list.txt (2026-10-08); this drops it from the
+    # matched tables and burden files built before that, until the
+    # upstream steps are rerun. APOE genotype itself is analysed as an
+    # exposure (apoe_exposure.py)
+    EXCLUDED_GENES: tuple[str, ...] = ("APOE",)
+    # identifier column of `FileNames.UKB_PHENO`
+    UKB_ID_COLUMN: str = "f.eid"
+    # genetic ancestry/relatedness column of `FileNames.UKB_PHENO` and
+    # its values that make up the UKB EUR subset (related + unrelated)
+    UKB_POPULATION_COLUMN: str = "population"
+    UKB_EUR_POPULATIONS: tuple[str, ...] = ("eur_related", "eur_unrelated")
+    # APOE genotype column of `FileNames.UKB_PHENO` (values e2e2 ... e4e4,
+    # see `ApoeStratum.GENOTYPES`) and the reference genotype of the APOE
+    # genotype exposure (apoe_exposure.py)
+    UKB_APOE_COLUMN: str = "genotype"
+    UKB_APOE_REFERENCE: str = "e3e3"
+    # separator between the ancestry and the APOE stratum in a marvel
+    # `Stratification name`, e.g. ``EUR_e44`` (create_config.py)
+    MARVEL_ANCESTRY_SEP: str = "_"
     # burden sensitivity: ClinVar-only variants without a lowering/raising
     # direction left out
     DIRECTED_BURDEN_LABEL: str = "directed_only"
@@ -309,6 +329,7 @@ class RunlogOrder:
     """
     GWAS_CAT_PREP: int = 10
     FILTER_GWAS_CAT: int = 20
+    APOE_EXPOSURE: int = 24
     MARVEL_RESULTS_TABLE: int = 25
     MERGE_ASSOCIATIONS: int = 30
     MATCH_VARIANTS: int = 40
@@ -861,6 +882,14 @@ class ApoeStratum:
     # an unstratified run (all APOE genotypes)
     ALL: str = "all"
     CODES: frozenset[str] = frozenset({E44, E43, E33, E22_E32})
+    # stratum -> `Constants.UKB_APOE_COLUMN` values in it (UKB marvel
+    # runs, create_config.py); e2e4 is in none
+    GENOTYPES: dict[str, tuple[str, ...]] = {
+        E44: ("e4e4",),
+        E43: ("e3e4",),
+        E33: ("e3e3",),
+        E22_E32: ("e2e2", "e2e3"),
+    }
 
 
 class Orientation:
@@ -950,11 +979,17 @@ class FileNames:
         Paths.DATA_RAW / "clinvar_condition_direction.tsv"
     )
     # own UKB/AoU association results (marvel), one row per file/outcome
-    UKB_PHENO: Path = Paths.DATA_PROC / "pheno_cov.tsv.gz"
+    UKB_PHENO: Path = Paths.DATA_PROC / "lipids_full_pheno.tsv.gz"
     MARVEL_RESULTS: Path = Paths.DATA_RAW / "marvel_results.tsv"
     # pyjasub job array for the per-gene marvel runs (one cnf per gene,
     # written by src/create_config.py)
     MARVEL_TASKS: Path = Paths.DATA_RAW / "marvel_tasks.tsv"
+    # marvel run of APOE genotype -> outcomes: its own job array, so its
+    # results never enter marvel_results.tsv as variants
+    MARVEL_APOE_TASKS: Path = Paths.DATA_RAW / "marvel_apoe_tasks.tsv"
+    # exposure file of that run: per genotype a 1 (genotype) / 0
+    # (reference) / NA (other genotypes) column (apoe_exposure.py)
+    APOE_EXPOSURE: Path = Paths.DATA_TEMP / "APOE_genotype_exposure.tsv.gz"
     # per-gene store of all marvel results (in `Paths.MARVEL_STORE`)
     MARVEL_STORE_TEMPLATE: str = "{gene}_results.tsv.gz"
     # loose per-variant marvel result files in a gene's outdir
