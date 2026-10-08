@@ -3,5 +3,5 @@ rowidx	gene	carriers	outdir	config
 2	HMGCR	/myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/HMGCR_variant_extraction.tsv.gz	/myriadfs/home/rmgpmva/projects/lipid_adem/results/HMGCR	/myriadfs/home/rmgpmva/projects/lipid_adem/config/marvel/HMGCR
 3	NPC1L1	/myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/NPC1L1_variant_extraction.tsv.gz	/myriadfs/home/rmgpmva/projects/lipid_adem/results/NPC1L1	/myriadfs/home/rmgpmva/projects/lipid_adem/config/marvel/NPC1L1
 4	PCSK9	/myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/PCSK9_variant_extraction.tsv.gz	/myriadfs/home/rmgpmva/projects/lipid_adem/results/PCSK9	/myriadfs/home/rmgpmva/projects/lipid_adem/config/marvel/PCSK9
-5	ANGPTL3	/myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/ANGPTL3_variant_extraction.tsv.gz	/myriadfs/home/rmgpmva/projects/lipid_adem/results/ANGPTL3	/myriadfs/home/rmgpmva/projects/lipid_adem/config/marvel/PCSK9
+5	ANGPTL3	/myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/ANGPTL3_variant_extraction.tsv.gz	/myriadfs/home/rmgpmva/projects/lipid_adem/results/ANGPTL3	/myriadfs/home/rmgpmva/projects/lipid_adem/config/marvel/NAGPTL3
 6	PPARA	/myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/PPARA_variant_extraction.tsv.gz	/myriadfs/home/rmgpmva/projects/lipid_adem/results/PPARA	/myriadfs/home/rmgpmva/projects/lipid_adem/config/marvel/PPARA
