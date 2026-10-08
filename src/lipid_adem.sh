@@ -80,6 +80,11 @@ qsub "${ROOT}"/src/merge_associations.sh -r "${ROOT}"
 
 # [myriad] match GWAS lookups to the gene variant lists
 run_mamba biomed-api "${ROOT}"/src/match_variants.py
+# [myriad] no variant lists: every GWAS/marvel row in its gene region with
+# MAF < 1% (marvel rows have no MAF, all kept), a1 = GRCh38 ref, a2 = alt;
+# writes matched_region_variants.tsv.gz (input of meta --region-rare)
+run_mamba biomed-api "${ROOT}"/src/match_variants.py --region-rare \
+    --max-maf 0.01
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -90,9 +95,10 @@ run_mamba biomed-api "${ROOT}"/src/match_variants.py
 run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR
 
 # [myriad] first analysis: Thomassen 2026 AD, the 4 disjoint APOE strata
-# (e44, e43, e33, e22+e32), PTV + ClinVar variants; pooled and per stratum,
-# plus gene burden. ClinVar = P/LP list (annotate_variants.py), GoF
-# (raising) variants flipped (data/raw/clinvar_condition_direction.tsv);
+# (e44, e43, e33, e22+e32), all non-AM list variants (PTV, ClinVar, GoF,
+# landfors_paper; *_lists); pooled and per stratum, plus gene burden.
+# ClinVar = P/LP list (annotate_variants.py); GoF and ClinVar raising
+# variants flipped (data/raw/clinvar_condition_direction.tsv);
 # sensitivity files: *_no_apoe_e2e4 (without APOE e2/e4) and
 # burden_*_directed_only (without ClinVar altered/conflicting/unknown).
 # Strata per study: data/raw/apoe_strata.tsv; outputs: pooled (per study
@@ -102,33 +108,57 @@ run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR
 run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
     --outcomes alzheimers_dementia \
     --studies GCST90861026 GCST90861027 GCST90861029 GCST90861030 \
-    --variant-sources PTV ClinVar --stratified \
-    --label thomassen_ad_ptv_clinvar
+    --variant-sources PTV ClinVar GoF landfors_paper --stratified \
+    --label thomassen_ad_lists
 
-# arm B (rare variants: own UKB, FinnGen R13; AoU TODO). Accessions are
-# written by marvel_results_table.py; once the APOE-stratified marvel runs
-# exist, add marvel_ukb_EUR_alzheimers_dementia_{e44,e43,e33,e22_e32}
+# arm B (rare variants: own UKB + FinnGen R13; AoU TODO), the 4 dementia
+# outcomes, pooled per outcome (input of the forest plots and the gene x
+# outcome heatmap). UKB accessions are written by marvel_results_table.py;
+# once the APOE-stratified marvel runs exist, add
+# marvel_ukb_EUR_alzheimers_dementia_{e44,e43,e33,e22_e32}
+ARMB_STUDIES=(
+    marvel_ukb_EUR_{all_cause,alzheimers,vascular,frontotemporal}_dementia
+    F5_DEMENTIA_INCLAVO G6_ALZHEIMER F5_VASCDEM FTD
+)
 run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
-    --outcomes alzheimers_dementia \
-    --studies marvel_ukb_EUR_alzheimers_dementia G6_ALZHEIMER \
-    --variant-sources PTV ClinVar --stratified \
-    --label armb_ad_ptv_clinvar
+    --studies "${ARMB_STUDIES[@]}" \
+    --variant-sources PTV ClinVar GoF landfors_paper --stratified \
+    --label armb_dementia_lists
 
-# UKB only, the 4 dementia outcomes (input of the gene x outcome heatmap)
+# UKB only, the 4 dementia outcomes (sensitivity: without FinnGen)
 run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
     --studies marvel_ukb_EUR_{all_cause,alzheimers,vascular}_dementia \
     marvel_ukb_EUR_frontotemporal_dementia \
-    --variant-sources PTV ClinVar --stratified \
-    --label ukb_dementia_ptv_clinvar
+    --variant-sources PTV ClinVar GoF landfors_paper --stratified \
+    --label ukb_dementia_lists
+
+# [myriad] the same 3 runs without the variant lists (--region-rare): every
+# rare variant in the gene region, alt-allele effects, NOT oriented by gene
+# function (lowering and raising variants cancel out)
+run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
+    --outcomes alzheimers_dementia \
+    --studies GCST90861026 GCST90861027 GCST90861029 GCST90861030 \
+    --region-rare --stratified --label thomassen_ad_region_rare
+run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
+    --studies "${ARMB_STUDIES[@]}" \
+    --region-rare --stratified --label armb_dementia_region_rare
+run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
+    --studies marvel_ukb_EUR_{all_cause,alzheimers,vascular}_dementia \
+    marvel_ukb_EUR_frontotemporal_dementia \
+    --region-rare --stratified --label ukb_dementia_region_rare
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # FIGURES
 
 # [local] copy results/output/burden_EUR_*.tsv.gz from Myriad first
-run_mamba plot-misc "${ROOT}"/src/figures.py --ancestry EUR \
-    --forest-label armb_ad_ptv_clinvar \
-    --heatmap-label ukb_dementia_ptv_clinvar
+for analysis in lists region_rare; do
+    run_mamba plot-misc "${ROOT}"/src/figures.py --ancestry EUR \
+        --forest-label "armb_dementia_${analysis}" \
+        --heatmap-label "armb_dementia_${analysis}"
+    run_mamba plot-misc "${ROOT}"/src/figures.py --ancestry EUR \
+        --forest-label "thomassen_ad_${analysis}"
+done
 
 # EAS (pooled only, no APOE strata): arm A = Cao 2026 + K-ROAD WGS
 # (independent cohorts), arm B = K-ROAD WGS; both via

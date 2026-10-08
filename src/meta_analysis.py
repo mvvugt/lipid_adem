@@ -21,6 +21,10 @@ without them (sensitivity, `_no_apoe_e2e4` files).
 APOE strata (`data/raw/apoe_strata.tsv`): the pooled run takes, per study
 group, its unstratified study or else its strata; studies that are strata
 are also pooled per stratum (`_apoe_strata` files).
+
+`--region-rare` pools `matched_region_variants.tsv.gz` instead: every rare
+variant in the gene region, effects of the GRCh38 alt allele (unoriented;
+rare variants taken as independent).
 """
 
 
@@ -229,8 +233,14 @@ def _rank_rows(rows: pd.DataFrame) -> pd.DataFrame:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def load_matched() -> pd.DataFrame:
+def load_matched(path: Path = FileNames.MATCHED_VARIANTS) -> pd.DataFrame:
     """Read the matched GWAS rows and add the variant-site key.
+
+    Parameters
+    ----------
+    path : `Path`, optional, default: `FileNames.MATCHED_VARIANTS`
+        The matched table; `FileNames.MATCHED_REGION_VARIANTS` for the
+        `--region-rare` run of match_variants.py.
 
     Returns
     -------
@@ -242,28 +252,24 @@ def load_matched() -> pd.DataFrame:
     Raises
     ------
     FileNotFoundError
-        If `FileNames.MATCHED_VARIANTS` does not exist (run
-        match_variants.py first).
+        If `path` does not exist (run match_variants.py first).
     ValueError
         If the table has no ClinVar direction column (written by an older
         match_variants.py).
     """
-    if not FileNames.MATCHED_VARIANTS.exists():
+    if not path.exists():
         raise FileNotFoundError(
-            f"{FileNames.MATCHED_VARIANTS} not found: run "
-            "match_variants.py first"
+            f"{path} not found: run match_variants.py first"
         )
-    columns = pd.read_csv(
-        FileNames.MATCHED_VARIANTS, sep="\t", nrows=0
-    ).columns
+    columns = pd.read_csv(path, sep="\t", nrows=0).columns
     if VariantListColumns.OUT_CLINVAR_DIRECTION not in columns:
         raise ValueError(
-            f"{FileNames.MATCHED_VARIANTS} has no "
+            f"{path} has no "
             f"{VariantListColumns.OUT_CLINVAR_DIRECTION} column, so ClinVar "
             "raising variants cannot be oriented: rerun match_variants.py"
         )
     matched = pd.read_csv(
-        FileNames.MATCHED_VARIANTS,
+        path,
         sep="\t",
         dtype={
             HarmonisedColumns.CHROM: str,
@@ -289,7 +295,7 @@ def load_matched() -> pd.DataFrame:
     # matched tables written before ancestry harmonisation have no column
     if HarmonisedColumns.ANCESTRY_GROUP not in matched.columns:
         log_warn(
-            f"{FileNames.MATCHED_VARIANTS} has no ancestry_group column, "
+            f"{path} has no ancestry_group column, "
             f"all rows labelled {Ancestry.NR} (rerun merge and match)"
         )
         matched[HarmonisedColumns.ANCESTRY_GROUP] = Ancestry.NR
@@ -299,7 +305,7 @@ def load_matched() -> pd.DataFrame:
     # matched tables written before the effect-scale check have no column
     if HarmonisedColumns.STUDY_EFFECT_SCALE not in matched.columns:
         log_warn(
-            f"{FileNames.MATCHED_VARIANTS} has no study_effect_scale "
+            f"{path} has no study_effect_scale "
             f"column, all rows labelled {EffectScale.UNKNOWN} (rerun merge "
             "and match)"
         )
@@ -308,7 +314,7 @@ def load_matched() -> pd.DataFrame:
         HarmonisedColumns.STUDY_EFFECT_SCALE
     ].fillna(EffectScale.UNKNOWN)
     log_info(
-        f"{FileNames.MATCHED_VARIANTS}: {len(matched)} rows, "
+        f"{path}: {len(matched)} rows, "
         f"{matched[MetaColumns.VARIANT_SITE].nunique()} variants"
     )
     return matched
@@ -969,6 +975,7 @@ def meta_analysis(
     per_study: bool = False,
     label: str | None = None,
     require_log_or: bool = False,
+    region_rare: bool = False,
 ) -> None:
     """Run the meta-analysis for one ancestry group and write it.
 
@@ -1004,6 +1011,12 @@ def meta_analysis(
     require_log_or : `bool`, optional, default: `False`
         Drop studies whose `study_effect_scale` is not log-OR
         (`check_effect_scales`); otherwise they are only warned about.
+    region_rare : `bool`, optional, default: `False`
+        Read `FileNames.MATCHED_REGION_VARIANTS` (match_variants.py
+        `--region-rare`: every rare variant in the gene region) instead of
+        the list matches. Effects are those of the GRCh38 alt allele, not
+        oriented by gene function, so the burden pools variants that lower
+        and raise function alike.
 
     Returns
     -------
@@ -1018,7 +1031,11 @@ def meta_analysis(
     log_info(f"ancestry {ancestry}, pooled by {', '.join(keys)}")
 
     log_stage("load_matched")
-    matched = load_matched()
+    matched = load_matched(
+        FileNames.MATCHED_REGION_VARIANTS
+        if region_rare
+        else FileNames.MATCHED_VARIANTS
+    )
     is_ancestry = matched[HarmonisedColumns.ANCESTRY_GROUP] == ancestry
     counts = matched[HarmonisedColumns.ANCESTRY_GROUP].value_counts()
     log_info(
@@ -1439,6 +1456,15 @@ def _init_cmd_args() -> argparse.ArgumentParser:
             "unknown, conflict); default: warn and keep them"
         ),
     )
+    parser.add_argument(
+        "--region-rare",
+        action="store_true",
+        help=(
+            f"read {FileNames.MATCHED_REGION_VARIANTS.name} (every rare "
+            "variant in the gene region, match_variants.py --region-rare); "
+            "effects of the alt allele, not oriented by gene function"
+        ),
+    )
     return parser
 
 
@@ -1465,6 +1491,7 @@ def main() -> None:
             per_study=args.stratified,
             label=args.label,
             require_log_or=args.require_log_or,
+            region_rare=args.region_rare,
         )
 
 
