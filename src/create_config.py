@@ -66,8 +66,8 @@ bin_list = ['GLM-Binom', ]
 outcomes = [
     'all_cause_dementia_algo',
     'all_cause_dementia_combined',
-    'alzheimers_dementia_algo',
-    'alzheimers_dementia_combined',
+    'alzheimers_disease_algo',
+    'alzheimers_disease_combined',
     'vascular_dementia_algo',
     'frontotemporal_dementia_algo',
     ]

@@ -145,83 +145,106 @@ Output:
 
 ## [30] merge_associations (`/home/rmgpmva/projects/lipid_adem/src/merge_associations.py`)
 - first run: 2026-09-22 15:24:19
-- last run: 2026-10-06 14:48:07
-- commit: `7e96ca6`
+- last run: 2026-10-07 16:59:58
+- commit: `e68eb48` (dirty)
 
 Output:
 ```text
-[stage] 2026-10-06 14:25:34 load_sumstats
-[info]  2026-10-06 14:25:35 summary-stats: 124 files, 312227 rows incl. one copy per outcome (0 missing)
-[info]  2026-10-06 14:25:38 MONDO_0011057 (all_cause_dementia) in Constants.EXCLUDED_EFO_IDS, skipped
-[info]  2026-10-06 14:25:38 MONDO_0011057 (vascular_dementia) in Constants.EXCLUDED_EFO_IDS, skipped
-[stage] 2026-10-06 14:25:38 marvel
-[info]  2026-10-06 14:25:38 no own results listed in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/marvel_results.tsv
-[stage] 2026-10-06 14:25:38 fetch_curated
-[info]  2026-10-06 14:26:59 MONDO_0005252 (exact): 892 fetched; in region: CETP=1
-[info]  2026-10-06 14:27:02 MONDO_0005099 (exact): 15 fetched; in region: none
-[info]  2026-10-06 14:27:07 MONDO_0013792 (exact): 42 fetched; in region: APOE=1
-[info]  2026-10-06 14:27:11 MONDO_0005394 (exact): 41 fetched; in region: none
-[info]  2026-10-06 14:27:35 MONDO_0005098 (exact): 327 fetched; in region: CETP=1
-[info]  2026-10-06 14:28:00 EFO_0003913 (exact): 320 fetched; in region: PCSK9=2 APOB=3 APOE=4
-[info]  2026-10-06 14:28:02 MONDO_0004781 (exact): 17 fetched; in region: none
-[info]  2026-10-06 14:28:09 MONDO_0005267 (exact): 55 fetched; in region: none
-[info]  2026-10-06 14:35:18 MONDO_0005010 (exact): 3913 fetched; in region: CETP=3 HMGCR=1 PCSK9=9 APOB=2 APOE=14
-[info]  2026-10-06 14:35:33 EFO_0004269 (exact): 102 fetched; in region: none
-[info]  2026-10-06 14:35:35 EFO_0009492 (exact): 8 fetched; in region: none
-[info]  2026-10-06 14:35:37 EFO_0009493 (exact): 3 fetched; in region: none
-[info]  2026-10-06 14:47:16 MONDO_0004975 (with child traits): 7069 fetched; in region: APOB=1 APOE=179
-[info]  2026-10-06 14:47:26 MONDO_0004648 (with child traits): 120 fetched; in region: none
-[info]  2026-10-06 14:47:33 EFO_0006799 (with child traits): 40 fetched; in region: none
-[info]  2026-10-06 14:47:37 EFO_0011057 (with child traits): 26 fetched; in region: none
-[info]  2026-10-06 14:47:40 EFO ids with 0 curated associations: 4
-[stage] 2026-10-06 14:47:40 gene_burden
-[info]  2026-10-06 14:47:40 Open Targets disease ids: 29 (from 20 outcome ids)
-[info]  2026-10-06 14:47:41 curated MAF: numeric=4 not_reported=260
-[info]  2026-10-06 14:47:41 curated: 218 rows dropped from studies excluded for cohort overlap
-[info]  2026-10-06 14:47:41 gene-burden rows: none (9 genes with 0)
-[info]  2026-10-06 14:47:41 ancestry: 2 rows of studies not in the discovery log labelled NR
-[info]  2026-10-06 14:47:41 ancestry: curated AFR=14
-[info]  2026-10-06 14:47:41 ancestry: curated EAS=18
-[info]  2026-10-06 14:47:41 ancestry: curated EUR=72
-[info]  2026-10-06 14:47:41 ancestry: curated MULTI=156
-[info]  2026-10-06 14:47:41 ancestry: curated NR=4
-[info]  2026-10-06 14:47:41 ancestry: summary-stats AFR=89935
-[info]  2026-10-06 14:47:41 ancestry: summary-stats AMR=44204
-[info]  2026-10-06 14:47:41 ancestry: summary-stats CSA=39174
-[info]  2026-10-06 14:47:41 ancestry: summary-stats EAS=11338
-[info]  2026-10-06 14:47:41 ancestry: summary-stats EUR=72391
-[info]  2026-10-06 14:47:41 ancestry: summary-stats MULTI=54948
-[info]  2026-10-06 14:47:41 ancestry: summary-stats NR=237
-[stage] 2026-10-06 14:47:41 normalise
-[info]  2026-10-06 14:47:42 normalisation: summary-stats rows unchanged=312224 ref_mismatch=3
-[info]  2026-10-06 14:47:42 normalisation: curated rows effect_only=264
-[stage] 2026-10-06 14:47:42 ensembl_check
-[info]  2026-10-06 14:47:42 CETP: 16262 Ensembl variants in 16:56951980-56993663 (0 windows fetched, rest cached)
-[info]  2026-10-06 14:47:42 HMGCR: 13932 Ensembl variants in 5:75332606-75370339 (0 windows fetched, rest cached)
-[info]  2026-10-06 14:47:42 NPC1L1: 17649 Ensembl variants in 7:44503450-44551259 (0 windows fetched, rest cached)
-[info]  2026-10-06 14:47:42 PCSK9: 16676 Ensembl variants in 1:55029838-55073581 (0 windows fetched, rest cached)
-[info]  2026-10-06 14:47:43 ANGPTL3: 9469 Ensembl variants in 1:62587567-62614814 (0 windows fetched, rest cached)
-[info]  2026-10-06 14:47:43 PPARA: 21414 Ensembl variants in 22:46188384-46245377 (0 windows fetched, rest cached)
-[info]  2026-10-06 14:47:43 APOA1: 11180 Ensembl variants in 11:116824677-116852065 (0 windows fetched, rest cached)
-[info]  2026-10-06 14:47:43 APOB: 26572 Ensembl variants in 2:20991305-21054075 (0 windows fetched, rest cached)
-[info]  2026-10-06 14:47:44 APOE: 11244 Ensembl variants in 19:44893787-44919396 (0 windows fetched, rest cached)
-[info]  2026-10-06 14:47:44 Ensembl check: 13872 unique variant rows checked, 0 rsids fetched via the variation endpoint
-[info]  2026-10-06 14:47:44 summary-stats rows: alleles match=244379 flipped=67737 mismatch=57 not_found=54; rsid same=308594 no_source_rsid=3195 different=384
-[info]  2026-10-06 14:47:44 curated rows: alleles effect_unknown=130 match=122 flipped=8 strand_flip=2 mismatch=2; rsid same=260 different=4
-[info]  2026-10-06 14:47:45 duplicate variants flagged: 202 rows
-[stage] 2026-10-06 14:47:45 write
-[info]  2026-10-06 14:48:07 wrote 312491 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/merged_associations.tsv.gz
+[stage] 2026-10-07 14:03:11 load_sumstats
+[info]  2026-10-07 14:03:12 summary-stats: 124 files, 593027 rows incl. one copy per outcome (0 missing)
+[info]  2026-10-07 14:03:17 MONDO_0011057 (all_cause_dementia) in Constants.EXCLUDED_EFO_IDS, skipped
+[info]  2026-10-07 14:03:17 MONDO_0011057 (vascular_dementia) in Constants.EXCLUDED_EFO_IDS, skipped
+[stage] 2026-10-07 14:03:17 marvel
+[info]  2026-10-07 14:03:17 no own results listed in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/marvel_results.tsv
+[stage] 2026-10-07 14:03:17 fetch_curated
+[info]  2026-10-07 14:04:21 MONDO_0005252 (exact): 892 fetched; in region: CETP=2 PCSK9=1 APOE=1
+[info]  2026-10-07 14:04:24 MONDO_0005099 (exact): 15 fetched; in region: none
+[info]  2026-10-07 14:04:28 MONDO_0013792 (exact): 42 fetched; in region: APOE=1
+[info]  2026-10-07 14:04:32 MONDO_0005394 (exact): 41 fetched; in region: APOE=1
+[info]  2026-10-07 14:04:55 MONDO_0005098 (exact): 327 fetched; in region: CETP=1
+[info]  2026-10-07 14:05:17 EFO_0003913 (exact): 320 fetched; in region: PCSK9=2 APOB=6 APOE=5
+[info]  2026-10-07 14:05:20 MONDO_0004781 (exact): 17 fetched; in region: none
+[info]  2026-10-07 14:05:26 MONDO_0005267 (exact): 55 fetched; in region: none
+[info]  2026-10-07 14:10:25 MONDO_0005010 (exact): 3913 fetched; in region: CETP=9 HMGCR=2 PCSK9=21 APOB=3 APOE=23
+[info]  2026-10-07 14:10:33 EFO_0004269 (exact): 102 fetched; in region: none
+[info]  2026-10-07 14:10:34 EFO_0009492 (exact): 8 fetched; in region: none
+[info]  2026-10-07 14:10:36 EFO_0009493 (exact): 3 fetched; in region: none
+[info]  2026-10-07 14:18:53 MONDO_0004975 (with child traits): 7069 fetched; in region: APOB=1 APOE=246
+[info]  2026-10-07 14:19:05 MONDO_0004648 (with child traits): 120 fetched; in region: APOE=6
+[info]  2026-10-07 14:19:13 EFO_0006799 (with child traits): 40 fetched; in region: APOE=3
+[info]  2026-10-07 14:19:18 EFO_0011057 (with child traits): 26 fetched; in region: none
+[info]  2026-10-07 14:19:22 EFO ids with 0 curated associations: 4
+[stage] 2026-10-07 14:19:22 gene_burden
+[info]  2026-10-07 14:19:22 Open Targets disease ids: 29 (from 20 outcome ids)
+[info]  2026-10-07 14:19:23 curated MAF: numeric=226 not_reported=260
+[info]  2026-10-07 14:19:23 curated: 253 rows dropped from studies excluded for cohort overlap
+[info]  2026-10-07 14:19:23 gene-burden rows: none (9 genes with 0)
+[info]  2026-10-07 14:19:24 ancestry: 2 rows of studies not in the discovery log labelled NR
+[info]  2026-10-07 14:19:24 ancestry: curated AFR=28
+[info]  2026-10-07 14:19:24 ancestry: curated AMR=8
+[info]  2026-10-07 14:19:24 ancestry: curated EAS=34
+[info]  2026-10-07 14:19:24 ancestry: curated EUR=196
+[info]  2026-10-07 14:19:24 ancestry: curated MULTI=182
+[info]  2026-10-07 14:19:24 ancestry: curated NR=38
+[info]  2026-10-07 14:19:24 ancestry: summary-stats AFR=159854
+[info]  2026-10-07 14:19:24 ancestry: summary-stats AMR=73617
+[info]  2026-10-07 14:19:24 ancestry: summary-stats CSA=43677
+[info]  2026-10-07 14:19:24 ancestry: summary-stats EAS=45135
+[info]  2026-10-07 14:19:24 ancestry: summary-stats EUR=137357
+[info]  2026-10-07 14:19:24 ancestry: summary-stats MULTI=127489
+[info]  2026-10-07 14:19:24 ancestry: summary-stats NR=5898
+[stage] 2026-10-07 14:19:24 effect_scale
+[info]  2026-10-07 14:19:26 wrote 182 studies to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/study_effect_scale.tsv.gz
+[info]  2026-10-07 14:19:26 study effect scale: linear=2, log_or=57, unknown=123
+[stage] 2026-10-07 14:19:26 normalise
+[info]  2026-10-07 14:19:27 normalisation: summary-stats rows unchanged=589956 ref_mismatch=3070 normalised=1
+[info]  2026-10-07 14:19:27 normalisation: curated rows effect_only=486
+[stage] 2026-10-07 14:19:27 ensembl_check
+[info]  2026-10-07 14:19:27 CETP: 16262 Ensembl variants in 16:56951980-56993663 (0 windows fetched, rest cached)
+[info]  2026-10-07 14:19:27 HMGCR: 13932 Ensembl variants in 5:75332606-75370339 (0 windows fetched, rest cached)
+[info]  2026-10-07 14:19:28 NPC1L1: 17649 Ensembl variants in 7:44503450-44551259 (0 windows fetched, rest cached)
+[info]  2026-10-07 14:19:28 PCSK9: 16676 Ensembl variants in 1:55029838-55073581 (0 windows fetched, rest cached)
+[info]  2026-10-07 14:19:28 ANGPTL3: 9469 Ensembl variants in 1:62587567-62614814 (0 windows fetched, rest cached)
+[info]  2026-10-07 14:19:28 PPARA: 21414 Ensembl variants in 22:46188384-46245377 (0 windows fetched, rest cached)
+[info]  2026-10-07 14:19:28 APOA1: 11180 Ensembl variants in 11:116824677-116852065 (0 windows fetched, rest cached)
+[info]  2026-10-07 14:19:29 APOB: 26572 Ensembl variants in 2:20991305-21054075 (0 windows fetched, rest cached)
+[info]  2026-10-07 14:19:29 APOE: 11244 Ensembl variants in 19:44893787-44919396 (0 windows fetched, rest cached)
+[warn]  2026-10-07 14:20:39 Ensembl variation rs407444: HTTP 500, retry 1/3 in 30s
+[warn]  2026-10-07 14:29:17 Ensembl variation rs145449362: HTTP 500, retry 1/3 in 30s
+[warn]  2026-10-07 14:29:54 Ensembl variation rs145449362: HTTP 500, retry 2/3 in 60s
+[warn]  2026-10-07 14:32:06 Ensembl variation rs78060355: HTTP 500, retry 1/3 in 30s
+[warn]  2026-10-07 14:37:48 Ensembl variation rs35617436: HTTP 500, retry 1/3 in 30s
+[warn]  2026-10-07 14:39:02 Ensembl variation rs58555027: HTTP 500, retry 1/3 in 30s
+[warn]  2026-10-07 14:44:25 Ensembl variation rs113013240: HTTP 500, retry 1/3 in 30s
+[warn]  2026-10-07 14:49:07 Ensembl variation rs139579141: HTTP 500, retry 1/3 in 30s
+[warn]  2026-10-07 14:50:43 Ensembl variation rs3816069: HTTP 500, retry 1/3 in 30s
+[warn]  2026-10-07 14:52:36 Ensembl variation rs1702003: HTTP 500, retry 1/3 in 30s
+[warn]  2026-10-07 14:56:30 Ensembl variation rs78052945: HTTP 500, retry 1/3 in 30s
+[warn]  2026-10-07 14:57:39 Ensembl variation rs77402806: HTTP 500, retry 1/3 in 30s
+[warn]  2026-10-07 14:58:55 Ensembl variation rs77402806: HTTP 500, retry 2/3 in 60s
+[warn]  2026-10-07 15:09:02 Ensembl variation rs111628602: HTTP 500, retry 1/3 in 30s
+[warn]  2026-10-07 15:09:38 Ensembl variation rs111628602: HTTP 500, retry 2/3 in 60s
+[warn]  2026-10-07 15:15:04 Ensembl variation rs146834124: HTTP 500, retry 1/3 in 30s
+[warn]  2026-10-07 15:28:13 Ensembl variation rs192243749: HTTP 500, retry 1/3 in 30s
+[warn]  2026-10-07 15:28:51 Ensembl variation rs192243749: HTTP 500, retry 2/3 in 60s
+[warn]  2026-10-07 16:37:50 Ensembl variation rs136002: HTTP 500, retry 1/3 in 30s
+[info]  2026-10-07 16:59:14 Ensembl check: 20674 unique variant rows checked, 803 rsids fetched via the variation endpoint
+[info]  2026-10-07 16:59:14 summary-stats rows: alleles match=454054 flipped=136621 mismatch=1625 strand_flip=520 not_found=207; rsid same=559073 no_source_rsid=27153 different=3326 rsid_only=3268
+[info]  2026-10-07 16:59:14 curated rows: alleles match=226 effect_unknown=138 flipped=118 strand_flip=2 mismatch=2; rsid same=482 different=4
+[info]  2026-10-07 16:59:15 duplicate variants flagged: 766 rows
+[stage] 2026-10-07 16:59:15 write
+[info]  2026-10-07 16:59:58 wrote 593513 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/merged_associations.tsv.gz
 
 ```
 
 ## [30] merge_associations_job
 - first run: 2026-09-30 11:30:47
-- last run: 2026-10-06 14:48:08
-- commit: `7e96ca6`
+- last run: 2026-10-07 16:59:59
+- commit: `e68eb48` (dirty)
 
 Output:
 ```text
-[info]  2026-10-06 14:25:32 using root directory: /home/rmgpmva/projects/lipid_adem
+[info]  2026-10-07 14:03:03 using root directory: /home/rmgpmva/projects/lipid_adem
 
 ```
 
@@ -339,27 +362,22 @@ Include: reviewed by expert panel + criteria provided, multiple submitters, no c
 
 ## [50] marvel_assoc_job
 - first run: 2026-10-07 13:49:03
-- last run: 2026-10-07 13:49:51
-- commit: `43baa0f`
-- status: failed
+- last run: 2026-10-08 09:03:45
+- commit: `c5846ce` (dirty)
+
+Δ vs previous run (was `c5846ce` (dirty)):
+```diff
+@@ -1,2 +1,2 @@
+-[info]  2026-10-07 23:02:28 task 6: rows 6-6
+-[info]  2026-10-08 04:11:04 PPARA: results in /myriadfs/home/rmgpmva/projects/lipid_adem/results/PPARA
++[info]  2026-10-07 23:02:15 task 2: rows 2-2
++[info]  2026-10-08 09:03:45 HMGCR: results in /myriadfs/home/rmgpmva/projects/lipid_adem/results/HMGCR
+```
 
 Output:
 ```text
-[info]  2026-10-07 13:49:13 task 1: rows 1-1
-[error] 2026-10-07 13:49:51 CETP: config check failed, see marvel output above
-[error] 2026-10-07 13:49:51 task 1: 1 gene(s) failed, rerun to retry
---- error output (raw) ---
-[info]  2026-10-07 13:49:13 repo root=/myriadfs/home/rmgpmva/projects/lipid_adem
-[info]  2026-10-07 13:49:13 === /myriadfs/home/rmgpmva/projects/lipid_adem/src/marvel_assoc.sh ===
-[info]  2026-10-07 13:49:13 started at Wed  7 Oct 13:49:13 BST 2026
-[info]  2026-10-07 13:49:13 hostname=node-t00a-003.myriad.ucl.ac.uk
-[info]  2026-10-07 13:49:13 job array file=/myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/marvel_task_logs/1_1791376445/run_job_array.job
-[info]  2026-10-07 13:49:13 temp location=/myriadfs/home/rmgpmva/Scratch/lipid_adem/marvel_task_tmp
-[info]  2026-10-07 13:49:13 step=1
-[info]  2026-10-07 13:49:13 marvel env=marvel
-[info]  2026-10-07 13:49:13 task 1: rows 1-1
-[info]  2026-10-07 13:49:41 CETP: dry run
-[info]  2026-10-07 13:49:51 ended at Wed  7 Oct 13:49:51 BST 2026
+[info]  2026-10-07 23:02:15 task 2: rows 2-2
+[info]  2026-10-08 09:03:45 HMGCR: results in /myriadfs/home/rmgpmva/projects/lipid_adem/results/HMGCR
 
 ```
 
