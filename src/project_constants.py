@@ -166,7 +166,8 @@ class Constants:
         "19:44908822:C:T",
     )
     APOE_SENSITIVITY_LABEL: str = "no_apoe_e2e4"
-    # variant-list genes left out of meta_analysis.py and figures.py.
+    # variant-list genes left out of meta_analysis.py and the figures
+    # (figure_utils.load_burden).
     # APOE is out of gene_list.txt (2026-10-08); this drops it from the
     # matched tables and burden files built before that, until the
     # upstream steps are rerun. APOE genotype itself is analysed as an
@@ -193,8 +194,8 @@ class Constants:
     # (marvel ExpInput label, outdir and config name)
     APOE_EXPOSURE_NAME: str = "APOE_genotype"
     # `UKB_APOE_COLUMN` values meaning "no genotype". marvel cannot treat
-    # them as missing, so they get their own dummy term; figures.py
-    # leaves them out
+    # them as missing, so they get their own dummy term;
+    # apoe_genotype_forest.py leaves them out
     APOE_MISSING_VALUES: tuple[str, ...] = ("Unknown",)
     # every real genotype `UKB_APOE_COLUMN` may hold
     APOE_GENOTYPES: tuple[str, ...] = (

@@ -143,21 +143,24 @@ run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry MULTI \
 # [local] copy results/output/burden_EUR_*.tsv.gz from Myriad first
 # TODO still necessary?
 for analysis in lists region_rare; do
-    run_mamba plot-misc "${ROOT}"/src/figures.py --ancestry MULTI \
-        --forest-label "armb_dementia_${analysis}" \
-        --heatmap-label "armb_dementia_${analysis}"
-    run_mamba plot-misc "${ROOT}"/src/figures.py --ancestry EUR \
-        --forest-label "thomassen_ad_${analysis}"
+    for script in burden_forest burden_apoe_forest burden_heatmap; do
+        run_mamba plot-misc "${ROOT}/src/${script}.py" --ancestry MULTI \
+            --label "armb_dementia_${analysis}"
+    done
+    for script in burden_forest burden_apoe_forest; do
+        run_mamba plot-misc "${ROOT}/src/${script}.py" --ancestry EUR \
+            --label "thomassen_ad_${analysis}"
+    done
 done
 
 # [local] main analysis figures
-run_mamba plot-misc "${ROOT}"/src/figures.py --ancestry EUR \
-    --sources-label annotated_eur \
-    --forest-label annotated_eur
-run_mamba plot-misc "${ROOT}"/src/figures.py --ancestry MULTI \
-    --sources-label maf_filter_all \
-    --forest-label maf_filter_all
+for script in burden_forest burden_apoe_forest sources_forest pooled_forest; do
+    run_mamba plot-misc "${ROOT}/src/${script}.py" --ancestry EUR \
+        --label annotated_eur
+    run_mamba plot-misc "${ROOT}/src/${script}.py" --ancestry MULTI \
+        --label maf_filter_all
+done
 
 # [local] APOE genotype vs e3e3 (marvel); rsync results/APOE_genotype{,_eur}
 # from Myriad first
-run_mamba plot-misc "${ROOT}"/src/figures.py --apoe-genotype
+run_mamba plot-misc "${ROOT}"/src/apoe_genotype_forest.py
