@@ -171,18 +171,23 @@ for row in tasks.itertuples(index = False):
         'stratify'           : stratify,
         CFLhs.StratifyOverall : False,
         }
-    # APOE genotype (apoe_exposure.py): one integer-coded column, dummy-
-    # coded by marvel against the reference's code. A marvel without
-    # strata_ref would ignore the option and fit a trend over the codes
+    # APOE genotype: the carriers file is the phenotype file, and only its
+    # genotype column (text, e.g. e3e3) is tested, dummy-coded against
+    # the reference genotype. strata_ref is text in the config, so it only
+    # matches a text exposure. A marvel without these options would
+    # ignore them and test every column of the phenotype file
     if row.gene == Constants.APOE_EXPOSURE_NAME:
-        if not hasattr(CFLhs, 'StrataRef'):
+        missing = [
+            name for name in ('StrataRef', 'Exposures')
+            if not hasattr(CFLhs, name)
+            ]
+        if missing:
             raise ValueError(
-                'the installed marvel has no strata_ref option; update '
+                f'the installed marvel has no {missing} option(s); update '
                 'marvel before running the APOE genotype task'
                 )
-        options[CFLhs.StrataRef] = str(
-            Constants.APOE_GENOTYPE_CODES[Constants.UKB_APOE_REFERENCE]
-            )
+        options[CFLhs.StrataRef] = Constants.UKB_APOE_REFERENCE
+        options[CFLhs.Exposures] = Constants.UKB_APOE_COLUMN
     create_config(
         path                 = row.config,
         extract_variants     = False,

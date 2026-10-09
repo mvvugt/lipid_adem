@@ -17,7 +17,11 @@ into `results/output/`. Writes PDF and PNG files to `results/figures/`:
   over the variants it contributes) and the pooled one last; for a
   `meta_analysis.py --prefer-groups` run;
 - ``forest_pooled_<label>``: the pooled estimates of that run, per gene
-  one row per outcome.
+  one row per outcome;
+- ``forest_apoe_genotype_<population>``: UK Biobank marvel association
+  of each APOE genotype vs ε3/ε3 (`config/marvel_apoe_task.cnf`), per
+  outcome one row per genotype; read from the loose marvel files of the
+  `FileNames.MARVEL_APOE_TASKS` outdirs copied into `results/`.
 
 Layout follows `cox_forest.py` (small cm-sized panels, black CIs, dashed
 OR = 1 line, shaded gene bands, plot_misc side tables). Significance is
@@ -39,6 +43,7 @@ import argparse
 import logging
 import math
 import os
+import re
 import warnings
 from pathlib import Path
 
@@ -56,6 +61,7 @@ from project_constants import (
     Constants,
     FileNames,
     HarmonisedColumns,
+    MarvelColumns,
     MetaColumns,
     MetaLevel,
     Paths,
@@ -108,7 +114,44 @@ _OUTCOME_NAMES: dict[str, str] = {
     "alzheimers_dementia": "Alzheimer's disease",
     "vascular_dementia": "Vascular dementia",
     "frontotemporal_dementia": "Frontotemporal dementia",
+    "ascvd": "ASCVD",
 }
+# APOE genotype figure: marvel variable -> outcome key, in plotting order
+_APOE_GENOTYPE_OUTCOMES: dict[str, str] = {
+    **Constants.MARVEL_UKB_OUTCOMES,
+    "ascvd_ii": "ascvd",
+}
+# genotypes vs the reference (`Constants.UKB_APOE_REFERENCE`), in
+# plotting order: ε2 dose down, then ε4 dose up
+_GENOTYPE_NAMES: dict[str, str] = {
+    "e2e2": "ε2/ε2",
+    "e2e3": "ε2/ε3",
+    "e3e4": "ε3/ε4",
+    "e2e4": "ε2/ε4",
+    "e4e4": "ε4/ε4",
+}
+# name of `Constants.UKB_APOE_REFERENCE`
+_REFERENCE_GENOTYPE_NAME: str = "ε3/ε3"
+_APOE_GENOTYPE_MODEL: str = "model_3"
+# marvel `subset` (`FileNames.MARVEL_APOE_TASKS`) -> population label
+_SUBSET_POPULATIONS: dict[str, str] = {
+    "all": "all",
+    "eur_overall": "EUR",
+}
+_POPULATION_NAMES: dict[str, str] = {
+    "all": "UK Biobank, all participants",
+    "EUR": "UK Biobank, EUR",
+}
+# columns added to the APOE genotype rows
+_GENOTYPE: str = "genotype"
+_POPULATION: str = "population"
+_OUTCOME_GROUP: str = "outcome_name"
+# marvel results column with the error of a skipped test
+_MARVEL_REMARKS: str = "remarks"
+# dummy-coded marvel exposure of the genotype vs `strata_ref`
+_APOE_EXPOSURE_RE: re.Pattern = re.compile(
+    rf"^{re.escape(Constants.UKB_APOE_COLUMN)}: (?P<genotype>\S+)$"
+)
 _UKB_PREFIX: str = "marvel_ukb_"
 _FINNGEN_NAME: str = "FinnGen R13"
 _UKB_NAME: str = "UK Biobank"
@@ -252,6 +295,167 @@ def _format_p(p: float) -> str:
     if p < 0.001:
         return f"{p:.1e}"
     return f"{p:.3f}"
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _genotype_of_exposure(exposure: str) -> str | None:
+    """APOE genotype of a dummy-coded marvel exposure label.
+
+    Parameters
+    ----------
+    exposure : `str`
+        marvel `Exposure`, e.g. ``"genotype: e4e4"``.
+
+    Returns
+    -------
+    genotype : `str` or `None`
+        One of `Constants.APOE_GENOTYPES`, e.g. ``"e4e4"``; `None` for
+        `Constants.APOE_MISSING_VALUES` (e.g. ``"genotype: Unknown"``, its
+        own dummy term in marvel) and any other exposure (intercept,
+        covariates).
+
+    Raises
+    ------
+    ValueError
+        If the genotype is neither in `Constants.APOE_GENOTYPES` nor in
+        `Constants.APOE_MISSING_VALUES`.
+    """
+    match = _APOE_EXPOSURE_RE.match(str(exposure))
+    if match is None:
+        return None
+    genotype = match.group("genotype")
+    if genotype in Constants.APOE_MISSING_VALUES:
+        return None
+    if genotype not in Constants.APOE_GENOTYPES:
+        raise ValueError(
+            f"{exposure!r}: {genotype!r} not in Constants.APOE_GENOTYPES "
+            f"{Constants.APOE_GENOTYPES}"
+        )
+    return genotype
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def load_apoe_genotype(
+    task_file: Path = FileNames.MARVEL_APOE_TASKS,
+    results_dir: Path = Paths.HERE / "results",
+    model: str = _APOE_GENOTYPE_MODEL,
+) -> pd.DataFrame | None:
+    """Read the marvel APOE genotype results and add the odds ratios.
+
+    Parameters
+    ----------
+    task_file : `Path`, optional, default: `FileNames.MARVEL_APOE_TASKS`
+        Job-array file of the runs; its ``outdir`` (Myriad path) and
+        ``subset`` columns give the result directory and population.
+    results_dir : `Path`, optional, default: ``results/``
+        Local directory holding copies of the outdirs (same base names).
+    model : `str`, optional, default: `_APOE_GENOTYPE_MODEL`
+        marvel `Model name` to keep.
+
+    Returns
+    -------
+    results : `pd.DataFrame` or `None`
+        One row per population, outcome and genotype (reference left
+        out) with a finite estimate and SE, with `_POPULATION`,
+        `_GENOTYPE`, `HarmonisedColumns.OUTCOME`, `MetaColumns.BETA`/
+        `SE`/`P`, `_OR`, `_LB`, `_UB`, `_OR_TEXT` and `_P_TEXT`; `None`
+        (logged) when no result files are found.
+
+    Raises
+    ------
+    ValueError
+        If a subset has no population label, a marvel column is missing,
+        or a population has two rows for one outcome and genotype (e.g.
+        two stratifications).
+    """
+    tasks = pd.read_csv(task_file, sep="\t", dtype=str)
+    unknown = sorted(set(tasks["subset"]) - set(_SUBSET_POPULATIONS))
+    if unknown:
+        raise ValueError(
+            f"{task_file}: subset(s) {unknown} not in _SUBSET_POPULATIONS"
+        )
+    required = [
+        MarvelColumns.MODEL_NAME,
+        MarvelColumns.VARIABLE,
+        MarvelColumns.EXPOSURE,
+        MarvelColumns.EXPOSED,
+        MarvelColumns.ESTIMATE,
+        MarvelColumns.SE,
+        MarvelColumns.P_VALUE,
+    ]
+    frames = []
+    for row in tasks.itertuples(index=False):
+        outdir = results_dir / Path(row.outdir).name
+        files = sorted(outdir.glob(FileNames.MARVEL_LOOSE_GLOB))
+        if not files:
+            _LOGGER.info(f"{outdir}: no marvel result files, skipped")
+            continue
+        for path in files:
+            frame = pd.read_csv(path, sep="\t", low_memory=False)
+            missing = [col for col in required if col not in frame.columns]
+            if missing:
+                raise ValueError(f"{path}: missing marvel column(s) {missing}")
+            frame[_POPULATION] = _SUBSET_POPULATIONS[row.subset]
+            frames.append(frame)
+        _LOGGER.info(f"{outdir}: {len(files)} marvel result files")
+    if not frames:
+        return None
+    results = pd.concat(frames, ignore_index=True)
+    # skipped tests (marvel exits 0 anyway): one row per outcome and model
+    # with the error in `remarks` and no estimate
+    if _MARVEL_REMARKS in results.columns:
+        remarks = results[_MARVEL_REMARKS].dropna()
+        for remark, n in remarks.value_counts().items():
+            _LOGGER.warning(
+                f"APOE genotype: {n} skipped marvel tests: {remark}"
+            )
+    results[_GENOTYPE] = results[MarvelColumns.EXPOSURE].map(
+        _genotype_of_exposure
+    )
+    keep = (
+        (results[MarvelColumns.MODEL_NAME] == model)
+        & results[MarvelColumns.VARIABLE].isin(_APOE_GENOTYPE_OUTCOMES)
+        & results[_GENOTYPE].isin(_GENOTYPE_NAMES)
+    )
+    results = results.loc[keep].copy()
+    results[HarmonisedColumns.OUTCOME] = results[MarvelColumns.VARIABLE].map(
+        _APOE_GENOTYPE_OUTCOMES
+    )
+    results[MetaColumns.BETA] = pd.to_numeric(
+        results[MarvelColumns.ESTIMATE], errors="coerce"
+    )
+    results[MetaColumns.SE] = pd.to_numeric(
+        results[MarvelColumns.SE], errors="coerce"
+    )
+    results[MetaColumns.P] = pd.to_numeric(
+        results[MarvelColumns.P_VALUE], errors="coerce"
+    )
+    results[MarvelColumns.EXPOSED] = pd.to_numeric(
+        results[MarvelColumns.EXPOSED], errors="coerce"
+    )
+    usable = np.isfinite(results[MetaColumns.BETA]) & np.isfinite(
+        results[MetaColumns.SE]
+    )
+    if not usable.all():
+        _LOGGER.info(
+            f"APOE genotype: {int((~usable).sum())} rows without "
+            "estimate/SE dropped"
+        )
+    results = results.loc[usable]
+    key = [_POPULATION, HarmonisedColumns.OUTCOME, _GENOTYPE]
+    repeats = results.duplicated(key, keep=False)
+    if repeats.any():
+        raise ValueError(
+            f"APOE genotype: {int(repeats.sum())} rows share a population, "
+            f"outcome and genotype ({model}):\n"
+            + results.loc[repeats, key].to_string(index=False)
+        )
+    if results.empty:
+        _LOGGER.info(f"APOE genotype: no {model} rows for the outcomes")
+        return None
+    results = _add_or(results)
+    _LOGGER.info(f"APOE genotype ({model}): {len(results)} rows")
+    return results
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -530,25 +734,32 @@ def _significance_legend(strict: float, n_tests: int) -> list[Line2D]:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _plot_points(data: pd.DataFrame, ax: plt.Axes, ylim: tuple) -> dict:
-    """Draw points and CIs per gene, shaded gene bands.
+def _plot_points(
+    data: pd.DataFrame,
+    ax: plt.Axes,
+    ylim: tuple,
+    group_col: str = VariantListColumns.OUT_GENE,
+) -> dict:
+    """Draw points and CIs per group, shaded group bands.
 
     Parameters
     ----------
     data : `pd.DataFrame`
         Rows with `_OR`, `_LB`, `_UB`, `_Y`, `_MARKER`, `_COLOUR`,
-        `_SIZE` and the gene column.
+        `_SIZE` and `group_col`.
     ax : `plt.Axes`
         Forest axes.
     ylim : `tuple`
         Y limits (before inversion).
+    group_col : `str`, optional, default: `VariantListColumns.OUT_GENE`
+        Column of the groups (y tick labels, one per group).
 
     Returns
     -------
     span : `dict`
         `ForestPlot.span_dict`, for the side tables; empty for one row.
     """
-    gene = VariantListColumns.OUT_GENE
+    gene = group_col
     scatter_kwargs = {"edgecolors": "black", "linewidth": 0.3}
     ci_kwargs = {
         "zorder": 1,
@@ -608,6 +819,8 @@ def draw_forest(
     row_header: str,
     legend: list[Line2D],
     max_or: float,
+    group_col: str = VariantListColumns.OUT_GENE,
+    italic_groups: bool = True,
 ) -> plt.Figure:
     """Draw a log-scale odds-ratio forest plot with side tables.
 
@@ -616,7 +829,7 @@ def draw_forest(
     data : `pd.DataFrame`
         Rows sorted in plotting order with `_OR`, `_LB`, `_UB`,
         `_MARKER`, `_COLOUR`, `_SIZE`, `_ROW_NAME`, `_OR_TEXT`, `_P_TEXT`
-        and the gene column (y tick labels, one per gene).
+        and `group_col` (y tick labels, one per group).
     title : `str`
         Panel title.
     row_header : `str`
@@ -625,6 +838,10 @@ def draw_forest(
         Legend handles (marker shapes).
     max_or : `float`
         Odds ratios and CI bounds are shown within ``[1/max_or, max_or]``.
+    group_col : `str`, optional, default: `VariantListColumns.OUT_GENE`
+        Column of the groups.
+    italic_groups : `bool`, optional, default: `True`
+        Italic y tick labels (gene names).
 
     Returns
     -------
@@ -640,7 +857,7 @@ def draw_forest(
         data = data.loc[~points_out]
     n_clipped = _clip_ci(data, max_or)
     data = data.reset_index(drop=True)
-    data = _set_y(data)
+    data = _set_y(data, group_col)
     ylim = (data[_Y].min() - 3, data[_Y].max() + 3)
     height_cm = 1.6 + _CM_PER_Y * (ylim[1] - ylim[0])
     matplotlib.rcParams["axes.linewidth"] = _LWD
@@ -657,7 +874,7 @@ def draw_forest(
     ax = figure.add_subplot(grid[0])
     ax.set_xscale("log")
     ax.set_zorder(1)
-    span = _plot_points(data, ax, ylim)
+    span = _plot_points(data, ax, ylim, group_col)
     limits, ticks = _x_axis(data)
     ax.set_xlim(limits)
     ax.axvline(1, linewidth=_LWD, linestyle="--", c="black", zorder=0.5)
@@ -673,8 +890,9 @@ def draw_forest(
         width=_LWD,
     )
     ax.tick_params(axis="both", labelsize=_AX_LAB_SZ, width=_LWD)
-    for label in ax.get_yticklabels():
-        label.set_fontstyle("italic")
+    if italic_groups:
+        for label in ax.get_yticklabels():
+            label.set_fontstyle("italic")
     xlabel = "Odds ratio (95% CI)"
     if n_clipped:
         xlabel += f"\n{n_clipped} CIs truncated at {1 / max_or:g}-{max_or:g}"
@@ -720,13 +938,17 @@ def draw_forest(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _set_y(data: pd.DataFrame) -> pd.DataFrame:
-    """Y coordinates: rows 2 apart within a gene, 4 between genes.
+def _set_y(
+    data: pd.DataFrame, group_col: str = VariantListColumns.OUT_GENE
+) -> pd.DataFrame:
+    """Y coordinates: rows 2 apart within a group, 4 between groups.
 
     Parameters
     ----------
     data : `pd.DataFrame`
         Rows sorted in plotting order, unique index.
+    group_col : `str`, optional, default: `VariantListColumns.OUT_GENE`
+        Column of the groups (genes).
 
     Returns
     -------
@@ -735,8 +957,8 @@ def _set_y(data: pd.DataFrame) -> pd.DataFrame:
     """
     y = pd.Series(np.nan, index=data.index)
     position = 1.0
-    for gene in dict.fromkeys(data[VariantListColumns.OUT_GENE]):
-        rows = data.index[data[VariantListColumns.OUT_GENE] == gene]
+    for gene in dict.fromkeys(data[group_col]):
+        rows = data.index[data[group_col] == gene]
         y[rows] = position + 2 * np.arange(len(rows))
         position = y[rows].max() + 4
     data = data.copy()
@@ -879,6 +1101,75 @@ def forest_apoe(
             max_or,
         )
         save(figure, out_dir / f"forest_apoe_{label}_{outcome}")
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def forest_apoe_genotype(
+    results: pd.DataFrame,
+    out_dir: Path,
+    max_or: float,
+    model: str = _APOE_GENOTYPE_MODEL,
+) -> None:
+    """Per population: odds ratio of each APOE genotype vs ε3/ε3.
+
+    Parameters
+    ----------
+    results : `pd.DataFrame`
+        From `load_apoe_genotype`.
+    out_dir : `Path`
+        Output directory.
+    max_or : `float`
+        Axis limit, see `draw_forest`.
+    model : `str`, optional, default: `_APOE_GENOTYPE_MODEL`
+        marvel model of `results`, shown in the title.
+
+    Returns
+    -------
+    `None`
+
+    Notes
+    -----
+    The Bonferroni threshold is 0.05 / (genotype x outcome estimates of
+    the population).
+    """
+    outcome_rank = {
+        name: i for i, name in enumerate(_APOE_GENOTYPE_OUTCOMES.values())
+    }
+    genotype_rank = {name: i for i, name in enumerate(_GENOTYPE_NAMES)}
+    for population, rows in results.groupby(_POPULATION):
+        rows = rows.copy()
+        rows["_outcome_order"] = rows[HarmonisedColumns.OUTCOME].map(
+            outcome_rank
+        )
+        rows["_genotype_order"] = rows[_GENOTYPE].map(genotype_rank)
+        rows = rows.sort_values(["_outcome_order", "_genotype_order"])
+        n_tests = int(np.isfinite(rows[MetaColumns.P]).sum())
+        strict = (_P_NOMINAL / max(n_tests, 1), n_tests)
+        rows[_OUTCOME_GROUP] = rows[HarmonisedColumns.OUTCOME].map(
+            _outcome_name
+        )
+        rows[_MARKER] = _significance_marker(rows[MetaColumns.P], strict[0])
+        rows[_COLOUR] = _POOLED_COLOUR
+        rows[_SIZE] = _POOLED_SIZE
+        rows[_ROW_NAME] = [
+            _GENOTYPE_NAMES[genotype]
+            if not np.isfinite(exposed)
+            else f"{_GENOTYPE_NAMES[genotype]} (n={int(exposed):,})"
+            for genotype, exposed in zip(
+                rows[_GENOTYPE], rows[MarvelColumns.EXPOSED]
+            )
+        ]
+        name = _POPULATION_NAMES.get(str(population), str(population))
+        figure = draw_forest(
+            rows,
+            f"{name}: APOE genotype vs {_REFERENCE_GENOTYPE_NAME} ({model})",
+            "APOE genotype",
+            _significance_legend(*strict),
+            max_or,
+            group_col=_OUTCOME_GROUP,
+            italic_groups=False,
+        )
+        save(figure, out_dir / f"forest_apoe_genotype_{population}")
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1072,6 +1363,7 @@ def figures(
     out_dir: Path,
     max_or: float,
     sources_label: str | None = None,
+    apoe_genotype_model: str | None = None,
 ) -> None:
     """Draw every figure whose input exists.
 
@@ -1090,6 +1382,8 @@ def figures(
     sources_label : `str` or `None`, optional, default: `None`
         Label of a `--prefer-groups` run for `forest_sources` and
         `forest_pooled`; `None` skips them.
+    apoe_genotype_model : `str` or `None`, optional, default: `None`
+        marvel model for `forest_apoe_genotype`; `None` skips it.
 
     Returns
     -------
@@ -1121,6 +1415,12 @@ def figures(
             strict = strict_threshold(burden)
             forest_sources(burden, sources_label, out_dir, max_or, strict)
             forest_pooled(burden, sources_label, out_dir, max_or, strict)
+    if apoe_genotype_model:
+        results = load_apoe_genotype(model=apoe_genotype_model)
+        if results is not None:
+            forest_apoe_genotype(
+                results, out_dir, max_or, model=apoe_genotype_model
+            )
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1129,7 +1429,10 @@ def figures(
 def _init_cmd_args() -> argparse.ArgumentParser:
     """Create and configure the argument parser."""
     parser = argparse.ArgumentParser(
-        description="Forest plots and heatmap of the gene-burden results."
+        description=(
+            "Forest plots and heatmap of the gene-burden results, and the "
+            "APOE genotype forest."
+        )
     )
     parser.add_argument(
         "--ancestry",
@@ -1153,6 +1456,19 @@ def _init_cmd_args() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--apoe-genotype",
+        action="store_true",
+        help=(
+            "forest of the marvel APOE genotype vs e3e3 runs, read from "
+            "the outdirs of marvel_apoe_tasks.tsv copied into results/"
+        ),
+    )
+    parser.add_argument(
+        "--apoe-model",
+        default=_APOE_GENOTYPE_MODEL,
+        help="marvel model for --apoe-genotype (default: %(default)s)",
+    )
+    parser.add_argument(
         "--out-dir",
         type=Path,
         default=Paths.RESULTS_FIGURES,
@@ -1171,9 +1487,15 @@ def _init_cmd_args() -> argparse.ArgumentParser:
 def _parse_cmd_args(parser: argparse.ArgumentParser) -> argparse.Namespace:
     """Parse and validate command-line arguments."""
     args = parser.parse_args()
-    if not (args.forest_label or args.heatmap_label or args.sources_label):
+    if not (
+        args.forest_label
+        or args.heatmap_label
+        or args.sources_label
+        or args.apoe_genotype
+    ):
         parser.error(
-            "give --forest-label, --heatmap-label and/or --sources-label"
+            "give --forest-label, --heatmap-label, --sources-label and/or "
+            "--apoe-genotype"
         )
     if args.max_or <= 1:
         parser.error("--max-or must be > 1")
@@ -1197,6 +1519,7 @@ def main() -> None:
         args.out_dir,
         args.max_or,
         sources_label=args.sources_label,
+        apoe_genotype_model=args.apoe_model if args.apoe_genotype else None,
     )
 
 

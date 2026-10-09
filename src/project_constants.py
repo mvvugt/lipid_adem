@@ -170,7 +170,7 @@ class Constants:
     # APOE is out of gene_list.txt (2026-10-08); this drops it from the
     # matched tables and burden files built before that, until the
     # upstream steps are rerun. APOE genotype itself is analysed as an
-    # exposure (apoe_exposure.py)
+    # exposure (`FileNames.MARVEL_APOE_TASKS`)
     EXCLUDED_GENES: tuple[str, ...] = ("APOE",)
     # identifier column of `FileNames.UKB_PHENO`
     UKB_ID_COLUMN: str = "f.eid"
@@ -180,24 +180,31 @@ class Constants:
     UKB_EUR_POPULATIONS: tuple[str, ...] = ("eur_related", "eur_unrelated")
     # APOE genotype column of `FileNames.UKB_PHENO` (values e2e2 ... e4e4,
     # see `ApoeStratum.GENOTYPES`) and the reference genotype of the APOE
-    # genotype exposure (apoe_exposure.py)
+    # genotype exposure. The marvel APOE genotype run tests this column
+    # of the phenotype file directly (marvel `exposures` option), dummy-
+    # coded with `strata_ref` = `UKB_APOE_REFERENCE` (create_config.py).
+    # It must hold text: marvel reads `strata_ref` from the config as
+    # text and clean_data drops that label from the `pd.get_dummies`
+    # columns, so integer codes never match (KeyError "['0'] not found
+    # in axis", 2026-10-09)
     UKB_APOE_COLUMN: str = "genotype"
     UKB_APOE_REFERENCE: str = "e3e3"
-    # APOE genotype exposure (apoe_exposure.py): one integer-coded column,
-    # dummy-coded by marvel with `strata_ref` = the reference's code
-    # (create_config.py). Integers, not the genotype strings: marvel
-    # matches `strata_ref` to str(value), and covariates must be numeric
+    # `gene` of the APOE genotype run in `FileNames.MARVEL_APOE_TASKS`
+    # (marvel ExpInput label, outdir and config name)
     APOE_EXPOSURE_NAME: str = "APOE_genotype"
-    # `UKB_APOE_COLUMN` values meaning "no genotype", read as missing
+    # `UKB_APOE_COLUMN` values meaning "no genotype". marvel cannot treat
+    # them as missing, so they get their own dummy term; figures.py
+    # leaves them out
     APOE_MISSING_VALUES: tuple[str, ...] = ("Unknown",)
-    APOE_GENOTYPE_CODES: dict[str, int] = {
-        "e3e3": 0,
-        "e2e2": 1,
-        "e2e3": 2,
-        "e2e4": 3,
-        "e3e4": 4,
-        "e4e4": 5,
-    }
+    # every real genotype `UKB_APOE_COLUMN` may hold
+    APOE_GENOTYPES: tuple[str, ...] = (
+        "e2e2",
+        "e2e3",
+        "e2e4",
+        "e3e3",
+        "e3e4",
+        "e4e4",
+    )
     # separator between the ancestry and the APOE stratum in a marvel
     # `Stratification name`, e.g. ``EUR_e44`` (create_config.py)
     MARVEL_ANCESTRY_SEP: str = "_"
@@ -344,7 +351,6 @@ class RunlogOrder:
     """
     GWAS_CAT_PREP: int = 10
     FILTER_GWAS_CAT: int = 20
-    APOE_EXPOSURE: int = 24
     MARVEL_RESULTS_TABLE: int = 25
     MERGE_ASSOCIATIONS: int = 30
     MATCH_VARIANTS: int = 40
@@ -1002,9 +1008,6 @@ class FileNames:
     # marvel run of APOE genotype -> outcomes: its own job array, so its
     # results never enter marvel_results.tsv as variants
     MARVEL_APOE_TASKS: Path = Paths.DATA_RAW / "marvel_apoe_tasks.tsv"
-    # exposure file of that run: per genotype a 1 (genotype) / 0
-    # (reference) / NA (other genotypes) column (apoe_exposure.py)
-    APOE_EXPOSURE: Path = Paths.DATA_TEMP / "APOE_genotype_exposure.tsv.gz"
     # per-gene store of all marvel results (in `Paths.MARVEL_STORE`)
     MARVEL_STORE_TEMPLATE: str = "{gene}_results.tsv.gz"
     # loose per-variant marvel result files in a gene's outdir

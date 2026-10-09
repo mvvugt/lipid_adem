@@ -65,10 +65,8 @@ run_mamba biomed-api "${ROOT}"/src/marvel_results_table.py --ancestry MULTI
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # APOE GENOTYPE
 
-# [myriad] prepare apoe-status exposure file
-run_mamba biomed-api "${ROOT}"/src/apoe_exposure.py
-
-# [myriad] associate apoe-status with outcomes
+# [myriad] associate apoe-status (genotype column of the pheno file, vs
+# e3e3) with outcomes
 run_mamba marvel "${ROOT}"/src/create_config.py -a \
     -t "${ROOT}"/data/raw/marvel_apoe_tasks.tsv
 run_mamba biomed-api pyjasub "${ROOT}"/config/marvel_apoe_task.cnf
@@ -159,3 +157,7 @@ run_mamba plot-misc "${ROOT}"/src/figures.py --ancestry EUR \
 run_mamba plot-misc "${ROOT}"/src/figures.py --ancestry MULTI \
     --sources-label maf_filter_all \
     --forest-label maf_filter_all
+
+# [local] APOE genotype vs e3e3 (marvel); rsync results/APOE_genotype{,_eur}
+# from Myriad first
+run_mamba plot-misc "${ROOT}"/src/figures.py --apoe-genotype
