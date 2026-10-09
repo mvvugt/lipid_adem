@@ -42,6 +42,9 @@ import figure_utils as futils
 from pathlib import Path
 from project_constants import (
         Constants,
+        FigureColumns as FCols,
+        FigureNames as FigNames,
+        FigureStyle as FStyle,
         FileNames,
         HarmonisedColumns,
         MarvelColumns,
@@ -49,7 +52,8 @@ from project_constants import (
         Paths,
         )
 
-logging.basicConfig(level = logging.INFO, format = '[%(levelname)s] %(message)s')
+logging.basicConfig(level = logging.INFO,
+                    format = '[%(levelname)s] %(message)s')
 logger = logging.getLogger('apoe_genotype_forest')
 
 
@@ -63,7 +67,7 @@ parser = argparse.ArgumentParser(
                        'into results/.'))
 parser.add_argument('-m', '--model',
                     type = str,
-                    default = 'model_3',
+                    default = Constants.MARVEL_DEFAULT_MODEL,
                     help = 'marvel model (default: %(default)s)')
 parser.add_argument('-r', '--results-dir',
                     type = Path,
@@ -76,7 +80,7 @@ parser.add_argument('-o', '--out-dir',
                     help = 'output directory (default: %(default)s)')
 parser.add_argument('--max-or',
                     type = float,
-                    default = 20.0,
+                    default = FStyle.MAX_OR,
                     help = 'odds-ratio axis limit (default: %(default)s)')
 
 args = parser.parse_args()
@@ -94,7 +98,7 @@ POPULATION = 'population'
 OUTCOME_GROUP = 'outcome_name'
 # marvel results column with the error of a skipped test
 MARVEL_REMARKS = 'remarks'
-# marvel variable -> outcome key (`futils.OUTCOME_NAMES`)
+# marvel variable -> outcome key (`FigNames.OUTCOMES`)
 APOE_OUTCOMES = {
     **Constants.MARVEL_UKB_OUTCOMES,
     'ascvd_ii': 'ascvd',
@@ -138,9 +142,9 @@ REQUIRED = [
 ]
 # side tables: column, header, alignment, x location
 TABLES = (
-    (futils.ROW_NAME, 'APOE genotype', 'left', 0.05),
-    (futils.OR_TEXT, 'OR (95% CI)', 'center', 0.5),
-    (futils.P_TEXT, 'P-value', 'center', 0.5),
+    (FCols.ROW_NAME, 'APOE genotype', 'left', 0.05),
+    (FCols.OR_TEXT, FigNames.OR_HEADER, 'center', 0.5),
+    (FCols.P_TEXT, FigNames.P_HEADER, 'center', 0.5),
 )
 
 
@@ -229,16 +233,16 @@ gen_df = futils.add_or(gen_df)
 logger.info(f'APOE genotype ({args.model}): {len(gen_df)} rows')
 
 # order: outcomes in `OUTCOME_NAMES` order, then genotypes
-gen_df['outcome_order'] = gen_df[OUTCOME].map(futils.OUTCOME_RANK)
+gen_df['outcome_order'] = gen_df[OUTCOME].map(FigNames.OUTCOME_RANK)
 gen_df['genotype_order'] = gen_df[GENOTYPE].map(GENOTYPE_RANK)
 gen_df = gen_df.sort_values(['outcome_order', 'genotype_order'])
 gen_df[OUTCOME_GROUP] = gen_df[OUTCOME].map(futils.outcome_name)
 
 # one symbol, coloured by genotype
-gen_df[futils.MARKER] = futils.MARKER_NS
-gen_df[futils.COLOUR] = gen_df[GENOTYPE].map(GENOTYPE_COLOURS)
-gen_df[futils.SIZE] = MARKER_SIZE
-gen_df[futils.ROW_NAME] = [
+gen_df[FCols.MARKER] = FStyle.MARKER_NS
+gen_df[FCols.COLOUR] = gen_df[GENOTYPE].map(GENOTYPE_COLOURS)
+gen_df[FCols.SIZE] = MARKER_SIZE
+gen_df[FCols.ROW_NAME] = [
     GENOTYPE_NAMES[genotype] if not np.isfinite(exposed)
     else f'{GENOTYPE_NAMES[genotype]} (n={int(exposed):,})'
     for genotype, exposed in zip(gen_df[GENOTYPE],
@@ -252,49 +256,43 @@ gen_df[futils.ROW_NAME] = [
 
 for pop, pop_df in gen_df.groupby(POPULATION):
     # axis range
-    pop_df, n_clipped = futils.limit_or(pop_df, MIN_OR, args.max_or,
+    pop_df = futils.limit_or(pop_df, MIN_OR, args.max_or,
                                         f'APOE genotype {pop}')
     if len(pop_df) < 2:
         logger.warning(f'APOE genotype {pop}: fewer than two estimates, '
                        'skipped')
         continue
     pop_df = futils.set_y(pop_df, OUTCOME_GROUP)
-    test_y = (pop_df[futils.Y].min() - 3, pop_df[futils.Y].max() + 3)
+    test_y = (pop_df[FCols.Y].min() - FStyle.FOREST_Y_PAD,
+              pop_df[FCols.Y].max() + FStyle.FOREST_Y_PAD)
     # start figure
-    height_cm = 1.6 + futils.CM_PER_Y * (test_y[1] - test_y[0])
-    matplotlib.rcParams['axes.linewidth'] = futils.LWD
-    fig = plt.figure(figsize = (futils.WIDTH_CM * futils.CM,
-                                height_cm * futils.CM))
+    height_cm = 1.1 + FStyle.CM_PER_Y * (test_y[1] - test_y[0])
+    matplotlib.rcParams['axes.linewidth'] = FStyle.LWD
+    fig = plt.figure(figsize = (FStyle.WIDTH_CM * FStyle.CM,
+                                height_cm * FStyle.CM))
     gs = gridspec.GridSpec(nrows = 1, ncols = 4,
-                           width_ratios = [1.3, .7, .8, .35],
+                           width_ratios = [1.5, .5, .7, .35],
                            figure = fig, wspace = 0.0,
                            bottom = 1.0 / height_cm,
-                           top = 1 - .35 / height_cm)
+                           top = 1 - FStyle.FOREST_TOP_CM / height_cm)
     # plot
     ax = fig.add_subplot(gs[0])
     ax.set_xscale('log')
     ax.set_zorder(1)
     bm_forest = forest.ForestPlot(
-            data = pop_df, x_col = futils.OR, y_col = futils.Y,
-            lb_col = futils.LB, ub_col = futils.UB, g_col = OUTCOME_GROUP,
+            data = pop_df, x_col = FCols.OR, y_col = FCols.Y,
+            lb_col = FCols.LB, ub_col = FCols.UB, g_col = OUTCOME_GROUP,
             ax = ax,
             )
     _, ax = bm_forest.plot(
-            s_col = futils.MARKER, c_col = futils.COLOUR,
-            s_size_col = futils.SIZE, ci_colour = 'black',
-            ci_lwd = futils.LWD, span = True, ylim = test_y,
-            kwargs_scatter_dict = {
-                'edgecolors': 'black',
-                'linewidth': .3,
-            },
-            kwargs_plot_ci_dict = {
-                'zorder': 1,
-                'solid_capstyle': 'round',
-                'linestyle': '-',
-            }
+            s_col = FCols.MARKER, c_col = FCols.COLOUR,
+            s_size_col = FCols.SIZE, ci_colour = 'black',
+            ci_lwd = FStyle.LWD, span = True, ylim = test_y,
+            kwargs_scatter_dict = FStyle.SCATTER_KWARGS,
+            kwargs_plot_ci_dict = FStyle.CI_KWARGS,
             )
     # formatting
-    ax.axvline(1, linewidth = futils.LWD, linestyle = '--', c = 'black',
+    ax.axvline(1, linewidth = FStyle.LWD, linestyle = '--', c = 'black',
                zorder = .5)
     ax.spines[['right', 'top']].set_visible(False)
     x_lim, x_tic = futils.x_axis(pop_df, low = MIN_OR)
@@ -303,14 +301,11 @@ for pop, pop_df in gen_df.groupby(POPULATION):
     ax.xaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%g'))
     ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
     ax.tick_params(axis = 'both', which = 'minor', bottom = False,
-                   labelsize = futils.AX_LAB_SZ, width = futils.LWD)
-    ax.tick_params(axis = 'both', labelsize = futils.AX_LAB_SZ,
-                   width = futils.LWD)
-    xlabel = 'Odds ratio (95% CI)'
-    if n_clipped:
-        xlabel += (f'\n{n_clipped} CIs truncated at '
-                   f'{MIN_OR:g}-{args.max_or:g}')
-    ax.set_xlabel(xlabel, fontsize = futils.LAB_SIZE)
+                   labelsize = FStyle.AX_LAB_SZ, width = FStyle.LWD)
+    ax.tick_params(axis = 'both', labelsize = FStyle.AX_LAB_SZ,
+                   width = FStyle.LWD)
+    xlabel = FigNames.OR_LABEL
+    ax.set_xlabel(xlabel, fontsize = FStyle.LAB_SIZE)
     # create side tables
     span = bm_forest.span_dict
     for i, (column, header, align, xloc) in enumerate(TABLES, start = 1):
@@ -318,12 +313,12 @@ for pop, pop_df in gen_df.groupby(POPULATION):
         side_ax.set_ylim(ax.get_ylim())
         side_ax.set_zorder(1 - .1 * i)
         _ = forest.plot_table(
-                pop_df, ax = side_ax, string_col = column, y_col = futils.Y,
+                pop_df, ax = side_ax, string_col = column, y_col = FCols.Y,
                 annoteheader = header, xloc = xloc, xloc_header = xloc,
                 halignment_text = align, halignment_header = align,
-                size_text = futils.STEXT_SIZE,
-                size_header = futils.STEXT_SIZE,
-                negative_padding = 1, span = span,
+                size_text = FStyle.STEXT_SIZE,
+                size_header = FStyle.STEXT_SIZE,
+                negative_padding = FStyle.TABLE_NEGATIVE_PADDING, span = span,
                 )
     # save
     futils.save(fig, args.out_dir / f'forest_apoe_genotype_{pop}')

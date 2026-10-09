@@ -6,11 +6,13 @@
 ##
 ## Script name: figure_utils
 ##
-## Purpose of script: Shared constants and helpers of the figure scripts
+## Purpose of script: Shared helpers of the figure scripts
 ##     (burden_forest.py, burden_apoe_forest.py, sources_forest.py,
 ##     pooled_forest.py, burden_heatmap.py, apoe_genotype_forest.py):
 ##     reading burden files, odds ratios with 95% CI, p-value formatting,
 ##     readable names, significance markers, axis limits and saving.
+##     Constants shared by the figure scripts are in `project_constants`
+##     (`FigureColumns`, `FigureNames`, `FigureStyle`).
 ##     Only `project_constants` is imported from the pipeline;
 ##     `functions.py` needs the Myriad biomed-api env.
 ##
@@ -37,8 +39,10 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from matplotlib.lines import Line2D
 from project_constants import (
-        ApoeStratum,
         Constants,
+        FigureColumns as FCols,
+        FigureNames as FigNames,
+        FigureStyle as FStyle,
         FileNames,
         HarmonisedColumns,
         MetaColumns,
@@ -55,72 +59,14 @@ LOGGER = logging.getLogger('figure_utils')
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Z_95 = 1.959963984540054
-# plotted columns added to the result rows
-OR = 'odds_ratio'
-LB = 'or_lower'
-UB = 'or_upper'
-Y = 'y_axis'
-MARKER = 'marker'
-COLOUR = 'colour'
-SIZE = 'size'
-ROW_NAME = 'row_name'
-OR_TEXT = 'or_text'
-P_TEXT = 'p_text'
-# colours and sizes: pooled estimate vs single study / stratum
-POOLED_COLOUR = 'black'
-STUDY_COLOUR = '#bdbdbd'
-POOLED_SIZE = 14
-STUDY_SIZE = 9
-# significance -> marker shape, and the matching heatmap glyph
-MARKER_NS = 'o'
-MARKER_NOMINAL = 's'
-MARKER_STRICT = 'D'
-GLYPH_NOMINAL = '■'
-GLYPH_STRICT = '◆'
-P_NOMINAL = 0.05
-# p-values below this are shown as this (p = 0 is below double precision)
-P_MIN = 1e-100
-# outcome key -> name, in plotting order
-OUTCOME_NAMES = {
-    'ascvd': 'ASCVD',
-    'alzheimers_dementia': 'Alzheimer\'s disease',
-    'vascular_dementia': 'Vascular dementia',
-    'frontotemporal_dementia': 'Frontotemporal dementia',
-    'all_cause_dementia': 'All-cause dementia',
-}
-OUTCOME_RANK = {name: i for i, name in enumerate(OUTCOME_NAMES)}
-# APOE strata in plotting order, `ApoeStratum.ALL` = all genotypes
-STRATUM_ORDER = (
-    ApoeStratum.ALL,
-    ApoeStratum.E44,
-    ApoeStratum.E43,
-    ApoeStratum.E33,
-    ApoeStratum.E22_E32,
-)
-STRATUM_NAMES = {
-    ApoeStratum.ALL: 'All genotypes',
-    ApoeStratum.E44: 'ε4/ε4',
-    ApoeStratum.E43: 'ε4/ε3',
-    ApoeStratum.E33: 'ε3/ε3',
-    ApoeStratum.E22_E32: 'ε2/ε2 + ε3/ε2',
-}
 UKB_PREFIX = 'marvel_ukb_'
 FINNGEN_NAME = 'FinnGen R13'
-UKB_NAME = 'UK Biobank'
-POOLED_NAME = 'Pooled (IVW)'
 # x-axis tick candidates (odds ratio), coarse first
 TICKS_COARSE = (0.05, 0.1, 0.25, 0.5, 1, 2, 4, 10, 20)
 TICKS_FINE = (0.5, 0.75, 1, 1.5, 2)
 TICKS_FINER = (0.8, 0.9, 1, 1.1, 1.2)
-# sizes, as in cox_forest.py (points, cm)
-CM = 1 / 2.54
-TITLE_SIZE = 3.5
-LAB_SIZE = 3
-LWD = .5
-AX_LAB_SZ = 2.7
-STEXT_SIZE = 2.7
-WIDTH_CM = 9.0
-CM_PER_Y = 0.12
+# p-values below this are shown as this (p = 0 is below double precision)
+P_MIN = 1e-100
 DPI = 300
 
 
@@ -225,20 +171,21 @@ def add_or(data: pd.DataFrame) -> pd.DataFrame:
     Returns
     -------
     data : `pd.DataFrame`
-        Copy with `OR`, `LB`, `UB`, `OR_TEXT` (two decimals) and `P_TEXT`
-        (`format_p`).
+        Copy with `FigureColumns` `OR`, `LB`, `UB`, `OR_TEXT` (two
+        decimals) and `P_TEXT` (`format_p`).
     """
     data = data.copy()
     beta, se = data[MetaColumns.BETA], data[MetaColumns.SE]
-    data[OR] = np.exp(beta)
-    data[LB] = np.exp(beta - Z_95 * se)
-    data[UB] = np.exp(beta + Z_95 * se)
+    data[FCols.OR] = np.exp(beta)
+    data[FCols.LB] = np.exp(beta - Z_95 * se)
+    data[FCols.UB] = np.exp(beta + Z_95 * se)
     # text before any axis clipping, so the tables show the real CI
-    data[OR_TEXT] = [
+    data[FCols.OR_TEXT] = [
         f'{point:.2f} ({low:.2f}; {high:.2f})'
-        for point, low, high in zip(data[OR], data[LB], data[UB])
+        for point, low, high in zip(data[FCols.OR], data[FCols.LB],
+                                    data[FCols.UB])
     ]
-    data[P_TEXT] = data[MetaColumns.P].map(format_p)
+    data[FCols.P_TEXT] = data[MetaColumns.P].map(format_p)
     return data
 
 
@@ -329,9 +276,9 @@ def outcome_name(outcome: str) -> str:
     Returns
     -------
     name : `str`
-        From `OUTCOME_NAMES`, else underscores replaced by spaces.
+        From `FigureNames.OUTCOMES`, else underscores replaced by spaces.
     """
-    return OUTCOME_NAMES.get(outcome, outcome.replace('_', ' '))
+    return FigNames.OUTCOMES.get(outcome, outcome.replace('_', ' '))
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -354,7 +301,7 @@ def study_names() -> dict[str, str]:
     if FileNames.APOE_STRATA.exists():
         strata = pd.read_csv(FileNames.APOE_STRATA, sep = '\t')
         for _, row in strata.iterrows():
-            stratum = STRATUM_NAMES.get(row[MetaColumns.APOE_STRATUM],
+            stratum = FigNames.STRATA.get(row[MetaColumns.APOE_STRATUM],
                                         row[MetaColumns.APOE_STRATUM])
             names[row[HarmonisedColumns.STUDY_ACCESSION]] = (
                 f'{str(row[MetaColumns.STUDY_GROUP]).capitalize()} {stratum}'
@@ -376,11 +323,11 @@ def study_name(accession: str, names: dict[str, str]) -> str:
     Returns
     -------
     name : `str`
-        `UKB_NAME` for marvel UKB accessions, else the `names` entry, else
-        the accession itself.
+        `FigureNames.UKB` for marvel UKB accessions, else the `names`
+        entry, else the accession itself.
     """
     if accession.startswith(UKB_PREFIX):
-        return UKB_NAME
+        return FigNames.UKB
     return names.get(accession, accession)
 
 
@@ -427,21 +374,21 @@ def source_rows(per_study: pd.DataFrame) -> pd.DataFrame:
     Returns
     -------
     sources : `pd.DataFrame`
-        Gene, outcome, `ROW_NAME` (source name), beta, SE, p and the
-        `add_or` columns.
+        Gene, outcome, `FigureColumns.ROW_NAME` (source name), beta, SE,
+        p and the `add_or` columns.
     """
     gene = VariantListColumns.OUT_GENE
     outcome = HarmonisedColumns.OUTCOME
     names = source_names()
     rows = per_study.copy()
-    rows[ROW_NAME] = [
+    rows[FCols.ROW_NAME] = [
         study_name(str(accession), names)
         for accession in rows[HarmonisedColumns.STUDY_ACCESSION]
     ]
     rows['_weight'] = 1.0 / rows[MetaColumns.SE] ** 2
     rows['_weighted'] = rows['_weight'] * rows[MetaColumns.BETA]
     sums = (
-        rows.groupby([gene, outcome, ROW_NAME], sort = False)[
+        rows.groupby([gene, outcome, FCols.ROW_NAME], sort = False)[
             ['_weight', '_weighted']]
         .sum()
         .reset_index()
@@ -469,13 +416,13 @@ def strict_threshold(burden: pd.DataFrame) -> tuple[float, int]:
     Returns
     -------
     threshold : `float`
-        `P_NOMINAL` / number of tests.
+        `FigureStyle.P_NOMINAL` / number of tests.
     n_tests : `int`
         Pooled rows with a finite p-value (one per gene and outcome).
     """
     pooled = burden[burden[MetaColumns.LEVEL] == MetaLevel.POOLED]
     n_tests = int(np.isfinite(pooled[MetaColumns.P]).sum())
-    return P_NOMINAL / max(n_tests, 1), n_tests
+    return FStyle.P_NOMINAL / max(n_tests, 1), n_tests
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -492,10 +439,11 @@ def significance_marker(p: pd.Series, strict: float) -> np.ndarray:
     Returns
     -------
     markers : `np.ndarray`
-        `MARKER_STRICT`, `MARKER_NOMINAL` or `MARKER_NS`.
+        `FigureStyle.MARKER_STRICT`, `MARKER_NOMINAL` or `MARKER_NS`.
     """
-    return np.select([p < strict, p < P_NOMINAL],
-                     [MARKER_STRICT, MARKER_NOMINAL], default = MARKER_NS)
+    return np.select([p < strict, p < FStyle.P_NOMINAL],
+                     [FStyle.MARKER_STRICT, FStyle.MARKER_NOMINAL],
+                     default = FStyle.MARKER_NS)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -514,12 +462,13 @@ def significance_legend(strict: float, n_tests: int) -> list[Line2D]:
     handles : `list[Line2D]`
     """
     labels = (
-        (MARKER_NS, f'p ≥ {P_NOMINAL:g}'),
-        (MARKER_NOMINAL, f'p < {P_NOMINAL:g}'),
-        (MARKER_STRICT, f'p < {strict:.1e} (Bonferroni, {n_tests} tests)'),
+        (FStyle.MARKER_NS, f'p ≥ {FStyle.P_NOMINAL:g}'),
+        (FStyle.MARKER_NOMINAL, f'p < {FStyle.P_NOMINAL:g}'),
+        (FStyle.MARKER_STRICT,
+         f'p < {strict:.1e} (Bonferroni, {n_tests} tests)'),
     )
     return [
-        Line2D([0], [0], marker = marker, color = POOLED_COLOUR,
+        Line2D([0], [0], marker = marker, color = FStyle.POOLED_COLOUR,
                markeredgecolor = 'black', markeredgewidth = .3,
                markersize = 2.5, lw = 0, label = label)
         for marker, label in labels
@@ -538,7 +487,7 @@ def limit_or(data: pd.DataFrame, min_or: float, max_or: float,
     Parameters
     ----------
     data : `pd.DataFrame`
-        With `OR`, `LB` and `UB`.
+        With `FigureColumns.OR`, `FigureColumns.LB` and `FigureColumns.UB`.
     min_or : `float`
         Smallest odds ratio shown.
     max_or : `float`
@@ -551,18 +500,15 @@ def limit_or(data: pd.DataFrame, min_or: float, max_or: float,
     data : `pd.DataFrame`
         Copy without the estimates outside the range, CIs clipped, index
         reset.
-    n_clipped : `int`
-        Rows with a clipped CI bound.
     """
-    points_out = (data[OR] < min_or) | (data[OR] > max_or)
+    points_out = (data[FCols.OR] < min_or) | (data[FCols.OR] > max_or)
     if points_out.any():
         LOGGER.warning(f'{label}: {int(points_out.sum())} estimates outside '
                        f'[{min_or:g}, {max_or:g}] not shown')
     data = data.loc[~points_out].copy()
-    clipped = (data[LB] < min_or) | (data[UB] > max_or)
-    data[LB] = data[LB].clip(lower = min_or)
-    data[UB] = data[UB].clip(upper = max_or)
-    return data.reset_index(drop = True), int(clipped.sum())
+    data[FCols.LB] = data[FCols.LB].clip(lower = min_or)
+    data[FCols.UB] = data[FCols.UB].clip(upper = max_or)
+    return data.reset_index(drop = True)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -579,7 +525,7 @@ def set_y(data: pd.DataFrame, group_col: str) -> pd.DataFrame:
     Returns
     -------
     data : `pd.DataFrame`
-        Copy with `Y`.
+        Copy with `FigureColumns.Y`.
     """
     y = pd.Series(np.nan, index = data.index)
     position = 1.0
@@ -588,7 +534,7 @@ def set_y(data: pd.DataFrame, group_col: str) -> pd.DataFrame:
         y[rows] = position + 2 * np.arange(len(rows))
         position = y[rows].max() + 4
     data = data.copy()
-    data[Y] = y
+    data[FCols.Y] = y
     return data
 
 
@@ -600,7 +546,7 @@ def x_axis(data: pd.DataFrame, low: float | None = None
     Parameters
     ----------
     data : `pd.DataFrame`
-        With `LB` and `UB`.
+        With `FigureColumns.LB` and `FigureColumns.UB`.
     low : `float` or `None`, optional, default: `None`
         Fixed lower limit; `None` derives it from the CIs.
 
@@ -614,8 +560,8 @@ def x_axis(data: pd.DataFrame, low: float | None = None
         least three ticks within the limits (else `TICKS_FINER`).
     """
     if low is None:
-        low = min(float(data[LB].min()), 1.0) / 1.15
-    high = max(float(data[UB].max()), 1.0) * 1.15
+        low = min(float(data[FCols.LB].min()), 1.0) / 1.15
+    high = max(float(data[FCols.UB].max()), 1.0) * 1.15
     for candidates in (TICKS_COARSE, TICKS_FINE, TICKS_FINER):
         ticks = [t for t in candidates if low <= t <= high]
         if len(ticks) >= 3:

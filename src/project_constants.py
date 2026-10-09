@@ -289,6 +289,9 @@ class Constants:
         "vascular_dementia_algo": "vascular_dementia",
         "frontotemporal_dementia_algo": "frontotemporal_dementia",
     }
+    # marvel `Model name` of the main analysis (marvel_results_table.py,
+    # apoe_genotype_forest.py)
+    MARVEL_DEFAULT_MODEL: str = "model_3"
     # effect-scale inference (`functions.infer_effect_scales`): median of
     # r = SE * sqrt(2f(1-f)N) over a study's variants with MAF above
     # EFFECT_SCALE_MIN_MAF; log-OR gives r = 1/sqrt(phi(1-phi)) >= 2,
@@ -1043,3 +1046,119 @@ class FileNames:
     META_ANALYSIS_TEMPLATE: str = "meta_{ancestry}{suffix}.tsv.gz"
     # gene-level burden (IVW over the oriented variant effects)
     BURDEN_TEMPLATE: str = "burden_{ancestry}{suffix}.tsv.gz"
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Figures
+
+class FigureColumns:
+    """Columns the figure scripts add to the result rows."""
+    # odds ratio and its 95% CI
+    OR: str = "odds_ratio"
+    LB: str = "or_lower"
+    UB: str = "or_upper"
+    # y coordinate (`figure_utils.set_y`)
+    Y: str = "y_axis"
+    # per-row marker shape, colour and size
+    MARKER: str = "marker"
+    COLOUR: str = "colour"
+    SIZE: str = "size"
+    # side-table texts: row name, OR (95% CI), p-value
+    ROW_NAME: str = "row_name"
+    OR_TEXT: str = "or_text"
+    P_TEXT: str = "p_text"
+    # row order within a group
+    ORDER: str = "order"
+
+
+class FigureNames:
+    """Readable names and plotting order shared by the figure scripts."""
+    # outcome key -> name, in plotting order
+    OUTCOMES: dict[str, str] = {
+        "ascvd": "ASCVD",
+        "alzheimers_dementia": "Alzheimer's disease",
+        "vascular_dementia": "Vascular dementia",
+        "frontotemporal_dementia": "Frontotemporal dementia",
+        "all_cause_dementia": "All-cause dementia",
+    }
+    OUTCOME_RANK: dict[str, int] = {
+        name: i for i, name in enumerate(OUTCOMES)
+    }
+    # APOE strata in plotting order, `ApoeStratum.ALL` = all genotypes
+    STRATUM_ORDER: tuple[str, ...] = (
+        ApoeStratum.ALL,
+        ApoeStratum.E44,
+        ApoeStratum.E43,
+        ApoeStratum.E33,
+        ApoeStratum.E22_E32,
+    )
+    STRATA: dict[str, str] = {
+        ApoeStratum.ALL: "All genotypes",
+        ApoeStratum.E44: "ε4/ε4",
+        ApoeStratum.E43: "ε4/ε3",
+        ApoeStratum.E33: "ε3/ε3",
+        ApoeStratum.E22_E32: "ε2/ε2 + ε3/ε2",
+    }
+    UKB: str = "UK Biobank"
+    POOLED: str = "Pooled (IVW)"
+    # forest x label and side-table headers
+    OR_LABEL: str = "Odds ratio (95% CI)"
+    OR_HEADER: str = "OR (95% CI)"
+    P_HEADER: str = "P-value"
+
+
+class FigureStyle:
+    """Sizes, colours, markers and forest layout of the figure scripts.
+
+    Sizes as in cox_forest.py: font sizes and line widths in points,
+    lengths in cm.
+    """
+    CM: float = 1 / 2.54
+    TITLE_SIZE: float = 3.5
+    LAB_SIZE: float = 3
+    LWD: float = 0.5
+    AX_LAB_SZ: float = 2.7
+    STEXT_SIZE: float = 2.7
+    WIDTH_CM: float = 9.0
+    CM_PER_Y: float = 0.07
+    # pooled estimate vs single study / stratum
+    POOLED_COLOUR: str = "black"
+    STUDY_COLOUR: str = "#bdbdbd"
+    POOLED_SIZE: float = 14
+    STUDY_SIZE: float = 9
+    # significance -> marker shape, and the matching heatmap glyph
+    P_NOMINAL: float = 0.05
+    MARKER_NS: str = "o"
+    MARKER_NOMINAL: str = "s"
+    MARKER_STRICT: str = "D"
+    GLYPH_NOMINAL: str = "■"
+    GLYPH_STRICT: str = "◆"
+    # forest layout: panel widths (forest, three side tables), height
+    # without the rows and top margin (cm), y padding around the rows
+    FOREST_WIDTH_RATIOS: tuple[float, ...] = (1.3, 0.7, 0.8, 0.35)
+    FOREST_BASE_HEIGHT_CM: float = 1.6
+    FOREST_TOP_CM: float = 0.35
+    FOREST_Y_PAD: float = 3
+    # default odds-ratio axis limit (`--max-or`)
+    MAX_OR: float = 20.0
+    # plot_misc ForestPlot / plot_table keyword arguments
+    SCATTER_KWARGS: dict[str, object] = {
+        "edgecolors": "black",
+        "linewidth": 0.3,
+    }
+    CI_KWARGS: dict[str, object] = {
+        "zorder": 1,
+        "solid_capstyle": "round",
+        "linestyle": "-",
+    }
+    TABLE_NEGATIVE_PADDING: float = 1
+    # significance legend below the forest
+    LEGEND_KWARGS: dict[str, object] = {
+        "loc": "lower left",
+        "bbox_to_anchor": (0.02, 0.0),
+        "ncol": 3,
+        "frameon": False,
+        "fontsize": STEXT_SIZE,
+        "handletextpad": 0.2,
+        "columnspacing": 1.0,
+    }

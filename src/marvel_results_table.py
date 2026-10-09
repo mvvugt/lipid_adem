@@ -66,7 +66,7 @@ from project_constants import (
 
 # cohort key of these runs (`Constants.PREFERRED_COHORT_ALIASES`)
 _COHORT: str = "ukb"
-_DEFAULT_MODEL: str = "model_3"
+_DEFAULT_MODEL: str = Constants.MARVEL_DEFAULT_MODEL
 _STAMP_FORMAT: str = "%Y%m%d_%H%M%S"
 # conflicts listed in the error log before the rest is only counted
 _MAX_CONFLICTS_SHOWN: int = 20

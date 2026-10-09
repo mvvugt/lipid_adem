@@ -39,6 +39,8 @@ import figure_utils as futils
 from pathlib import Path
 from plot_misc.heatmap import annotate_heatmap, heatmap
 from project_constants import (
+        FigureNames as FigNames,
+        FigureStyle as FStyle,
         HarmonisedColumns,
         MetaColumns,
         MetaLevel,
@@ -46,7 +48,8 @@ from project_constants import (
         VariantListColumns,
         )
 
-logging.basicConfig(level = logging.INFO, format = '[%(levelname)s] %(message)s')
+logging.basicConfig(level = logging.INFO,
+                    format = '[%(levelname)s] %(message)s')
 logger = logging.getLogger('burden_heatmap')
 
 
@@ -95,15 +98,15 @@ pooled = burden[burden[MetaColumns.LEVEL] == MetaLevel.POOLED]
 beta = pooled.pivot(index = GENE, columns = OUTCOME,
                     values = MetaColumns.BETA)
 columns = sorted(beta.columns, key = lambda name: (
-        futils.OUTCOME_RANK.get(name, len(futils.OUTCOME_RANK)), name))
+        FigNames.OUTCOME_RANK.get(name, len(FigNames.OUTCOME_RANK)), name))
 beta = beta[columns]
 p = pooled.pivot(index = GENE, columns = OUTCOME, values = MetaColumns.P)
 p = p.reindex_like(beta)
 
 # significance glyphs
 glyphs = pd.DataFrame('', index = beta.index, columns = beta.columns)
-glyphs = glyphs.mask(p < futils.P_NOMINAL, futils.GLYPH_NOMINAL)
-glyphs = glyphs.mask(p < strict, futils.GLYPH_STRICT)
+glyphs = glyphs.mask(p < FStyle.P_NOMINAL, FStyle.GLYPH_NOMINAL)
+glyphs = glyphs.mask(p < strict, FStyle.GLYPH_STRICT)
 
 # symmetric colour range
 n_cells = int(beta.notna().sum().sum())
@@ -115,9 +118,9 @@ limit = float(np.nanmax(np.abs(beta.to_numpy()))) if n_cells else 1.0
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # start figure
-matplotlib.rcParams['axes.linewidth'] = futils.LWD
-fig, ax = plt.subplots(figsize = ((2.5 + 1.0 * beta.shape[1]) * futils.CM,
-                                  (2.0 + 0.6 * beta.shape[0]) * futils.CM))
+matplotlib.rcParams['axes.linewidth'] = FStyle.LWD
+fig, ax = plt.subplots(figsize = ((2.5 + 1.0 * beta.shape[1]) * FStyle.CM,
+                                  (2.0 + 0.6 * beta.shape[0]) * FStyle.CM))
 # plot
 im, cbar = heatmap(
         beta.to_numpy(dtype = float),
@@ -130,23 +133,23 @@ with warnings.catch_warnings():
     # empty (NaN) cells are masked; matplotlib warns per masked cell
     warnings.simplefilter('ignore', UserWarning)
     annotate_heatmap(im, data = glyphs, threshold = limit / 2,
-                     fontsize = futils.STEXT_SIZE)
+                     fontsize = FStyle.STEXT_SIZE)
 # formatting
-ax.tick_params(axis = 'both', labelsize = futils.AX_LAB_SZ,
-               width = futils.LWD, length = 2)
+ax.tick_params(axis = 'both', labelsize = FStyle.AX_LAB_SZ,
+               width = FStyle.LWD, length = 2)
 for tick in ax.get_yticklabels():
     tick.set_fontstyle('italic')
-cbar.ax.tick_params(labelsize = futils.AX_LAB_SZ, width = futils.LWD,
+cbar.ax.tick_params(labelsize = FStyle.AX_LAB_SZ, width = FStyle.LWD,
                     length = 2)
-cbar.outline.set_linewidth(futils.LWD)
-cbar.set_label(CBAR_LABEL, fontsize = futils.LAB_SIZE)
+cbar.outline.set_linewidth(FStyle.LWD)
+cbar.set_label(CBAR_LABEL, fontsize = FStyle.LAB_SIZE)
 ax.set_title('Gene burden', fontweight = 'bold',
-             fontsize = futils.TITLE_SIZE, loc = 'left')
+             fontsize = FStyle.TITLE_SIZE, loc = 'left')
 # footnote
 fig.text(0.0, -0.08,
-         f'{futils.GLYPH_NOMINAL} p < {futils.P_NOMINAL:g}; '
-         f'{futils.GLYPH_STRICT} p < {strict:.1e} (Bonferroni, {n_tests} '
+         f'{FStyle.GLYPH_NOMINAL} p < {FStyle.P_NOMINAL:g}; '
+         f'{FStyle.GLYPH_STRICT} p < {strict:.1e} (Bonferroni, {n_tests} '
          'tests); blank: no estimate',
-         fontsize = futils.STEXT_SIZE)
+         fontsize = FStyle.STEXT_SIZE)
 # save
 futils.save(fig, args.out_dir / f'heatmap_burden_{args.label}')
