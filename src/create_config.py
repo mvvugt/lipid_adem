@@ -171,6 +171,18 @@ for row in tasks.itertuples(index = False):
         'stratify'           : stratify,
         CFLhs.StratifyOverall : False,
         }
+    # APOE genotype (apoe_exposure.py): one integer-coded column, dummy-
+    # coded by marvel against the reference's code. A marvel without
+    # strata_ref would ignore the option and fit a trend over the codes
+    if row.gene == Constants.APOE_EXPOSURE_NAME:
+        if not hasattr(CFLhs, 'StrataRef'):
+            raise ValueError(
+                'the installed marvel has no strata_ref option; update '
+                'marvel before running the APOE genotype task'
+                )
+        options[CFLhs.StrataRef] = str(
+            Constants.APOE_GENOTYPE_CODES[Constants.UKB_APOE_REFERENCE]
+            )
     create_config(
         path                 = row.config,
         extract_variants     = False,

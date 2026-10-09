@@ -183,6 +183,19 @@ class Constants:
     # genotype exposure (apoe_exposure.py)
     UKB_APOE_COLUMN: str = "genotype"
     UKB_APOE_REFERENCE: str = "e3e3"
+    # APOE genotype exposure (apoe_exposure.py): one integer-coded column,
+    # dummy-coded by marvel with `strata_ref` = the reference's code
+    # (create_config.py). Integers, not the genotype strings: marvel
+    # matches `strata_ref` to str(value), and covariates must be numeric
+    APOE_EXPOSURE_NAME: str = "APOE_genotype"
+    APOE_GENOTYPE_CODES: dict[str, int] = {
+        "e3e3": 0,
+        "e2e2": 1,
+        "e2e3": 2,
+        "e2e4": 3,
+        "e3e4": 4,
+        "e4e4": 5,
+    }
     # separator between the ancestry and the APOE stratum in a marvel
     # `Stratification name`, e.g. ``EUR_e44`` (create_config.py)
     MARVEL_ANCESTRY_SEP: str = "_"

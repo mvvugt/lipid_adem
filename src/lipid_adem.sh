@@ -55,9 +55,9 @@ run_mamba biomed-api pyjasub "${ROOT}"/config/filter_task.cnf
 
 # [myriad] marvel association per gene, per `subset` row of
 # marvel_tasks.tsv: all (all samples, overall; done), all_apoe (all
-# samples per APOE stratum e44/e43/e33/e22_e32 of apoe_status) and eur
+# samples per APOE stratum e44/e43/e33/e22_e32 of genotype) and eur
 # (population eur_related + eur_unrelated: EUR and EUR_<stratum>).
-# create_config.py stops if a listed apoe_status/population value is
+# create_config.py stops if a listed genotype/population value is
 # absent from the phenotype file; rows whose outdir exists are skipped
 run_mamba marvel "${ROOT}"/src/create_config.py -a
 run_mamba biomed-api pyjasub "${ROOT}"/config/marvel_task.cnf
@@ -77,11 +77,11 @@ run_mamba biomed-api "${ROOT}"/src/marvel_results_table.py --ancestry MULTI
 # APOE is out of gene_list.txt and of the gene analyses
 # (Constants.EXCLUDED_GENES); instead APOE genotype is the exposure.
 
-# [myriad] exposure file from apoe_status of the phenotype file (the
-# column the stratified runs use): each genotype present vs e3e3 (1/0,
-# NA = other genotypes)
-run_mamba biomed-api "${ROOT}"/src/apoe_exposure.py \
-    --column apoe_status --reference e3e3
+# [myriad] exposure file from the genotype column of the phenotype file
+# (Constants.UKB_APOE_COLUMN, the column the stratified runs use): one
+# integer-coded column (Constants.APOE_GENOTYPE_CODES, e3e3 = 0); marvel
+# dummy-codes it against e3e3 (strata_ref, set by create_config.py)
+run_mamba biomed-api "${ROOT}"/src/apoe_exposure.py
 
 # [myriad] marvel, same outcomes/models as the genes, not APOE-stratified:
 # all samples and EUR; own job array, results in results/APOE_genotype
