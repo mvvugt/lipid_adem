@@ -6,7 +6,7 @@ step=1
 batch=9
 mem=14G
 shell=/bin/bash
-time=12:00:00
+time=24:00:00
 nodes=None
 tmp_size=10G
 tmp_dir=/home/rmgpmva/Scratch/lipid_adem/marvel_task_tmp
@@ -20,7 +20,6 @@ task_script=/myriadfs/home/rmgpmva/projects/lipid_adem/src/marvel_assoc.sh
 
 # columns to verify.
 infiles=carriers
-outfiles=outdir
 
 [script]
 verbose=true
