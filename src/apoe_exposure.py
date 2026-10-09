@@ -44,7 +44,8 @@ def apoe_codes(
     Parameters
     ----------
     genotypes : `pd.Series`
-        Genotype per participant, as strings; missing values allowed.
+        Genotype per participant, as strings; missing values and
+        `Constants.APOE_MISSING_VALUES` (e.g. ``"Unknown"``) become NA.
     codes : `dict[str, int]`, optional, default: `Constants.APOE_GENOTYPE_CODES`
         Genotype -> code.
     reference : `str`, optional, default: `Constants.UKB_APOE_REFERENCE`
@@ -60,7 +61,9 @@ def apoe_codes(
     ValueError
         If a genotype is not in `codes`, or `reference` does not occur.
     """
-    values = genotypes.astype("string").str.strip().replace("", pd.NA)
+    values = genotypes.astype("string").str.strip()
+    is_missing = values.isin(["", *Constants.APOE_MISSING_VALUES])
+    values = values.mask(is_missing.fillna(False))
     present = set(values.dropna())
     unknown = sorted(present - set(codes))
     if unknown:

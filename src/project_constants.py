@@ -188,6 +188,8 @@ class Constants:
     # (create_config.py). Integers, not the genotype strings: marvel
     # matches `strata_ref` to str(value), and covariates must be numeric
     APOE_EXPOSURE_NAME: str = "APOE_genotype"
+    # `UKB_APOE_COLUMN` values meaning "no genotype", read as missing
+    APOE_MISSING_VALUES: tuple[str, ...] = ("Unknown",)
     APOE_GENOTYPE_CODES: dict[str, int] = {
         "e3e3": 0,
         "e2e2": 1,
