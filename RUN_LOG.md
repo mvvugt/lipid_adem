@@ -143,63 +143,126 @@ Output:
 
 ```
 
-## [24] apoe_exposure (`/home/rmgpmva/projects/lipid_adem/src/apoe_exposure.py --column genotype --reference e3e3`)
+## [24] apoe_exposure (`/home/rmgpmva/projects/lipid_adem/src/apoe_exposure.py`)
 - first run: 2026-10-09 09:54:04
-- last run: 2026-10-09 10:05:09
-- commit: `1f6ca38`
+- last run: 2026-10-09 12:04:31
+- commit: `4f02218`
 
 Output:
 ```text
-[stage] 2026-10-09 10:05:02 read
-[info]  2026-10-09 10:05:03 /myriadfs/home/rmgpmva/projects/lipid_adem/data/processed/lipids_full_pheno.tsv.gz: 469587 participants; genotype: e3e3=276035, e3e4=110438, e2e3=57188, e2e4=11672, e4e4=11202, e2e2=3025, Unknown=27
-[stage] 2026-10-09 10:05:03 indicators
-[info]  2026-10-09 10:05:04 APOE_Unknown: 27 vs 276035 reference (e3e3); 193525 NA
-[info]  2026-10-09 10:05:04 APOE_e2e2: 3025 vs 276035 reference (e3e3); 190527 NA
-[info]  2026-10-09 10:05:04 APOE_e2e3: 57188 vs 276035 reference (e3e3); 136364 NA
-[info]  2026-10-09 10:05:04 APOE_e2e4: 11672 vs 276035 reference (e3e3); 181880 NA
-[info]  2026-10-09 10:05:04 APOE_e3e4: 110438 vs 276035 reference (e3e3); 83114 NA
-[info]  2026-10-09 10:05:04 APOE_e4e4: 11202 vs 276035 reference (e3e3); 182350 NA
-[stage] 2026-10-09 10:05:04 write
-[info]  2026-10-09 10:05:07 wrote 469587 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/APOE_genotype_exposure.tsv.gz
+[stage] 2026-10-09 12:04:16 read
+[info]  2026-10-09 12:04:16 /myriadfs/home/rmgpmva/projects/lipid_adem/data/processed/lipids_full_pheno.tsv.gz: 469587 participants; genotype: e3e3=276035, e3e4=110438, e2e3=57188, e2e4=11672, e4e4=11202, e2e2=3025, Unknown=27
+[stage] 2026-10-09 12:04:16 code
+[info]  2026-10-09 12:04:17 APOE_genotype codes: e3e3=0, e2e2=1, e2e3=2, e2e4=3, e3e4=4, e4e4=5; reference e3e3
+[warn]  2026-10-09 12:04:17 27 participants without a genotype left out
+[stage] 2026-10-09 12:04:17 write
+[info]  2026-10-09 12:04:25 wrote 469560 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/APOE_genotype_exposure.tsv.gz
 
 ```
 
 ## [25] marvel_results_table (`/home/rmgpmva/projects/lipid_adem/src/marvel_results_table.py --ancestry MULTI`)
 - first run: 2026-10-08 09:54:25
-- last run: 2026-10-08 09:54:25
-- commit: `dbcc753` (dirty)
+- last run: 2026-10-09 13:36:49
+- commit: `4f02218`
+
+Δ vs previous run (was `4f02218`):
+stage `compare`:
+```diff
+@@ -2,12 +2,12 @@
+ [info]  2026-10-09 13:35:08 /myriadfs/home/rmgpmva/projects/lipid_adem/results/CETP: 667 loose result files
+ [info]  2026-10-09 13:35:12 /myriadfs/home/rmgpmva/projects/lipid_adem/results/CETP_all_apoe: 667 loose result files
+ [warn]  2026-10-09 13:35:12 /myriadfs/home/rmgpmva/projects/lipid_adem/results/CETP_eur: outdir not found, skipped
+-[info]  2026-10-09 12:45:08 CETP: 430882 loose rows, 354844 new, 76038 already in the store
+-[warn]  2026-10-09 12:45:08 CETP: 354844 rows added to CETP_results.tsv.gz (675 exposures; Model name: model_1, model_2, model_3; Stratification name: e22_e32, e33, e43, e44; Variable: all_cause_dementia_algo, all_cause_dementia_combined, alzheimers_disease_algo, alzheimers_disease_combined, ascvd_ii, frontotemporal_dementia_algo, vascular_dementia_algo)
++[info]  2026-10-09 13:35:20 CETP: 430882 loose rows, 0 new, 430882 already in the store
+ [info]  2026-10-09 13:35:22 /myriadfs/home/rmgpmva/projects/lipid_adem/results/HMGCR: 714 loose result files
+-[warn]  2026-10-09 12:45:11 /myriadfs/home/rmgpmva/projects/lipid_adem/results/HMGCR_all_apoe: outdir not found, skipped
++[info]  2026-10-09 13:35:29 /myriadfs/home/rmgpmva/projects/lipid_adem/results/HMGCR_all_apoe: 714 loose result files
+ [warn]  2026-10-09 13:35:29 /myriadfs/home/rmgpmva/projects/lipid_adem/results/HMGCR_eur: outdir not found, skipped
+-[info]  2026-10-09 12:45:13 HMGCR: 81396 loose rows, 0 new, 81396 already in the store
++[info]  2026-10-09 13:35:32 HMGCR: 461244 loose rows, 379848 new, 81396 already in the store
++[warn]  2026-10-09 13:35:32 HMGCR: 379848 rows added to HMGCR_results.tsv.gz (722 exposures; Model name: model_1, model_2, model_3; Stratification name: e22_e32, e33, e43, e44; Variable: all_cause_dementia_algo, all_cause_dementia_combined, alzheimers_disease_algo, alzheimers_disease_combined, ascvd_ii, frontotemporal_dementia_algo, vascular_dementia_algo)
+ [warn]  2026-10-09 13:35:32 /myriadfs/home/rmgpmva/projects/lipid_adem/results/NPC1L1: outdir not found, skipped
+ [warn]  2026-10-09 13:35:32 /myriadfs/home/rmgpmva/projects/lipid_adem/results/NPC1L1_all_apoe: outdir not found, skipped
+ [warn]  2026-10-09 13:35:32 /myriadfs/home/rmgpmva/projects/lipid_adem/results/NPC1L1_eur: outdir not found, skipped
+@@ -19,10 +19,8 @@
+ [info]  2026-10-09 13:35:33 /myriadfs/home/rmgpmva/projects/lipid_adem/results/ANGPTL3: 324 loose result files
+ [info]  2026-10-09 13:35:35 /myriadfs/home/rmgpmva/projects/lipid_adem/results/ANGPTL3_all_apoe: 324 loose result files
+ [warn]  2026-10-09 13:35:35 /myriadfs/home/rmgpmva/projects/lipid_adem/results/ANGPTL3_eur: outdir not found, skipped
+-[info]  2026-10-09 12:45:17 ANGPTL3: 209304 loose rows, 172368 new, 36936 already in the store
+-[warn]  2026-10-09 12:45:17 ANGPTL3: 172368 rows added to ANGPTL3_results.tsv.gz (332 exposures; Model name: model_1, model_2, model_3; Stratification name: e22_e32, e33, e43, e44; Variable: all_cause_dementia_algo, all_cause_dementia_combined, alzheimers_disease_algo, alzheimers_disease_combined, ascvd_ii, frontotemporal_dementia_algo, vascular_dementia_algo)
++[info]  2026-10-09 13:35:39 ANGPTL3: 209304 loose rows, 0 new, 209304 already in the store
+ [info]  2026-10-09 13:35:40 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PPARA: 343 loose result files
+ [info]  2026-10-09 13:35:42 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PPARA_all_apoe: 343 loose result files
+ [warn]  2026-10-09 13:35:42 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PPARA_eur: outdir not found, skipped
+-[info]  2026-10-09 12:45:21 PPARA: 221578 loose rows, 182476 new, 39102 already in the store
+-[warn]  2026-10-09 12:45:21 PPARA: 182476 rows added to PPARA_results.tsv.gz (351 exposures; Model name: model_1, model_2, model_3; Stratification name: e22_e32, e33, e43, e44; Variable: all_cause_dementia_algo, all_cause_dementia_combined, alzheimers_disease_algo, alzheimers_disease_combined, ascvd_ii, frontotemporal_dementia_algo, vascular_dementia_algo)
++[info]  2026-10-09 13:35:46 PPARA: 221578 loose rows, 0 new, 221578 already in the store
+```
+stage `write_stores`:
+```diff
+@@ -1,3 +1 @@
+-[info]  2026-10-09 12:45:33 CETP: wrote 430882 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/marvel/CETP_results.tsv.gz
+-[info]  2026-10-09 12:45:38 ANGPTL3: wrote 209304 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/marvel/ANGPTL3_results.tsv.gz
+-[info]  2026-10-09 12:45:44 PPARA: wrote 221578 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/marvel/PPARA_results.tsv.gz
++[info]  2026-10-09 13:36:11 HMGCR: wrote 461244 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/marvel/HMGCR_results.tsv.gz
+```
+stage `marvel_table`:
+```diff
+@@ -1,8 +1,8 @@
+ [warn]  2026-10-09 13:36:11 no store yet for: NPC1L1
+ [info]  2026-10-09 13:36:12 ANGPTL3: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo, ascvd_ii
+ [info]  2026-10-09 13:36:13 CETP: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo, ascvd_ii
+-[info]  2026-10-09 12:45:47 HMGCR: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo
++[info]  2026-10-09 13:36:15 HMGCR: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo, ascvd_ii
+ [info]  2026-10-09 13:36:15 PCSK9: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo
+ [info]  2026-10-09 13:36:15 PPARA: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo, ascvd_ii
+-[info]  2026-10-09 12:45:48 wrote 68 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/marvel_results.tsv
+-[info]  2026-10-09 12:45:48 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/apoe_strata.tsv: 20 marvel rows added
++[info]  2026-10-09 13:36:42 wrote 84 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/marvel_results.tsv
++[info]  2026-10-09 13:36:42 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/apoe_strata.tsv: all marvel strata already listed
+```
 
 Output:
 ```text
-[stage] 2026-10-08 09:54:08 compare
-[info]  2026-10-08 09:54:08 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/marvel_tasks.tsv: 6 rows, 6 genes
-[info]  2026-10-08 09:54:10 /myriadfs/home/rmgpmva/projects/lipid_adem/results/CETP: 667 loose result files
-[info]  2026-10-08 09:54:10 CETP: new store, 76038 rows
-[info]  2026-10-08 09:54:12 /myriadfs/home/rmgpmva/projects/lipid_adem/results/HMGCR: 714 loose result files
-[info]  2026-10-08 09:54:13 HMGCR: new store, 81396 rows
-[warn]  2026-10-08 09:54:13 /myriadfs/home/rmgpmva/projects/lipid_adem/results/NPC1L1: outdir not found, skipped
-[info]  2026-10-08 09:54:13 NPC1L1: no loose result files, store unchanged
-[info]  2026-10-08 09:54:14 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PCSK9: 324 loose result files
-[info]  2026-10-08 09:54:14 PCSK9: new store, 36936 rows
-[info]  2026-10-08 09:54:15 /myriadfs/home/rmgpmva/projects/lipid_adem/results/ANGPTL3: 324 loose result files
-[info]  2026-10-08 09:54:15 ANGPTL3: new store, 36936 rows
-[info]  2026-10-08 09:54:16 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PPARA: 343 loose result files
-[info]  2026-10-08 09:54:16 PPARA: new store, 39102 rows
-[stage] 2026-10-08 09:54:16 write_stores
-[info]  2026-10-08 09:54:18 CETP: wrote 76038 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/marvel/CETP_results.tsv.gz
-[info]  2026-10-08 09:54:21 HMGCR: wrote 81396 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/marvel/HMGCR_results.tsv.gz
-[info]  2026-10-08 09:54:22 PCSK9: wrote 36936 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/marvel/PCSK9_results.tsv.gz
-[info]  2026-10-08 09:54:23 ANGPTL3: wrote 36936 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/marvel/ANGPTL3_results.tsv.gz
-[info]  2026-10-08 09:54:24 PPARA: wrote 39102 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/marvel/PPARA_results.tsv.gz
-[stage] 2026-10-08 09:54:24 marvel_table
-[warn]  2026-10-08 09:54:24 no store yet for: NPC1L1
-[info]  2026-10-08 09:54:24 ANGPTL3: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo
-[info]  2026-10-08 09:54:24 CETP: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo
-[info]  2026-10-08 09:54:24 HMGCR: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo
-[info]  2026-10-08 09:54:25 PCSK9: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo
-[info]  2026-10-08 09:54:25 PPARA: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo
-[info]  2026-10-08 09:54:25 wrote 20 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/marvel_results.tsv
-[info]  2026-10-08 09:54:25 no APOE-stratified marvel rows, apoe_strata.tsv unchanged
+[stage] 2026-10-09 13:35:06 compare
+[info]  2026-10-09 13:35:06 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/marvel_tasks.tsv: 18 rows, 6 genes
+[info]  2026-10-09 13:35:08 /myriadfs/home/rmgpmva/projects/lipid_adem/results/CETP: 667 loose result files
+[info]  2026-10-09 13:35:12 /myriadfs/home/rmgpmva/projects/lipid_adem/results/CETP_all_apoe: 667 loose result files
+[warn]  2026-10-09 13:35:12 /myriadfs/home/rmgpmva/projects/lipid_adem/results/CETP_eur: outdir not found, skipped
+[info]  2026-10-09 13:35:20 CETP: 430882 loose rows, 0 new, 430882 already in the store
+[info]  2026-10-09 13:35:22 /myriadfs/home/rmgpmva/projects/lipid_adem/results/HMGCR: 714 loose result files
+[info]  2026-10-09 13:35:29 /myriadfs/home/rmgpmva/projects/lipid_adem/results/HMGCR_all_apoe: 714 loose result files
+[warn]  2026-10-09 13:35:29 /myriadfs/home/rmgpmva/projects/lipid_adem/results/HMGCR_eur: outdir not found, skipped
+[info]  2026-10-09 13:35:32 HMGCR: 461244 loose rows, 379848 new, 81396 already in the store
+[warn]  2026-10-09 13:35:32 HMGCR: 379848 rows added to HMGCR_results.tsv.gz (722 exposures; Model name: model_1, model_2, model_3; Stratification name: e22_e32, e33, e43, e44; Variable: all_cause_dementia_algo, all_cause_dementia_combined, alzheimers_disease_algo, alzheimers_disease_combined, ascvd_ii, frontotemporal_dementia_algo, vascular_dementia_algo)
+[warn]  2026-10-09 13:35:32 /myriadfs/home/rmgpmva/projects/lipid_adem/results/NPC1L1: outdir not found, skipped
+[warn]  2026-10-09 13:35:32 /myriadfs/home/rmgpmva/projects/lipid_adem/results/NPC1L1_all_apoe: outdir not found, skipped
+[warn]  2026-10-09 13:35:32 /myriadfs/home/rmgpmva/projects/lipid_adem/results/NPC1L1_eur: outdir not found, skipped
+[info]  2026-10-09 13:35:32 NPC1L1: no loose result files, store unchanged
+[info]  2026-10-09 13:35:32 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PCSK9: no loose result files
+[warn]  2026-10-09 13:35:32 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PCSK9_all_apoe: outdir not found, skipped
+[warn]  2026-10-09 13:35:32 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PCSK9_eur: outdir not found, skipped
+[info]  2026-10-09 13:35:32 PCSK9: no loose result files, store unchanged
+[info]  2026-10-09 13:35:33 /myriadfs/home/rmgpmva/projects/lipid_adem/results/ANGPTL3: 324 loose result files
+[info]  2026-10-09 13:35:35 /myriadfs/home/rmgpmva/projects/lipid_adem/results/ANGPTL3_all_apoe: 324 loose result files
+[warn]  2026-10-09 13:35:35 /myriadfs/home/rmgpmva/projects/lipid_adem/results/ANGPTL3_eur: outdir not found, skipped
+[info]  2026-10-09 13:35:39 ANGPTL3: 209304 loose rows, 0 new, 209304 already in the store
+[info]  2026-10-09 13:35:40 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PPARA: 343 loose result files
+[info]  2026-10-09 13:35:42 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PPARA_all_apoe: 343 loose result files
+[warn]  2026-10-09 13:35:42 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PPARA_eur: outdir not found, skipped
+[info]  2026-10-09 13:35:46 PPARA: 221578 loose rows, 0 new, 221578 already in the store
+[stage] 2026-10-09 13:35:46 write_stores
+[info]  2026-10-09 13:36:11 HMGCR: wrote 461244 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/marvel/HMGCR_results.tsv.gz
+[stage] 2026-10-09 13:36:11 marvel_table
+[warn]  2026-10-09 13:36:11 no store yet for: NPC1L1
+[info]  2026-10-09 13:36:12 ANGPTL3: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo, ascvd_ii
+[info]  2026-10-09 13:36:13 CETP: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo, ascvd_ii
+[info]  2026-10-09 13:36:15 HMGCR: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo, ascvd_ii
+[info]  2026-10-09 13:36:15 PCSK9: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo
+[info]  2026-10-09 13:36:15 PPARA: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo, ascvd_ii
+[info]  2026-10-09 13:36:42 wrote 84 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/marvel_results.tsv
+[info]  2026-10-09 13:36:42 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/apoe_strata.tsv: all marvel strata already listed
 
 ```
 
@@ -424,22 +487,13 @@ Include: reviewed by expert panel + criteria provided, multiple submitters, no c
 
 ## [50] marvel_assoc_job
 - first run: 2026-10-07 13:49:03
-- last run: 2026-10-09 10:48:45
-- commit: `1f6ca38`
-
-Δ vs previous run (was `1f6ca38`):
-```diff
-@@ -1,2 +1,2 @@
--[info]  2026-10-09 10:35:27 task 1: rows 1-1
--[info]  2026-10-09 10:42:41 APOE_genotype: results in /myriadfs/home/rmgpmva/projects/lipid_adem/results/APOE_genotype
-+[info]  2026-10-09 10:41:04 task 2: rows 2-2
-+[info]  2026-10-09 10:48:36 APOE_genotype: results in /myriadfs/home/rmgpmva/projects/lipid_adem/results/APOE_genotype_eur
-```
+- last run: 2026-10-09 12:46:28
+- commit: `4f02218`
 
 Output:
 ```text
-[info]  2026-10-09 10:41:04 task 2: rows 2-2
-[info]  2026-10-09 10:48:36 APOE_genotype: results in /myriadfs/home/rmgpmva/projects/lipid_adem/results/APOE_genotype_eur
+[info]  2026-10-08 23:04:21 task 8: rows 8-8
+[info]  2026-10-09 12:46:28 HMGCR: results in /myriadfs/home/rmgpmva/projects/lipid_adem/results/HMGCR_all_apoe
 
 ```
 
