@@ -107,6 +107,18 @@ UKB_EUR_GROUPS=(
 UKB_GROUPS=(
     marvel_ukb_MULTI_{all_cause,alzheimers,vascular,frontotemporal}_dementia
 )
+# UKB accessions are written by marvel_results_table.py:
+# marvel_ukb_<MULTI|EUR>_<outcome>, + _<stratum> for the APOE strata
+UKB_OUTCOMES=(all_cause alzheimers vascular frontotemporal)
+UKB_STUDIES=()
+UKB_EUR_STUDIES=()
+for outcome in "${UKB_OUTCOMES[@]}"; do
+    for stratum in "" _e44 _e43 _e33 _e22_e32; do
+        UKB_STUDIES+=("marvel_ukb_MULTI_${outcome}_dementia${stratum}")
+        UKB_EUR_STUDIES+=("marvel_ukb_EUR_${outcome}_dementia${stratum}")
+    done
+done
+ARMB_STUDIES=("${UKB_STUDIES[@]}" "${FINNGEN_STUDIES[@]}")
 run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
     --studies "${THOMASSEN_STUDIES[@]}" "${UKB_EUR_STUDIES[@]}" \
     "${FINNGEN_STUDIES[@]}" \
