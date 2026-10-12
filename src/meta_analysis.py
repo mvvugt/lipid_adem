@@ -694,7 +694,7 @@ def ivw(rows: pd.DataFrame, keys: list[str], beta: str) -> pd.DataFrame:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def orient(rows: pd.DataFrame) -> pd.DataFrame:
+def orient(rows: pd.DataFrame, by_function: bool = True) -> pd.DataFrame:
     """Orient every row's effect per variant.
 
     The a2 allele is used, or a1 when any of the variant's list sources
@@ -707,6 +707,9 @@ def orient(rows: pd.DataFrame) -> pd.DataFrame:
     ----------
     rows : `pd.DataFrame`
         From `prepare_effects`.
+    by_function : `bool`, optional, default: `True`
+        When `False`, nothing is flipped: every variant is oriented to a2
+        (sensitivity analysis without the gene-function coding).
 
     Returns
     -------
@@ -732,6 +735,10 @@ def orient(rows: pd.DataFrame) -> pd.DataFrame:
 
     is_gof = rows[site].isin(gof_sites)
     is_raising = rows[site].isin(raising_sites)
+    if not by_function:
+        log_info("orientation by gene function off: every variant on a2")
+        is_gof[:] = False
+        is_raising[:] = False
     sign = np.where(is_gof | is_raising, -1.0, 1.0)
     oriented = rows.copy()
     oriented[MetaColumns.ORIENTATION] = np.select(
@@ -979,6 +986,7 @@ def meta_analysis(
     region_rare: bool = False,
     prefer_groups: list[str] | None = None,
     fallback_groups: list[str] | None = None,
+    orient_by_function: bool = True,
 ) -> None:
     """Run the meta-analysis for one ancestry group and write it.
 
@@ -1029,6 +1037,9 @@ def meta_analysis(
     fallback_groups : `list[str]` or `None`, optional, default: `None`
         Study groups used for a variant only when no `prefer_groups`
         group has it.
+    orient_by_function : `bool`, optional, default: `True`
+        Passed to `orient` as `by_function`; `False` keeps every effect
+        on the a2 allele (no GoF / ClinVar-raising flips).
 
     Returns
     -------
@@ -1104,7 +1115,7 @@ def meta_analysis(
     rows = resolve_ambiguous(rows)
 
     log_stage("orient")
-    rows = orient(rows)
+    rows = orient(rows, by_function=orient_by_function)
     rows = _keep_values(rows, VariantListColumns.OUT_SOURCE, variant_sources)
     if rows.empty:
         log_warn("no rows left after filtering; no output written")
@@ -1595,6 +1606,14 @@ def _init_cmd_args() -> argparse.ArgumentParser:
             "--prefer-groups group has it"
         ),
     )
+    parser.add_argument(
+        "--no-orient",
+        action="store_true",
+        help=(
+            "do not flip GoF / ClinVar-raising variants: every effect is "
+            "that of the a2 (alt) allele; combine with --label"
+        ),
+    )
     return parser
 
 
@@ -1627,6 +1646,7 @@ def main() -> None:
             region_rare=args.region_rare,
             prefer_groups=args.prefer_groups,
             fallback_groups=args.fallback_groups,
+            orient_by_function=not args.no_orient,
         )
 
 

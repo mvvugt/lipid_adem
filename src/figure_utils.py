@@ -65,6 +65,8 @@ FINNGEN_NAME = 'FinnGen R13'
 TICKS_COARSE = (0.05, 0.1, 0.25, 0.5, 1, 2, 4, 10, 20)
 TICKS_FINE = (0.5, 0.75, 1, 1.5, 2)
 TICKS_FINER = (0.8, 0.9, 1, 1.1, 1.2)
+# x-axis padding factor around the point estimates (log scale)
+X_PAD = 1.15
 # p-values below this are shown as this (p = 0 is below double precision)
 P_MIN = 1e-100
 DPI = 300
@@ -590,31 +592,43 @@ def set_y(data: pd.DataFrame, group_col: str) -> pd.DataFrame:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def x_axis(data: pd.DataFrame, low: float | None = None
            ) -> tuple[tuple[float, float], list[float]]:
-    """Log x limits and ticks that fit the (clipped) CIs.
+    """Log x limits and ticks that fit the point estimates.
+
+    Confidence intervals do not widen the axis; the parts outside the
+    limits are cut off at the axis edge.
 
     Parameters
     ----------
     data : `pd.DataFrame`
-        With `FigureColumns.LB` and `FigureColumns.UB`.
+        With `FigureColumns.OR`.
     low : `float` or `None`, optional, default: `None`
-        Fixed lower limit; `None` derives it from the CIs.
+        Fixed lower limit; `None` derives it from the point estimates.
 
     Returns
     -------
     limits : `tuple[float, float]`
-        `low` (else lowest CI bound / 1.15) and highest * 1.15, always
-        around 1.
+        The lowest and highest point estimate (always around 1), padded
+        by `X_PAD` and widened to the next tick outside; `low`, when
+        given, is used as is.
     ticks : `list[float]`
-        The first of `TICKS_COARSE`, `TICKS_FINE`, `TICKS_FINER` with at
-        least three ticks within the limits (else `TICKS_FINER`).
+        Within the limits, from the first of `TICKS_COARSE`,
+        `TICKS_FINE`, `TICKS_FINER` with at least three ticks within the
+        padded range (else `TICKS_FINER`).
     """
-    if low is None:
-        low = min(float(data[FCols.LB].min()), 1.0) / 1.15
-    high = max(float(data[FCols.UB].max()), 1.0) * 1.15
+    pad_low = min(float(data[FCols.OR].min()), 1.0) / X_PAD
+    pad_high = max(float(data[FCols.OR].max()), 1.0) * X_PAD
+    if low is not None:
+        pad_low = low
     for candidates in (TICKS_COARSE, TICKS_FINE, TICKS_FINER):
-        ticks = [t for t in candidates if low <= t <= high]
-        if len(ticks) >= 3:
+        if sum(pad_low <= t <= pad_high for t in candidates) >= 3:
             break
+    # widen to the nearest tick outside the padded range, if any
+    below = [t for t in candidates if t <= pad_low]
+    above = [t for t in candidates if t >= pad_high]
+    if low is None:
+        low = max(below) if below else pad_low
+    high = min(above) if above else pad_high
+    ticks = [t for t in candidates if low <= t <= high]
     return (low, high), ticks
 
 

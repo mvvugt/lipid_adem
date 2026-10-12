@@ -142,6 +142,16 @@ run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry MULTI \
     --fallback-groups "${UKB_GROUPS[@]}" "${FINNGEN_STUDIES[@]}" \
     --label maf_filter_all
 
+# [myriad] sensitivity: main analysis without orientation by gene function
+# (no GoF / ClinVar-raising flips, a2 allele effects)
+run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
+    --studies "${THOMASSEN_STUDIES[@]}" "${UKB_EUR_STUDIES[@]}" \
+    "${FINNGEN_STUDIES[@]}" \
+    --variant-sources PTV ClinVar GoF landfors_paper --stratified \
+    --prefer-groups thomassen \
+    --fallback-groups "${UKB_EUR_GROUPS[@]}" "${FINNGEN_STUDIES[@]}" \
+    --label annotated_eur_unoriented --no-orient
+
 # [myriad] without the variant lists: every rare variant in the gene region,
 # alt-allele effects, NOT oriented by gene function
 run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
@@ -180,3 +190,6 @@ for script in burden_forest burden_apoe_forest sources_forest pooled_forest; do
     run_mamba plot-misc "${ROOT}/src/${script}.py" --ancestry MULTI \
         --label maf_filter_all
 done
+# [local] sensitivity: main analysis without orientation by gene function
+run_mamba plot-misc "${ROOT}/src/burden_forest.py" --ancestry EUR \
+    --label annotated_eur_unoriented
