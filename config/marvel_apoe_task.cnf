@@ -20,7 +20,6 @@ task_script=/myriadfs/home/rmgpmva/projects/lipid_adem/src/marvel_assoc.sh
 
 # columns to verify.
 infiles=carriers
-outfiles=outdir
 
 [script]
 verbose=true

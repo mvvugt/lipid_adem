@@ -119,6 +119,7 @@ for outcome in "${UKB_OUTCOMES[@]}"; do
     done
 done
 ARMB_STUDIES=("${UKB_STUDIES[@]}" "${FINNGEN_STUDIES[@]}")
+
 run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
     --studies "${THOMASSEN_STUDIES[@]}" "${UKB_EUR_STUDIES[@]}" \
     "${FINNGEN_STUDIES[@]}" \
@@ -126,6 +127,7 @@ run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
     --prefer-groups thomassen \
     --fallback-groups "${UKB_EUR_GROUPS[@]}" "${FINNGEN_STUDIES[@]}" \
     --label annotated_eur
+
 # [myriad] sensitivity using all UKB samples
 run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry MULTI \
     --studies "${THOMASSEN_STUDIES[@]}" "${UKB_STUDIES[@]}" \
