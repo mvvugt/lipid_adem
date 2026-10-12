@@ -12,7 +12,7 @@
 ##
 ## Author: M. van Vugt
 ## Date created: 07/11/2025
-## Last updated: 08/10/2026
+## Last updated: 12/10/2026
 ##
 ## Copyright (c) M. van Vugt, 2026
 ## Email: m.vanvugt1@amsterdamumc.nl
@@ -105,7 +105,7 @@ subsets = {
         f'EUR{sep}{stratum}': f'{eur};{criterion}'
         for stratum, criterion in apoe.items()
         },
-    # EUR only (APOE genotype exposure, data/raw/marvel_apoe_tasks.tsv)
+    # EUR only (APOE diplotype exposure, data/raw/marvel_apoe_tasks.tsv)
     'eur_overall' : {'EUR': eur},
     }
 
@@ -171,23 +171,9 @@ for row in tasks.itertuples(index = False):
         'stratify'           : stratify,
         CFLhs.StratifyOverall : False,
         }
-    # APOE genotype: the carriers file is the phenotype file, and only its
-    # genotype column (text, e.g. e3e3) is tested, dummy-coded against
-    # the reference genotype. strata_ref is text in the config, so it only
-    # matches a text exposure. A marvel without these options would
-    # ignore them and test every column of the phenotype file
-    if row.gene == Constants.APOE_EXPOSURE_NAME:
-        missing = [
-            name for name in ('StrataRef', 'Exposures')
-            if not hasattr(CFLhs, name)
-            ]
-        if missing:
-            raise ValueError(
-                f'the installed marvel has no {missing} option(s); update '
-                'marvel before running the APOE genotype task'
-                )
-        options[CFLhs.StrataRef] = Constants.UKB_APOE_REFERENCE
-        options[CFLhs.Exposures] = Constants.UKB_APOE_COLUMN
+    # APOE diplotype (data/raw/marvel_apoe_tasks.tsv): the carriers file is
+    # the 0/1 file of apoe_exposure.py, so no extra options; every column
+    # is tested, as in the gene runs
     create_config(
         path                 = row.config,
         extract_variants     = False,

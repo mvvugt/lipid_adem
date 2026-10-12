@@ -7,11 +7,13 @@
 ## Script name: apoe_genotype_forest
 ##
 ## Purpose of script: Forest plot per population of the UK Biobank marvel
-##     association of each APOE genotype vs ε3/ε3
-##     (`config/marvel_apoe_task.cnf`): per outcome one row per genotype,
-##     odds ratio with 95% CI, side tables (genotype (n), OR (95% CI),
-##     p-value). No title or legend; circles coloured by genotype (blue
-##     ε2, red ε4, purple ε2/ε4); x axis from 0.5. Reads the loose marvel
+##     association of each APOE diplotype (carriers vs all other
+##     diplotypes, `config/marvel_apoe_task.cnf`): per outcome one row per
+##     diplotype, odds ratio with 95% CI, side tables (diplotype (n),
+##     OR (95% CI), p-value). The reference mixes ε2 and ε4 carriers, so
+##     these ORs are not vs ε3/ε3. No title or legend; circles coloured by
+##     diplotype (blue ε2, grey ε3/ε3, red ε4, purple ε2/ε4); x axis from
+##     0.5. Reads the loose marvel
 ##     files of the `FileNames.MARVEL_APOE_TASKS` outdirs copied into
 ##     `results/`. Run locally in the `plot-misc` env. Writes
 ##     `results/figures/forest_apoe_genotype_<population>.pdf` (EUR) or
@@ -63,7 +65,8 @@ logger = logging.getLogger('apoe_genotype_forest')
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 parser = argparse.ArgumentParser(
-        description = ('Forest plot of the marvel APOE genotype vs e3e3 runs, '
+        description = ('Forest plot of the marvel APOE diplotype (vs all '
+                       'other diplotypes) runs, '
                        'read from the outdirs of marvel_apoe_tasks.tsv copied '
                        'into results/.'))
 parser.add_argument('-m', '--model',
@@ -104,20 +107,22 @@ APOE_OUTCOMES = {
     **Constants.MARVEL_UKB_OUTCOMES,
     'ascvd_ii': 'ascvd',
 }
-# genotypes vs the reference (`Constants.UKB_APOE_REFERENCE`, ε3/ε3), in
-# plotting order: ε2 dose down, then ε4 dose up
+# diplotypes, each vs all other diplotypes, in plotting order: ε2 dose
+# down, ε3/ε3, then ε4 dose up
 GENOTYPE_NAMES = {
     'e2e2': 'ε2/ε2',
     'e2e3': 'ε2/ε3',
+    'e3e3': 'ε3/ε3',
     'e3e4': 'ε3/ε4',
     'e2e4': 'ε2/ε4',
     'e4e4': 'ε4/ε4',
 }
 GENOTYPE_RANK = {name: i for i, name in enumerate(GENOTYPE_NAMES)}
-# blue = ε2, red = ε4, purple = both (ColorBrewer)
+# blue = ε2, grey = ε3/ε3, red = ε4, purple = both (ColorBrewer)
 GENOTYPE_COLOURS = {
     'e2e2': '#2166ac',
     'e2e3': '#67a9cf',
+    'e3e3': '#878787',
     'e3e4': '#ef8a62',
     'e2e4': '#8073ac',
     'e4e4': '#b2182b',
@@ -128,9 +133,9 @@ SUBSET_POPULATIONS = {
     'all': 'all',
     'eur_overall': 'EUR',
 }
-# dummy-coded marvel exposure of the genotype vs `strata_ref`
+# marvel exposure = carrier column of apoe_exposure.py, e.g. APOE_e4e4
 APOE_EXPOSURE_RE = re.compile(
-    rf'^{re.escape(Constants.UKB_APOE_COLUMN)}: (?P<genotype>\S+)$')
+    rf'^{re.escape(Constants.APOE_DIPLOTYPE_PREFIX)}(?P<genotype>\S+)$')
 REQUIRED = [
     MarvelColumns.MODEL_NAME,
     MarvelColumns.VARIABLE,
@@ -142,7 +147,7 @@ REQUIRED = [
 ]
 # side tables: column, header, alignment, x location
 TABLES = (
-    (FCols.ROW_NAME, 'APOE genotype', 'left', 0.05),
+    (FCols.ROW_NAME, 'APOE diplotype', 'left', 0.05),
     (FCols.OR_TEXT, FigNames.OR_HEADER, 'center', 0.5),
     (FCols.P_TEXT, FigNames.P_HEADER, 'center', 0.5),
 )
@@ -185,12 +190,9 @@ if MARVEL_REMARKS in gen_df.columns:
     for remark, n in gen_df[MARVEL_REMARKS].dropna().value_counts().items():
         logger.warning(f'APOE genotype: {n} skipped marvel tests: {remark}')
 
-# genotype of the dummy-coded exposure; missing genotypes (e.g. 'Unknown',
-# their own dummy term in marvel), intercept and covariates -> NaN
+# diplotype of the carrier column; intercept and covariates -> NaN
 gen_df[GENOTYPE] = gen_df[MarvelColumns.EXPOSURE].astype(str).str.extract(
         APOE_EXPOSURE_RE)['genotype']
-gen_df.loc[gen_df[GENOTYPE].isin(Constants.APOE_MISSING_VALUES),
-           GENOTYPE] = np.nan
 unknown = sorted(set(gen_df[GENOTYPE].dropna())
                  - set(Constants.APOE_GENOTYPES))
 if unknown:

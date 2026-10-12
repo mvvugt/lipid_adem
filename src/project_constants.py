@@ -184,21 +184,19 @@ class Constants:
     UKB_EUR_POPULATIONS: tuple[str, ...] = ("eur_related", "eur_unrelated")
     # APOE genotype column of `FileNames.UKB_PHENO` (values e2e2 ... e4e4,
     # see `ApoeStratum.GENOTYPES`) and the reference genotype of the APOE
-    # genotype exposure. The marvel APOE genotype run tests this column
-    # of the phenotype file directly (marvel `exposures` option), dummy-
-    # coded with `strata_ref` = `UKB_APOE_REFERENCE` (create_config.py).
-    # It must hold text: marvel reads `strata_ref` from the config as
-    # text and clean_data drops that label from the `pd.get_dummies`
-    # columns, so integer codes never match (KeyError "['0'] not found
-    # in axis", 2026-10-09)
+    # strata. The marvel APOE diplotype run does not test this column
+    # itself: apoe_exposure.py turns it into one 0/1 carrier column per
+    # diplotype (1 = that diplotype, 0 = every other genotype)
     UKB_APOE_COLUMN: str = "genotype"
     UKB_APOE_REFERENCE: str = "e3e3"
-    # `gene` of the APOE genotype run in `FileNames.MARVEL_APOE_TASKS`
+    # `gene` of the APOE diplotype run in `FileNames.MARVEL_APOE_TASKS`
     # (marvel ExpInput label, outdir and config name)
-    APOE_EXPOSURE_NAME: str = "APOE_genotype"
-    # `UKB_APOE_COLUMN` values meaning "no genotype". marvel cannot treat
-    # them as missing, so they get their own dummy term;
-    # apoe_genotype_forest.py leaves them out
+    APOE_EXPOSURE_NAME: str = "APOE_diplotype"
+    # prefix of the carrier columns of `FileNames.APOE_EXPOSURE`
+    # (`APOE_e4e4` etc.); marvel names each test's `Exposure` after it
+    APOE_DIPLOTYPE_PREFIX: str = "APOE_"
+    # `UKB_APOE_COLUMN` values meaning "no genotype"; apoe_exposure.py
+    # leaves these participants out of the exposure file
     APOE_MISSING_VALUES: tuple[str, ...] = ("Unknown",)
     # every real genotype `UKB_APOE_COLUMN` may hold
     APOE_GENOTYPES: tuple[str, ...] = (
@@ -361,6 +359,7 @@ class RunlogOrder:
     give every step 10. The Bash job wrappers hard-code the same values
     in `RUNLOG_ORDER` and must be kept in sync.
     """
+    APOE_EXPOSURE: int = 5
     GWAS_CAT_PREP: int = 10
     FILTER_GWAS_CAT: int = 20
     MARVEL_RESULTS_TABLE: int = 25
@@ -1017,9 +1016,12 @@ class FileNames:
     # pyjasub job array for the per-gene marvel runs (one cnf per gene,
     # written by src/create_config.py)
     MARVEL_TASKS: Path = Paths.DATA_RAW / "marvel_tasks.tsv"
-    # marvel run of APOE genotype -> outcomes: its own job array, so its
+    # marvel run of APOE diplotype -> outcomes: its own job array, so its
     # results never enter marvel_results.tsv as variants
     MARVEL_APOE_TASKS: Path = Paths.DATA_RAW / "marvel_apoe_tasks.tsv"
+    # marvel exposure file of that run (apoe_exposure.py): ID column plus
+    # one 0/1 carrier column per APOE diplotype
+    APOE_EXPOSURE: Path = Paths.DATA_PROC / "apoe_diplotype.tsv.gz"
     # per-gene store of all marvel results (in `Paths.MARVEL_STORE`)
     MARVEL_STORE_TEMPLATE: str = "{gene}_results.tsv.gz"
     # loose per-variant marvel result files in a gene's outdir

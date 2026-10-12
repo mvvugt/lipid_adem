@@ -22,6 +22,21 @@ esac
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# APOE DIPLOTYPE
+# Needs only the phenotype file, so it runs first. Each diplotype (e3e3
+# included) vs all other diplotypes.
+
+# [myriad] exposure file: one 0/1 carrier column per diplotype
+run_mamba biomed-api "${ROOT}"/src/apoe_exposure.py
+# [myriad] associate the diplotypes with outcomes (all samples and EUR)
+run_mamba marvel "${ROOT}"/src/create_config.py -a \
+    -t "${ROOT}"/data/raw/marvel_apoe_tasks.tsv
+run_mamba biomed-api pyjasub "${ROOT}"/config/marvel_apoe_task.cnf
+# [local] rsync results/APOE_diplotype{,_eur} from Myriad first
+run_mamba plot-misc "${ROOT}"/src/apoe_genotype_forest.py
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # VARIANT ANNOTATION
 # TODO annotate variants using GoF and VEP+LOFTEE
 
@@ -60,16 +75,6 @@ run_mamba biomed-api pyjasub "${ROOT}"/config/marvel_task.cnf
 # [myriad] combine all marvel results
 # Add --archive to tar the loose files, --refresh to rebuild the stores
 run_mamba biomed-api "${ROOT}"/src/marvel_results_table.py --ancestry MULTI
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# APOE GENOTYPE
-
-# [myriad] associate apoe-status (genotype column of the pheno file, vs
-# e3e3) with outcomes
-run_mamba marvel "${ROOT}"/src/create_config.py -a \
-    -t "${ROOT}"/data/raw/marvel_apoe_tasks.tsv
-run_mamba biomed-api pyjasub "${ROOT}"/config/marvel_apoe_task.cnf
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -175,7 +180,3 @@ for script in burden_forest burden_apoe_forest sources_forest pooled_forest; do
     run_mamba plot-misc "${ROOT}/src/${script}.py" --ancestry MULTI \
         --label maf_filter_all
 done
-
-# [local] APOE genotype vs e3e3 (marvel); rsync results/APOE_genotype{,_eur}
-# from Myriad first
-run_mamba plot-misc "${ROOT}"/src/apoe_genotype_forest.py
