@@ -280,6 +280,11 @@ class Constants:
     }
     # marvel rows with fewer exposed (carriers) are dropped at merge
     MARVEL_MIN_CARRIERS: int = 5
+    # marvel rows outside [MARVEL_MIN_SE, MARVEL_MAX_SE] are dropped at
+    # merge: below is a degenerate fit (no carriers in the subset/stratum,
+    # `Exposed` NA, beta ~1e-16), above is separation (no carrier cases)
+    MARVEL_MIN_SE: float = 1e-6
+    MARVEL_MAX_SE: float = 30.0
     # UKB marvel `Variable` -> `outcome` in icd_codes.txt; `_combined`
     # (algorithm + ICD) where UKB has it, else `_algo`. Other variables
     # are left out of marvel_results.tsv

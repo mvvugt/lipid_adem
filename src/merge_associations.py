@@ -319,8 +319,10 @@ def load_marvel_results(
     is its `Model` (regression method) mapped by
     `Constants.MARVEL_METHOD_SCALE`. Rows with fewer than
     `Constants.MARVEL_MIN_CARRIERS` exposed (`Exposed`) are dropped
-    (counted). A file listed for several entries (a per-gene store) is
-    read once.
+    (counted), as are rows with `Standard Error` below
+    `Constants.MARVEL_MIN_SE` (degenerate fit, no carriers in the subset)
+    or above `Constants.MARVEL_MAX_SE` (separation). A file listed for
+    several entries (a per-gene store) is read once.
 
     Parameters
     ----------
@@ -392,6 +394,27 @@ def load_marvel_results(
                     f"({path.name})"
                 )
             results = results[~few].reset_index(drop=True)
+        if MarvelColumns.SE in results.columns:
+            se = pd.to_numeric(results[MarvelColumns.SE], errors="coerce")
+            degenerate = se < Constants.MARVEL_MIN_SE
+            separated = se > Constants.MARVEL_MAX_SE
+            if degenerate.any():
+                log_info(
+                    f"marvel {entry['cohort']} {entry['outcome']}: "
+                    f"{int(degenerate.sum())} rows with SE < "
+                    f"{Constants.MARVEL_MIN_SE} (degenerate fit) dropped "
+                    f"({path.name})"
+                )
+            if separated.any():
+                log_info(
+                    f"marvel {entry['cohort']} {entry['outcome']}: "
+                    f"{int(separated.sum())} rows with SE > "
+                    f"{Constants.MARVEL_MAX_SE} (separation) dropped "
+                    f"({path.name})"
+                )
+            results = results[~(degenerate | separated)].reset_index(
+                drop=True
+            )
         if results.empty:
             log_warn(
                 f"marvel {entry['cohort']} {entry['outcome']}: no rows for "
