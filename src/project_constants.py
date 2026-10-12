@@ -29,6 +29,9 @@ class Paths:
     # per-gene marvel result stores (`marvel_results_table.py`)
     MARVEL_STORE: Path = HERE / "results" / "marvel"
     RESULTS_FIGURES: Path = HERE / "results" / "figures"
+    # subfolder of a figure `--out-dir` for figures not in
+    # `FigureNames.MAIN_FIGURES`
+    FIGURES_SENSITIVITY: str = "sensitivity"
     LOGS: Path = HERE / "logs"
     # must match `log_dir` in config/filter_task.cnf
     FILTER_TASK_LOGS: Path = HERE / "src" / "logs" / "filter_task_logs"
@@ -1110,6 +1113,17 @@ class FigureNames:
     OR_LABEL: str = "Odds ratio (95% CI)"
     OR_HEADER: str = "OR (95% CI)"
     P_HEADER: str = "P-value"
+    # legend titles
+    SIGNIFICANCE_TITLE: str = "Significance"
+    OUTCOME_TITLE: str = "Outcomes"
+    # main-analysis figures: a full file name without suffix, or, ending
+    # in '_', the start of one; every other figure goes to
+    # `Paths.FIGURES_SENSITIVITY` (`figure_utils.save`)
+    MAIN_FIGURES: tuple[str, ...] = (
+        "forest_pooled_annotated_eur",
+        "forest_sources_annotated_eur_",
+        "forest_apoe_genotype_EUR",
+    )
 
 
 class FigureStyle:
@@ -1128,9 +1142,19 @@ class FigureStyle:
     CM_PER_Y: float = 0.07
     # pooled estimate vs single study / stratum
     POOLED_COLOUR: str = "black"
+    # pooled forest: marker colour per outcome key, from the APOE
+    # genotype colours (apoe_genotype_forest.py); others `POOLED_COLOUR`
+    OUTCOME_COLOURS: dict[str, str] = {
+        "alzheimers_dementia": "#67a9cf",
+        "vascular_dementia": "#ef8a62",
+        "frontotemporal_dementia": "#8073ac",
+        "all_cause_dementia": "#b2182b",
+    }
     STUDY_COLOUR: str = "#bdbdbd"
     POOLED_SIZE: float = 14
     STUDY_SIZE: float = 9
+    # marker size of a forest with one kind of estimate
+    MARKER_SIZE: float = 9
     # significance -> marker shape, and the matching heatmap glyph
     P_NOMINAL: float = 0.05
     MARKER_NS: str = "o"
@@ -1139,9 +1163,14 @@ class FigureStyle:
     GLYPH_NOMINAL: str = "■"
     GLYPH_STRICT: str = "◆"
     # forest layout: panel widths (forest, three side tables), height
-    # without the rows and top margin (cm), y padding around the rows
-    FOREST_WIDTH_RATIOS: tuple[float, ...] = (1.3, 0.7, 0.8, 0.35)
-    FOREST_BASE_HEIGHT_CM: float = 1.6
+    # without the rows (cm; with and without the significance legend), top
+    # margin (cm), y padding around the rows
+    FOREST_WIDTH_RATIOS: tuple[float, ...] = (1.5, 0.5, 0.7, 0.35)
+    FOREST_BASE_HEIGHT_CM: float = 1.75
+    # space below the forest axis (cm): ticks, x label and the titled
+    # significance legend
+    FOREST_BOTTOM_CM: float = 1.15
+    FOREST_BASE_HEIGHT_NO_LEGEND_CM: float = 1.1
     FOREST_TOP_CM: float = 0.35
     FOREST_Y_PAD: float = 3
     # default odds-ratio axis limit (`--max-or`)
@@ -1157,13 +1186,17 @@ class FigureStyle:
         "linestyle": "-",
     }
     TABLE_NEGATIVE_PADDING: float = 1
-    # significance legend below the forest
+    # significance legend below the forest, its left edge at the forest
+    # axis (`figure_utils.add_legend`); height of an extra titled legend
+    # (cm)
+    LEGEND_ROW_CM: float = 0.4
     LEGEND_KWARGS: dict[str, object] = {
         "loc": "lower left",
-        "bbox_to_anchor": (0.02, 0.0),
         "ncol": 3,
         "frameon": False,
         "fontsize": STEXT_SIZE,
+        "title_fontproperties": {"size": STEXT_SIZE, "weight": "bold"},
+        "alignment": "left",
         "handletextpad": 0.2,
         "columnspacing": 1.0,
     }

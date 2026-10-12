@@ -15,7 +15,7 @@
 ##     0.05 / (genes x outcomes with a pooled estimate in the main run).
 ##     Run locally in the `plot-misc` env on burden files copied from
 ##     Myriad into `results/output/`. Writes
-##     `results/figures/forest_apoe_<label>_<outcome>.pdf`.
+##     `results/figures/sensitivity/forest_apoe_<label>_<outcome>.pdf`.
 ##
 ## Author: M. van Vugt
 ## Date created: 09/10/2026
@@ -167,7 +167,7 @@ for outcome, out_df in apoe_df.groupby(OUTCOME):
     gs = gridspec.GridSpec(nrows = 1, ncols = 4,
                            width_ratios = FStyle.FOREST_WIDTH_RATIOS,
                            figure = fig, wspace = 0.0,
-                           bottom = 1.0 / height_cm,
+                           bottom = FStyle.FOREST_BOTTOM_CM / height_cm,
                            top = 1 - FStyle.FOREST_TOP_CM / height_cm)
     # plot
     ax = fig.add_subplot(gs[0])
@@ -218,6 +218,7 @@ for outcome, out_df in apoe_df.groupby(OUTCOME):
                 negative_padding = FStyle.TABLE_NEGATIVE_PADDING, span = span,
                 )
     # add legend
-    fig.legend(handles = leg_handles, **FStyle.LEGEND_KWARGS)
+    futils.add_legend(fig, ax, leg_handles,
+                      FigNames.SIGNIFICANCE_TITLE)
     # save
     futils.save(fig, args.out_dir / f'forest_apoe_{args.label}_{outcome}')

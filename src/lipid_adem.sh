@@ -167,7 +167,8 @@ for analysis in lists region_rare; do
     done
 done
 
-# [local] main analysis figures
+# [local] main analysis figures; only those in FigureNames.MAIN_FIGURES are
+# written to results/figures, the rest to results/figures/sensitivity
 for script in burden_forest burden_apoe_forest sources_forest pooled_forest; do
     run_mamba plot-misc "${ROOT}/src/${script}.py" --ancestry EUR \
         --label annotated_eur

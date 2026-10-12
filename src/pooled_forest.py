@@ -8,13 +8,14 @@
 ##
 ## Purpose of script: One forest plot of the pooled (IVW) gene-burden
 ##     estimates of a `meta_analysis.py` run: per gene one row per
-##     outcome, 95% CI, with side tables (outcome, OR (95% CI), p-value).
-##     Marker shape shows significance: circle p >= 0.05, square
-##     p < 0.05, diamond below the Bonferroni threshold
-##     0.05 / (genes x outcomes with a pooled estimate). Run locally in
-##     the `plot-misc` env on burden files copied from Myriad into
+##     outcome, 95% CI, with side tables (OR (95% CI), p-value).
+##     Marker colour shows the outcome, marker shape significance:
+##     circle p >= 0.05, square p < 0.05, diamond below the Bonferroni
+##     threshold 0.05 / (genes x outcomes with a pooled estimate). Run
+##     locally in the `plot-misc` env on burden files copied from Myriad into
 ##     `results/output/`. Writes
-##     `results/figures/forest_pooled_<label>.pdf`.
+##     `results/figures/forest_pooled_<label>.pdf` (main analysis,
+##     `FigureNames.MAIN_FIGURES`) or `results/figures/sensitivity/`.
 ##
 ## Author: M. van Vugt
 ## Date created: 09/10/2026
@@ -88,12 +89,18 @@ if args.max_or <= 1:
 GENE = VariantListColumns.OUT_GENE
 OUTCOME = HarmonisedColumns.OUTCOME
 TITLE = 'Gene burden, pooled (IVW)'
-# side tables: column, header, alignment, x location
+# side tables: column, header, alignment, x location; no outcome column,
+# the outcomes are shown by colour
 TABLES = (
-    (FCols.ROW_NAME, 'Outcome', 'left', 0.05),
     (FCols.OR_TEXT, FigNames.OR_HEADER, 'center', 0.5),
     (FCols.P_TEXT, FigNames.P_HEADER, 'center', 0.5),
 )
+# panel widths: the forest and the OR and p-value tables, at the same
+# absolute size as in the other forests
+WIDTH_RATIOS = (FStyle.FOREST_WIDTH_RATIOS[0],
+                *FStyle.FOREST_WIDTH_RATIOS[2:])
+WIDTH_CM = (FStyle.WIDTH_CM * sum(WIDTH_RATIOS)
+            / sum(FStyle.FOREST_WIDTH_RATIOS))
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -115,10 +122,10 @@ pool_df[FCols.ORDER] = pool_df[OUTCOME].map(FigNames.OUTCOME_RANK).fillna(
 pool_df = pool_df.sort_values([GENE, FCols.ORDER, OUTCOME])
 pool_df[FCols.MARKER] = futils.significance_marker(
         pool_df[MetaColumns.P], strict)
-pool_df[FCols.COLOUR] = FStyle.POOLED_COLOUR
-pool_df[FCols.SIZE] = FStyle.POOLED_SIZE
-pool_df[FCols.ROW_NAME] = [futils.outcome_name(str(name))
-                            for name in pool_df[OUTCOME]]
+# colour per outcome, others black
+pool_df[FCols.COLOUR] = pool_df[OUTCOME].map(
+        FStyle.OUTCOME_COLOURS).fillna(FStyle.POOLED_COLOUR)
+pool_df[FCols.SIZE] = FStyle.MARKER_SIZE
 
 # axis range
 pool_df = futils.limit_or(pool_df, 1 / args.max_or, args.max_or,
@@ -126,6 +133,14 @@ pool_df = futils.limit_or(pool_df, 1 / args.max_or, args.max_or,
 if len(pool_df) < 2:
     sys.exit(f'{TITLE}: fewer than two estimates')
 pool_df = futils.set_y(pool_df, GENE)
+# outcome colour legend, in plotting order
+legend_rows = pool_df.drop_duplicates(OUTCOME).sort_values(
+        [FCols.ORDER, OUTCOME])
+colour_handles = futils.colour_legend({
+    futils.outcome_name(str(outcome)): colour
+    for outcome, colour in zip(legend_rows[OUTCOME],
+                               legend_rows[FCols.COLOUR])
+})
 test_y = (pool_df[FCols.Y].min() - FStyle.FOREST_Y_PAD,
           pool_df[FCols.Y].max() + FStyle.FOREST_Y_PAD)
 
@@ -134,16 +149,16 @@ test_y = (pool_df[FCols.Y].min() - FStyle.FOREST_Y_PAD,
 ## Forest plot
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# start figure
-height_cm = (FStyle.FOREST_BASE_HEIGHT_CM
+# start figure, one extra legend row for the outcome colours
+height_cm = (FStyle.FOREST_BASE_HEIGHT_CM + FStyle.LEGEND_ROW_CM
              + FStyle.CM_PER_Y * (test_y[1] - test_y[0]))
 matplotlib.rcParams['axes.linewidth'] = FStyle.LWD
-fig = plt.figure(figsize = (FStyle.WIDTH_CM * FStyle.CM,
-                            height_cm * FStyle.CM))
-gs = gridspec.GridSpec(nrows = 1, ncols = 4,
-                       width_ratios = FStyle.FOREST_WIDTH_RATIOS,
+fig = plt.figure(figsize = (WIDTH_CM * FStyle.CM, height_cm * FStyle.CM))
+gs = gridspec.GridSpec(nrows = 1, ncols = len(WIDTH_RATIOS),
+                       width_ratios = WIDTH_RATIOS,
                        figure = fig, wspace = 0.0,
-                       bottom = 1.0 / height_cm,
+                       bottom = ((FStyle.FOREST_BOTTOM_CM
+                                  + FStyle.LEGEND_ROW_CM) / height_cm),
                        top = 1 - FStyle.FOREST_TOP_CM / height_cm)
 # plot
 ax = fig.add_subplot(gs[0])
@@ -193,7 +208,9 @@ for i, (column, header, align, xloc) in enumerate(TABLES, start = 1):
             size_header = FStyle.STEXT_SIZE,
             negative_padding = FStyle.TABLE_NEGATIVE_PADDING, span = span,
             )
-# add legend
-fig.legend(handles = leg_handles, **FStyle.LEGEND_KWARGS)
+# add legends: outcome colours above the significance shapes
+futils.add_legend(fig, ax, colour_handles, FigNames.OUTCOME_TITLE,
+                  y = FStyle.LEGEND_ROW_CM / height_cm)
+futils.add_legend(fig, ax, leg_handles, FigNames.SIGNIFICANCE_TITLE)
 # save
 futils.save(fig, args.out_dir / f'forest_pooled_{args.label}')

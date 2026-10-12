@@ -465,13 +465,62 @@ def significance_legend(strict: float, n_tests: int) -> list[Line2D]:
         (FStyle.MARKER_NS, f'p ≥ {FStyle.P_NOMINAL:g}'),
         (FStyle.MARKER_NOMINAL, f'p < {FStyle.P_NOMINAL:g}'),
         (FStyle.MARKER_STRICT,
-         f'p < {strict:.1e} (Bonferroni, {n_tests} tests)'),
+         f'p < {sci_notation(strict, sig_fig = 1)} (Bonferroni, '
+         f'{n_tests} tests)'),
     )
     return [
         Line2D([0], [0], marker = marker, color = FStyle.POOLED_COLOUR,
                markeredgecolor = 'black', markeredgewidth = .3,
                markersize = 2.5, lw = 0, label = label)
         for marker, label in labels
+    ]
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def add_legend(fig: plt.Figure, ax: plt.Axes, handles: list[Line2D],
+               title: str, y: float = 0.0) -> None:
+    """Add a titled legend below the forest.
+
+    Parameters
+    ----------
+    fig : `plt.Figure`
+        Figure of the forest.
+    ax : `plt.Axes`
+        Forest axis; the legend's left edge is aligned with it.
+    handles : `list[Line2D]`
+        E.g. from `significance_legend` or `colour_legend`.
+    title : `str`
+        Legend title, shown bold above the entries.
+    y : `float`, optional, default: `0.0`
+        Bottom of the legend as a figure fraction.
+
+    Returns
+    -------
+    `None`
+    """
+    kwargs = {**FStyle.LEGEND_KWARGS, 'ncol': len(handles)}
+    fig.legend(handles = handles, title = title,
+               bbox_to_anchor = (ax.get_position().x0, y), **kwargs)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def colour_legend(colours: dict[str, str]) -> list[Line2D]:
+    """Legend handles of coloured circles.
+
+    Parameters
+    ----------
+    colours : `dict[str, str]`
+        Label -> colour, in legend order.
+
+    Returns
+    -------
+    handles : `list[Line2D]`
+    """
+    return [
+        Line2D([0], [0], marker = FStyle.MARKER_NS, color = colour,
+               markeredgecolor = 'black', markeredgewidth = .3,
+               markersize = 2.5, lw = 0, label = label)
+        for label, colour in colours.items()
     ]
 
 
@@ -574,20 +623,46 @@ def x_axis(data: pd.DataFrame, low: float | None = None
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def is_main_figure(name: str) -> bool:
+    """Whether a figure belongs to the main analysis.
+
+    Parameters
+    ----------
+    name : `str`
+        File name without suffix.
+
+    Returns
+    -------
+    is_main : `bool`
+        `True` when `name` equals an entry of `FigureNames.MAIN_FIGURES`,
+        or starts with an entry ending in ``'_'``.
+    """
+    for entry in FigNames.MAIN_FIGURES:
+        if name == entry or (entry.endswith('_') and name.startswith(entry)):
+            return True
+    return False
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def save(fig: plt.Figure, stem: Path) -> None:
     """Save a figure as PDF, written then moved into place.
+
+    Main-analysis figures (`is_main_figure`) are written to the directory
+    of `stem`, all others to its `Paths.FIGURES_SENSITIVITY` subfolder.
 
     Parameters
     ----------
     fig : `plt.Figure`
         Figure to save; closed afterwards.
     stem : `Path`
-        Output path without suffix.
+        Output path without suffix, in the figure `--out-dir`.
 
     Returns
     -------
     `None`
     """
+    if not is_main_figure(stem.name):
+        stem = stem.parent / Paths.FIGURES_SENSITIVITY / stem.name
     stem.parent.mkdir(parents = True, exist_ok = True)
     path = stem.with_name(f'{stem.name}.pdf')
     tmp = path.with_name(f'{path.name}.tmp')

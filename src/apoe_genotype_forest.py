@@ -14,11 +14,12 @@
 ##     ε2, red ε4, purple ε2/ε4); x axis from 0.5. Reads the loose marvel
 ##     files of the `FileNames.MARVEL_APOE_TASKS` outdirs copied into
 ##     `results/`. Run locally in the `plot-misc` env. Writes
-##     `results/figures/forest_apoe_genotype_<population>.pdf`.
+##     `results/figures/forest_apoe_genotype_<population>.pdf` (EUR) or
+##     `results/figures/sensitivity/` (others).
 ##
 ## Author: M. van Vugt
 ## Date created: 09/10/2026
-## Last updated: 09/10/2026
+## Last updated: 12/10/2026
 ##
 ## Copyright (c) M. van Vugt, 2026
 ## Email: m.vanvugt1@amsterdamumc.nl
@@ -121,7 +122,6 @@ GENOTYPE_COLOURS = {
     'e2e4': '#8073ac',
     'e4e4': '#b2182b',
 }
-MARKER_SIZE = 9
 MIN_OR = .5
 # marvel `subset` (`FileNames.MARVEL_APOE_TASKS`) -> population label
 SUBSET_POPULATIONS = {
@@ -241,7 +241,7 @@ gen_df[OUTCOME_GROUP] = gen_df[OUTCOME].map(futils.outcome_name)
 # one symbol, coloured by genotype
 gen_df[FCols.MARKER] = FStyle.MARKER_NS
 gen_df[FCols.COLOUR] = gen_df[GENOTYPE].map(GENOTYPE_COLOURS)
-gen_df[FCols.SIZE] = MARKER_SIZE
+gen_df[FCols.SIZE] = FStyle.MARKER_SIZE
 gen_df[FCols.ROW_NAME] = [
     GENOTYPE_NAMES[genotype] if not np.isfinite(exposed)
     else f'{GENOTYPE_NAMES[genotype]} (n={int(exposed):,})'
@@ -266,12 +266,13 @@ for pop, pop_df in gen_df.groupby(POPULATION):
     test_y = (pop_df[FCols.Y].min() - FStyle.FOREST_Y_PAD,
               pop_df[FCols.Y].max() + FStyle.FOREST_Y_PAD)
     # start figure
-    height_cm = 1.1 + FStyle.CM_PER_Y * (test_y[1] - test_y[0])
+    height_cm = (FStyle.FOREST_BASE_HEIGHT_NO_LEGEND_CM
+                 + FStyle.CM_PER_Y * (test_y[1] - test_y[0]))
     matplotlib.rcParams['axes.linewidth'] = FStyle.LWD
     fig = plt.figure(figsize = (FStyle.WIDTH_CM * FStyle.CM,
                                 height_cm * FStyle.CM))
     gs = gridspec.GridSpec(nrows = 1, ncols = 4,
-                           width_ratios = [1.5, .5, .7, .35],
+                           width_ratios = FStyle.FOREST_WIDTH_RATIOS,
                            figure = fig, wspace = 0.0,
                            bottom = 1.0 / height_cm,
                            top = 1 - FStyle.FOREST_TOP_CM / height_cm)

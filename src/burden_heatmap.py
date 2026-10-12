@@ -13,7 +13,7 @@
 ##     with a pooled estimate); blank cells have no estimate. Run locally
 ##     in the `plot-misc` env on burden files copied from Myriad into
 ##     `results/output/`. Writes
-##     `results/figures/heatmap_burden_<label>.pdf`.
+##     `results/figures/sensitivity/heatmap_burden_<label>.pdf`.
 ##
 ## Author: M. van Vugt
 ## Date created: 09/10/2026
@@ -148,8 +148,9 @@ ax.set_title('Gene burden', fontweight = 'bold',
 # footnote
 fig.text(0.0, -0.08,
          f'{FStyle.GLYPH_NOMINAL} p < {FStyle.P_NOMINAL:g}; '
-         f'{FStyle.GLYPH_STRICT} p < {strict:.1e} (Bonferroni, {n_tests} '
-         'tests); blank: no estimate',
+         f'{FStyle.GLYPH_STRICT} p < '
+         f'{futils.sci_notation(strict, sig_fig = 1)} '
+         f'(Bonferroni, {n_tests} tests); blank: no estimate',
          fontsize = FStyle.STEXT_SIZE)
 # save
 futils.save(fig, args.out_dir / f'heatmap_burden_{args.label}')
