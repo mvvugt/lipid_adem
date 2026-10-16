@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """annotate_variants
 
-Extract ClinVar variants with at least a "Likely pathogenic" classification
+Extract ClinVar variants with an aggregate (variant-level) classification of
+Pathogenic, Likely pathogenic or Pathogenic/Likely pathogenic
 """
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # imports
@@ -71,11 +72,15 @@ def read_clinvar_variants(path: Path) -> pd.DataFrame:
 
 
 def filter_plp_variants(data: pd.DataFrame) -> pd.DataFrame:
-    """Filter to at-least-likely-pathogenic rows and annotate with review flag.
+    """Filter to variants with an aggregate P/LP classification.
 
-    Kept if `rcv_classification` is Pathogenic/Likely pathogenic/
-    Pathogenic-Likely pathogenic, OR it's "Conflicting classifications of
-    pathogenicity" with a pathogenic-tier term in `submitted_classifications`
+    Kept if the variant-level `ac_classification` is in
+    `Constants.PATHOGENIC_CLASSIFICATIONS`. Conflicting, VUS and benign
+    variants are dropped, whatever their per-condition
+    `rcv_classification`. All condition rows of a kept variant are kept,
+    so the lipid direction can still be derived per condition. Rows
+    without an `assembly` (old records without coordinates) are dropped,
+    as they cannot be matched.
 
     Parameters
     ----------
@@ -85,48 +90,18 @@ def filter_plp_variants(data: pd.DataFrame) -> pd.DataFrame:
     Returns
     -------
     filtered : `pd.DataFrame`
-        Matching rows `review_flag` column added.
-        No rows are deduplicated or collapsed.
+        Matching rows. No rows are deduplicated or collapsed.
     """
-    clean_pathogenic_mask = data[CVCNames.RCV_CLASSIFICATION_COL].isin(
+    pathogenic_mask = data[CVCNames.AC_CLASSIFICATION_COL].isin(
         Constants.PATHOGENIC_CLASSIFICATIONS
     )
-    conflicting_mask = (
-        data[CVCNames.RCV_CLASSIFICATION_COL]
-        == Constants.CONFLICTING_CLASSIFICATION_LABEL
-    )
-    submitted_pathogenic_mask = data[
-        CVCNames.SUBMITTED_CLASSIFICATIONS_COL
-    ].str.contains(Constants.PATHOGENIC_TERM, case=False, na=False)
-    rescued_conflicting_mask = conflicting_mask & submitted_pathogenic_mask
-    pathogenic_mask = clean_pathogenic_mask | rescued_conflicting_mask
-
+    no_assembly_mask = pathogenic_mask & data[CVCNames.ASSEMBLY_COL].isna()
     log_info(
-        f"{clean_pathogenic_mask.sum()} rows have a clean LP/P "
-        "rcv_classification."
+        f"{pathogenic_mask.sum()} rows have an aggregate P/LP "
+        f"ac_classification; {no_assembly_mask.sum()} of them without an "
+        "assembly dropped"
     )
-    log_info(
-        f"{rescued_conflicting_mask.sum()} of those are rescued from a "
-        "Conflicting classification because submitted_classifications "
-        "contains a pathogenic-tier term"
-    )
-
-    filtered = data.loc[pathogenic_mask].copy()
-
-    filtered[CVCNames.REVIEW_FLAG_COL] = ""
-    rescued_in_filtered = rescued_conflicting_mask.loc[filtered.index]
-    filtered.loc[rescued_in_filtered, CVCNames.REVIEW_FLAG_COL] = filtered.loc[
-        rescued_in_filtered, CVCNames.SUBMITTED_CLASSIFICATIONS_COL
-    ].apply(
-        lambda submitted: (
-            "Conflicting classifications of pathogenicity for this condition, "
-            f"but submitted_classifications ({submitted}) includes a "
-            "pathogenic-tier term -- submitted_classifications is "
-            "variant-level, not confirmed specific to this condition"
-        )
-    )
-
-    return filtered
+    return data.loc[pathogenic_mask & ~no_assembly_mask].copy()
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -288,10 +263,6 @@ if __name__ == "__main__":
         plp_variants = filter_plp_variants(variants)
 
         log_info(f"Kept {len(plp_variants)} rows after filtering")
-        log_info(
-            f"{(plp_variants[CVCNames.REVIEW_FLAG_COL] != '').sum()} "
-            "rows carry a review_flag"
-        )
 
         review_status_summary = summarize_review_status_scope(plp_variants)
         log_info(

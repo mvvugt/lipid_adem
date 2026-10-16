@@ -1523,27 +1523,51 @@ Output:
 
 ## [50] annotate_variants (`/Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/src/annotate_variants.py`)
 - first run: 2026-10-06 17:13:43
-- last run: 2026-10-06 17:16:22
-- commit: `7e96ca6` (dirty)
+- last run: 2026-10-16 13:14:40
+- commit: `c91df4d` (dirty)
+
+Δ vs previous run (was `c91df4d` (dirty)):
+- error resolved
+```diff
+@@ -1,11 +1,14 @@
+ [info]  2026-10-16 13:14:39 Reading ClinVar variants from /Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/data/raw/clinvar_variants.tsv
+ [info]  2026-10-16 13:14:39 Read 313818 rows
+-[info]  2026-10-16 13:12:57 9922 rows have an aggregate P/LP ac_classification
+-[info]  2026-10-16 13:12:57 Kept 9922 rows after filtering
++[info]  2026-10-16 13:14:39 9922 rows have an aggregate P/LP ac_classification; 3 of them without an assembly dropped
++[info]  2026-10-16 13:14:39 Kept 9919 rows after filtering
+ [info]  2026-10-16 13:14:39 Review-status scope-reduction summary:
+                                                                                                                          scope  n_unique_variants  n_variants_removed_cumulative  n_variants_removed_this_step
+-                                                                                     All review statuses (every tier included)                552                              0                             0
+-Include: reviewed by expert panel + criteria provided, multiple submitters, no conflicts + criteria provided, single submitter                485                             67                            67
+-                                      Include: reviewed by expert panel + criteria provided, multiple submitters, no conflicts                252                            300                           233
+-                                                                                             Include: reviewed by expert panel                221                            331                            31
++                                                                                     All review statuses (every tier included)                549                              0                             0
++Include: reviewed by expert panel + criteria provided, multiple submitters, no conflicts + criteria provided, single submitter                482                             67                            67
++                                      Include: reviewed by expert panel + criteria provided, multiple submitters, no conflicts                249                            300                           233
++                                                                                             Include: reviewed by expert panel                218                            331                            31
+ [info]  2026-10-16 13:14:39 Wrote review-status summary to /Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/data/processed/pah_variants_review_status_summary.tsv
++[info]  2026-10-16 13:14:39 Widened 3648 assembly-duplicated rows into 1900 variant/condition rows
++[info]  2026-10-16 13:14:39 549 unique variants identified
++[info]  2026-10-16 13:14:39 Writing 1900 rows to /Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/data/processed/plp_variants.tsv
+```
 
 Output:
 ```text
-[info]  2026-10-06 17:16:21 Reading ClinVar variants from /Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/data/raw/clinvar_variants.tsv
-[info]  2026-10-06 17:16:22 Read 313818 rows
-[info]  2026-10-06 17:16:22 13120 rows have a clean LP/P rcv_classification.
-[info]  2026-10-06 17:16:22 950 of those are rescued from a Conflicting classification because submitted_classifications contains a pathogenic-tier term
-[info]  2026-10-06 17:16:22 Kept 14070 rows after filtering
-[info]  2026-10-06 17:16:22 950 rows carry a review_flag
-[info]  2026-10-06 17:16:22 Review-status scope-reduction summary:
+[info]  2026-10-16 13:14:39 Reading ClinVar variants from /Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/data/raw/clinvar_variants.tsv
+[info]  2026-10-16 13:14:39 Read 313818 rows
+[info]  2026-10-16 13:14:39 9922 rows have an aggregate P/LP ac_classification; 3 of them without an assembly dropped
+[info]  2026-10-16 13:14:39 Kept 9919 rows after filtering
+[info]  2026-10-16 13:14:39 Review-status scope-reduction summary:
                                                                                                                          scope  n_unique_variants  n_variants_removed_cumulative  n_variants_removed_this_step
-                                                                                     All review statuses (every tier included)                431                              0                             0
-Include: reviewed by expert panel + criteria provided, multiple submitters, no conflicts + criteria provided, single submitter                311                            120                           120
-                                      Include: reviewed by expert panel + criteria provided, multiple submitters, no conflicts                 59                            372                           252
-                                                                                             Include: reviewed by expert panel                 24                            407                            35
-[info]  2026-10-06 17:16:22 Wrote review-status summary to /Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/data/processed/pah_variants_review_status_summary.tsv
-[info]  2026-10-06 17:16:22 Widened 4212 assembly-duplicated rows into 2106 variant/condition rows
-[info]  2026-10-06 17:16:22 431 unique variants identified
-[info]  2026-10-06 17:16:22 Writing 2106 rows to /Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/data/processed/plp_variants.tsv
+                                                                                     All review statuses (every tier included)                549                              0                             0
+Include: reviewed by expert panel + criteria provided, multiple submitters, no conflicts + criteria provided, single submitter                482                             67                            67
+                                      Include: reviewed by expert panel + criteria provided, multiple submitters, no conflicts                249                            300                           233
+                                                                                             Include: reviewed by expert panel                218                            331                            31
+[info]  2026-10-16 13:14:39 Wrote review-status summary to /Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/data/processed/pah_variants_review_status_summary.tsv
+[info]  2026-10-16 13:14:39 Widened 3648 assembly-duplicated rows into 1900 variant/condition rows
+[info]  2026-10-16 13:14:39 549 unique variants identified
+[info]  2026-10-16 13:14:39 Writing 1900 rows to /Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/data/processed/plp_variants.tsv
 
 ```
 
@@ -1563,69 +1587,6 @@ Output:
 - first run: 2026-10-01 10:26:24
 - last run: 2026-10-14 16:21:57
 - commit: `8781963`
-
-Δ vs previous run (was `8781963`):
-stage `load_matched`:
-```diff
-@@ -1,5 +1,5 @@
- [info]  2026-10-14 16:19:27 /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/matched_region_variants.tsv.gz: 347357 rows, 10047 variants
- [info]  2026-10-14 16:19:27 20375 rows of excluded gene(s) APOE dropped
- [info]  2026-10-14 16:19:29 326982 of 326982 rows kept (MULTI pools every ancestry) (all: AFR=87047, AMR=42782, CSA=36051, EAS=10748, EUR=81062, MULTI=69061, NR=231)
--[info]  2026-10-14 16:15:51 study_accession in marvel_ukb_MULTI_all_cause_dementia, marvel_ukb_MULTI_all_cause_dementia_e44, marvel_ukb_MULTI_all_cause_dementia_e43, marvel_ukb_MULTI_all_cause_dementia_e33, marvel_ukb_MULTI_all_cause_dementia_e22_e32, marvel_ukb_MULTI_alzheimers_dementia, marvel_ukb_MULTI_alzheimers_dementia_e44, marvel_ukb_MULTI_alzheimers_dementia_e43, marvel_ukb_MULTI_alzheimers_dementia_e33, marvel_ukb_MULTI_alzheimers_dementia_e22_e32, marvel_ukb_MULTI_vascular_dementia, marvel_ukb_MULTI_vascular_dementia_e44, marvel_ukb_MULTI_vascular_dementia_e43, marvel_ukb_MULTI_vascular_dementia_e33, marvel_ukb_MULTI_vascular_dementia_e22_e32, marvel_ukb_MULTI_frontotemporal_dementia, marvel_ukb_MULTI_frontotemporal_dementia_e44, marvel_ukb_MULTI_frontotemporal_dementia_e43, marvel_ukb_MULTI_frontotemporal_dementia_e33, marvel_ukb_MULTI_frontotemporal_dementia_e22_e32, F5_DEMENTIA_INCLAVO, G6_ALZHEIMER, F5_VASCDEM, FTD: 21335 of 326982 rows kept
--[info]  2026-10-14 16:15:52 MULTI: 21335 rows pooled across ancestries (EUR=5704, MULTI=15631), relabelled MULTI; a study reported both per ancestry and combined is counted twice unless --studies excludes one
-+[info]  2026-10-14 16:19:29 study_accession in marvel_ukb_MULTI_all_cause_dementia, marvel_ukb_MULTI_all_cause_dementia_e44, marvel_ukb_MULTI_all_cause_dementia_e43, marvel_ukb_MULTI_all_cause_dementia_e33, marvel_ukb_MULTI_all_cause_dementia_e22_e32, marvel_ukb_MULTI_alzheimers_dementia, marvel_ukb_MULTI_alzheimers_dementia_e44, marvel_ukb_MULTI_alzheimers_dementia_e43, marvel_ukb_MULTI_alzheimers_dementia_e33, marvel_ukb_MULTI_alzheimers_dementia_e22_e32, marvel_ukb_MULTI_vascular_dementia, marvel_ukb_MULTI_vascular_dementia_e44, marvel_ukb_MULTI_vascular_dementia_e43, marvel_ukb_MULTI_vascular_dementia_e33, marvel_ukb_MULTI_vascular_dementia_e22_e32, marvel_ukb_MULTI_frontotemporal_dementia, marvel_ukb_MULTI_frontotemporal_dementia_e44, marvel_ukb_MULTI_frontotemporal_dementia_e43, marvel_ukb_MULTI_frontotemporal_dementia_e33, marvel_ukb_MULTI_frontotemporal_dementia_e22_e32: 15631 of 326982 rows kept
-+[info]  2026-10-14 16:19:30 MULTI: 15631 rows pooled across ancestries (MULTI=15631), relabelled MULTI; a study reported both per ancestry and combined is counted twice unless --studies excludes one
-```
-stage `prepare_effects`:
-```diff
-@@ -1 +1 @@
--[info]  2026-10-14 16:15:52 21335 usable rows, 0 with SE derived from p
-+[info]  2026-10-14 16:19:30 15631 usable rows, 0 with SE derived from p
-```
-stage `orient`:
-```diff
-@@ -1 +1 @@
--[info]  2026-10-14 16:15:52 3217 variants oriented as a2
-+[info]  2026-10-14 16:19:30 1821 variants oriented as a2
-```
-stage `dedupe`:
-```diff
-@@ -1,4 +1,4 @@
--[info]  2026-10-14 16:15:52 8 duplicate rows removed
-+[info]  2026-10-14 16:19:30 0 duplicate rows removed
- [info]  2026-10-14 16:19:30 0 estimates removed as copies of another study
- [info]  2026-10-14 16:20:35 0 duplicate rows removed
- [info]  2026-10-14 16:20:35 0 estimates removed as copies of another study
-```
-stage `meta_analyse`:
-```diff
-@@ -1,4 +1,4 @@
--[info]  2026-10-14 16:16:44 12477 groups, 96 pooling more than one estimate
--[info]  2026-10-14 16:17:37 12573 groups, 0 pooling more than one estimate
-+[info]  2026-10-14 16:19:58 6877 groups, 0 pooling more than one estimate
-+[info]  2026-10-14 16:20:27 6877 groups, 0 pooling more than one estimate
- [info]  2026-10-14 16:21:09 8754 groups, 0 pooling more than one estimate
- [info]  2026-10-14 16:21:42 8754 groups, 0 pooling more than one estimate
-```
-stage `gene_burden`:
-```diff
-@@ -1,2 +1,2 @@
--[info]  2026-10-14 16:17:37 gene burden: 32 pooled and 56 per-study rows
-+[info]  2026-10-14 16:20:27 gene burden: 24 pooled and 24 per-study rows
- [info]  2026-10-14 16:21:43 gene burden: 96 pooled and 96 per-study rows
-```
-stage `write`:
-```diff
-@@ -1,4 +1,4 @@
--[info]  2026-10-14 16:17:38 wrote 25050 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_armb_dementia_region_rare.tsv.gz
--[info]  2026-10-14 16:17:39 wrote 88 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_armb_dementia_region_rare.tsv.gz
--[info]  2026-10-14 16:18:48 wrote 17508 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_armb_dementia_region_rare_apoe_strata.tsv.gz
--[info]  2026-10-14 16:18:48 wrote 192 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_armb_dementia_region_rare_apoe_strata.tsv.gz
-+[info]  2026-10-14 16:20:30 wrote 13754 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_ukb_dementia_region_rare.tsv.gz
-+[info]  2026-10-14 16:20:35 wrote 48 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_ukb_dementia_region_rare.tsv.gz
-+[info]  2026-10-14 16:21:46 wrote 17508 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_ukb_dementia_region_rare_apoe_strata.tsv.gz
-+[info]  2026-10-14 16:21:50 wrote 192 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_ukb_dementia_region_rare_apoe_strata.tsv.gz
-```
 
 Output:
 ```text

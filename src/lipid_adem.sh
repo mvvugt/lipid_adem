@@ -128,7 +128,7 @@ ARMB_STUDIES=("${UKB_STUDIES[@]}" "${FINNGEN_STUDIES[@]}")
 run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
     --studies "${THOMASSEN_STUDIES[@]}" "${UKB_EUR_STUDIES[@]}" \
     "${FINNGEN_STUDIES[@]}" \
-    --variant-sources PTV ClinVar GoF landfors_paper --stratified \
+    --variant-sources PTV ClinVar --stratified \
     --prefer-groups thomassen \
     --fallback-groups "${UKB_EUR_GROUPS[@]}" "${FINNGEN_STUDIES[@]}" \
     --label annotated_eur
@@ -137,7 +137,7 @@ run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
 run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry MULTI \
     --studies "${THOMASSEN_STUDIES[@]}" "${UKB_STUDIES[@]}" \
     "${FINNGEN_STUDIES[@]}" \
-    --variant-sources PTV ClinVar GoF landfors_paper --stratified \
+    --variant-sources PTV ClinVar --stratified \
     --prefer-groups thomassen \
     --fallback-groups "${UKB_GROUPS[@]}" "${FINNGEN_STUDIES[@]}" \
     --label maf_filter_all
@@ -147,7 +147,7 @@ run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry MULTI \
 run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
     --studies "${THOMASSEN_STUDIES[@]}" "${UKB_EUR_STUDIES[@]}" \
     "${FINNGEN_STUDIES[@]}" \
-    --variant-sources PTV ClinVar GoF landfors_paper --stratified \
+    --variant-sources PTV ClinVar --stratified \
     --prefer-groups thomassen \
     --fallback-groups "${UKB_EUR_GROUPS[@]}" "${FINNGEN_STUDIES[@]}" \
     --label annotated_eur_unoriented --no-orient

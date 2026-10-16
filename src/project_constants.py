@@ -339,10 +339,6 @@ class Constants:
     PATHOGENIC_CLASSIFICATIONS: frozenset[str] = frozenset(
         {"Pathogenic", "Likely pathogenic", "Pathogenic/Likely pathogenic"}
     )
-    CONFLICTING_CLASSIFICATION_LABEL: str = (
-        "Conflicting classifications of pathogenicity"
-    )
-    PATHOGENIC_TERM: str = "pathogenic"
     REVIEW_STATUS_CORE: str = "reviewed by expert panel"
     REVIEW_STATUS_STRICTNESS_ORDER: tuple[str, ...] = (
         "no assertion criteria provided",
@@ -451,6 +447,8 @@ class ClinVarColumnNames:
     ALTERNATE_ALLELE_COL: str = "alternate_allele_vcf"
     SUBMITTED_CLASSIFICATIONS_COL: str = "submitted_classifications"
     CLASSIFICATION_COUNT_COL: str = "classification_count"
+    AC_CLASSIFICATION_COL: str = "ac_classification"
+    AC_REVIEW_STATUS_COL: str = "ac_review_status"
     VARIANT_TYPE_COL: str = "variant_type"
     RCV_MOLECULAR_CONSEQUENCE_COL: str = "rcv_molecular_consequence"
     RCV_CONDITION_COL: str = "rcv_condition"
@@ -458,7 +456,6 @@ class ClinVarColumnNames:
     RCV_CONDITION_ID_COL: str = "rcv_condition_id"
     RCV_CLASSIFICATION_COL: str = "rcv_classification"
     RCV_REVIEW_STATUS_COL: str = "rcv_review_status"
-    REVIEW_FLAG_COL: str = "review_flag"
 
 
 class HarmonisedColumns:
