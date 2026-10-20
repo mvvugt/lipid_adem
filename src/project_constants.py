@@ -142,18 +142,25 @@ class Constants:
     ENSEMBL_BAD_FRACTION_WARN: float = 0.5
     # ... but only when it has at least this many variant rows
     ENSEMBL_BAD_MIN_ROWS: int = 20
-    # per-gene variant lists (external, not written by this pipeline)
-    VARIANT_LIST_GLOB: str = "*_variants.tsv"
-    # variant-list sources not matched to GWAS lookups (AlphaMissense)
-    EXCLUDED_VARIANT_SOURCES: frozenset[str] = frozenset({"AM"})
     # GWAS result sources with single variants (gene-burden has none)
     VARIANT_LEVEL_SOURCES: tuple[str, ...] = ("summary-stats", "curated")
     # variant-list source flipped in the meta-analysis so the a1 allele's
     # effect is reported
     GOF_VARIANT_SOURCE: str = "GoF"
-    # variant-list source of the ClinVar P/LP entries; in the per-gene
-    # lists it is replaced by `FileNames.PLP_VARIANTS`
+    # variant-list source of the ClinVar P/LP entries
+    # (`FileNames.PLP_VARIANTS`, combine_variants.py)
     CLINVAR_VARIANT_SOURCE: str = "ClinVar"
+    # variant-list source of the VEP/LOFTEE PTVs (`FileNames.PTV_VARIANTS`,
+    # annotate_ptv.py): LoF = `LOFTEE_KEEP` on the transcript where
+    # CANONICAL = `VEP_CANONICAL`, of the gene_list.txt Ensembl gene
+    PTV_VARIANT_SOURCE: str = "PTV"
+    LOFTEE_KEEP: str = "HC"
+    VEP_CANONICAL: str = "YES"
+    # marvel extraction lists (combine_variants.py): the `ID` of a
+    # variant's form before normalisation is its `variant_id` + this
+    # suffix, so both forms are extracted and collapsed afterwards
+    # (docs/rap_carrier_extraction.md)
+    ORIG_ID_SUFFIX: str = "_orig"
     # assembly suffix of the P/LP coordinate columns used for matching
     PLP_ASSEMBLY_SUFFIX: str = "_grch38"
     # pseudo variant-list source of `match_variants.py --region-rare`: every
@@ -744,12 +751,18 @@ class VariantListColumns:
     A2: str = "a2"
     SOURCE: str = "source"
     GENE: str = "gene"
+    AM_PATHOGENICITY: str = "am_pathogenicity"
     TRI_CLASS: str = "tri_class"
     # pos/a1/a2 before normalisation, and its `NormStatus`
     POS_ORIG: str = "pos_orig"
     A1_ORIG: str = "a1_orig"
     A2_ORIG: str = "a2_orig"
     NORM_STATUS: str = "norm_status"
+    # normalised ``chr:pos:a1:a2`` (combine_variants.py); the marvel
+    # exposure name of the variant
+    VARIANT_ID: str = "variant_id"
+    # variant label column of the per-gene marvel extraction lists
+    MARVEL_ID: str = "ID"
     # ClinVar P/LP rows only: a `ClinVarDirection` value (NA otherwise)
     CLINVAR_DIRECTION: str = "clinvar_direction"
     # added to the matched output, after the merged-associations columns
@@ -767,6 +780,35 @@ class VariantListColumns:
     EFFECT_ALLELE_IS: str = "effect_allele_is"
     # "both" (effect + other allele) or "effect_only" (curated rows)
     MATCH_ALLELES: str = "match_alleles"
+
+
+class VepCsqColumns:
+    """Columns of `FileNames.VEP_CSQ` (header written by vep_extract.sh;
+    the CSQ ones are the VEP/LOFTEE field names) and the extra columns of
+    `FileNames.PTV_VARIANTS`.
+    """
+    CHROM: str = "chr"
+    POS: str = "pos"
+    REF: str = "ref"
+    ALT: str = "alt"
+    AF: str = "AF"
+    AC: str = "AC"
+    ALLELE: str = "Allele"
+    CONSEQUENCE: str = "Consequence"
+    IMPACT: str = "IMPACT"
+    SYMBOL: str = "SYMBOL"
+    GENE_ID: str = "Gene"
+    FEATURE: str = "Feature"
+    BIOTYPE: str = "BIOTYPE"
+    CANONICAL: str = "CANONICAL"
+    HGVSC: str = "HGVSc"
+    HGVSP: str = "HGVSp"
+    LOF: str = "LoF"
+    LOF_FILTER: str = "LoF_filter"
+    LOF_FLAGS: str = "LoF_flags"
+    LOF_INFO: str = "LoF_info"
+    # PTV_VARIANTS: the gene_list.txt symbol of the variant
+    GENE: str = "gene"
 
 
 class MetaColumns:
@@ -1003,6 +1045,19 @@ class FileNames:
         Paths.DATA_PROC / "pah_variants_review_status_summary.tsv"
     )
     PLP_VARIANTS: Path = Paths.DATA_PROC / "plp_variants.tsv"
+    # VEP/LOFTEE consequences of the gene_list.txt genes, one row per
+    # variant x transcript (vep_extract.sh, Snellius; has UKB AF/AC, so
+    # never committed)
+    VEP_CSQ: Path = Paths.DATA_RAW / "vep_lipid_gene_csq.tsv.gz"
+    # LOFTEE HC PTVs on the canonical transcript (annotate_ptv.py; has UKB
+    # AF/AC, so never committed)
+    PTV_VARIANTS: Path = Paths.DATA_PROC / "ptv_variants.tsv.gz"
+    # PTV + ClinVar P/LP variant list, all genes (combine_variants.py;
+    # sites only, committed, normalised) and its per-gene marvel
+    # extraction lists (`str.format(gene=...)`; normalised and original
+    # forms, docs/rap_carrier_extraction.md)
+    LIPID_VARIANTS: Path = Paths.DATA_PROC / "lipid_variants.tsv"
+    VARIANT_LIST_TEMPLATE: str = str(Paths.DATA_TEMP / "{gene}_variants.tsv")
     # curated gene x ClinVar condition -> `ClinVarDirection`
     CLINVAR_CONDITION_DIRECTION: Path = (
         Paths.DATA_RAW / "clinvar_condition_direction.tsv"

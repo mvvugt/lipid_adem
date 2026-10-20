@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 """
 Matches the variant-level GWAS lookups in the merged associations table to the
-per-gene variant lists (`data/temp/*_variants.tsv`), excluding the
-AlphaMissense (`AM`) entries, and writes the matched rows.
-
-The `ClinVar` entries of the per-gene lists are replaced by the ClinVar P/LP
-list (`data/processed/plp_variants.tsv`), each variant labelled with the
-lipid direction of its conditions (`data/raw/clinvar_condition_direction.tsv`).
+PTV + ClinVar P/LP variant list (`data/processed/lipid_variants.tsv`,
+combine_variants.py), and writes the matched rows. Each ClinVar variant is
+labelled with the lipid direction of its conditions.
 
 `--region-rare` ignores the lists: every GWAS row in its gene region with
 MAF < `--max-maf` (marvel rows, which have no MAF, are all kept) is matched
@@ -30,13 +27,11 @@ from log_tools.setup import runlog_setup
 
 import functions
 from project_constants import (
-    ClinVarColumnNames,
-    ClinVarDirection,
     ColumnNames,
-    ConditionDirectionColumns,
     Constants,
     FileNames,
     HarmonisedColumns,
+    NormStatus,
     Paths,
     RunlogOrder,
     VariantListColumns,
@@ -51,7 +46,6 @@ _CHROM_KEY: str = "_chrom"
 _POS_KEY: str = "_pos"
 _EFFECT_KEY: str = "_effect"
 _OTHER_KEY: str = "_other"
-_CONSEQUENCE_KEY: str = "_consequence"
 # variant-list columns renamed for the output, in output order
 _LIST_OUTPUT_COLUMNS: dict[str, str] = {
     VariantListColumns.SOURCE: VariantListColumns.OUT_SOURCE,
@@ -180,153 +174,14 @@ def _in_region(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _collapse_direction(directions: pd.Series) -> str:
-    """Combine the condition directions of one variant into one value.
-
-    Parameters
-    ----------
-    directions : `pd.Series`
-        `ClinVarDirection` values of the variant's conditions.
-
-    Returns
-    -------
-    direction : `str`
-        `lowering`, `raising` or `altered` when only that one occurs among
-        the known directions, `conflicting` when more than one occurs,
-        else `unknown`.
-    """
-    known = set(directions) & {
-        ClinVarDirection.LOWERING,
-        ClinVarDirection.RAISING,
-        ClinVarDirection.ALTERED,
-    }
-    if len(known) > 1:
-        return ClinVarDirection.CONFLICTING
-    if len(known) == 1:
-        return known.pop()
-    return ClinVarDirection.UNKNOWN
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def load_plp_variants() -> pd.DataFrame:
-    """Read the ClinVar P/LP list as variant-list rows with a direction.
-
-    The GRCh38 coordinates are used (`Constants.PLP_ASSEMBLY_SUFFIX`).
-    Each row's condition gets its direction from
-    `FileNames.CLINVAR_CONDITION_DIRECTION`; conditions missing there are
-    `unknown` (warned). The directions are combined per variant by
-    `_collapse_direction`, except that a variant with a consequence in
-    `Constants.TRUNCATING_CONSEQUENCES` is always `lowering` (less gene
-    product, whatever the conditions say).
-
-    Returns
-    -------
-    plp : `pd.DataFrame`
-        One row per variant, with the `VariantListColumns` `chr`, `pos`,
-        `a1` (reference), `a2` (alternate), `source`
-        (`Constants.CLINVAR_VARIANT_SOURCE`), `gene` and
-        `clinvar_direction`, as strings.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the P/LP list or the condition-direction table does not exist.
-    """
-    for path in (FileNames.PLP_VARIANTS, FileNames.CLINVAR_CONDITION_DIRECTION):
-        if not path.exists():
-            raise FileNotFoundError(f"{path} not found")
-    cv = ClinVarColumnNames
-    cd = ConditionDirectionColumns
-    vc = VariantListColumns
-    suffix = Constants.PLP_ASSEMBLY_SUFFIX
-    plp = pd.read_csv(FileNames.PLP_VARIANTS, sep="\t", dtype=str)
-    directions = pd.read_csv(
-        FileNames.CLINVAR_CONDITION_DIRECTION, sep="\t", dtype=str
-    )
-    log_info(
-        f"{FileNames.PLP_VARIANTS}: {len(plp)} rows; "
-        f"{FileNames.CLINVAR_CONDITION_DIRECTION}: {len(directions)} rows"
-    )
-
-    variants = pd.DataFrame(
-        {
-            vc.CHROM: pd.to_numeric(
-                plp[f"{cv.CHR_COL}{suffix}"], errors="coerce"
-            ).astype("Int64"),
-            vc.POS: pd.to_numeric(
-                plp[f"{cv.POSITION_VCF_COL}{suffix}"], errors="coerce"
-            ).astype("Int64"),
-            vc.A1: plp[f"{cv.REFERENCE_ALLELE_COL}{suffix}"],
-            vc.A2: plp[f"{cv.ALTERNATE_ALLELE_COL}{suffix}"],
-            vc.SOURCE: Constants.CLINVAR_VARIANT_SOURCE,
-            vc.GENE: plp[cv.GENE_SYMBOL_COL],
-            cd.CONDITION: plp[cv.RCV_CONDITION_COL],
-            _CONSEQUENCE_KEY: plp[cv.RCV_MOLECULAR_CONSEQUENCE_COL],
-        }
-    )
-    variants[vc.CHROM] = variants[vc.CHROM].astype("string")
-    variants[vc.POS] = variants[vc.POS].astype("string")
-    # reference records (e.g. APOE3 isoform "c.388=") are not variants
-    is_ref = variants[vc.A1].notna() & (variants[vc.A1] == variants[vc.A2])
-    log_info(f"{int(is_ref.sum())} P/LP rows with ref = alt dropped")
-    variants = variants.loc[~is_ref].merge(
-        directions.rename(columns={cd.GENE: vc.GENE}),
-        on=[vc.GENE, cd.CONDITION],
-        how="left",
-    )
-    missing = variants.loc[
-        variants[cd.DIRECTION].isna(), [vc.GENE, cd.CONDITION]
-    ].drop_duplicates()
-    for gene, condition in missing.itertuples(index=False):
-        log_warn(
-            f"{gene} condition '{condition}' not in "
-            f"{FileNames.CLINVAR_CONDITION_DIRECTION}: counted as unknown"
-        )
-    variants[cd.DIRECTION] = variants[cd.DIRECTION].fillna(
-        ClinVarDirection.UNKNOWN
-    )
-
-    site = [vc.CHROM, vc.POS, vc.A1, vc.A2, vc.SOURCE, vc.GENE]
-    collapsed = (
-        variants.groupby(site, dropna=False, sort=True)[cd.DIRECTION]
-        .agg(_collapse_direction)
-        .rename(vc.CLINVAR_DIRECTION)
-        .reset_index()
-    )
-    truncating = (
-        variants[_CONSEQUENCE_KEY]
-        .isin(Constants.TRUNCATING_CONSEQUENCES)
-        .groupby([variants[col] for col in site], dropna=False, sort=True)
-        .any()
-        .to_numpy()
-    )
-    overruled = truncating & (
-        collapsed[vc.CLINVAR_DIRECTION] != ClinVarDirection.LOWERING
-    )
-    log_info(
-        f"{int(truncating.sum())} truncating P/LP variants set to "
-        f"{ClinVarDirection.LOWERING}, {int(overruled.sum())} of them "
-        "against their conditions"
-    )
-    collapsed.loc[truncating, vc.CLINVAR_DIRECTION] = ClinVarDirection.LOWERING
-    counts = collapsed.groupby(
-        [vc.GENE, vc.CLINVAR_DIRECTION], sort=True
-    ).size()
-    for (gene, direction), n in counts.items():
-        log_info(f"{gene} ClinVar P/LP: {n} variants {direction}")
-    return collapsed
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def load_variant_lists() -> pd.DataFrame:
-    """Read the per-gene variant lists and keep the matchable entries.
+    """Read the PTV + ClinVar P/LP list and keep the matchable entries.
 
-    `Constants.EXCLUDED_VARIANT_SOURCES` rows and exact duplicate rows
-    are dropped. The lists' `Constants.CLINVAR_VARIANT_SOURCE` rows are
-    replaced by the P/LP list (`load_plp_variants`), the only rows with a
-    `clinvar_direction`. Per gene and source the rows, the rows without both
-    alleles (dropped, they cannot be matched) and the rows outside the
-    gene region are logged.
+    The list is `FileNames.LIPID_VARIANTS` (combine_variants.py); its
+    ClinVar rows are the only ones with a `clinvar_direction`. Exact
+    duplicate rows are dropped. Per gene and source the rows, the rows
+    without both alleles (dropped, they cannot be matched) and the rows
+    outside the gene region are logged.
 
     Returns
     -------
@@ -340,40 +195,15 @@ def load_variant_lists() -> pd.DataFrame:
     Raises
     ------
     FileNotFoundError
-        If no file matches `Constants.VARIANT_LIST_GLOB`.
+        If `FileNames.LIPID_VARIANTS` does not exist.
     """
-    paths = sorted(Paths.DATA_TEMP.glob(Constants.VARIANT_LIST_GLOB))
-    if not paths:
+    path = FileNames.LIPID_VARIANTS
+    if not path.exists():
         raise FileNotFoundError(
-            f"no {Constants.VARIANT_LIST_GLOB} files in {Paths.DATA_TEMP}"
+            f"{path} not found: run combine_variants.py first"
         )
-    variants = pd.concat(
-        [pd.read_csv(path, sep="\t", dtype=str) for path in paths],
-        ignore_index=True,
-    )
-    log_info(
-        f"{len(paths)} variant lists, {len(variants)} rows: "
-        + ", ".join(path.name for path in paths)
-    )
-
-    excluded = variants[VariantListColumns.SOURCE].isin(
-        Constants.EXCLUDED_VARIANT_SOURCES
-    )
-    log_info(
-        f"{int(excluded.sum())} rows with source in "
-        f"{sorted(Constants.EXCLUDED_VARIANT_SOURCES)} skipped"
-    )
-    variants = variants[~excluded]
-    is_clinvar = (
-        variants[VariantListColumns.SOURCE] == Constants.CLINVAR_VARIANT_SOURCE
-    )
-    log_info(
-        f"{int(is_clinvar.sum())} {Constants.CLINVAR_VARIANT_SOURCE} rows "
-        f"of the lists dropped, replaced by {FileNames.PLP_VARIANTS}"
-    )
-    variants = pd.concat(
-        [variants[~is_clinvar], load_plp_variants()], ignore_index=True
-    )
+    variants = pd.read_csv(path, sep="\t", dtype=str)
+    log_info(f"{path}: {len(variants)} rows")
     n_before = len(variants)
     variants = variants.drop_duplicates().reset_index(drop=True)
     log_info(f"{n_before - len(variants)} duplicate rows removed")
@@ -416,7 +246,9 @@ def _normalise_variant_list(
 
     Uses `functions.normalise_variant` (the same normalisation as the
     merged associations), with `a1` as other and `a2` as effect allele, so
-    list entries and GWAS rows meet in the same form.
+    list entries and GWAS rows meet in the same form. combine_variants.py
+    already normalises the list, so this pass normally changes nothing;
+    the originals and `norm_status` it wrote are then kept.
 
     Parameters
     ----------
@@ -431,7 +263,8 @@ def _normalise_variant_list(
     -------
     normalised : `pd.DataFrame`
         `variants` with `_POS_KEY`, `a1` and `a2` normalised, the values
-        before in `pos_orig`/`a1_orig`/`a2_orig`, and `norm_status`.
+        before in `pos_orig`/`a1_orig`/`a2_orig`, and `norm_status` (both
+        from combine_variants.py when the list has them).
         Counts per status, and entries where `a2` rather than `a1` is the
         reference allele, are logged.
 
@@ -442,9 +275,12 @@ def _normalise_variant_list(
     """
     vc = VariantListColumns
     normalised = variants.copy()
-    normalised[vc.POS_ORIG] = normalised[_POS_KEY]
-    normalised[vc.A1_ORIG] = normalised[vc.A1]
-    normalised[vc.A2_ORIG] = normalised[vc.A2]
+    # combine_variants.py wrote the originals: keep them
+    pre_normalised = vc.NORM_STATUS in normalised.columns
+    if not pre_normalised:
+        normalised[vc.POS_ORIG] = normalised[_POS_KEY]
+        normalised[vc.A1_ORIG] = normalised[vc.A1]
+        normalised[vc.A2_ORIG] = normalised[vc.A2]
     sequences = functions.region_sequences(
         {
             gene: functions.GeneRegion(chrom=chrom, start=start, end=end)
@@ -465,13 +301,22 @@ def _normalise_variant_list(
     )
     normalised[vc.A2] = [result.effect for result in results]
     normalised[vc.A1] = [result.other for result in results]
-    normalised[vc.NORM_STATUS] = [result.status for result in results]
+    statuses = pd.Series([result.status for result in results])
+    if not pre_normalised:
+        normalised[vc.NORM_STATUS] = statuses.to_numpy()
 
-    counts = normalised[vc.NORM_STATUS].value_counts()
+    counts = statuses.value_counts()
     log_info(
         "normalisation: variant-list rows "
         + " ".join(f"{k}={n}" for k, n in counts.items())
     )
+    if pre_normalised:
+        n_changed = int((statuses == NormStatus.NORMALISED).sum())
+        if n_changed:
+            log_warn(
+                f"{n_changed} variant-list rows changed again although "
+                "combine_variants.py normalised them"
+            )
     n_a2_ref = sum(result.effect_is_ref is True for result in results)
     if n_a2_ref:
         log_warn(
@@ -925,7 +770,7 @@ def match_variants(
 def _init_cmd_args() -> argparse.ArgumentParser:
     """Create and configure the argument parser."""
     parser = argparse.ArgumentParser(
-        description="Match GWAS lookups to the (non-AM) gene variant lists."
+        description="Match GWAS lookups to the PTV + ClinVar variant list."
     )
     parser.add_argument(
         "--region-rare",

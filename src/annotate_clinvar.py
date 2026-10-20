@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""annotate_variants
+"""annotate_clinvar
 
 Extract ClinVar variants with an aggregate (variant-level) classification of
 Pathogenic, Likely pathogenic or Pathogenic/Likely pathogenic

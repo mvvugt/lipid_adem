@@ -38,7 +38,25 @@ run_mamba plot-misc "${ROOT}"/src/apoe_genotype_forest.py
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # VARIANT ANNOTATION
-# TODO annotate variants using GoF and VEP+LOFTEE
+# PTV (VEP + LOFTEE HC, canonical) + ClinVar P/LP -> one variant list,
+# committed to git (sites only, no allele counts)
+
+# Manual copies (no automatic sync between machines):
+# - snellius -> myriad: data/raw/vep_lipid_gene_csq.tsv.gz by scp/rsync;
+#   it has cohort AF/AC, so never commit it
+# - local -> myriad: data/processed/plp_variants.tsv via git push/pull
+# - myriad -> git: lipid_variants.tsv + data/temp/<GENE>_variants.tsv
+#   (sites only) via git add -f, then git pull where needed
+
+# [snellius] VEP/LOFTEE consequences per gene, region read from the
+# indexed per-chromosome VEP VCFs (-p pattern with {chrom})
+sbatch "${ROOT}"/src/vep_extract.sh -r "${ROOT}" -o "${ROOT}"/data/raw \
+    -d "<vcf_dir>" -p "<ukb_chr{chrom}_vep.vcf.gz>" -v
+# [local/myriad] copy the csq file from Snellius (run where it is needed):
+# rsync -av <snellius>:<root>/data/raw/vep_lipid_gene_csq.tsv.gz \
+#     "${ROOT}"/data/raw/
+# [myriad] LOFTEE HC PTVs on the canonical transcript
+run_mamba biomed-api "${ROOT}"/src/annotate_ptv.py
 
 # [local] query ClinVar for all variants in the curated genes
 mapfile -t genes < <(cut -f1 "${ROOT}/data/raw/gene_list.txt")
@@ -51,7 +69,29 @@ runlog run --id clinvar_filter --order 40 --root "${ROOT}" --                  \
     -o "${ROOT}/data/raw/clinvar_variants.tsv"                                 \
     -vvv
 
-run_mamba marvel "${ROOT}"/src/annotate_variants.py
+run_mamba marvel "${ROOT}"/src/annotate_clinvar.py
+# [local] commit + push data/processed/plp_variants.tsv (git add -f)
+# [myriad] after git pull of plp_variants.tsv: combine PTV + ClinVar,
+# normalised against GRCh38, into data/processed/lipid_variants.tsv and
+# the marvel extraction lists data/temp/<GENE>_variants.tsv (normalised
+# form + original form "_orig" where it differs); commit both with
+# git add -f and push
+run_mamba biomed-api "${ROOT}"/src/combine_variants.py
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# CARRIER EXTRACTION
+# TODO not implemented: plan in docs/rap_carrier_extraction.md
+# [rap] MARVELous Docker on Swiss Army Knife; extract both forms of each
+# variant from the RAP PLINK files (WGS or WES)
+# Manual copies:
+# - git -> rap: dx upload data/temp/<GENE>_variants.tsv, the extraction
+#   cnfs, src/rap_extract.sh and the Docker image tarball (once)
+# - rap -> myriad: dx download the <GENE>_carriers.tsv.gz files into
+#   data/raw/carriers/; individual-level data: check the UKB approval
+#   allows the download, never commit, delete when no longer needed
+# [myriad] collapse the two forms per variant (no merge on conflict) into
+# data/temp/<GENE>_variant_extraction.tsv.gz (read by marvel_tasks.tsv)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

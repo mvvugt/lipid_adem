@@ -1014,7 +1014,7 @@ def meta_analysis(
     variant_sources : `list[str]` or `None`, optional, default: `None`
         Variant-list sources to keep (e.g. ``PTV``, ``ClinVar``); applied
         after orientation, so GoF flips still see every list. `None`
-        keeps all. ClinVar is the P/LP list of `annotate_variants.py`.
+        keeps all. ClinVar is the P/LP list of `annotate_clinvar.py`.
     per_study : `bool`, optional, default: `False`
         Also write each study's own per-variant estimate (`level`
         ``stratum``) next to the pooled rows.
@@ -1557,7 +1557,7 @@ def _init_cmd_args() -> argparse.ArgumentParser:
         metavar="SOURCE",
         help=(
             "variant-list sources to keep, e.g. PTV ClinVar (default: all); "
-            "ClinVar is the P/LP list of annotate_variants.py, raising "
+            "ClinVar is the P/LP list of annotate_clinvar.py, raising "
             "variants flipped"
         ),
     )
