@@ -1,24 +1,14 @@
 #!/usr/bin/env python3
 """combine_variants
 
-Combine the VEP/LOFTEE PTVs (`annotate_ptv.py`) and the ClinVar P/LP
-variants (`annotate_clinvar.py`) into one variant list of sites
-(`data/processed/lipid_variants.tsv`), left-aligned and trimmed against
-GRCh38, and split it per gene for the marvel carrier extraction
-(`data/temp/<GENE>_variants.tsv`, overwritten).
-
-marvel matches on chr:pos and alleles, and the VEP VCFs and ClinVar may
-write a site differently from the genotype files. So the per-gene lists
-hold the normalised form (`ID` = `variant_id`) and, where it differs, the
-original form (`ID` = `variant_id` + `Constants.ORIG_ID_SUFFIX`); both are
-collapsed after extraction (docs/rap_carrier_extraction.md).
-
-Both files hold sites, gene, source and the ClinVar lipid direction only
-(no cohort allele counts), so they can be committed and used for UKB, AoU
-and the public GWAS results alike.
+Combine the PTVs with the ClinVar P/LP into one variant list, left-aligned and
+trimmed against GRCh38, and split per gene. Original and normalised variant ID
+(chr:pos:alleles) are kept.
 """
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# imports
+# IMPORTS
 
 from __future__ import annotations
 
@@ -41,33 +31,27 @@ from project_constants import (
     VepCsqColumns,
 )
 
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# CONSTANTS
+
 # helper column of `load_plp_variants`, dropped before returning
 _CONSEQUENCE_KEY: str = "_consequence"
 # columns of the combined list, in output order (the columns of the old
 # per-gene lists, plus `clinvar_direction` and the normalisation columns)
 LIST_COLUMNS: list[str] = [
-    VariantListColumns.VARIANT_ID,
-    VariantListColumns.CHROM,
-    VariantListColumns.POS,
-    VariantListColumns.A1,
-    VariantListColumns.A2,
-    VariantListColumns.SOURCE,
-    VariantListColumns.GENE,
-    VariantListColumns.AM_PATHOGENICITY,
-    VariantListColumns.TRI_CLASS,
-    VariantListColumns.CLINVAR_DIRECTION,
-    VariantListColumns.POS_ORIG,
-    VariantListColumns.A1_ORIG,
-    VariantListColumns.A2_ORIG,
+    VariantListColumns.VARIANT_ID, VariantListColumns.CHROM,
+    VariantListColumns.POS, VariantListColumns.A1, VariantListColumns.A2,
+    VariantListColumns.SOURCE, VariantListColumns.GENE,
+    VariantListColumns.AM_PATHOGENICITY, VariantListColumns.TRI_CLASS,
+    VariantListColumns.CLINVAR_DIRECTION, VariantListColumns.POS_ORIG,
+    VariantListColumns.A1_ORIG, VariantListColumns.A2_ORIG,
     VariantListColumns.NORM_STATUS,
 ]
 # columns of the per-gene marvel extraction lists
 MARVEL_COLUMNS: list[str] = [
-    VariantListColumns.MARVEL_ID,
-    VariantListColumns.CHROM,
-    VariantListColumns.POS,
-    VariantListColumns.A1,
-    VariantListColumns.A2,
+    VariantListColumns.MARVEL_ID, VariantListColumns.CHROM,
+    VariantListColumns.POS, VariantListColumns.A1, VariantListColumns.A2,
     VariantListColumns.GENE,
 ]
 

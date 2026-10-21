@@ -1048,7 +1048,7 @@ class FileNames:
     # VEP/LOFTEE consequences of the gene_list.txt genes, one row per
     # variant x transcript (vep_extract.sh, Snellius; has UKB AF/AC, so
     # never committed)
-    VEP_CSQ: Path = Paths.DATA_RAW / "vep_lipid_gene_csq.tsv.gz"
+    VEP_CSQ: Path = Paths.DATA_TEMP / "vep_lipid_gene_csq.tsv.gz"
     # LOFTEE HC PTVs on the canonical transcript (annotate_ptv.py; has UKB
     # AF/AC, so never committed)
     PTV_VARIANTS: Path = Paths.DATA_PROC / "ptv_variants.tsv.gz"
