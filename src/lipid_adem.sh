@@ -69,6 +69,7 @@ run_mamba biomed-api "${ROOT}"/src/combine_variants.py
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # CARRIER EXTRACTION
+
 # TODO not implemented: plan in docs/rap_carrier_extraction.md
 # [rap] MARVELous Docker on Swiss Army Knife; extract both forms of each
 # variant from the RAP PLINK files (WGS or WES)
@@ -80,6 +81,7 @@ run_mamba biomed-api "${ROOT}"/src/combine_variants.py
 #   allows the download, never commit, delete when no longer needed
 # [myriad] collapse the two forms per variant (no merge on conflict) into
 # data/temp/<GENE>_variant_extraction.tsv.gz (read by marvel_tasks.tsv)
+# TODO if individual data/temp/<GENE>_variants.tsv doe not exist, but data/processed/lipid_variants does, create the individual files anytime the individual ones are needed (not in marvel itself of course, but before marvel submission e.g.)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
