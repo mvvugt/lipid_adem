@@ -172,129 +172,287 @@ Output:
 
 ## [10] slurm_script_extract_task1
 - first run: 2026-10-22 03:17:59
-- last run: 2026-10-22 03:17:59
-- commit: `d22d73f` (dirty)
-- status: failed
+- last run: 2026-10-22 04:43:47
+- commit: `461486d` (dirty)
 
 Output:
 ```text
-[info]  2026-10-22 03:17:59 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
-[info]  2026-10-22 03:17:59 stage: extract
-[info]  2026-10-22 03:17:59 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
-[info]  2026-10-22 03:17:59 node: tcn5.local.snellius.surf.nl, job id: 28452648, task: 1
-[info]  2026-10-22 03:17:59 task 1: /gpfs/home6/mvanvugt/projects/cetp_marvel/data/temp/ukb_ANGPTL3_chr1_plink.vcf.gz
-[error] 2026-10-22 03:17:59 extract ukb_ANGPTL3_chr1_plink.vcf.gz: unexpected exit code 127
---- error output (raw) ---
-[info]  2026-10-22 03:17:59 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
-[info]  2026-10-22 03:17:59 stage: extract
-[info]  2026-10-22 03:17:59 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
-[info]  2026-10-22 03:17:59 node: tcn5.local.snellius.surf.nl, job id: 28452648, task: 1
-[info]  2026-10-22 03:17:59 task 1: /gpfs/home6/mvanvugt/projects/cetp_marvel/data/temp/ukb_ANGPTL3_chr1_plink.vcf.gz
+[info]  2026-10-22 04:43:45 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
+[info]  2026-10-22 04:43:45 stage: extract
+[info]  2026-10-22 04:43:45 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 04:43:45 node: tcn4.local.snellius.surf.nl, job id: 28455323, task: 1
+[info]  2026-10-22 04:43:45 task 1: /home/mvanvugt/projects/lipid_adem/data/temp/marvel/two_source/vep/vep_chr1.vcf.gz
+[info]  2026-10-22 04:43:47 extract vep_chr1.vcf.gz: finished
 
 ```
 
 ## [10] slurm_script_extract_task2
 - first run: 2026-10-22 03:17:58
-- last run: 2026-10-22 03:17:58
-- commit: `d22d73f` (dirty)
-- status: failed
+- last run: 2026-10-22 04:43:12
+- commit: `461486d` (dirty)
 
 Output:
 ```text
-[info]  2026-10-22 03:17:58 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
-[info]  2026-10-22 03:17:58 stage: extract
-[info]  2026-10-22 03:17:58 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
-[info]  2026-10-22 03:17:58 node: tcn17.local.snellius.surf.nl, job id: 28452649, task: 2
-[info]  2026-10-22 03:17:58 task 2: /gpfs/home6/mvanvugt/projects/cetp_marvel/data/temp/ukb_CETP_chr16_plink.vcf.gz
-[error] 2026-10-22 03:17:58 extract ukb_CETP_chr16_plink.vcf.gz: unexpected exit code 127
---- error output (raw) ---
-[info]  2026-10-22 03:17:58 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
-[info]  2026-10-22 03:17:58 stage: extract
-[info]  2026-10-22 03:17:58 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
-[info]  2026-10-22 03:17:58 node: tcn17.local.snellius.surf.nl, job id: 28452649, task: 2
-[info]  2026-10-22 03:17:58 task 2: /gpfs/home6/mvanvugt/projects/cetp_marvel/data/temp/ukb_CETP_chr16_plink.vcf.gz
+[info]  2026-10-22 04:43:09 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
+[info]  2026-10-22 04:43:09 stage: extract
+[info]  2026-10-22 04:43:09 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 04:43:09 node: tcn4.local.snellius.surf.nl, job id: 28455324, task: 2
+[info]  2026-10-22 04:43:09 task 2: /home/mvanvugt/projects/lipid_adem/data/temp/marvel/two_source/vep/vep_chr11.vcf.gz
+[info]  2026-10-22 04:43:12 extract vep_chr11.vcf.gz: finished
 
 ```
 
 ## [10] slurm_script_extract_task3
 - first run: 2026-10-22 03:17:57
-- last run: 2026-10-22 03:17:57
-- commit: `d22d73f` (dirty)
-- status: failed
+- last run: 2026-10-22 04:48:21
+- commit: `461486d` (dirty)
 
 Output:
 ```text
-[info]  2026-10-22 03:17:57 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
-[info]  2026-10-22 03:17:57 stage: extract
-[info]  2026-10-22 03:17:57 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
-[info]  2026-10-22 03:17:57 node: tcn26.local.snellius.surf.nl, job id: 28452650, task: 3
-[info]  2026-10-22 03:17:57 task 3: /gpfs/home6/mvanvugt/projects/cetp_marvel/data/temp/ukb_HMGCR_chr5_plink.vcf.gz
-[error] 2026-10-22 03:17:57 extract ukb_HMGCR_chr5_plink.vcf.gz: unexpected exit code 127
---- error output (raw) ---
-[info]  2026-10-22 03:17:57 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
-[info]  2026-10-22 03:17:57 stage: extract
-[info]  2026-10-22 03:17:57 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
-[info]  2026-10-22 03:17:57 node: tcn26.local.snellius.surf.nl, job id: 28452650, task: 3
-[info]  2026-10-22 03:17:57 task 3: /gpfs/home6/mvanvugt/projects/cetp_marvel/data/temp/ukb_HMGCR_chr5_plink.vcf.gz
+[info]  2026-10-22 04:48:19 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
+[info]  2026-10-22 04:48:19 stage: extract
+[info]  2026-10-22 04:48:19 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 04:48:19 node: tcn4.local.snellius.surf.nl, job id: 28455325, task: 3
+[info]  2026-10-22 04:48:19 task 3: /home/mvanvugt/projects/lipid_adem/data/temp/marvel/two_source/vep/vep_chr2.vcf.gz
+[info]  2026-10-22 04:48:21 extract vep_chr2.vcf.gz: finished
+
+```
+
+## [10] slurm_script_extract_task4
+- first run: 2026-10-22 03:37:57
+- last run: 2026-10-22 04:43:13
+- commit: `461486d` (dirty)
+
+Output:
+```text
+[info]  2026-10-22 04:43:11 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
+[info]  2026-10-22 04:43:11 stage: extract
+[info]  2026-10-22 04:43:11 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 04:43:11 node: tcn6.local.snellius.surf.nl, job id: 28455326, task: 4
+[info]  2026-10-22 04:43:11 task 4: /home/mvanvugt/projects/lipid_adem/data/temp/marvel/two_source/vep/vep_chr19.vcf.gz
+[info]  2026-10-22 04:43:13 extract vep_chr19.vcf.gz: finished
 
 ```
 
 ## [10] slurm_script_extract_task5
 - first run: 2026-10-22 03:18:01
-- last run: 2026-10-22 03:18:01
-- commit: `d22d73f` (dirty)
-- status: failed
+- last run: 2026-10-22 04:44:22
+- commit: `461486d` (dirty)
 
 Output:
 ```text
-[info]  2026-10-22 03:18:01 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
-[info]  2026-10-22 03:18:01 stage: extract
-[info]  2026-10-22 03:18:01 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
-[info]  2026-10-22 03:18:01 node: tcn97.local.snellius.surf.nl, job id: 28452652, task: 5
-[info]  2026-10-22 03:18:01 task 5: /gpfs/home6/mvanvugt/projects/cetp_marvel/data/temp/ukb_PCSK9_chr1_plink.vcf.gz
-[error] 2026-10-22 03:18:01 extract ukb_PCSK9_chr1_plink.vcf.gz: unexpected exit code 127
---- error output (raw) ---
-[info]  2026-10-22 03:18:01 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
-[info]  2026-10-22 03:18:01 stage: extract
-[info]  2026-10-22 03:18:01 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
-[info]  2026-10-22 03:18:01 node: tcn97.local.snellius.surf.nl, job id: 28452652, task: 5
-[info]  2026-10-22 03:18:01 task 5: /gpfs/home6/mvanvugt/projects/cetp_marvel/data/temp/ukb_PCSK9_chr1_plink.vcf.gz
+[info]  2026-10-22 04:44:19 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
+[info]  2026-10-22 04:44:19 stage: extract
+[info]  2026-10-22 04:44:19 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 04:44:19 node: tcn4.local.snellius.surf.nl, job id: 28455327, task: 5
+[info]  2026-10-22 04:44:19 task 5: /home/mvanvugt/projects/lipid_adem/data/temp/marvel/two_source/vep/vep_chr16.vcf.gz
+[info]  2026-10-22 04:44:21 extract vep_chr16.vcf.gz: finished
 
 ```
 
 ## [10] slurm_script_extract_task6
 - first run: 2026-10-22 03:17:58
-- last run: 2026-10-22 03:17:58
-- commit: `d22d73f` (dirty)
-- status: failed
+- last run: 2026-10-22 04:43:13
+- commit: `461486d` (dirty)
 
 Output:
 ```text
-[info]  2026-10-22 03:17:58 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
-[info]  2026-10-22 03:17:58 stage: extract
-[info]  2026-10-22 03:17:58 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
-[info]  2026-10-22 03:17:58 node: tcn102.local.snellius.surf.nl, job id: 28452629, task: 6
-[info]  2026-10-22 03:17:58 task 6: /gpfs/home6/mvanvugt/projects/cetp_marvel/data/temp/ukb_PPARA_chr22_plink.vcf.gz
-[error] 2026-10-22 03:17:58 extract ukb_PPARA_chr22_plink.vcf.gz: unexpected exit code 127
---- error output (raw) ---
-[info]  2026-10-22 03:17:58 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
-[info]  2026-10-22 03:17:58 stage: extract
-[info]  2026-10-22 03:17:58 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
-[info]  2026-10-22 03:17:58 node: tcn102.local.snellius.surf.nl, job id: 28452629, task: 6
-[info]  2026-10-22 03:17:58 task 6: /gpfs/home6/mvanvugt/projects/cetp_marvel/data/temp/ukb_PPARA_chr22_plink.vcf.gz
+[info]  2026-10-22 04:43:10 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
+[info]  2026-10-22 04:43:10 stage: extract
+[info]  2026-10-22 04:43:10 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 04:43:10 node: tcn17.local.snellius.surf.nl, job id: 28455328, task: 6
+[info]  2026-10-22 04:43:10 task 6: /home/mvanvugt/projects/lipid_adem/data/temp/marvel/two_source/vep/vep_chr5.vcf.gz
+[info]  2026-10-22 04:43:12 extract vep_chr5.vcf.gz: finished
+
+```
+
+## [10] slurm_script_extract_task7
+- first run: 2026-10-22 04:30:10
+- last run: 2026-10-22 04:42:39
+- commit: `461486d` (dirty)
+
+Output:
+```text
+[info]  2026-10-22 04:42:36 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
+[info]  2026-10-22 04:42:36 stage: extract
+[info]  2026-10-22 04:42:36 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 04:42:36 node: tcn20.local.snellius.surf.nl, job id: 28455329, task: 7
+[info]  2026-10-22 04:42:36 task 7: /home/mvanvugt/projects/lipid_adem/data/temp/marvel/two_source/vep/vep_chr7.vcf.gz
+[info]  2026-10-22 04:42:38 extract vep_chr7.vcf.gz: finished
+
+```
+
+## [10] slurm_script_extract_task8
+- first run: 2026-10-22 04:30:44
+- last run: 2026-10-22 04:42:48
+- commit: `461486d` (dirty)
+
+Output:
+```text
+[info]  2026-10-22 04:42:36 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
+[info]  2026-10-22 04:42:36 stage: extract
+[info]  2026-10-22 04:42:36 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 04:42:36 node: tcn24.local.snellius.surf.nl, job id: 28455321, task: 8
+[info]  2026-10-22 04:42:36 task 8: /home/mvanvugt/projects/lipid_adem/data/temp/marvel/two_source/vep/vep_chr22.vcf.gz
+[info]  2026-10-22 04:42:48 extract vep_chr22.vcf.gz: finished
+
+```
+
+## [10] slurm_script_final_task1
+- first run: 2026-10-22 04:37:33
+- last run: 2026-10-22 04:51:38
+- commit: `461486d` (dirty)
+
+Δ vs previous run (was `461486d` (dirty)):
+- error resolved
+```diff
+@@ -1,6 +1,6 @@
+ [info]  2026-10-22 04:48:53 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
+ [info]  2026-10-22 04:48:53 stage: final
+ [info]  2026-10-22 04:48:53 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+-[info]  2026-10-22 04:36:57 node: tcn4.local.snellius.surf.nl, job id: 28454917, task: 1
++[info]  2026-10-22 04:48:53 node: tcn4.local.snellius.surf.nl, job id: 28455322, task: 1
+ [info]  2026-10-22 04:49:25 aggregate: finished
+-[error] 2026-10-22 04:37:33 associate: runtime error (exit 1); see its log
++[info]  2026-10-22 04:51:38 associate: finished
+```
+
+Output:
+```text
+[info]  2026-10-22 04:48:53 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
+[info]  2026-10-22 04:48:53 stage: final
+[info]  2026-10-22 04:48:53 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 04:48:53 node: tcn4.local.snellius.surf.nl, job id: 28455322, task: 1
+[info]  2026-10-22 04:49:25 aggregate: finished
+[info]  2026-10-22 04:51:38 associate: finished
+
+```
+
+## [10] slurm_script_vep_prep_task1
+- first run: 2026-10-22 04:22:14
+- last run: 2026-10-22 04:43:05
+- commit: `461486d` (dirty)
+
+Output:
+```text
+[info]  2026-10-22 04:42:01 env: /home/mvanvugt/mambaforge/envs/marvel
+[info]  2026-10-22 04:42:01 stage: vep_prep; config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml; output: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 04:42:01 task 1: chr 1, /gpfs/work2/0/aus20644/data/ukbiobank/genetics/b38/lof/chr1_merged_vep.vcf.gz -> /home/mvanvugt/projects/lipid_adem/data/temp/marvel/two_source/vep/vep_chr1.vcf.gz
+[info]  2026-10-22 04:43:05 chr 1: 0
+
+```
+
+## [10] slurm_script_vep_prep_task2
+- first run: 2026-10-22 04:22:17
+- last run: 2026-10-22 04:42:32
+- commit: `461486d` (dirty)
+
+Output:
+```text
+[info]  2026-10-22 04:42:02 env: /home/mvanvugt/mambaforge/envs/marvel
+[info]  2026-10-22 04:42:02 stage: vep_prep; config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml; output: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 04:42:02 task 2: chr 11, /gpfs/work2/0/aus20644/data/ukbiobank/genetics/b38/lof/chr11_merged_vep.vcf.gz -> /home/mvanvugt/projects/lipid_adem/data/temp/marvel/two_source/vep/vep_chr11.vcf.gz
+[info]  2026-10-22 04:42:32 chr 11: 18
+
+```
+
+## [10] slurm_script_vep_prep_task3
+- first run: 2026-10-22 04:22:15
+- last run: 2026-10-22 04:47:45
+- commit: `461486d` (dirty)
+
+Output:
+```text
+[info]  2026-10-22 04:42:02 env: /home/mvanvugt/mambaforge/envs/marvel
+[info]  2026-10-22 04:42:02 stage: vep_prep; config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml; output: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 04:42:03 task 3: chr 2, /gpfs/work2/0/aus20644/data/ukbiobank/genetics/b38/lof/chr2_merged_vep.vcf.gz -> /home/mvanvugt/projects/lipid_adem/data/temp/marvel/two_source/vep/vep_chr2.vcf.gz
+[info]  2026-10-22 04:47:45 chr 2: 178
+
+```
+
+## [10] slurm_script_vep_prep_task4
+- first run: 2026-10-22 04:22:19
+- last run: 2026-10-22 04:42:39
+- commit: `461486d` (dirty)
+
+Output:
+```text
+[info]  2026-10-22 04:42:02 env: /home/mvanvugt/mambaforge/envs/marvel
+[info]  2026-10-22 04:42:02 stage: vep_prep; config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml; output: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 04:42:03 task 4: chr 19, /gpfs/work2/0/aus20644/data/ukbiobank/genetics/b38/lof/chr19_merged_vep.vcf.gz -> /home/mvanvugt/projects/lipid_adem/data/temp/marvel/two_source/vep/vep_chr19.vcf.gz
+[info]  2026-10-22 04:42:39 chr 19: 8
+
+```
+
+## [10] slurm_script_vep_prep_task5
+- first run: 2026-10-22 04:22:14
+- last run: 2026-10-22 04:43:36
+- commit: `461486d` (dirty)
+
+Output:
+```text
+[info]  2026-10-22 04:42:02 env: /home/mvanvugt/mambaforge/envs/marvel
+[info]  2026-10-22 04:42:02 stage: vep_prep; config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml; output: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 04:42:03 task 5: chr 16, /gpfs/work2/0/aus20644/data/ukbiobank/genetics/b38/lof/chr16_merged_vep.vcf.gz -> /home/mvanvugt/projects/lipid_adem/data/temp/marvel/two_source/vep/vep_chr16.vcf.gz
+[info]  2026-10-22 04:43:36 chr 16: 58
+
+```
+
+## [10] slurm_script_vep_prep_task6
+- first run: 2026-10-22 04:22:26
+- last run: 2026-10-22 04:42:29
+- commit: `461486d` (dirty)
+
+Output:
+```text
+[info]  2026-10-22 04:42:03 env: /home/mvanvugt/mambaforge/envs/marvel
+[info]  2026-10-22 04:42:03 stage: vep_prep; config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml; output: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 04:42:04 task 6: chr 5, /gpfs/work2/0/aus20644/data/ukbiobank/genetics/b38/lof/chr5_merged_vep.vcf.gz -> /home/mvanvugt/projects/lipid_adem/data/temp/marvel/two_source/vep/vep_chr5.vcf.gz
+[info]  2026-10-22 04:42:28 chr 5: 0
+
+```
+
+## [10] slurm_script_vep_prep_task7
+- first run: 2026-10-22 04:22:22
+- last run: 2026-10-22 04:42:06
+- commit: `461486d` (dirty)
+
+Output:
+```text
+[info]  2026-10-22 04:42:02 env: /home/mvanvugt/mambaforge/envs/marvel
+[info]  2026-10-22 04:42:02 stage: vep_prep; config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml; output: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 04:42:03 task 7: chr 7, /gpfs/work2/0/aus20644/data/ukbiobank/genetics/b38/lof/chr7_merged_vep.vcf.gz -> /home/mvanvugt/projects/lipid_adem/data/temp/marvel/two_source/vep/vep_chr7.vcf.gz
+[info]  2026-10-22 04:42:05 chr 7: no VEP fallback variants; header-only chunk
+[info]  2026-10-22 04:42:06 chr 7: 0
+
+```
+
+## [10] slurm_script_vep_prep_task8
+- first run: 2026-10-22 04:22:13
+- last run: 2026-10-22 04:42:08
+- commit: `461486d` (dirty)
+
+Output:
+```text
+[info]  2026-10-22 04:42:03 env: /home/mvanvugt/mambaforge/envs/marvel
+[info]  2026-10-22 04:42:03 stage: vep_prep; config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml; output: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 04:42:04 task 8: chr 22, /gpfs/work2/0/aus20644/data/ukbiobank/genetics/b38/lof/chr22_merged_vep.vcf.gz -> /home/mvanvugt/projects/lipid_adem/data/temp/marvel/two_source/vep/vep_chr22.vcf.gz
+[info]  2026-10-22 04:42:07 chr 22: no VEP fallback variants; header-only chunk
+[info]  2026-10-22 04:42:07 chr 22: 0
 
 ```
 
 ## [10] submit_two_source_submit_task1
 - first run: 2026-10-21 21:41:00
-- last run: 2026-10-22 03:17:19
-- commit: `d22d73f` (dirty)
+- last run: 2026-10-22 04:41:12
+- commit: `461486d` (dirty)
 
 Output:
 ```text
-[info]  2026-10-22 03:17:15 stage: submit; config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml; output: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
-[info]  2026-10-22 03:17:17 6 plink gene VCF(s); chromosomes: 1 11 2 19 16 5 7 22
-[info]  2026-10-22 03:17:19 submitted: J1 28452629, J2 28452630, J3 28452631, J4 28452632
+[info]  2026-10-22 04:41:01 env: /home/mvanvugt/mambaforge/envs/marvel
+[info]  2026-10-22 04:41:01 stage: submit; config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml; output: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 04:41:09 5 plink gene VCF(s); chromosomes: 1 11 2 19 16 5 7 22
+[info]  2026-10-22 04:41:12 submitted: J1 28455319, J2 28455320, J3 28455321, J4 28455322
 
 ```
 
@@ -1898,4 +2056,3 @@ Output:
 [info]  2026-10-21 13:50:41 Wrote 24 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PPARA_variants.tsv
 
 ```
-``

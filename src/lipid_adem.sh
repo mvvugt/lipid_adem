@@ -82,8 +82,9 @@ run_mamba biomed-api "${ROOT}"/src/combine_variants.py
 # [myriad] collapse the two forms per variant (no merge on conflict) into
 # data/temp/<GENE>_variant_extraction.tsv.gz (read by marvel_tasks.tsv)
 # TODO if individual data/temp/<GENE>_variants.tsv doe not exist, but data/processed/lipid_variants does, create the individual files anytime the individual ones are needed (not in marvel itself of course, but before marvel submission e.g.)
-# list full-sample vcf-files for some genes
-realpath "${ROOT}"/../cetp_marvel/data/temp/*plink*vcf.gz > "${ROOT}"/data/raw/plink_gene_vcfs.txt
+# list full-sample vcf-files for some genes; exclude one of the chr1 genes
+realpath "${ROOT}"/../cetp_marvel/data/temp/*plink*vcf.gz | 
+    grep -v PCSK9 > "${ROOT}"/data/raw/plink_gene_vcfs.txt
 DATA_DIR="/gpfs/work2/0/aus20644/data"
 REF_DIR="${DATA_DIR}/resources/human_genome/b38"
 LOF_DIR="${DATA_DIR}/ukbiobank/genetics/b38/lof"
@@ -94,8 +95,7 @@ LOF_DIR="${DATA_DIR}/ukbiobank/genetics/b38/lof"
     -R "${REF_DIR}/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz"             \
     -o "${ROOT}"/data/temp/marvel                                              \
     -a "${HOME}"/software/marvel/resources/workflows/slurm_array.sh            \
-    -m '2023 BCFtools/1.18-GCC-12.3.0'                                         \
-    -D
+    -m '2023 BCFtools/1.18-GCC-12.3.0'
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
