@@ -28,6 +28,13 @@ class Paths:
     RESULTS_OUTPUT: Path = HERE / "results" / "output"
     # per-gene marvel result stores (`marvel_results_table.py`)
     MARVEL_STORE: Path = HERE / "results" / "marvel"
+    # MARVELous two-source run (submit_two_source.sh, Snellius): extract
+    # chunks plus the burden and per-variant aggregate/associate outputs
+    MARVEL_RUN: Path = DATA_TEMP / "marvel"
+    # old vs new marvel run comparison (compare_marvel_runs.py): counts
+    # only here, the individual-level output in MARVEL_COMPARISON_TEMP
+    MARVEL_COMPARISON: Path = HERE / "results" / "marvel_comparison"
+    MARVEL_COMPARISON_TEMP: Path = DATA_TEMP / "marvel_comparison"
     RESULTS_FIGURES: Path = HERE / "results" / "figures"
     # subfolder of a figure `--out-dir` for figures not in
     # `FigureNames.MAIN_FIGURES`
@@ -305,6 +312,17 @@ class Constants:
     # marvel `Model name` of the main analysis (marvel_results_table.py,
     # apoe_genotype_forest.py)
     MARVEL_DEFAULT_MODEL: str = "model_3"
+    # old (cnf) marvel `Model name` -> new (TOML) `covariate_model`;
+    # model_2 (PCs only) has no new counterpart (compare_marvel_runs.py)
+    MARVEL_MODEL_MAP: dict[str, str] = {
+        "model_1": "unadjusted",
+        "model_3": "adjusted",
+    }
+    # dosage above this is a carrier, in both runs (`extract.
+    # carrier_threshold` of config/marvel_config.toml)
+    MARVEL_CARRIER_THRESHOLD: float = 0.5
+    # rows per chunk when streaming an old wide carriers file
+    OLD_CARRIERS_CHUNK_ROWS: int = 50_000
     # effect-scale inference (`functions.infer_effect_scales`): median of
     # r = SE * sqrt(2f(1-f)N) over a study's variants with MAF above
     # EFFECT_SCALE_MIN_MAF; log-OR gives r = 1/sqrt(phi(1-phi)) >= 2,
@@ -366,6 +384,7 @@ class RunlogOrder:
     GWAS_CAT_PREP: int = 10
     FILTER_GWAS_CAT: int = 20
     MARVEL_RESULTS_TABLE: int = 25
+    COMPARE_MARVEL_RUNS: int = 27
     MERGE_ASSOCIATIONS: int = 30
     MATCH_VARIANTS: int = 40
     META_ANALYSIS: int = 50
@@ -933,6 +952,119 @@ class MarvelColumns:
     )
 
 
+class MarvelRun:
+    """File suffixes and columns of a MARVELous (TOML) run directory
+    (`Paths.MARVEL_RUN`): extract writes ``<chunk>.<suffix>`` per
+    genotype file, aggregate/associate ``<prefix>.<suffix>``.
+    """
+    CARRIERS_SUFFIX: str = ".carriers.tsv.gz"
+    VARIANTS_SUFFIX: str = ".variants.tsv.gz"
+    SAMPLES_SUFFIX: str = ".samples.tsv.gz"
+    SENTINEL_SUFFIX: str = ".SUCCESS"
+    RESULTS_SUFFIX: str = ".results.tsv.gz"
+    # chunk carriers (long, sparse) and samples
+    ID: str = "id"
+    VARIANT: str = "variant"
+    DOSAGE: str = "dosage"
+    # chunk variant summary
+    CHROM: str = "chrom"
+    POS: str = "pos"
+    REF: str = "ref"
+    ALT: str = "alt"
+    N_CARRIERS: str = "n_carriers"
+    N_MISSING: str = "n_missing"
+    STATUS: str = "status"
+    # statuses whose genotypes were read
+    READ_STATUS: tuple[str, ...] = ("found", "swapped")
+    # association results
+    EXPOSURE: str = "exposure"
+    STRATUM: str = "stratum"
+    COVARIATE_MODEL: str = "covariate_model"
+    OUTCOME: str = "outcome"
+    TEST: str = "test"
+    TERM: str = "term"
+    N_CASES: str = "n_cases"
+    N_SAMPLES: str = "n_samples"
+    N_EXPOSED: str = "n_exposed"
+    ESTIMATE: str = "estimate"
+    SE: str = "se"
+    P_VALUE: str = "p_value"
+    REMARKS: str = "remarks"
+    OVERALL: str = "overall"
+
+
+class MarvelCompareColumns:
+    """Columns of the compare_marvel_runs.py outputs. A variant key is
+    ``chrom:pos:a1:a2`` without ``chr``, alleles upper case.
+    """
+    OLD_KEY: str = "old_key"
+    NEW_KEY: str = "new_key"
+    OLD_VARIANT: str = "old_variant"
+    NEW_VARIANT: str = "new_variant"
+    OLD_GENE: str = "old_gene"
+    NEW_GENE: str = "new_gene"
+    OLD_SOURCE: str = "old_source"
+    NEW_SOURCE: str = "new_source"
+    IN_OLD: str = "in_old_list"
+    IN_NEW: str = "in_new_list"
+    # how an old variant was found in the new list (`MATCH_*`)
+    MATCH: str = "match"
+    MATCH_EXACT: str = "exact"
+    # old = the new variant's form before normalisation (`*_orig`)
+    MATCH_ORIG: str = "orig"
+    # old a1/a2 = new a2/a1: the counted allele differs, so carriers and
+    # effects are not comparable as they are
+    MATCH_SWAPPED: str = "swapped"
+    MATCH_SWAPPED_ORIG: str = "swapped_orig"
+    MATCH_NONE: str = "none"
+    NEW_STATUS: str = "new_status"
+    NEW_CHUNK: str = "new_chunk"
+    NEW_N_CARRIERS: str = "new_n_carriers"
+    NEW_N_MISSING: str = "new_n_missing"
+    # max old `Exposed` over the overall model_1 rows of the store (NA in
+    # most old rows: use the carriers comparison for counts)
+    OLD_EXPOSED: str = "old_exposed"
+    # carriers comparison, per old carriers column
+    N_OLD_SAMPLES: str = "n_old_samples"
+    N_NEW_SAMPLES: str = "n_new_samples"
+    N_OLD_CARRIERS: str = "n_old_carriers"
+    N_OLD_MISSING: str = "n_old_missing"
+    N_BOTH: str = "n_both"
+    # old carriers that are not carriers now, by reason (`LOST_*`)
+    N_LOST: str = "n_lost"
+    N_LOST_NON_CARRIER: str = "n_lost_non_carrier"
+    N_LOST_MISSING: str = "n_lost_missing"
+    N_LOST_NOT_SAMPLED: str = "n_lost_not_sampled"
+    N_LOST_NOT_READ: str = "n_lost_not_read"
+    # new carriers that were not old carriers
+    N_GAINED: str = "n_gained"
+    N_GAINED_OLD_MISSING: str = "n_gained_old_missing"
+    N_GAINED_NOT_IN_OLD: str = "n_gained_not_in_old"
+    LOST_REASON: str = "reason"
+    LOST_NON_CARRIER: str = "non_carrier"
+    LOST_MISSING: str = "missing"
+    LOST_NOT_SAMPLED: str = "not_sampled"
+    LOST_NOT_READ: str = "not_read"
+    # results comparison
+    STORE_GENE: str = "store_gene"
+    OUTCOME: str = "outcome"
+    MODEL: str = "covariate_model"
+    OLD_PREFIX: str = "old_"
+    NEW_PREFIX: str = "new_"
+    CASES: str = "cases"
+    SAMPLES: str = "samples"
+    EXPOSED: str = "exposed"
+    BETA: str = "beta"
+    SE: str = "se"
+    P: str = "p"
+    BETA_DIFF: str = "beta_diff"
+    # (new - old beta) / sqrt(old se^2 + new se^2); not a test, the runs
+    # share most samples
+    Z_DIFF: str = "z_diff"
+    SAME_SIGN: str = "same_sign"
+    NEW_REMARKS: str = "new_remarks"
+
+
 class MetaLevel:
     """Values of the `level` column of the meta-analysis outputs."""
     # pooled over all studies of the run
@@ -1080,6 +1212,23 @@ class FileNames:
     MARVEL_LOOSE_GLOB: str = "*_results.tsv.gz"
     # tar of an outdir's loose files (`marvel_results_table.py --archive`)
     MARVEL_ARCHIVE_TEMPLATE: str = "per_variant_results_{stamp}.tar"
+    # old per-gene wide carriers files (`f.eid` + one column per variant),
+    # as in marvel_tasks.tsv; copied from Myriad for compare_marvel_runs.py
+    OLD_CARRIERS_TEMPLATE: str = str(
+        Paths.DATA_TEMP / "{gene}_variant_extraction.tsv.gz"
+    )
+    # `output.prefix` of the burden and per-variant runs in
+    # `Paths.MARVEL_RUN` (config/marvel_config{,_variant}.toml)
+    MARVEL_BURDEN_PREFIX: str = "lipid_vep_plink_marvel_test"
+    MARVEL_VARIANT_PREFIX: str = "lipid_vep_plink_marvel_variant"
+    # compare_marvel_runs.py outputs
+    COMPARE_VARIANT_LISTS: Path = (
+        Paths.MARVEL_COMPARISON / "variant_lists.tsv.gz"
+    )
+    COMPARE_CARRIERS: Path = Paths.MARVEL_COMPARISON / "carriers.tsv.gz"
+    COMPARE_RESULTS: Path = Paths.MARVEL_COMPARISON / "results.tsv.gz"
+    # individual-level: never committed, delete when no longer needed
+    LOST_CARRIERS: Path = Paths.MARVEL_COMPARISON_TEMP / "lost_carriers.tsv.gz"
     # curated study accession -> study group and APOE stratum
     APOE_STRATA: Path = Paths.DATA_RAW / "apoe_strata.tsv"
     # curated outcome x study exclusions, applied before the recency cap

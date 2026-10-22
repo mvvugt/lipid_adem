@@ -96,6 +96,29 @@ LOF_DIR="${DATA_DIR}/ukbiobank/genetics/b38/lof"
     -a "${HOME}"/software/marvel/resources/workflows/slurm_array.sh            \
     -m '2023 BCFtools/1.18-GCC-12.3.0'                                         \
     -D
+# [snellius] per-variant aggregate + associate on the same extract chunks
+# (one exposure per variant, prefix lipid_vep_plink_marvel_variant); ~100x
+# the tests of the burden run, hence 8 cores and 8 h (estimate)
+RUN_DIR="${ROOT}/data/temp/marvel"
+sbatch --partition=rome --cpus-per-task=8 --mem=16G --time=08:00:00         \
+    --job-name=mv_final_variant                                                \
+    --output="${RUN_DIR}/two_source/logs/%x_%j.log"                            \
+    "${HOME}"/software/marvel/resources/workflows/slurm_array.sh               \
+    -c "${ROOT}"/config/marvel_config_variant.toml -o "${RUN_DIR}"             \
+    -g "${RUN_DIR}/two_source/geno_all.txt" -s final -n 8
+# [myriad -> snellius] old carriers + stores for the comparison;
+# individual-level: never commit, delete when no longer needed
+# rsync <myriad>:projects/lipid_adem/data/temp/'*_variant_extraction.tsv.gz' \
+#     "${ROOT}"/data/temp/
+# rsync <myriad>:projects/lipid_adem/results/marvel/'*_results.tsv.gz' \
+#     "${ROOT}"/results/marvel/
+# [snellius] old vs new run: variant lists, carriers, per-variant results
+# (results/marvel_comparison; lost carrier IDs in data/temp/marvel_comparison)
+# <SNELLIUS_ENV>: needs pandas and log_tools (not biomed_api)
+sbatch --partition=rome --cpus-per-task=1 --mem=8G --time=01:00:00          \
+    --job-name=compare_marvel --output="${ROOT}"/src/logs/%x_%j.log            \
+    --wrap "mamba run --no-capture-output -n <SNELLIUS_ENV> \
+        python ${ROOT}/src/compare_marvel_runs.py"
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
