@@ -1804,39 +1804,39 @@ Output:
 
 ## [40] match_variants (`/home/rmgpmva/projects/lipid_adem/src/match_variants.py --region-rare --max-maf 0.01`)
 - first run: 2026-10-01 09:59:12
-- last run: 2026-10-14 08:57:32
-- commit: `8781963`
+- last run: 2026-10-16 12:22:34
+- commit: `a763a00`
 
 Output:
 ```text
-[stage] 2026-10-14 08:55:43 load_gwas
-[info]  2026-10-14 08:56:09 /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/merged_associations.tsv.gz: 620105 rows, 620105 variant-level (summary-stats, curated)
-[info]  2026-10-14 08:56:11 curated: 25 rows without chrom/pos or effect allele, cannot be matched
-[info]  2026-10-14 08:56:13 region-rare: 620080 rows, 0 outside their gene region, 271216 with MAF >= 0.01, 9645 without MAF (not marvel) dropped, 26992 marvel rows without MAF kept; 339219 rows kept
-[stage] 2026-10-14 08:56:14 build_region_list
-[info]  2026-10-14 08:56:14 region-rare list: 10047 sites (4253 duplicates after ref/alt ordering removed), 1 without a known reference allele (alleles in alphabetical order)
-[info]  2026-10-14 08:56:14 region-rare list: ANGPTL3 689 sites
-[info]  2026-10-14 08:56:14 region-rare list: APOA1 607 sites
-[info]  2026-10-14 08:56:14 region-rare list: APOB 1640 sites
-[info]  2026-10-14 08:56:14 region-rare list: APOE 614 sites
-[info]  2026-10-14 08:56:14 region-rare list: CETP 1347 sites
-[info]  2026-10-14 08:56:14 region-rare list: HMGCR 1091 sites
-[info]  2026-10-14 08:56:14 region-rare list: NPC1L1 1526 sites
-[info]  2026-10-14 08:56:14 region-rare list: PCSK9 1267 sites
-[info]  2026-10-14 08:56:14 region-rare list: PPARA 1266 sites
-[stage] 2026-10-14 08:56:14 match
-[info]  2026-10-14 08:56:15 ANGPTL3 region_rare: 689 variants, 689 matched, GWAS rows: summary-stats=20130
-[info]  2026-10-14 08:56:15 APOA1 region_rare: 607 variants, 607 matched, GWAS rows: summary-stats=23493
-[info]  2026-10-14 08:56:16 APOB region_rare: 1640 variants, 1640 matched, GWAS rows: summary-stats=63380
-[info]  2026-10-14 08:56:16 APOE region_rare: 614 variants, 614 matched, GWAS rows: summary-stats=20375
-[info]  2026-10-14 08:56:16 CETP region_rare: 1347 variants, 1347 matched, GWAS rows: summary-stats=51273
-[info]  2026-10-14 08:56:16 HMGCR region_rare: 1091 variants, 1091 matched, GWAS rows: summary-stats=34246
-[info]  2026-10-14 08:56:16 NPC1L1 region_rare: 1526 variants, 1526 matched, GWAS rows: summary-stats=45092
-[info]  2026-10-14 08:56:16 PCSK9 region_rare: 1267 variants, 1267 matched, GWAS rows: summary-stats=46108
-[info]  2026-10-14 08:56:16 PPARA region_rare: 1266 variants, 1266 matched, GWAS rows: summary-stats=43260
-[warn]  2026-10-14 08:56:17 a1 vs Ensembl ref: 319516 matched SNV rows checked, 108 where a1 is not the Ensembl ref (e.g. 1:62598799:AAAA:AAA, 1:62601803:AGGT:AGGTAGGT, 1:62604235:GG:G)
-[stage] 2026-10-14 08:56:17 write
-[info]  2026-10-14 08:57:22 wrote 347357 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/matched_region_variants.tsv.gz
+[stage] 2026-10-16 12:21:10 load_gwas
+[info]  2026-10-16 12:21:36 /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/merged_associations.tsv.gz: 620105 rows, 620105 variant-level (summary-stats, curated)
+[info]  2026-10-16 12:21:38 curated: 25 rows without chrom/pos or effect allele, cannot be matched
+[info]  2026-10-16 12:21:41 region-rare: 620080 rows, 0 outside their gene region, 271216 with MAF >= 0.01, 9645 without MAF (not marvel) dropped, 26992 marvel rows without MAF kept; 339219 rows kept
+[stage] 2026-10-16 12:21:41 build_region_list
+[info]  2026-10-16 12:21:42 region-rare list: 10047 sites (4253 duplicates after ref/alt ordering removed), 1 without a known reference allele (alleles in alphabetical order)
+[info]  2026-10-16 12:21:42 region-rare list: ANGPTL3 689 sites
+[info]  2026-10-16 12:21:42 region-rare list: APOA1 607 sites
+[info]  2026-10-16 12:21:42 region-rare list: APOB 1640 sites
+[info]  2026-10-16 12:21:42 region-rare list: APOE 614 sites
+[info]  2026-10-16 12:21:42 region-rare list: CETP 1347 sites
+[info]  2026-10-16 12:21:42 region-rare list: HMGCR 1091 sites
+[info]  2026-10-16 12:21:42 region-rare list: NPC1L1 1526 sites
+[info]  2026-10-16 12:21:42 region-rare list: PCSK9 1267 sites
+[info]  2026-10-16 12:21:42 region-rare list: PPARA 1266 sites
+[stage] 2026-10-16 12:21:42 match
+[info]  2026-10-16 12:21:43 ANGPTL3 region_rare: 689 variants, 689 matched, GWAS rows: summary-stats=20130
+[info]  2026-10-16 12:21:43 APOA1 region_rare: 607 variants, 607 matched, GWAS rows: summary-stats=23493
+[info]  2026-10-16 12:21:43 APOB region_rare: 1640 variants, 1640 matched, GWAS rows: summary-stats=63380
+[info]  2026-10-16 12:21:43 APOE region_rare: 614 variants, 614 matched, GWAS rows: summary-stats=20375
+[info]  2026-10-16 12:21:43 CETP region_rare: 1347 variants, 1347 matched, GWAS rows: summary-stats=51273
+[info]  2026-10-16 12:21:43 HMGCR region_rare: 1091 variants, 1091 matched, GWAS rows: summary-stats=34246
+[info]  2026-10-16 12:21:44 NPC1L1 region_rare: 1526 variants, 1526 matched, GWAS rows: summary-stats=45092
+[info]  2026-10-16 12:21:44 PCSK9 region_rare: 1267 variants, 1267 matched, GWAS rows: summary-stats=46108
+[info]  2026-10-16 12:21:44 PPARA region_rare: 1266 variants, 1266 matched, GWAS rows: summary-stats=43260
+[warn]  2026-10-16 12:21:44 a1 vs Ensembl ref: 319516 matched SNV rows checked, 108 where a1 is not the Ensembl ref (e.g. 1:62598799:AAAA:AAA, 1:62601803:AGGT:AGGTAGGT, 1:62604235:GG:G)
+[stage] 2026-10-16 12:21:45 write
+[info]  2026-10-16 12:22:33 wrote 347357 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/matched_region_variants.tsv.gz
 
 ```
 
@@ -1878,75 +1878,138 @@ Output:
 
 ## [50] meta_analysis (`/home/rmgpmva/projects/lipid_adem/src/meta_analysis.py --ancestry MULTI --studies marvel_ukb_MULTI_all_cause_dementia marvel_ukb_MULTI_all_cause_dementia_e44 marvel_ukb_MULTI_all_cause_dementia_e43 marvel_ukb_MULTI_all_cause_dementia_e33 marvel_ukb_MULTI_all_cause_dementia_e22_e32 marvel_ukb_MULTI_alzheimers_dementia marvel_ukb_MULTI_alzheimers_dementia_e44 marvel_ukb_MULTI_alzheimers_dementia_e43 marvel_ukb_MULTI_alzheimers_dementia_e33 marvel_ukb_MULTI_alzheimers_dementia_e22_e32 marvel_ukb_MULTI_vascular_dementia marvel_ukb_MULTI_vascular_dementia_e44 marvel_ukb_MULTI_vascular_dementia_e43 marvel_ukb_MULTI_vascular_dementia_e33 marvel_ukb_MULTI_vascular_dementia_e22_e32 marvel_ukb_MULTI_frontotemporal_dementia marvel_ukb_MULTI_frontotemporal_dementia_e44 marvel_ukb_MULTI_frontotemporal_dementia_e43 marvel_ukb_MULTI_frontotemporal_dementia_e33 marvel_ukb_MULTI_frontotemporal_dementia_e22_e32 --region-rare --stratified --label ukb_dementia_region_rare`)
 - first run: 2026-10-01 10:26:24
-- last run: 2026-10-14 16:21:57
-- commit: `8781963`
+- last run: 2026-10-16 12:36:28
+- commit: `a763a00`
+
+Δ vs previous run (was `a763a00`):
+stage `load_matched`:
+```diff
+@@ -1,5 +1,5 @@
+ [info]  2026-10-16 12:34:04 /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/matched_region_variants.tsv.gz: 347357 rows, 10047 variants
+ [info]  2026-10-16 12:34:04 20375 rows of excluded gene(s) APOE dropped
+ [info]  2026-10-16 12:34:06 326982 of 326982 rows kept (MULTI pools every ancestry) (all: AFR=87047, AMR=42782, CSA=36051, EAS=10748, EUR=81062, MULTI=69061, NR=231)
+-[info]  2026-10-16 12:30:21 study_accession in marvel_ukb_MULTI_all_cause_dementia, marvel_ukb_MULTI_all_cause_dementia_e44, marvel_ukb_MULTI_all_cause_dementia_e43, marvel_ukb_MULTI_all_cause_dementia_e33, marvel_ukb_MULTI_all_cause_dementia_e22_e32, marvel_ukb_MULTI_alzheimers_dementia, marvel_ukb_MULTI_alzheimers_dementia_e44, marvel_ukb_MULTI_alzheimers_dementia_e43, marvel_ukb_MULTI_alzheimers_dementia_e33, marvel_ukb_MULTI_alzheimers_dementia_e22_e32, marvel_ukb_MULTI_vascular_dementia, marvel_ukb_MULTI_vascular_dementia_e44, marvel_ukb_MULTI_vascular_dementia_e43, marvel_ukb_MULTI_vascular_dementia_e33, marvel_ukb_MULTI_vascular_dementia_e22_e32, marvel_ukb_MULTI_frontotemporal_dementia, marvel_ukb_MULTI_frontotemporal_dementia_e44, marvel_ukb_MULTI_frontotemporal_dementia_e43, marvel_ukb_MULTI_frontotemporal_dementia_e33, marvel_ukb_MULTI_frontotemporal_dementia_e22_e32, F5_DEMENTIA_INCLAVO, G6_ALZHEIMER, F5_VASCDEM, FTD: 21335 of 326982 rows kept
+-[info]  2026-10-16 12:30:22 MULTI: 21335 rows pooled across ancestries (EUR=5704, MULTI=15631), relabelled MULTI; a study reported both per ancestry and combined is counted twice unless --studies excludes one
++[info]  2026-10-16 12:34:07 study_accession in marvel_ukb_MULTI_all_cause_dementia, marvel_ukb_MULTI_all_cause_dementia_e44, marvel_ukb_MULTI_all_cause_dementia_e43, marvel_ukb_MULTI_all_cause_dementia_e33, marvel_ukb_MULTI_all_cause_dementia_e22_e32, marvel_ukb_MULTI_alzheimers_dementia, marvel_ukb_MULTI_alzheimers_dementia_e44, marvel_ukb_MULTI_alzheimers_dementia_e43, marvel_ukb_MULTI_alzheimers_dementia_e33, marvel_ukb_MULTI_alzheimers_dementia_e22_e32, marvel_ukb_MULTI_vascular_dementia, marvel_ukb_MULTI_vascular_dementia_e44, marvel_ukb_MULTI_vascular_dementia_e43, marvel_ukb_MULTI_vascular_dementia_e33, marvel_ukb_MULTI_vascular_dementia_e22_e32, marvel_ukb_MULTI_frontotemporal_dementia, marvel_ukb_MULTI_frontotemporal_dementia_e44, marvel_ukb_MULTI_frontotemporal_dementia_e43, marvel_ukb_MULTI_frontotemporal_dementia_e33, marvel_ukb_MULTI_frontotemporal_dementia_e22_e32: 15631 of 326982 rows kept
++[info]  2026-10-16 12:34:07 MULTI: 15631 rows pooled across ancestries (MULTI=15631), relabelled MULTI; a study reported both per ancestry and combined is counted twice unless --studies excludes one
+```
+stage `prepare_effects`:
+```diff
+@@ -1 +1 @@
+-[info]  2026-10-16 12:30:22 21335 usable rows, 0 with SE derived from p
++[info]  2026-10-16 12:34:07 15631 usable rows, 0 with SE derived from p
+```
+stage `orient`:
+```diff
+@@ -1 +1 @@
+-[info]  2026-10-16 12:30:22 3217 variants oriented as a2
++[info]  2026-10-16 12:34:07 1821 variants oriented as a2
+```
+stage `dedupe`:
+```diff
+@@ -1,4 +1,4 @@
+-[info]  2026-10-16 12:30:22 8 duplicate rows removed
++[info]  2026-10-16 12:34:07 0 duplicate rows removed
+ [info]  2026-10-16 12:34:07 0 estimates removed as copies of another study
+ [info]  2026-10-16 12:35:05 0 duplicate rows removed
+ [info]  2026-10-16 12:35:05 0 estimates removed as copies of another study
+```
+stage `meta_analyse`:
+```diff
+@@ -1,4 +1,4 @@
+-[info]  2026-10-16 12:31:16 12477 groups, 96 pooling more than one estimate
+-[info]  2026-10-16 12:32:08 12573 groups, 0 pooling more than one estimate
++[info]  2026-10-16 12:34:36 6877 groups, 0 pooling more than one estimate
++[info]  2026-10-16 12:35:05 6877 groups, 0 pooling more than one estimate
+ [info]  2026-10-16 12:35:39 8754 groups, 0 pooling more than one estimate
+ [info]  2026-10-16 12:36:15 8754 groups, 0 pooling more than one estimate
+```
+stage `gene_burden`:
+```diff
+@@ -1,2 +1,2 @@
+-[info]  2026-10-16 12:32:09 gene burden: 32 pooled and 56 per-study rows
++[info]  2026-10-16 12:35:05 gene burden: 24 pooled and 24 per-study rows
+ [info]  2026-10-16 12:36:15 gene burden: 96 pooled and 96 per-study rows
+```
+stage `write`:
+```diff
+@@ -1,4 +1,4 @@
+-[info]  2026-10-16 12:32:21 wrote 25050 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_armb_dementia_region_rare.tsv.gz
+-[info]  2026-10-16 12:32:31 wrote 88 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_armb_dementia_region_rare.tsv.gz
+-[info]  2026-10-16 12:33:44 wrote 17508 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_armb_dementia_region_rare_apoe_strata.tsv.gz
+-[info]  2026-10-16 12:33:44 wrote 192 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_armb_dementia_region_rare_apoe_strata.tsv.gz
++[info]  2026-10-16 12:35:05 wrote 13754 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_ukb_dementia_region_rare.tsv.gz
++[info]  2026-10-16 12:35:05 wrote 48 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_ukb_dementia_region_rare.tsv.gz
++[info]  2026-10-16 12:36:19 wrote 17508 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_ukb_dementia_region_rare_apoe_strata.tsv.gz
++[info]  2026-10-16 12:36:23 wrote 192 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_ukb_dementia_region_rare_apoe_strata.tsv.gz
+```
 
 Output:
 ```text
-[info]  2026-10-14 16:19:09 ancestry MULTI, pooled by variant_site, outcome, ancestry_group
-[stage] 2026-10-14 16:19:09 load_matched
-[info]  2026-10-14 16:19:27 /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/matched_region_variants.tsv.gz: 347357 rows, 10047 variants
-[info]  2026-10-14 16:19:27 20375 rows of excluded gene(s) APOE dropped
-[info]  2026-10-14 16:19:29 326982 of 326982 rows kept (MULTI pools every ancestry) (all: AFR=87047, AMR=42782, CSA=36051, EAS=10748, EUR=81062, MULTI=69061, NR=231)
-[info]  2026-10-14 16:19:29 study_accession in marvel_ukb_MULTI_all_cause_dementia, marvel_ukb_MULTI_all_cause_dementia_e44, marvel_ukb_MULTI_all_cause_dementia_e43, marvel_ukb_MULTI_all_cause_dementia_e33, marvel_ukb_MULTI_all_cause_dementia_e22_e32, marvel_ukb_MULTI_alzheimers_dementia, marvel_ukb_MULTI_alzheimers_dementia_e44, marvel_ukb_MULTI_alzheimers_dementia_e43, marvel_ukb_MULTI_alzheimers_dementia_e33, marvel_ukb_MULTI_alzheimers_dementia_e22_e32, marvel_ukb_MULTI_vascular_dementia, marvel_ukb_MULTI_vascular_dementia_e44, marvel_ukb_MULTI_vascular_dementia_e43, marvel_ukb_MULTI_vascular_dementia_e33, marvel_ukb_MULTI_vascular_dementia_e22_e32, marvel_ukb_MULTI_frontotemporal_dementia, marvel_ukb_MULTI_frontotemporal_dementia_e44, marvel_ukb_MULTI_frontotemporal_dementia_e43, marvel_ukb_MULTI_frontotemporal_dementia_e33, marvel_ukb_MULTI_frontotemporal_dementia_e22_e32: 15631 of 326982 rows kept
-[info]  2026-10-14 16:19:30 MULTI: 15631 rows pooled across ancestries (MULTI=15631), relabelled MULTI; a study reported both per ancestry and combined is counted twice unless --studies excludes one
-[stage] 2026-10-14 16:19:30 effect_scale
-[stage] 2026-10-14 16:19:30 prepare_effects
-[info]  2026-10-14 16:19:30 15631 usable rows, 0 with SE derived from p
-[stage] 2026-10-14 16:19:30 resolve_ambiguous
-[stage] 2026-10-14 16:19:30 orient
-[info]  2026-10-14 16:19:30 1821 variants oriented as a2
-[stage] 2026-10-14 16:19:30 apoe_strata
-[info]  2026-10-14 16:19:30 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/apoe_strata.tsv: 44 studies with an APOE stratum entry
-[info]  2026-10-14 16:19:30 study group marvel_ukb_MULTI_all_cause_dementia, stratum all: 1 studies
-[info]  2026-10-14 16:19:30 study group marvel_ukb_MULTI_all_cause_dementia, stratum e22_e32: 1 studies
-[info]  2026-10-14 16:19:30 study group marvel_ukb_MULTI_all_cause_dementia, stratum e33: 1 studies
-[info]  2026-10-14 16:19:30 study group marvel_ukb_MULTI_all_cause_dementia, stratum e43: 1 studies
-[info]  2026-10-14 16:19:30 study group marvel_ukb_MULTI_all_cause_dementia, stratum e44: 1 studies
-[info]  2026-10-14 16:19:30 study group marvel_ukb_MULTI_alzheimers_dementia, stratum all: 1 studies
-[info]  2026-10-14 16:19:30 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e22_e32: 1 studies
-[info]  2026-10-14 16:19:30 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e33: 1 studies
-[info]  2026-10-14 16:19:30 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e43: 1 studies
-[info]  2026-10-14 16:19:30 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e44: 1 studies
-[info]  2026-10-14 16:19:30 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum all: 1 studies
-[info]  2026-10-14 16:19:30 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e22_e32: 1 studies
-[info]  2026-10-14 16:19:30 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e33: 1 studies
-[info]  2026-10-14 16:19:30 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e43: 1 studies
-[info]  2026-10-14 16:19:30 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e44: 1 studies
-[info]  2026-10-14 16:19:30 study group marvel_ukb_MULTI_vascular_dementia, stratum all: 1 studies
-[info]  2026-10-14 16:19:30 study group marvel_ukb_MULTI_vascular_dementia, stratum e22_e32: 1 studies
-[info]  2026-10-14 16:19:30 study group marvel_ukb_MULTI_vascular_dementia, stratum e33: 1 studies
-[info]  2026-10-14 16:19:30 study group marvel_ukb_MULTI_vascular_dementia, stratum e43: 1 studies
-[info]  2026-10-14 16:19:30 study group marvel_ukb_MULTI_vascular_dementia, stratum e44: 1 studies
-[stage] 2026-10-14 16:19:30 pooled_run
-[info]  2026-10-14 16:19:30 pooled run, study group marvel_ukb_MULTI_all_cause_dementia: unstratified run, strata left out
-[info]  2026-10-14 16:19:30 pooled run, study group marvel_ukb_MULTI_alzheimers_dementia: unstratified run, strata left out
-[info]  2026-10-14 16:19:30 pooled run, study group marvel_ukb_MULTI_frontotemporal_dementia: unstratified run, strata left out
-[info]  2026-10-14 16:19:30 pooled run, study group marvel_ukb_MULTI_vascular_dementia: unstratified run, strata left out
-[stage] 2026-10-14 16:19:30 dedupe
-[info]  2026-10-14 16:19:30 0 duplicate rows removed
-[info]  2026-10-14 16:19:30 0 estimates removed as copies of another study
-[stage] 2026-10-14 16:19:30 meta_analyse
-[info]  2026-10-14 16:19:58 6877 groups, 0 pooling more than one estimate
-[info]  2026-10-14 16:20:27 6877 groups, 0 pooling more than one estimate
-[stage] 2026-10-14 16:20:27 gene_burden
-[info]  2026-10-14 16:20:27 gene burden: 24 pooled and 24 per-study rows
-[stage] 2026-10-14 16:20:27 write
-[info]  2026-10-14 16:20:30 wrote 13754 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_ukb_dementia_region_rare.tsv.gz
-[info]  2026-10-14 16:20:35 wrote 48 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_ukb_dementia_region_rare.tsv.gz
-[stage] 2026-10-14 16:20:35 apoe_strata_run
-[info]  2026-10-14 16:20:35 8754 rows from APOE strata: pooled per stratum
-[stage] 2026-10-14 16:20:35 dedupe
-[info]  2026-10-14 16:20:35 0 duplicate rows removed
-[info]  2026-10-14 16:20:35 0 estimates removed as copies of another study
-[stage] 2026-10-14 16:20:35 meta_analyse
-[info]  2026-10-14 16:21:09 8754 groups, 0 pooling more than one estimate
-[info]  2026-10-14 16:21:42 8754 groups, 0 pooling more than one estimate
-[stage] 2026-10-14 16:21:42 gene_burden
-[info]  2026-10-14 16:21:43 gene burden: 96 pooled and 96 per-study rows
-[stage] 2026-10-14 16:21:43 write
-[info]  2026-10-14 16:21:46 wrote 17508 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_ukb_dementia_region_rare_apoe_strata.tsv.gz
-[info]  2026-10-14 16:21:50 wrote 192 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_ukb_dementia_region_rare_apoe_strata.tsv.gz
+[info]  2026-10-16 12:33:50 ancestry MULTI, pooled by variant_site, outcome, ancestry_group
+[stage] 2026-10-16 12:33:50 load_matched
+[info]  2026-10-16 12:34:04 /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/matched_region_variants.tsv.gz: 347357 rows, 10047 variants
+[info]  2026-10-16 12:34:04 20375 rows of excluded gene(s) APOE dropped
+[info]  2026-10-16 12:34:06 326982 of 326982 rows kept (MULTI pools every ancestry) (all: AFR=87047, AMR=42782, CSA=36051, EAS=10748, EUR=81062, MULTI=69061, NR=231)
+[info]  2026-10-16 12:34:07 study_accession in marvel_ukb_MULTI_all_cause_dementia, marvel_ukb_MULTI_all_cause_dementia_e44, marvel_ukb_MULTI_all_cause_dementia_e43, marvel_ukb_MULTI_all_cause_dementia_e33, marvel_ukb_MULTI_all_cause_dementia_e22_e32, marvel_ukb_MULTI_alzheimers_dementia, marvel_ukb_MULTI_alzheimers_dementia_e44, marvel_ukb_MULTI_alzheimers_dementia_e43, marvel_ukb_MULTI_alzheimers_dementia_e33, marvel_ukb_MULTI_alzheimers_dementia_e22_e32, marvel_ukb_MULTI_vascular_dementia, marvel_ukb_MULTI_vascular_dementia_e44, marvel_ukb_MULTI_vascular_dementia_e43, marvel_ukb_MULTI_vascular_dementia_e33, marvel_ukb_MULTI_vascular_dementia_e22_e32, marvel_ukb_MULTI_frontotemporal_dementia, marvel_ukb_MULTI_frontotemporal_dementia_e44, marvel_ukb_MULTI_frontotemporal_dementia_e43, marvel_ukb_MULTI_frontotemporal_dementia_e33, marvel_ukb_MULTI_frontotemporal_dementia_e22_e32: 15631 of 326982 rows kept
+[info]  2026-10-16 12:34:07 MULTI: 15631 rows pooled across ancestries (MULTI=15631), relabelled MULTI; a study reported both per ancestry and combined is counted twice unless --studies excludes one
+[stage] 2026-10-16 12:34:07 effect_scale
+[stage] 2026-10-16 12:34:07 prepare_effects
+[info]  2026-10-16 12:34:07 15631 usable rows, 0 with SE derived from p
+[stage] 2026-10-16 12:34:07 resolve_ambiguous
+[stage] 2026-10-16 12:34:07 orient
+[info]  2026-10-16 12:34:07 1821 variants oriented as a2
+[stage] 2026-10-16 12:34:07 apoe_strata
+[info]  2026-10-16 12:34:07 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/apoe_strata.tsv: 44 studies with an APOE stratum entry
+[info]  2026-10-16 12:34:07 study group marvel_ukb_MULTI_all_cause_dementia, stratum all: 1 studies
+[info]  2026-10-16 12:34:07 study group marvel_ukb_MULTI_all_cause_dementia, stratum e22_e32: 1 studies
+[info]  2026-10-16 12:34:07 study group marvel_ukb_MULTI_all_cause_dementia, stratum e33: 1 studies
+[info]  2026-10-16 12:34:07 study group marvel_ukb_MULTI_all_cause_dementia, stratum e43: 1 studies
+[info]  2026-10-16 12:34:07 study group marvel_ukb_MULTI_all_cause_dementia, stratum e44: 1 studies
+[info]  2026-10-16 12:34:07 study group marvel_ukb_MULTI_alzheimers_dementia, stratum all: 1 studies
+[info]  2026-10-16 12:34:07 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e22_e32: 1 studies
+[info]  2026-10-16 12:34:07 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e33: 1 studies
+[info]  2026-10-16 12:34:07 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e43: 1 studies
+[info]  2026-10-16 12:34:07 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e44: 1 studies
+[info]  2026-10-16 12:34:07 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum all: 1 studies
+[info]  2026-10-16 12:34:07 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e22_e32: 1 studies
+[info]  2026-10-16 12:34:07 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e33: 1 studies
+[info]  2026-10-16 12:34:07 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e43: 1 studies
+[info]  2026-10-16 12:34:07 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e44: 1 studies
+[info]  2026-10-16 12:34:07 study group marvel_ukb_MULTI_vascular_dementia, stratum all: 1 studies
+[info]  2026-10-16 12:34:07 study group marvel_ukb_MULTI_vascular_dementia, stratum e22_e32: 1 studies
+[info]  2026-10-16 12:34:07 study group marvel_ukb_MULTI_vascular_dementia, stratum e33: 1 studies
+[info]  2026-10-16 12:34:07 study group marvel_ukb_MULTI_vascular_dementia, stratum e43: 1 studies
+[info]  2026-10-16 12:34:07 study group marvel_ukb_MULTI_vascular_dementia, stratum e44: 1 studies
+[stage] 2026-10-16 12:34:07 pooled_run
+[info]  2026-10-16 12:34:07 pooled run, study group marvel_ukb_MULTI_all_cause_dementia: unstratified run, strata left out
+[info]  2026-10-16 12:34:07 pooled run, study group marvel_ukb_MULTI_alzheimers_dementia: unstratified run, strata left out
+[info]  2026-10-16 12:34:07 pooled run, study group marvel_ukb_MULTI_frontotemporal_dementia: unstratified run, strata left out
+[info]  2026-10-16 12:34:07 pooled run, study group marvel_ukb_MULTI_vascular_dementia: unstratified run, strata left out
+[stage] 2026-10-16 12:34:07 dedupe
+[info]  2026-10-16 12:34:07 0 duplicate rows removed
+[info]  2026-10-16 12:34:07 0 estimates removed as copies of another study
+[stage] 2026-10-16 12:34:07 meta_analyse
+[info]  2026-10-16 12:34:36 6877 groups, 0 pooling more than one estimate
+[info]  2026-10-16 12:35:05 6877 groups, 0 pooling more than one estimate
+[stage] 2026-10-16 12:35:05 gene_burden
+[info]  2026-10-16 12:35:05 gene burden: 24 pooled and 24 per-study rows
+[stage] 2026-10-16 12:35:05 write
+[info]  2026-10-16 12:35:05 wrote 13754 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_ukb_dementia_region_rare.tsv.gz
+[info]  2026-10-16 12:35:05 wrote 48 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_ukb_dementia_region_rare.tsv.gz
+[stage] 2026-10-16 12:35:05 apoe_strata_run
+[info]  2026-10-16 12:35:05 8754 rows from APOE strata: pooled per stratum
+[stage] 2026-10-16 12:35:05 dedupe
+[info]  2026-10-16 12:35:05 0 duplicate rows removed
+[info]  2026-10-16 12:35:05 0 estimates removed as copies of another study
+[stage] 2026-10-16 12:35:05 meta_analyse
+[info]  2026-10-16 12:35:39 8754 groups, 0 pooling more than one estimate
+[info]  2026-10-16 12:36:15 8754 groups, 0 pooling more than one estimate
+[stage] 2026-10-16 12:36:15 gene_burden
+[info]  2026-10-16 12:36:15 gene burden: 96 pooled and 96 per-study rows
+[stage] 2026-10-16 12:36:15 write
+[info]  2026-10-16 12:36:19 wrote 17508 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_ukb_dementia_region_rare_apoe_strata.tsv.gz
+[info]  2026-10-16 12:36:23 wrote 192 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_ukb_dementia_region_rare_apoe_strata.tsv.gz
 
 ```
 

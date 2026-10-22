@@ -63,7 +63,6 @@ pheno_input = {
 
 # the dementia outcomes in data/raw/icd_codes.txt, one binary (0/1) column
 # each; GLM-Binom gives log-OR (Constants.MARVEL_METHOD_SCALE)
-bin_list = ['GLM-Binom', ]
 outcomes = [
     'ascvd_ii',
     'all_cause_dementia_algo',
@@ -73,7 +72,13 @@ outcomes = [
     'vascular_dementia_algo',
     'frontotemporal_dementia_algo',
     ]
-bin_tests = {outcome: list(bin_list) for outcome in outcomes}
+lipids = [
+        'Apolipoprotein A_i0',
+        'Apolipoprotein B_i0',
+        'HDL cholesterol_i0',
+        'LDL direct_i0',
+        'Triglycerides_i0',
+        ]
 
 # `model_1` is the `model` value in data/raw/marvel_results.tsv
 pcs = [f'PC{i}' for i in range(1, 7)]
@@ -180,7 +185,8 @@ for row in tasks.itertuples(index = False):
         association_analysis = True,
         exp_input            = {row.gene : row.carriers},
         pheno_input          = pheno_input,
-        bin_tests            = bin_tests,
+        bin_tests            = {outcome: ['GLM-Binom'] for outcome in outcomes},
+        con_tests            = {lipid: ['OLS'] for lipid in lipids},
         covs                 = covs,
         id_column            = 'f.eid',
         raise_on_error       = False,
