@@ -137,6 +137,167 @@ Output:
 
 ```
 
+## [10] slurm_script
+- first run: 2026-10-21 11:53:26
+- last run: 2026-10-21 11:53:26
+- commit: `e9443d3` (dirty)
+
+Output:
+```text
+[info]  2026-10-21 11:38:22 using root directory: /home/mvanvugt/projects/lipid_adem
+[info]  2026-10-21 11:38:22 VCF directory: /projects/0/aus20644/data/ukbiobank/genetics/b38/lof, pattern: chr{chrom}_merged_vep.vcf.gz
+[info]  2026-10-21 11:38:22 gene list: /home/mvanvugt/projects/lipid_adem/data/raw/gene_list.txt
+[info]  2026-10-21 11:38:22 working directory (temporary): /scratch-local/mvanvugt.28412845/tmp.rj01qmYBde/task_1
+[info]  2026-10-21 11:38:22 results will be moved to on success: /home/mvanvugt/projects/lipid_adem/data/temp
+[info]  2026-10-21 11:38:22 bcftools 1.18
+[info]  2026-10-21 11:38:22 8 genes in /home/mvanvugt/projects/lipid_adem/data/raw/gene_list.txt
+[info]  2026-10-21 11:38:22 /projects/0/aus20644/data/ukbiobank/genetics/b38/lof/chr16_merged_vep.vcf.gz: 377567 samples
+[info]  2026-10-21 11:39:51 CETP (ENSG00000087237, chr16:56961980-56983663): 6848 rows
+[info]  2026-10-21 11:39:52 /projects/0/aus20644/data/ukbiobank/genetics/b38/lof/chr5_merged_vep.vcf.gz: 377567 samples
+[info]  2026-10-21 11:41:35 HMGCR (ENSG00000113161, chr5:75342606-75360339): 20751 rows
+[info]  2026-10-21 11:41:44 /projects/0/aus20644/data/ukbiobank/genetics/b38/lof/chr7_merged_vep.vcf.gz: 377567 samples
+[info]  2026-10-21 11:44:10 NPC1L1 (ENSG00000015520, chr7:44513450-44541259): 9909 rows
+[info]  2026-10-21 11:44:10 /projects/0/aus20644/data/ukbiobank/genetics/b38/lof/chr1_merged_vep.vcf.gz: 377567 samples
+[info]  2026-10-21 11:45:43 PCSK9 (ENSG00000169174, chr1:55039838-55063581): 15046 rows
+[info]  2026-10-21 11:46:33 ANGPTL3 (ENSG00000132855, chr1:62597567-62604814): 2406 rows
+[info]  2026-10-21 11:46:34 /projects/0/aus20644/data/ukbiobank/genetics/b38/lof/chr22_merged_vep.vcf.gz: 377567 samples
+[info]  2026-10-21 11:47:17 PPARA (ENSG00000186951, chr22:46198384-46235377): 2982 rows
+[info]  2026-10-21 11:47:18 /projects/0/aus20644/data/ukbiobank/genetics/b38/lof/chr11_merged_vep.vcf.gz: 377567 samples
+[info]  2026-10-21 11:47:50 APOA1 (ENSG00000118137, chr11:116834677-116842065): 2805 rows
+[info]  2026-10-21 11:47:51 /projects/0/aus20644/data/ukbiobank/genetics/b38/lof/chr2_merged_vep.vcf.gz: 377567 samples
+[info]  2026-10-21 11:53:24 APOB (ENSG00000084674, chr2:21001305-21044075): 18416 rows
+[info]  2026-10-21 11:53:26 8 genes written to /scratch-local/mvanvugt.28412845/tmp.rj01qmYBde/task_1/vep_lipid_gene_csq.tsv.gz
+
+```
+
+## [10] slurm_script_extract_task1
+- first run: 2026-10-22 03:17:59
+- last run: 2026-10-22 03:17:59
+- commit: `d22d73f` (dirty)
+- status: failed
+
+Output:
+```text
+[info]  2026-10-22 03:17:59 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
+[info]  2026-10-22 03:17:59 stage: extract
+[info]  2026-10-22 03:17:59 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 03:17:59 node: tcn5.local.snellius.surf.nl, job id: 28452648, task: 1
+[info]  2026-10-22 03:17:59 task 1: /gpfs/home6/mvanvugt/projects/cetp_marvel/data/temp/ukb_ANGPTL3_chr1_plink.vcf.gz
+[error] 2026-10-22 03:17:59 extract ukb_ANGPTL3_chr1_plink.vcf.gz: unexpected exit code 127
+--- error output (raw) ---
+[info]  2026-10-22 03:17:59 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
+[info]  2026-10-22 03:17:59 stage: extract
+[info]  2026-10-22 03:17:59 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 03:17:59 node: tcn5.local.snellius.surf.nl, job id: 28452648, task: 1
+[info]  2026-10-22 03:17:59 task 1: /gpfs/home6/mvanvugt/projects/cetp_marvel/data/temp/ukb_ANGPTL3_chr1_plink.vcf.gz
+
+```
+
+## [10] slurm_script_extract_task2
+- first run: 2026-10-22 03:17:58
+- last run: 2026-10-22 03:17:58
+- commit: `d22d73f` (dirty)
+- status: failed
+
+Output:
+```text
+[info]  2026-10-22 03:17:58 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
+[info]  2026-10-22 03:17:58 stage: extract
+[info]  2026-10-22 03:17:58 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 03:17:58 node: tcn17.local.snellius.surf.nl, job id: 28452649, task: 2
+[info]  2026-10-22 03:17:58 task 2: /gpfs/home6/mvanvugt/projects/cetp_marvel/data/temp/ukb_CETP_chr16_plink.vcf.gz
+[error] 2026-10-22 03:17:58 extract ukb_CETP_chr16_plink.vcf.gz: unexpected exit code 127
+--- error output (raw) ---
+[info]  2026-10-22 03:17:58 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
+[info]  2026-10-22 03:17:58 stage: extract
+[info]  2026-10-22 03:17:58 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 03:17:58 node: tcn17.local.snellius.surf.nl, job id: 28452649, task: 2
+[info]  2026-10-22 03:17:58 task 2: /gpfs/home6/mvanvugt/projects/cetp_marvel/data/temp/ukb_CETP_chr16_plink.vcf.gz
+
+```
+
+## [10] slurm_script_extract_task3
+- first run: 2026-10-22 03:17:57
+- last run: 2026-10-22 03:17:57
+- commit: `d22d73f` (dirty)
+- status: failed
+
+Output:
+```text
+[info]  2026-10-22 03:17:57 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
+[info]  2026-10-22 03:17:57 stage: extract
+[info]  2026-10-22 03:17:57 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 03:17:57 node: tcn26.local.snellius.surf.nl, job id: 28452650, task: 3
+[info]  2026-10-22 03:17:57 task 3: /gpfs/home6/mvanvugt/projects/cetp_marvel/data/temp/ukb_HMGCR_chr5_plink.vcf.gz
+[error] 2026-10-22 03:17:57 extract ukb_HMGCR_chr5_plink.vcf.gz: unexpected exit code 127
+--- error output (raw) ---
+[info]  2026-10-22 03:17:57 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
+[info]  2026-10-22 03:17:57 stage: extract
+[info]  2026-10-22 03:17:57 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 03:17:57 node: tcn26.local.snellius.surf.nl, job id: 28452650, task: 3
+[info]  2026-10-22 03:17:57 task 3: /gpfs/home6/mvanvugt/projects/cetp_marvel/data/temp/ukb_HMGCR_chr5_plink.vcf.gz
+
+```
+
+## [10] slurm_script_extract_task5
+- first run: 2026-10-22 03:18:01
+- last run: 2026-10-22 03:18:01
+- commit: `d22d73f` (dirty)
+- status: failed
+
+Output:
+```text
+[info]  2026-10-22 03:18:01 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
+[info]  2026-10-22 03:18:01 stage: extract
+[info]  2026-10-22 03:18:01 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 03:18:01 node: tcn97.local.snellius.surf.nl, job id: 28452652, task: 5
+[info]  2026-10-22 03:18:01 task 5: /gpfs/home6/mvanvugt/projects/cetp_marvel/data/temp/ukb_PCSK9_chr1_plink.vcf.gz
+[error] 2026-10-22 03:18:01 extract ukb_PCSK9_chr1_plink.vcf.gz: unexpected exit code 127
+--- error output (raw) ---
+[info]  2026-10-22 03:18:01 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
+[info]  2026-10-22 03:18:01 stage: extract
+[info]  2026-10-22 03:18:01 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 03:18:01 node: tcn97.local.snellius.surf.nl, job id: 28452652, task: 5
+[info]  2026-10-22 03:18:01 task 5: /gpfs/home6/mvanvugt/projects/cetp_marvel/data/temp/ukb_PCSK9_chr1_plink.vcf.gz
+
+```
+
+## [10] slurm_script_extract_task6
+- first run: 2026-10-22 03:17:58
+- last run: 2026-10-22 03:17:58
+- commit: `d22d73f` (dirty)
+- status: failed
+
+Output:
+```text
+[info]  2026-10-22 03:17:58 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
+[info]  2026-10-22 03:17:58 stage: extract
+[info]  2026-10-22 03:17:58 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 03:17:58 node: tcn102.local.snellius.surf.nl, job id: 28452629, task: 6
+[info]  2026-10-22 03:17:58 task 6: /gpfs/home6/mvanvugt/projects/cetp_marvel/data/temp/ukb_PPARA_chr22_plink.vcf.gz
+[error] 2026-10-22 03:17:58 extract ukb_PPARA_chr22_plink.vcf.gz: unexpected exit code 127
+--- error output (raw) ---
+[info]  2026-10-22 03:17:58 config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml
+[info]  2026-10-22 03:17:58 stage: extract
+[info]  2026-10-22 03:17:58 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 03:17:58 node: tcn102.local.snellius.surf.nl, job id: 28452629, task: 6
+[info]  2026-10-22 03:17:58 task 6: /gpfs/home6/mvanvugt/projects/cetp_marvel/data/temp/ukb_PPARA_chr22_plink.vcf.gz
+
+```
+
+## [10] submit_two_source_submit_task1
+- first run: 2026-10-21 21:41:00
+- last run: 2026-10-22 03:17:19
+- commit: `d22d73f` (dirty)
+
+Output:
+```text
+[info]  2026-10-22 03:17:15 stage: submit; config: /home/mvanvugt/projects/lipid_adem/config/marvel_config.toml; output: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-10-22 03:17:17 6 plink gene VCF(s); chromosomes: 1 11 2 19 16 5 7 22
+[info]  2026-10-22 03:17:19 submitted: J1 28452629, J2 28452630, J3 28452631, J4 28452632
+
+```
+
 ## [20] filter_gwas_cat (`/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py --tasks-file /myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/filter_task_logs/4_1791376591/run_job_array.job --task-id 1 --step 10`)
 - first run: 2026-09-21 22:58:26
 - last run: 2026-10-07 13:43:01
@@ -1693,3 +1854,111 @@ Output:
 [info]  2026-10-16 12:36:23 wrote 192 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_ukb_dementia_region_rare_apoe_strata.tsv.gz
 
 ```
+
+## [51] annotate_ptv (`/home/mvanvugt/projects/lipid_adem/src/annotate_ptv.py`)
+- first run: 2026-10-21 13:16:22
+- last run: 2026-10-21 13:16:22
+- commit: `e9443d3` (dirty)
+
+Output:
+```text
+[info]  2026-10-21 13:16:21 Reading VEP consequences from /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/vep_lipid_gene_csq.tsv.gz
+[info]  2026-10-21 13:16:22 Read 79163 variant x transcript rows
+[info]  2026-10-21 13:16:22 CETP: 1595 sites, 58 LoF=HC on the canonical transcript kept, 1537 dropped
+[info]  2026-10-21 13:16:22 HMGCR: 1554 sites, 39 LoF=HC on the canonical transcript kept, 1515 dropped
+[info]  2026-10-21 13:16:22 NPC1L1: 2757 sites, 96 LoF=HC on the canonical transcript kept, 2661 dropped
+[info]  2026-10-21 13:16:22 PCSK9: 1651 sites, 68 LoF=HC on the canonical transcript kept, 1583 dropped
+[info]  2026-10-21 13:16:22 ANGPTL3: 802 sites, 56 LoF=HC on the canonical transcript kept, 746 dropped
+[info]  2026-10-21 13:16:22 PPARA: 772 sites, 23 LoF=HC on the canonical transcript kept, 749 dropped
+[info]  2026-10-21 13:16:22 APOA1: 561 sites, 15 LoF=HC on the canonical transcript kept, 546 dropped
+[info]  2026-10-21 13:16:22 APOB: 6376 sites, 172 LoF=HC on the canonical transcript kept, 6204 dropped
+[info]  2026-10-21 13:16:22 Wrote 527 PTVs to /gpfs/home6/mvanvugt/projects/lipid_adem/data/processed/ptv_variants.tsv.gz
+
+```
+
+## [55] combine_variants (`/home/mvanvugt/projects/lipid_adem/src/combine_variants.py`)
+- first run: 2026-10-21 13:50:41
+- last run: 2026-10-21 13:50:41
+- commit: `e9443d3` (dirty)
+
+Output:
+```text
+[info]  2026-10-21 13:49:03 /gpfs/home6/mvanvugt/projects/lipid_adem/data/processed/ptv_variants.tsv.gz: 527 PTVs
+[info]  2026-10-21 13:49:03 /gpfs/home6/mvanvugt/projects/lipid_adem/data/processed/plp_variants.tsv: 1900 rows; /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: 86 rows
+[info]  2026-10-21 13:49:03 0 P/LP rows with ref = alt dropped
+[warn]  2026-10-21 13:49:03 APOE condition 'Alzheimer disease 3, protection against, due to APOE3-Christchurch' not in /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-21 13:49:03 APOA1 condition 'nan' not in /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-21 13:49:03 ANGPTL3 condition 'nan' not in /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-21 13:49:03 PPARA condition 'nan' not in /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-21 13:49:03 PCSK9 condition 'nan' not in /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-21 13:49:03 HMGCR condition 'nan' not in /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-21 13:49:03 NPC1L1 condition 'nan' not in /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-21 13:49:03 CETP condition 'nan' not in /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-21 13:49:03 APOB condition 'nan' not in /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-21 13:49:03 APOE condition 'nan' not in /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[info]  2026-10-21 13:49:03 262 truncating P/LP variants set to lowering, 213 of them against their conditions
+[info]  2026-10-21 13:49:03 ANGPTL3 ClinVar P/LP: 12 variants lowering
+[info]  2026-10-21 13:49:03 ANGPTL3 ClinVar P/LP: 2 variants unknown
+[info]  2026-10-21 13:49:03 APOA1 ClinVar P/LP: 11 variants altered
+[info]  2026-10-21 13:49:03 APOA1 ClinVar P/LP: 2 variants conflicting
+[info]  2026-10-21 13:49:03 APOA1 ClinVar P/LP: 16 variants lowering
+[info]  2026-10-21 13:49:03 APOA1 ClinVar P/LP: 6 variants unknown
+[info]  2026-10-21 13:49:03 APOB ClinVar P/LP: 5 variants altered
+[info]  2026-10-21 13:49:03 APOB ClinVar P/LP: 6 variants conflicting
+[info]  2026-10-21 13:49:03 APOB ClinVar P/LP: 224 variants lowering
+[info]  2026-10-21 13:49:03 APOB ClinVar P/LP: 3 variants unknown
+[info]  2026-10-21 13:49:03 APOE ClinVar P/LP: 12 variants altered
+[info]  2026-10-21 13:49:03 APOE ClinVar P/LP: 3 variants lowering
+[info]  2026-10-21 13:49:03 APOE ClinVar P/LP: 6 variants unknown
+[info]  2026-10-21 13:49:03 CETP ClinVar P/LP: 10 variants lowering
+[info]  2026-10-21 13:49:03 CETP ClinVar P/LP: 2 variants unknown
+[info]  2026-10-21 13:49:03 HMGCR ClinVar P/LP: 6 variants lowering
+[info]  2026-10-21 13:49:03 HMGCR ClinVar P/LP: 3 variants unknown
+[info]  2026-10-21 13:49:03 NPC1L1 ClinVar P/LP: 2 variants unknown
+[info]  2026-10-21 13:49:03 PCSK9 ClinVar P/LP: 2 variants lowering
+[info]  2026-10-21 13:49:03 PCSK9 ClinVar P/LP: 16 variants raising
+[info]  2026-10-21 13:49:03 PCSK9 ClinVar P/LP: 2 variants unknown
+[info]  2026-10-21 13:49:03 PPARA ClinVar P/LP: 2 variants unknown
+[warn]  2026-10-21 13:49:03 ANGPTL3 ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-21 13:49:03 APOA1 ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-21 13:49:03 APOB ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-21 13:49:03 APOE ClinVar: 1 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-21 13:49:03 CETP ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-21 13:49:03 HMGCR ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-21 13:49:03 NPC1L1 ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-21 13:49:03 PCSK9 ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-21 13:49:03 PPARA ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[info]  2026-10-21 13:50:41 normalisation ClinVar: no_sequence=20
+[info]  2026-10-21 13:50:41 normalisation ClinVar: unchanged=316
+[info]  2026-10-21 13:50:41 normalisation PTV: normalised=18
+[info]  2026-10-21 13:50:41 normalisation PTV: unchanged=509
+[info]  2026-10-21 13:50:41 57 sites are both PTV and ClinVar
+[info]  2026-10-21 13:50:41 ANGPTL3 ClinVar: 12 variants
+[info]  2026-10-21 13:50:41 ANGPTL3 PTV: 56 variants
+[info]  2026-10-21 13:50:41 APOA1 ClinVar: 33 variants
+[info]  2026-10-21 13:50:41 APOA1 PTV: 15 variants
+[info]  2026-10-21 13:50:41 APOB ClinVar: 236 variants
+[info]  2026-10-21 13:50:41 APOB PTV: 172 variants
+[info]  2026-10-21 13:50:41 APOE ClinVar: 20 variants
+[info]  2026-10-21 13:50:41 CETP ClinVar: 10 variants
+[info]  2026-10-21 13:50:41 CETP PTV: 58 variants
+[info]  2026-10-21 13:50:41 HMGCR ClinVar: 7 variants
+[info]  2026-10-21 13:50:41 HMGCR PTV: 39 variants
+[info]  2026-10-21 13:50:41 NPC1L1 PTV: 96 variants
+[info]  2026-10-21 13:50:41 PCSK9 ClinVar: 18 variants
+[info]  2026-10-21 13:50:41 PCSK9 PTV: 68 variants
+[info]  2026-10-21 13:50:41 PPARA PTV: 23 variants
+[info]  2026-10-21 13:50:41 Wrote 863 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/processed/lipid_variants.tsv
+[info]  2026-10-21 13:50:41 marvel lists: 806 sites, 17 with an extra original-form row
+[info]  2026-10-21 13:50:41 Wrote 64 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/ANGPTL3_variants.tsv
+[info]  2026-10-21 13:50:41 Wrote 46 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/APOA1_variants.tsv
+[info]  2026-10-21 13:50:41 Wrote 373 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/APOB_variants.tsv
+[info]  2026-10-21 13:50:41 Wrote 20 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/APOE_variants.tsv
+[info]  2026-10-21 13:50:41 Wrote 66 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/CETP_variants.tsv
+[info]  2026-10-21 13:50:41 Wrote 45 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/HMGCR_variants.tsv
+[info]  2026-10-21 13:50:41 Wrote 99 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/NPC1L1_variants.tsv
+[info]  2026-10-21 13:50:41 Wrote 86 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PCSK9_variants.tsv
+[info]  2026-10-21 13:50:41 Wrote 24 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PPARA_variants.tsv
+
+```
+``

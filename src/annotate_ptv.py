@@ -6,12 +6,12 @@ from the VEP/LOFTEE consequences written by `vep_extract.sh`: LOFTEE
 high-confidence (`LoF` = HC) on the canonical transcript of the gene.
 No frequency filter is applied; the UKB AF/AC are kept as information.
 """
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# imports
+# IMPORTS
 
 from __future__ import annotations
-
-from pathlib import Path
 
 import pandas as pd
 
@@ -25,6 +25,10 @@ from project_constants import (
     Paths,
     VepCsqColumns,
 )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# CONSTANTS
 
 # columns of `FileNames.PTV_VARIANTS`, in output order
 PTV_COLUMNS: list[str] = [
@@ -46,74 +50,11 @@ PTV_COLUMNS: list[str] = [
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# read
-
-
-def read_gene_list(path: Path) -> pd.DataFrame:
-    """Read the gene symbols and Ensembl gene IDs of the gene list.
-
-    Parameters
-    ----------
-    path : `Path`
-        Path to `gene_list.txt`.
-
-    Returns
-    -------
-    genes : `pd.DataFrame`
-        Columns `gene` and `ensemblid`.
-
-    Raises
-    ------
-    FileNotFoundError
-        If `path` does not exist.
-    """
-    if not path.exists():
-        raise FileNotFoundError(f"gene list not found: {path}")
-    genes = pd.read_csv(path, sep="\t", dtype=str)
-    return genes[[ColumnNames.GENE, ColumnNames.ENSEMBL_ID]]
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def read_vep_csq(path: Path) -> pd.DataFrame:
-    """Read the VEP/LOFTEE consequences, one row per variant x transcript.
-
-    Parameters
-    ----------
-    path : `Path`
-        Path to the `vep_extract.sh` output.
-
-    Returns
-    -------
-    csq : `pd.DataFrame`
-        All columns as strings; bcftools' "." for a missing value is NA.
-
-    Raises
-    ------
-    FileNotFoundError
-        If `path` does not exist.
-    """
-    if not path.exists():
-        raise FileNotFoundError(
-            f"VEP consequence file not found: {path} (run vep_extract.sh "
-            "on Snellius and copy it here)"
-        )
-    log_info(f"Reading VEP consequences from {path}")
-    csq = pd.read_csv(path, sep="\t", dtype=str, na_values=["."])
-    log_info(f"Read {len(csq)} variant x transcript rows")
-    return csq
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# filter
+# FILTER PTV
 
 
 def filter_ptv(csq: pd.DataFrame, genes: pd.DataFrame) -> pd.DataFrame:
     """Keep the LOFTEE HC variants on the canonical transcript per gene.
-
-    A row is kept if its `Gene` is the Ensembl ID of a gene_list.txt gene,
-    `CANONICAL` is `Constants.VEP_CANONICAL` and `LoF` is
-    `Constants.LOFTEE_KEEP`. Rows with a multiallelic ALT are dropped
-    (warned); vep_extract.sh expects biallelic records.
 
     Parameters
     ----------
@@ -161,10 +102,25 @@ def filter_ptv(csq: pd.DataFrame, genes: pd.DataFrame) -> pd.DataFrame:
 
 if __name__ == "__main__":
     with runlog_setup(order=51, root=Paths.HERE):
-        gene_list = read_gene_list(FileNames.GENE_LIST)
-        vep_csq = read_vep_csq(FileNames.VEP_CSQ)
+        # read gene_list
+        if not FileNames.GENE_LIST.exists():
+            # NOTE create a bespoke function that checks existence of file and throws error which prints the following message, but where fle description ("gene list" in this case) is also flexible, so it can be used for many files
+            raise FileNotFoundError(
+                    f"gene list not found: {FileNames.GENE_LIST}"
+                    )
+        genes = pd.read_csv(FileNames.GENE_LIST, sep="\t", dtype=str)
+        gene_list = genes[[ColumnNames.GENE, ColumnNames.ENSEMBL_ID]]
+        # read vep_csq file
+        if not FileNames.VEP_CSQ.exists():
+            raise FileNotFoundError(
+                f"VEP consequence file not found: {FileNames.VEP_CSQ} "
+                f"(run vep_extract.sh on Snellius and copy it here)"
+            )
+        log_info(f"Reading VEP consequences from {FileNames.VEP_CSQ}")
+        vep_csq = pd.read_csv(FileNames.VEP_CSQ, sep="\t", dtype=str, na_values=["."])
+        log_info(f"Read {len(vep_csq)} variant x transcript rows")
         ptv_variants = filter_ptv(vep_csq, gene_list)
-
+        # writeannotated PTV
         FileNames.PTV_VARIANTS.parent.mkdir(parents=True, exist_ok=True)
         functions.write_table_atomic(ptv_variants, FileNames.PTV_VARIANTS)
         log_info(
