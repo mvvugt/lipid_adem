@@ -138,7 +138,20 @@ run_mamba biomed-api pyjasub "${ROOT}"/config/filter_task.cnf
 
 # [myriad] marvel association per gene
 run_mamba marvel "${ROOT}"/src/create_config.py -a
+# SGE (old Myriad) only
 run_mamba biomed-api pyjasub "${ROOT}"/config/marvel_task.cnf
+# Slurm (myriad-ng): same task script without pyjasub, one gene row per
+# array task; resources, tmp dir and log dir as in marvel_task.cnf
+TASKS="${ROOT}"/data/raw/marvel_tasks.tsv
+N_TASKS=$(( $(wc -l < "${TASKS}") - 1 ))
+TASK_LOGS="${ROOT}"/src/logs/marvel_task_logs
+TASK_TMP=/home/rmgpmva/Scratch/lipid_adem/marvel_task_tmp
+mkdir -p "${TASK_LOGS}" "${TASK_TMP}"
+sbatch --array=1-"${N_TASKS}"%9 --ntasks=1 --cpus-per-task=1 --mem=14G      \
+    --time=68:00:00 --job-name=marvel_assoc                                    \
+    --output="${TASK_LOGS}"/%x_%A_%a.log                                       \
+    --wrap "${ROOT}/src/marvel_assoc.sh ${TASKS} ${TASK_TMP} 1 \
+        \${SLURM_ARRAY_TASK_ID}"
 
 # [myriad] combine all marvel results
 # Add --archive to tar the loose files, --refresh to rebuild the stores
