@@ -147,7 +147,7 @@ N_TASKS=$(( $(wc -l < "${TASKS}") - 1 ))
 TASK_LOGS="${ROOT}"/src/logs/marvel_task_logs
 TASK_TMP=/home/rmgpmva/Scratch/lipid_adem/marvel_task_tmp
 mkdir -p "${TASK_LOGS}" "${TASK_TMP}"
-sbatch --array=1-"${N_TASKS}"%9 --ntasks=1 --cpus-per-task=1 --mem=14G      \
+sbatch --array=1-"${N_TASKS}"%9 --ntasks=1 --cpus-per-task=1 --mem=48G         \
     --time=68:00:00 --job-name=marvel_assoc                                    \
     --output="${TASK_LOGS}"/%x_%A_%a.log                                       \
     --wrap "${ROOT}/src/marvel_assoc.sh ${TASKS} ${TASK_TMP} 1 \

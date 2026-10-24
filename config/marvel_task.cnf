@@ -4,7 +4,7 @@
 [qsub]
 step=1
 batch=9
-mem=14G
+mem=48G
 shell=/bin/bash
 time=68:00:00
 nodes=None
@@ -12,7 +12,7 @@ tmp_size=10G
 tmp_dir=/home/rmgpmva/Scratch/lipid_adem/marvel_task_tmp
 
 [logs]
-log_dir=/myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/marvel_task_logs
+log_dir=/myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/marvel_logs
 
 [job_array]
 ja_file=/myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/marvel_tasks.tsv
