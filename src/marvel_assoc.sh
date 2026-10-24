@@ -186,6 +186,7 @@ run_gene() {
     local outdir="${3:?Error: outdir required}"
     local config="${4:?Error: config required}"
     local out_stage
+    local failed_log
     if [[ -d "$outdir" ]]; then
         log_info "${gene}: ${outdir} exists, skipping" no-record
         return 0
@@ -195,8 +196,7 @@ run_gene() {
         return 1
     fi
     if [[ ! -r "$config" ]]; then
-        log_error "${gene}: config not readable (run create_config.py -a):"\
-            "${config}"
+        log_error "${gene}: no config (create_config.py -a): ${config}"
         return 1
     fi
     STAGE_DIR="$(mktemp -d "${TMP_LOC}/marvel_${gene}_XXXXXX")"
@@ -204,16 +204,19 @@ run_gene() {
     mkdir -p "$out_stage"
     cp "$config" "${out_stage}/marvel.cnf"
     log_info "${gene}: dry run" no-record
-    # marvelous only logs (console and --log-file) with -v
+    # marvelous only logs (console and --log-file) with -v. Old marvel
+    # (10039b6) writes info only to the console and errors only to
+    # --log-file, so the console is teed to a file and both are checked
     ( cd "$STAGE_DIR" && run_mamba "$MARVEL_ENV" marvelous \
         "${out_stage}/marvel.cnf" -v --dry-run \
-        --log-file "${STAGE_DIR}/dry_run.log" ) || true
-    if ! grep -qsF "$DRY_RUN_OK" "${STAGE_DIR}/dry_run.log"; then
-        # old marvel (10039b6) writes errors to --log-file only: keep it
-        keep_log "${STAGE_DIR}/dry_run.log" \
-            "$(dirname "$outdir")/${gene}.dry_run.failed.log"
-        log_error "${gene}: config check failed, see"\
-            "$(dirname "$outdir")/${gene}.dry_run.failed.log"
+        --log-file "${STAGE_DIR}/dry_run.log" 2>&1 \
+        | tee "${STAGE_DIR}/dry_run.console.log" ) || true
+    if ! grep -qsF "$DRY_RUN_OK" "${STAGE_DIR}/dry_run.log" \
+        "${STAGE_DIR}/dry_run.console.log"; then
+        failed_log="$(dirname "$outdir")/${gene}.dry_run.failed.log"
+        keep_log "${STAGE_DIR}/dry_run.log" "$failed_log"
+        # log_error prints its first argument only
+        log_error "${gene}: config check failed, see ${failed_log}"
         rm -rf "$STAGE_DIR"
         STAGE_DIR=""
         return 1
@@ -221,12 +224,13 @@ run_gene() {
     log_info "${gene}: association run" no-record
     ( cd "$STAGE_DIR" && run_mamba "$MARVEL_ENV" marvelous \
         "${out_stage}/marvel.cnf" -v --outpath "$out_stage" \
-        --log-file "${out_stage}/marvel.log" ) || true
-    if ! grep -qsF "$RUN_OK" "${out_stage}/marvel.log"; then
-        keep_log "${out_stage}/marvel.log" \
-            "$(dirname "$outdir")/${gene}.marvel.failed.log"
-        log_error "${gene}: marvel run failed, see"\
-            "$(dirname "$outdir")/${gene}.marvel.failed.log"
+        --log-file "${out_stage}/marvel.log" 2>&1 \
+        | tee "${STAGE_DIR}/marvel.console.log" ) || true
+    if ! grep -qsF "$RUN_OK" "${out_stage}/marvel.log" \
+        "${STAGE_DIR}/marvel.console.log"; then
+        failed_log="$(dirname "$outdir")/${gene}.marvel.failed.log"
+        keep_log "${out_stage}/marvel.log" "$failed_log"
+        log_error "${gene}: marvel run failed, see ${failed_log}"
         rm -rf "$STAGE_DIR"
         STAGE_DIR=""
         return 1
