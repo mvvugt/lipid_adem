@@ -63,7 +63,9 @@ runlog run --id clinvar_filter --order 40 --root "${ROOT}" --                  \
 
 run_mamba marvel "${ROOT}"/src/annotate_clinvar.py
 
-# [myriad] combine PTV + ClinVar normalised against GRCh38
+# [myriad] combine PTV + ClinVar + GoF normalised against GRCh38; GoF is the
+# snapshot data/raw/gof_variants.tsv of the old per-gene lists (see its
+# SOURCE.md), which this step overwrites
 run_mamba biomed-api "${ROOT}"/src/combine_variants.py
 
 
@@ -126,9 +128,11 @@ sbatch --partition=rome --cpus-per-task=1 --mem=8G --time=01:00:00          \
 # GWAS LOOKUPS
 
 # [myriad] resolve gene/outcome lookups, discover studies, write job-array file
+# (ascvd: FinnGen I9_CVD_HARD only, efo_id NA in icd_codes.txt)
 run_mamba biomed-api "${ROOT}"/src/gwas_cat_prep.py
 
-# [myriad] filter GWAS catalog results to the gene regions
+# [myriad] filter GWAS catalog results to the gene regions; skips studies
+# whose outfile exists, so a rerun only adds the new ones
 run_mamba biomed-api pyjasub "${ROOT}"/config/filter_task.cnf
 
 
@@ -138,7 +142,20 @@ run_mamba biomed-api pyjasub "${ROOT}"/config/filter_task.cnf
 
 # [myriad] marvel association per gene
 run_mamba marvel "${ROOT}"/src/create_config.py -a
+# SGE (old Myriad) only
 run_mamba biomed-api pyjasub "${ROOT}"/config/marvel_task.cnf
+# Slurm (myriad-ng): same task script without pyjasub, one gene row per
+# array task; resources, tmp dir and log dir as in marvel_task.cnf
+TASKS="${ROOT}"/data/raw/marvel_tasks.tsv
+N_TASKS=$(( $(wc -l < "${TASKS}") - 1 ))
+TASK_LOGS="${ROOT}"/src/logs/marvel_task_logs
+TASK_TMP=/home/rmgpmva/Scratch/lipid_adem/marvel_task_tmp
+mkdir -p "${TASK_LOGS}" "${TASK_TMP}"
+sbatch --array=1-"${N_TASKS}"%9 --ntasks=1 --cpus-per-task=1 --mem=48G         \
+    --time=68:00:00 --job-name=marvel_assoc                                    \
+    --output="${TASK_LOGS}"/%x_%A_%a.log                                       \
+    --wrap "${ROOT}/src/marvel_assoc.sh ${TASKS} ${TASK_TMP} 1 \
+        \${SLURM_ARRAY_TASK_ID}"
 
 # [myriad] combine all marvel results
 # Add --archive to tar the loose files, --refresh to rebuild the stores
@@ -192,33 +209,62 @@ for outcome in "${UKB_OUTCOMES[@]}"; do
     done
 done
 ARMB_STUDIES=("${UKB_STUDIES[@]}" "${FINNGEN_STUDIES[@]}")
+# the lists runs also hold ASCVD (UKB ascvd_ii + FinnGen I9_CVD_HARD) and the
+# UKB lipids (Constants.LIPID_OUTCOMES, betas in native units); the
+# region-rare runs below stay dementia only
+OTHER_OUTCOMES=(ascvd apoa apob hdl_c ldl_c tg)
+LIST_FINNGEN_STUDIES=("${FINNGEN_STUDIES[@]}" I9_CVD_HARD)
+LIST_UKB_EUR_GROUPS=("${UKB_EUR_GROUPS[@]}")
+LIST_UKB_GROUPS=("${UKB_GROUPS[@]}")
+LIST_UKB_EUR_STUDIES=("${UKB_EUR_STUDIES[@]}")
+LIST_UKB_STUDIES=("${UKB_STUDIES[@]}")
+for outcome in "${OTHER_OUTCOMES[@]}"; do
+    LIST_UKB_EUR_GROUPS+=("marvel_ukb_EUR_${outcome}")
+    LIST_UKB_GROUPS+=("marvel_ukb_MULTI_${outcome}")
+    for stratum in "" _e44 _e43 _e33 _e22_e32; do
+        LIST_UKB_STUDIES+=("marvel_ukb_MULTI_${outcome}${stratum}")
+        LIST_UKB_EUR_STUDIES+=("marvel_ukb_EUR_${outcome}${stratum}")
+    done
+done
 
-run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
-    --studies "${THOMASSEN_STUDIES[@]}" "${UKB_EUR_STUDIES[@]}" \
-    "${FINNGEN_STUDIES[@]}" \
-    --variant-sources PTV ClinVar --stratified \
-    --prefer-groups thomassen \
-    --fallback-groups "${UKB_EUR_GROUPS[@]}" "${FINNGEN_STUDIES[@]}" \
-    --label annotated_eur
-
-# [myriad] sensitivity using all UKB samples
-run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry MULTI \
-    --studies "${THOMASSEN_STUDIES[@]}" "${UKB_STUDIES[@]}" \
-    "${FINNGEN_STUDIES[@]}" \
-    --variant-sources PTV ClinVar --stratified \
-    --prefer-groups thomassen \
-    --fallback-groups "${UKB_GROUPS[@]}" "${FINNGEN_STUDIES[@]}" \
-    --label maf_filter_all
-
-# [myriad] sensitivity: main analysis without orientation by gene function
-# (no GoF / ClinVar-raising flips, a2 allele effects)
-run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
-    --studies "${THOMASSEN_STUDIES[@]}" "${UKB_EUR_STUDIES[@]}" \
-    "${FINNGEN_STUDIES[@]}" \
-    --variant-sources PTV ClinVar --stratified \
-    --prefer-groups thomassen \
-    --fallback-groups "${UKB_EUR_GROUPS[@]}" "${FINNGEN_STUDIES[@]}" \
-    --label annotated_eur_unoriented --no-orient
+# one set of runs on PTV + ClinVar, one on the GoF variants (labels + _gof)
+for variant_set in ptv_clinvar gof; do
+    if [[ "${variant_set}" == ptv_clinvar ]]; then
+        VARIANT_SOURCES=(PTV ClinVar)
+        SET_SUFFIX=""
+    else
+        VARIANT_SOURCES=(GoF)
+        SET_SUFFIX="_gof"
+    fi
+    # [myriad] main
+    run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
+        --studies "${THOMASSEN_STUDIES[@]}" "${LIST_UKB_EUR_STUDIES[@]}" \
+        "${LIST_FINNGEN_STUDIES[@]}" \
+        --variant-sources "${VARIANT_SOURCES[@]}" --stratified \
+        --prefer-groups thomassen \
+        --fallback-groups "${LIST_UKB_EUR_GROUPS[@]}" \
+        "${LIST_FINNGEN_STUDIES[@]}" \
+        --label "annotated_eur${SET_SUFFIX}"
+    # [myriad] sensitivity using all UKB samples
+    run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry MULTI \
+        --studies "${THOMASSEN_STUDIES[@]}" "${LIST_UKB_STUDIES[@]}" \
+        "${LIST_FINNGEN_STUDIES[@]}" \
+        --variant-sources "${VARIANT_SOURCES[@]}" --stratified \
+        --prefer-groups thomassen \
+        --fallback-groups "${LIST_UKB_GROUPS[@]}" \
+        "${LIST_FINNGEN_STUDIES[@]}" \
+        --label "maf_filter_all${SET_SUFFIX}"
+    # [myriad] sensitivity: main analysis without orientation by gene
+    # function (no GoF / ClinVar-raising flips, a2 allele effects)
+    run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
+        --studies "${THOMASSEN_STUDIES[@]}" "${LIST_UKB_EUR_STUDIES[@]}" \
+        "${LIST_FINNGEN_STUDIES[@]}" \
+        --variant-sources "${VARIANT_SOURCES[@]}" --stratified \
+        --prefer-groups thomassen \
+        --fallback-groups "${LIST_UKB_EUR_GROUPS[@]}" \
+        "${LIST_FINNGEN_STUDIES[@]}" \
+        --label "annotated_eur_unoriented${SET_SUFFIX}" --no-orient
+done
 
 # [myriad] without the variant lists: every rare variant in the gene region,
 # alt-allele effects, NOT oriented by gene function
@@ -250,14 +296,19 @@ for analysis in lists region_rare; do
     done
 done
 
-# [local] main analysis figures; only those in FigureNames.MAIN_FIGURES are
-# written to results/figures, the rest to results/figures/sensitivity
-for script in burden_forest burden_apoe_forest sources_forest pooled_forest; do
-    run_mamba plot-misc "${ROOT}/src/${script}.py" --ancestry EUR \
-        --label annotated_eur
-    run_mamba plot-misc "${ROOT}/src/${script}.py" --ancestry MULTI \
-        --label maf_filter_all
+# [local] main analysis figures, PTV + ClinVar and GoF (_gof); only those in
+# FigureNames.MAIN_FIGURES are written to results/figures, the rest to
+# results/figures/sensitivity. pooled_forest adds the lipid panel; the other
+# scripts drop the lipids (OR scale only)
+for set_suffix in "" _gof; do
+    for script in burden_forest burden_apoe_forest sources_forest \
+        pooled_forest; do
+        run_mamba plot-misc "${ROOT}/src/${script}.py" --ancestry EUR \
+            --label "annotated_eur${set_suffix}"
+        run_mamba plot-misc "${ROOT}/src/${script}.py" --ancestry MULTI \
+            --label "maf_filter_all${set_suffix}"
+    done
+    # [local] sensitivity: main analysis without orientation by gene function
+    run_mamba plot-misc "${ROOT}/src/burden_forest.py" --ancestry EUR \
+        --label "annotated_eur_unoriented${set_suffix}"
 done
-# [local] sensitivity: main analysis without orientation by gene function
-run_mamba plot-misc "${ROOT}/src/burden_forest.py" --ancestry EUR \
-    --label annotated_eur_unoriented

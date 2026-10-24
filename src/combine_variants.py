@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """combine_variants
 
-Combine the PTVs with the ClinVar P/LP into one variant list, left-aligned and
+Combine the PTVs, the ClinVar P/LP and the GoF variants of the old per-gene
+lists (`data/raw/gof_variants.tsv`) into one variant list, left-aligned and
 trimmed against GRCh38, and split per gene. Original and normalised variant ID
 (chr:pos:alleles) are kept.
 """
@@ -235,6 +236,41 @@ def load_ptv_variants(path: Path = FileNames.PTV_VARIANTS) -> pd.DataFrame:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def load_gof_variants(path: Path = FileNames.GOF_VARIANTS) -> pd.DataFrame:
+    """Read the GoF list as variant-list rows.
+
+    Parameters
+    ----------
+    path : `Path`, optional, default: `FileNames.GOF_VARIANTS`
+        The GoF rows of the old per-gene lists (`chr`, `pos`, `a1`, `a2`,
+        `source`, `gene`, ...).
+
+    Returns
+    -------
+    gof : `pd.DataFrame`
+        The rows with `source` `Constants.GOF_VARIANT_SOURCE`, with the
+        `VariantListColumns` `chr`, `pos`, `a1`, `a2`, `source` and `gene`,
+        as strings.
+
+    Raises
+    ------
+    FileNotFoundError
+        If `path` does not exist.
+    ValueError
+        If `path` has rows of another source.
+    """
+    if not path.exists():
+        raise FileNotFoundError(f"{path} not found (see its SOURCE.md)")
+    vc = VariantListColumns
+    gof = pd.read_csv(path, sep="\t", dtype=str)
+    other = sorted(set(gof[vc.SOURCE]) - {Constants.GOF_VARIANT_SOURCE})
+    if other:
+        raise ValueError(f"{path}: sources other than GoF: {other}")
+    log_info(f"{path}: {len(gof)} GoF variants")
+    return gof[[vc.CHROM, vc.POS, vc.A1, vc.A2, vc.SOURCE, vc.GENE]]
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def read_gene_regions(
     path: Path = FileNames.GENE_LIST,
 ) -> dict[str, functions.GeneRegion]:
@@ -350,16 +386,17 @@ def normalise_list(
 def combine_lists(
     ptv: pd.DataFrame,
     plp: pd.DataFrame,
+    gof: pd.DataFrame,
     regions: dict[str, functions.GeneRegion],
 ) -> pd.DataFrame:
-    """Stack the PTV and P/LP rows into one normalised variant list.
+    """Stack the PTV, P/LP and GoF rows into one normalised variant list.
 
     `chr` gets a "chr" prefix (as in the old per-gene lists);
     `am_pathogenicity` and `tri_class` are added as NA. Rows without a
     GRCh38 chr, pos or both alleles are dropped (warned per gene and
     source), as they cannot be matched or extracted. The rest is normalised
     by `normalise_list`; rows that become the same site, gene and source
-    keep the first (warned). A site in both sources keeps one row per
+    keep the first (warned). A site in several sources keeps one row per
     source.
 
     Parameters
@@ -368,6 +405,8 @@ def combine_lists(
         From `load_ptv_variants`.
     plp : `pd.DataFrame`
         From `load_plp_variants`.
+    gof : `pd.DataFrame`
+        From `load_gof_variants`.
     regions : `dict[str, functions.GeneRegion]`
         From `read_gene_regions`.
 
@@ -376,10 +415,10 @@ def combine_lists(
     variants : `pd.DataFrame`
         `LIST_COLUMNS`, sorted by gene, chr, pos, a1, a2 and source,
         without duplicate rows. Rows per gene and source, and the sites in
-        both sources, are logged.
+        several sources, are logged.
     """
     vc = VariantListColumns
-    variants = pd.concat([ptv, plp], ignore_index=True)
+    variants = pd.concat([ptv, plp, gof], ignore_index=True)
     chrom = variants[vc.CHROM].astype("string").str.removeprefix("chr")
     variants[vc.CHROM] = "chr" + chrom
     for column in LIST_COLUMNS:
@@ -413,7 +452,7 @@ def combine_lists(
     )
 
     n_sources = variants.groupby(site, dropna=False)[vc.SOURCE].nunique()
-    log_info(f"{int((n_sources > 1).sum())} sites are both PTV and ClinVar")
+    log_info(f"{int((n_sources > 1).sum())} sites are in several sources")
     counts = variants.groupby([vc.GENE, vc.SOURCE], sort=True).size()
     for (gene, source), n in counts.items():
         log_info(f"{gene} {source}: {n} variants")
@@ -499,7 +538,10 @@ def write_gene_lists(variants: pd.DataFrame) -> None:
 if __name__ == "__main__":
     with runlog_setup(order=55, root=Paths.HERE):
         lipid_variants = combine_lists(
-            load_ptv_variants(), load_plp_variants(), read_gene_regions()
+            load_ptv_variants(),
+            load_plp_variants(),
+            load_gof_variants(),
+            read_gene_regions(),
         )
         FileNames.LIPID_VARIANTS.parent.mkdir(parents=True, exist_ok=True)
         functions.write_table_atomic(lipid_variants, FileNames.LIPID_VARIANTS)
