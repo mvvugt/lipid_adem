@@ -136,6 +136,28 @@ read_task_rows() {
 }
 
 # -----------------------------------------------------------------------
+# Copy a marvel log out of the staging dir before it is removed. A failed
+# copy only warns, so it never hides the marvel error itself.
+#
+# Parameters
+# ----------
+#   $1 - src  : The marvel log in the staging dir.
+#   $2 - dest : Where to keep it (its directory is created).
+#
+# Returns
+# -------
+#   0 always.
+# -----------------------------------------------------------------------
+keep_log() {
+    local src="${1:?Error: src required}"
+    local dest="${2:?Error: dest required}"
+    if ! mkdir -p "$(dirname "$dest")" || ! cp "$src" "$dest"; then
+        log_warn "could not keep ${src} as ${dest}"
+    fi
+    return 0
+}
+
+# -----------------------------------------------------------------------
 # Run marvel for one gene in a staging dir; move the results to `outdir`
 # only when the run finished successfully.
 #
@@ -187,7 +209,11 @@ run_gene() {
         "${out_stage}/marvel.cnf" -v --dry-run \
         --log-file "${STAGE_DIR}/dry_run.log" ) || true
     if ! grep -qsF "$DRY_RUN_OK" "${STAGE_DIR}/dry_run.log"; then
-        log_error "${gene}: config check failed, see marvel output above"
+        # old marvel (10039b6) writes errors to --log-file only: keep it
+        keep_log "${STAGE_DIR}/dry_run.log" \
+            "$(dirname "$outdir")/${gene}.dry_run.failed.log"
+        log_error "${gene}: config check failed, see"\
+            "$(dirname "$outdir")/${gene}.dry_run.failed.log"
         rm -rf "$STAGE_DIR"
         STAGE_DIR=""
         return 1
@@ -197,7 +223,10 @@ run_gene() {
         "${out_stage}/marvel.cnf" -v --outpath "$out_stage" \
         --log-file "${out_stage}/marvel.log" ) || true
     if ! grep -qsF "$RUN_OK" "${out_stage}/marvel.log"; then
-        log_error "${gene}: marvel run failed, see marvel output above"
+        keep_log "${out_stage}/marvel.log" \
+            "$(dirname "$outdir")/${gene}.marvel.failed.log"
+        log_error "${gene}: marvel run failed, see"\
+            "$(dirname "$outdir")/${gene}.marvel.failed.log"
         rm -rf "$STAGE_DIR"
         STAGE_DIR=""
         return 1
