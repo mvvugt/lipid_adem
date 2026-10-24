@@ -301,14 +301,24 @@ class Constants:
     MARVEL_MIN_SE: float = 1e-6
     MARVEL_MAX_SE: float = 30.0
     # UKB marvel `Variable` -> `outcome` in icd_codes.txt; `_combined`
-    # (algorithm + ICD) where UKB has it, else `_algo`. Other variables
-    # are left out of marvel_results.tsv
+    # (algorithm + ICD) where UKB has it, else `_algo`. The lipids
+    # (`LIPID_OUTCOMES`, OLS, native units) are not in icd_codes.txt.
+    # Other variables are left out of marvel_results.tsv
     MARVEL_UKB_OUTCOMES: dict[str, str] = {
         "all_cause_dementia_combined": "all_cause_dementia",
         "alzheimers_disease_combined": "alzheimers_dementia",
         "vascular_dementia_algo": "vascular_dementia",
         "frontotemporal_dementia_algo": "frontotemporal_dementia",
+        "ascvd_ii": "ascvd",
+        "Apolipoprotein A_i0": "apoa",
+        "Apolipoprotein B_i0": "apob",
+        "HDL cholesterol_i0": "hdl_c",
+        "LDL direct_i0": "ldl_c",
+        "Triglycerides_i0": "tg",
     }
+    # continuous outcomes (linear effects, not log-OR); the figure scripts
+    # plot them as betas, apart from the binary outcomes
+    LIPID_OUTCOMES: tuple[str, ...] = ("ldl_c", "apob", "hdl_c", "apoa", "tg")
     # marvel `Model name` of the main analysis (marvel_results_table.py,
     # apoe_genotype_forest.py)
     MARVEL_DEFAULT_MODEL: str = "model_3"
@@ -1184,11 +1194,14 @@ class FileNames:
     # LOFTEE HC PTVs on the canonical transcript (annotate_ptv.py; has UKB
     # AF/AC, so never committed)
     PTV_VARIANTS: Path = Paths.DATA_PROC / "ptv_variants.tsv.gz"
-    # PTV + ClinVar P/LP variant list, all genes (combine_variants.py;
+    # PTV + ClinVar P/LP + GoF variant list, all genes (combine_variants.py;
     # sites only, committed, normalised) and its per-gene marvel
     # extraction lists (`str.format(gene=...)`; normalised and original
     # forms, docs/rap_carrier_extraction.md)
     LIPID_VARIANTS: Path = Paths.DATA_PROC / "lipid_variants.tsv"
+    # GoF rows of the old per-gene lists (`GOF_VARIANT_SOURCE`; snapshot
+    # before combine_variants.py overwrote them; sites only, committed)
+    GOF_VARIANTS: Path = Paths.DATA_RAW / "gof_variants.tsv"
     VARIANT_LIST_TEMPLATE: str = str(Paths.DATA_TEMP / "{gene}_variants.tsv")
     # curated gene x ClinVar condition -> `ClinVarDirection`
     CLINVAR_CONDITION_DIRECTION: Path = (
@@ -1274,9 +1287,13 @@ class FigureColumns:
     MARKER: str = "marker"
     COLOUR: str = "colour"
     SIZE: str = "size"
-    # side-table texts: row name, OR (95% CI), p-value
+    # 95% CI of the beta (lipid outcomes, `figure_utils.add_beta_ci`)
+    BETA_LB: str = "beta_lower"
+    BETA_UB: str = "beta_upper"
+    # side-table texts: row name, OR (95% CI), beta (95% CI), p-value
     ROW_NAME: str = "row_name"
     OR_TEXT: str = "or_text"
+    BETA_TEXT: str = "beta_text"
     P_TEXT: str = "p_text"
     # row order within a group
     ORDER: str = "order"
@@ -1294,6 +1311,18 @@ class FigureNames:
     }
     OUTCOME_RANK: dict[str, int] = {
         name: i for i, name in enumerate(OUTCOMES)
+    }
+    # lipid outcome key (`Constants.LIPID_OUTCOMES`) -> name with the UKB
+    # unit, in plotting order
+    LIPIDS: dict[str, str] = {
+        "ldl_c": "LDL-C (mmol/L)",
+        "apob": "ApoB (g/L)",
+        "hdl_c": "HDL-C (mmol/L)",
+        "apoa": "ApoA1 (g/L)",
+        "tg": "Triglycerides (mmol/L)",
+    }
+    LIPID_RANK: dict[str, int] = {
+        name: i for i, name in enumerate(LIPIDS)
     }
     # APOE strata in plotting order, `ApoeStratum.ALL` = all genotypes
     STRATUM_ORDER: tuple[str, ...] = (
@@ -1315,15 +1344,19 @@ class FigureNames:
     # forest x label and side-table headers
     OR_LABEL: str = "Odds ratio (95% CI)"
     OR_HEADER: str = "OR (95% CI)"
+    BETA_LABEL: str = "Beta (95% CI), native units"
+    BETA_HEADER: str = "Beta (95% CI)"
     P_HEADER: str = "P-value"
     # legend titles
     SIGNIFICANCE_TITLE: str = "Significance"
     OUTCOME_TITLE: str = "Outcomes"
+    LIPID_TITLE: str = "Lipids"
     # main-analysis figures: a full file name without suffix, or, ending
     # in '_', the start of one; every other figure goes to
     # `Paths.FIGURES_SENSITIVITY` (`figure_utils.save`)
     MAIN_FIGURES: tuple[str, ...] = (
         "forest_pooled_annotated_eur",
+        "forest_pooled_annotated_eur_gof",
         "forest_sources_annotated_eur_",
         "forest_apoe_genotype_EUR",
     )
@@ -1352,6 +1385,15 @@ class FigureStyle:
         "vascular_dementia": "#ef8a62",
         "frontotemporal_dementia": "#8073ac",
         "all_cause_dementia": "#b2182b",
+        "ascvd": "#35978f",
+    }
+    # pooled forest, lipid panel: marker colour per lipid outcome key
+    LIPID_COLOURS: dict[str, str] = {
+        "ldl_c": "#1b7837",
+        "apob": "#a6dba0",
+        "hdl_c": "#c51b7d",
+        "apoa": "#f1b6da",
+        "tg": "#e08214",
     }
     STUDY_COLOUR: str = "#bdbdbd"
     POOLED_SIZE: float = 14
