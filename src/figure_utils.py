@@ -9,7 +9,8 @@
 ## Purpose of script: Shared helpers of the figure scripts
 ##     (burden_forest.py, burden_apoe_forest.py, sources_forest.py,
 ##     pooled_forest.py, burden_heatmap.py, apoe_genotype_forest.py):
-##     reading burden files, odds ratios with 95% CI, p-value formatting,
+##     reading burden files, odds ratios (binary outcomes) and betas
+##     (lipids) with 95% CI, p-value formatting,
 ##     readable names, significance markers, axis limits and saving.
 ##     Constants shared by the figure scripts are in `project_constants`
 ##     (`FigureColumns`, `FigureNames`, `FigureStyle`).
@@ -38,6 +39,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
 from matplotlib.lines import Line2D
+from matplotlib.ticker import MaxNLocator
 from project_constants import (
         Constants,
         FigureColumns as FCols,
@@ -67,6 +69,10 @@ TICKS_FINE = (0.5, 0.75, 1, 1.5, 2)
 TICKS_FINER = (0.8, 0.9, 1, 1.1, 1.2)
 # x-axis padding factor around the point estimates (log scale)
 X_PAD = 1.15
+# beta axis (lipids): padding as a fraction of the point-estimate range,
+# and the number of ticks aimed for
+BETA_PAD = 0.15
+BETA_N_TICKS = 5
 # p-values below this are shown as this (p = 0 is below double precision)
 P_MIN = 1e-100
 DPI = 300
@@ -191,6 +197,35 @@ def add_or(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def add_beta_ci(data: pd.DataFrame) -> pd.DataFrame:
+    """Add the beta's 95% CI and the side-table texts (lipid outcomes).
+
+    Parameters
+    ----------
+    data : `pd.DataFrame`
+        Rows with a finite numeric `MetaColumns.BETA` and `SE`, and a
+        numeric `MetaColumns.P`.
+
+    Returns
+    -------
+    data : `pd.DataFrame`
+        Copy with `FigureColumns` `BETA_LB`, `BETA_UB`, `BETA_TEXT` (two
+        decimals) and `P_TEXT` (`format_p`).
+    """
+    data = data.copy()
+    beta, se = data[MetaColumns.BETA], data[MetaColumns.SE]
+    data[FCols.BETA_LB] = beta - Z_95 * se
+    data[FCols.BETA_UB] = beta + Z_95 * se
+    data[FCols.BETA_TEXT] = [
+        f'{point:.2f} ({low:.2f}; {high:.2f})'
+        for point, low, high in zip(beta, data[FCols.BETA_LB],
+                                    data[FCols.BETA_UB])
+    ]
+    data[FCols.P_TEXT] = data[MetaColumns.P].map(format_p)
+    return data
+
+
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Reading
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -219,13 +254,18 @@ def burden_path(ancestry: str, label: str, extra: str = '') -> Path:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def load_burden(path: Path) -> pd.DataFrame | None:
+def load_burden(path: Path, keep_lipids: bool = False
+                ) -> pd.DataFrame | None:
     """Read a burden file and add the odds ratio with its 95% CI.
 
     Parameters
     ----------
     path : `Path`
         A `meta_analysis.py` burden file.
+    keep_lipids : `bool`, optional, default: `False`
+        Keep the `Constants.LIPID_OUTCOMES` rows (linear effects, their
+        `add_or` columns are meaningless); by default they are dropped
+        (logged), so the result holds binary outcomes only.
 
     Returns
     -------
@@ -246,6 +286,12 @@ def load_burden(path: Path) -> pd.DataFrame | None:
             f'gene(s) {", ".join(Constants.EXCLUDED_GENES)} dropped'
         )
         burden = burden.loc[~is_excluded]
+    is_lipid = burden[HarmonisedColumns.OUTCOME].isin(
+        Constants.LIPID_OUTCOMES)
+    if is_lipid.any() and not keep_lipids:
+        LOGGER.info(f'{path.name}: {int(is_lipid.sum())} lipid rows '
+                    'dropped (not on the OR scale)')
+        burden = burden.loc[~is_lipid]
     beta = pd.to_numeric(burden[MetaColumns.BETA], errors = 'coerce')
     se = pd.to_numeric(burden[MetaColumns.SE], errors = 'coerce')
     usable = np.isfinite(beta) & np.isfinite(se)
@@ -629,6 +675,35 @@ def x_axis(data: pd.DataFrame, low: float | None = None
         low = max(below) if below else pad_low
     high = min(above) if above else pad_high
     ticks = [t for t in candidates if low <= t <= high]
+    return (low, high), ticks
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def beta_axis(data: pd.DataFrame) -> tuple[tuple[float, float], list[float]]:
+    """Linear x limits and ticks that fit the beta point estimates.
+
+    As in `x_axis`, confidence intervals do not widen the axis.
+
+    Parameters
+    ----------
+    data : `pd.DataFrame`
+        With `MetaColumns.BETA`.
+
+    Returns
+    -------
+    limits : `tuple[float, float]`
+        The lowest and highest point estimate (always around 0), padded
+        by `BETA_PAD` of their range.
+    ticks : `list[float]`
+        About `BETA_N_TICKS` round ticks within the limits, 0 included.
+    """
+    low = min(float(data[MetaColumns.BETA].min()), 0.0)
+    high = max(float(data[MetaColumns.BETA].max()), 0.0)
+    pad = (high - low) * BETA_PAD or 0.1
+    low, high = low - pad, high + pad
+    locator = MaxNLocator(nbins = BETA_N_TICKS, steps = [1, 2, 2.5, 5, 10])
+    ticks = [float(t) for t in locator.tick_values(low, high)
+             if low <= t <= high]
     return (low, high), ticks
 
 

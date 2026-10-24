@@ -49,6 +49,7 @@ docs/
 data/
 *cache*/
 bin/
+results/
 
 # personal helpers
 TODO.md

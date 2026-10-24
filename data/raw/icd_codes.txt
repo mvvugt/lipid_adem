@@ -83,3 +83,4 @@ MACE	I46.9	icd10	Cardiac arrest, unspecified		EFO_0009492
 MACE	I46.1	icd10	Sudden cardiac death, so described		EFO_0009492
 MACE	I47.0	icd10	Re-entry ventricular arrhythmia		EFO_0009493
 MACE	I47.2	icd10	Ventricular tachycardia		EFO_0009493
+ascvd	ascvd_ii	ukb_variable	ASCVD (UKB ascvd_ii composite); FinnGen only, no GWAS Catalog search	I9_CVD_HARD	NA
