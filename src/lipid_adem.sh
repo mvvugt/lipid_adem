@@ -22,6 +22,57 @@ esac
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# PHENOTYPES
+# TODO not in this repo yet: add the commands that build the phenotype
+# files here. Every analysis below reads them.
+#
+# Files read (2026-10-26):
+# - data/processed/lipids_full_pheno.tsv.gz: FileNames.UKB_PHENO
+#   (create_config.py, apoe_exposure.py, burden_exposure.py),
+#   config/marvel_config.toml and all config/marvel{,_burden} cnfs
+# - data/processed/pheno_cov.tsv.gz: config/marvel_config_variant.toml
+#   only. Same IDs (502166) and counts as cetp_marvel's pheno_cov.tsv.gz
+#   (checked 2026-10-26); lipids_full_pheno.tsv.gz is it restricted to
+#   469587 IDs (the IDs with genotypes). Burden and per-variant runs share
+#   a run directory; kept as is, since marvel keeps only IDs in the
+#   exposure file
+#
+# CHECK EVERY TIME a phenotype file is rebuilt or copied, or before a
+# marvel run (gz md5 differs on gzip metadata alone, so compare the
+# uncompressed content):
+#   gzip -dc <file> | md5sum
+#   validation/check_pheno.py <old file> <new file>   # IDs, n, cases
+# - the files the configs read agree in IDs and outcome counts, and the
+#   md5 of each is noted with the run
+# - burden and per-variant results of one run have the same sample n
+#   per outcome (e.g. LDL direct_i0); if not, point both tomls at
+#   lipids_full_pheno.tsv.gz
+# - check_pheno.py does not compare covariates (Sex, age, PCs); for
+#   those diff the uncompressed files
+# - cetp_marvel/data/processed/pheno_cov.tsv.gz: validation step 2
+#   (old_pheno_cov.tsv.gz there = the 2026-02-06 version, A's input)
+#
+# Issues found with validation/check_pheno.py in cetp_marvel's
+# pheno_cov.tsv.gz (2026-10-26); fix in the outcome build, then rebuild:
+# - <outcome>_incident for the dementias: prevalent cases coded 0
+#   (counted as controls); should be NA, as in the 02-06 file and in
+#   ascvd_ii_incident
+# - ascvd_ii_incident misses ~11k cases: incident + prevalent = 63253, but
+#   ascvd_ii = 74254 (02-06 file: 50644 + 21239 = 71883, consistent).
+#   Likely the 2026-02-10 outcome update reached ascvd_ii but not the
+#   incident column (censoring date or sources)
+# - binary outcomes have no NAs any more (~15k were NA on 02-06): check
+#   this is intended
+# The analyses below use only the overall outcomes (ascvd_ii,
+# *_dementia_{algo,combined}, lipids _i0), not _incident/_prevalent, so
+# they are not affected. Checked 2026-10-26: lipids_full_pheno.tsv.gz
+# (469587 IDs) is a subset of the current pheno_cov.tsv.gz (withdrawals +
+# 02-10 outcomes in), has no _incident/_prevalent columns, and its counts
+# equal the validation step 2 rerun. cetp_marvel's lipids_full_pheno copy
+# (no lipid columns) is not read by any config.
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # APOE DIPLOTYPE
 # Needs only the phenotype file, so it runs first. Each diplotype (e3e3
 # included) vs all other diplotypes.
@@ -258,18 +309,25 @@ for outcome in "${OTHER_OUTCOMES[@]}"; do
     done
 done
 
-# one set of runs on PTV + ClinVar, one on the GoF variants (labels + _gof);
+# one set of runs per variant set (Constants.BURDEN_VARIANT_SETS): PTV +
+# ClinVar (main, no label suffix), GoF (_gof), and AM / PTV / ClinVar /
+# PTV + AM / AM + ClinVar / PTV + ClinVar + AM (_<set>);
 # --ukb-burden: the gene burden takes UKB's carrier-burden estimate
 # (UKB CARRIER BURDEN, matched_burden.tsv.gz) instead of the IVW over UKB's
-# variants (lof / gof masks, _fb where Thomassen has the gene and outcome)
-for variant_set in ptv_clinvar gof; do
-    if [[ "${variant_set}" == ptv_clinvar ]]; then
-        VARIANT_SOURCES=(PTV ClinVar)
-        SET_SUFFIX=""
-    else
-        VARIANT_SOURCES=(GoF)
-        SET_SUFFIX="_gof"
-    fi
+# variants (the set's mask, _fb where Thomassen has the gene and outcome)
+VARIANT_SETS=(lof gof am ptv clinvar ptv_am am_clinvar ptv_clinvar_am)
+for variant_set in "${VARIANT_SETS[@]}"; do
+    SET_SUFFIX="_${variant_set}"
+    case "${variant_set}" in
+        lof)            VARIANT_SOURCES=(PTV ClinVar); SET_SUFFIX="" ;;
+        gof)            VARIANT_SOURCES=(GoF) ;;
+        am)             VARIANT_SOURCES=(AM) ;;
+        ptv)            VARIANT_SOURCES=(PTV) ;;
+        clinvar)        VARIANT_SOURCES=(ClinVar) ;;
+        ptv_am)         VARIANT_SOURCES=(PTV AM) ;;
+        am_clinvar)     VARIANT_SOURCES=(AM ClinVar) ;;
+        ptv_clinvar_am) VARIANT_SOURCES=(PTV ClinVar AM) ;;
+    esac
     # [myriad] main
     run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
         --studies "${THOMASSEN_STUDIES[@]}" "${LIST_UKB_EUR_STUDIES[@]}" \
@@ -347,3 +405,12 @@ for set_suffix in "" _gof; do
     run_mamba plot-misc "${ROOT}/src/burden_forest.py" --ancestry EUR \
         --label "annotated_eur_unoriented${set_suffix}"
 done
+# [local] CETP per variant set (all eight VARIANT_SETS runs of a label):
+# binary outcomes and lipids side by side in one file; main analysis in
+# results/figures, the sensitivities in results/figures/sensitivity
+run_mamba plot-misc "${ROOT}/src/variant_sets_forest.py" --ancestry EUR \
+    --label annotated_eur --gene CETP
+run_mamba plot-misc "${ROOT}/src/variant_sets_forest.py" --ancestry MULTI \
+    --label maf_filter_all --gene CETP
+run_mamba plot-misc "${ROOT}/src/variant_sets_forest.py" --ancestry EUR \
+    --label annotated_eur_unoriented --gene CETP
