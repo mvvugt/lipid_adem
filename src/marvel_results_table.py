@@ -112,14 +112,16 @@ class GeneUpdate:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # reading
 
-def read_tasks(path: Path) -> dict[str, list[Path]]:
-    """Read the gene outdirs from the marvel job-array file.
+def read_tasks(paths: list[Path]) -> dict[str, list[Path]]:
+    """Read the gene outdirs from the marvel job-array files.
 
     Parameters
     ----------
-    path : `Path`
-        `marvel_tasks.tsv` with `gene` and `outdir`; a gene may have
-        several rows (e.g. a later batch or an APOE-stratified run).
+    paths : `list[Path]`
+        `marvel_tasks.tsv`-like files with `gene` and `outdir` (e.g. the
+        per-variant and the carrier-burden tasks); a gene may have several
+        rows (e.g. a later batch or an APOE-stratified run). Outdirs are
+        passed through `rebase_outdir`.
 
     Returns
     -------
@@ -129,21 +131,60 @@ def read_tasks(path: Path) -> dict[str, list[Path]]:
     Raises
     ------
     FileNotFoundError
-        If `path` does not exist.
+        If a file in `paths` does not exist.
     ValueError
         If `gene` or `outdir` is missing.
     """
-    if not path.exists():
-        raise FileNotFoundError(f"{path} not found")
-    tasks = pd.read_csv(path, sep="\t", dtype=str).fillna("")
-    missing = [col for col in ("gene", "outdir") if col not in tasks.columns]
-    if missing:
-        raise ValueError(f"{path}: missing column(s) {missing}")
     outdirs: dict[str, list[Path]] = {}
-    for gene, outdir in zip(tasks["gene"], tasks["outdir"]):
-        outdirs.setdefault(gene.strip(), []).append(Path(outdir.strip()))
-    log_info(f"{path}: {len(tasks)} rows, {len(outdirs)} genes")
+    for path in paths:
+        if not path.exists():
+            raise FileNotFoundError(f"{path} not found")
+        tasks = pd.read_csv(path, sep="\t", dtype=str).fillna("")
+        missing = [
+            col for col in ("gene", "outdir") if col not in tasks.columns
+        ]
+        if missing:
+            raise ValueError(f"{path}: missing column(s) {missing}")
+        for gene, outdir in zip(tasks["gene"], tasks["outdir"]):
+            outdirs.setdefault(gene.strip(), []).append(
+                rebase_outdir(Path(outdir.strip()))
+            )
+        log_info(f"{path}: {len(tasks)} rows")
+    log_info(f"{len(outdirs)} genes over {len(paths)} task file(s)")
     return outdirs
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def rebase_outdir(outdir: Path, root: Path = Paths.HERE) -> Path:
+    """Move an outdir written on another cluster under this project root.
+
+    Task files hold absolute paths of the machine that wrote them; when
+    the outdirs are copied to the same place inside the project on
+    another machine, they are found there.
+
+    Parameters
+    ----------
+    outdir : `Path`
+        Outdir as listed in a task file.
+    root : `Path`, optional, default: `Paths.HERE`
+        This project's root.
+
+    Returns
+    -------
+    outdir : `Path`
+        `outdir` itself when it exists, is relative, or has no component
+        named as `root`; else `root` plus the part after the last such
+        component (logged).
+    """
+    if outdir.exists() or not outdir.is_absolute():
+        return outdir
+    parts = outdir.parts
+    if root.name not in parts:
+        return outdir
+    last = len(parts) - 1 - parts[::-1].index(root.name)
+    rebased = root.joinpath(*parts[last + 1:])
+    log_info(f"outdir {outdir} not found here, read as {rebased}")
+    return rebased
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -802,7 +843,7 @@ def add_apoe_strata(table: pd.DataFrame) -> None:
 # main
 
 def marvel_results_table(
-    tasks: Path,
+    tasks: list[Path],
     ancestry: str,
     model: str = _DEFAULT_MODEL,
     refresh: bool = False,
@@ -812,8 +853,10 @@ def marvel_results_table(
 
     Parameters
     ----------
-    tasks : `Path`
-        The marvel job-array file (`gene`, `outdir`).
+    tasks : `list[Path]`
+        The marvel job-array files (`gene`, `outdir`), e.g. the
+        per-variant and the carrier-burden tasks: a gene's store is built
+        from the outdirs of all of them.
     ancestry : `str`
         `Ancestry` code of the runs without an ancestry in their
         stratification name (all samples: ``MULTI``).
@@ -915,8 +958,12 @@ def _init_cmd_args() -> argparse.ArgumentParser:
         "-t",
         "--tasks",
         type=Path,
-        default=FileNames.MARVEL_TASKS,
-        help="marvel job-array file (default: %(default)s)",
+        nargs="+",
+        default=[FileNames.MARVEL_TASKS],
+        help=(
+            "marvel job-array file(s); with --refresh list every file "
+            "whose outdirs belong in the stores (default: %(default)s)"
+        ),
     )
     parser.add_argument(
         "--refresh",
