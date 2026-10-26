@@ -39,6 +39,11 @@ class Paths:
     MARVEL_COMPARISON: Path = HERE / "results" / "marvel_comparison"
     MARVEL_COMPARISON_TEMP: Path = DATA_TEMP / "marvel_comparison"
     RESULTS_FIGURES: Path = HERE / "results" / "figures"
+    # archived result batches (archive_results.py): <tag>/<group>/; the
+    # hand-written README text per group lives in RESULTS_README_TEXT
+    # (not "archive": .gitignore ignores *archive*/)
+    RESULTS_ARCHIVE: Path = HERE / "results" / "archive"
+    RESULTS_README_TEXT: Path = HERE / "config" / "results_readmes"
     # subfolder of a figure `--out-dir` for figures not in
     # `FigureNames.MAIN_FIGURES`
     FIGURES_SENSITIVITY: str = "sensitivity"
@@ -474,6 +479,7 @@ class RunlogOrder:
     MERGE_ASSOCIATIONS: int = 30
     MATCH_VARIANTS: int = 40
     META_ANALYSIS: int = 50
+    ARCHIVE_RESULTS: int = 90
 
 
 class ColumnNames:
