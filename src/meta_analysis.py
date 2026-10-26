@@ -1086,26 +1086,27 @@ def _ukb_base_mask(variant_sources: list[str] | None) -> str:
     Returns
     -------
     mask : `str`
-        `Constants.BURDEN_MASK_GOF` for GoF only, `BURDEN_MASK_LOF` for
-        PTV and/or ClinVar.
+        The `Constants.BURDEN_VARIANT_SETS` key whose sources equal the
+        run's (e.g. `BURDEN_MASK_GOF` for GoF, `BURDEN_MASK_LOF` for PTV
+        and ClinVar).
 
     Raises
     ------
     ValueError
-        If the sources mix GoF with PTV/ClinVar or are not given: no
-        carrier burden matches such a run.
+        If no variant set has exactly these sources (or none are given):
+        no carrier burden matches such a run.
     """
     sources = set(variant_sources or [])
-    lof_sources = {
-        Constants.PTV_VARIANT_SOURCE, Constants.CLINVAR_VARIANT_SOURCE,
-    }
-    if sources == {Constants.GOF_VARIANT_SOURCE}:
-        return Constants.BURDEN_MASK_GOF
-    if sources and sources <= lof_sources:
-        return Constants.BURDEN_MASK_LOF
+    for mask, mask_sources in Constants.BURDEN_VARIANT_SETS.items():
+        if sources == set(mask_sources):
+            return mask
     raise ValueError(
-        "--ukb-burden needs --variant-sources GoF, or PTV and/or ClinVar "
-        f"(got {sorted(sources) or 'all'})"
+        "--ukb-burden needs --variant-sources of one variant set: "
+        + "; ".join(
+            " ".join(mask_sources)
+            for mask_sources in Constants.BURDEN_VARIANT_SETS.values()
+        )
+        + f" (got {sorted(sources) or 'all'})"
     )
 
 
@@ -1158,10 +1159,7 @@ def load_ukb_burden(
         )
     base = _ukb_base_mask(variant_sources)
     suffix = Constants.BURDEN_FALLBACK_SUFFIX
-    directed = (
-        Constants.BURDEN_MASK_LOF_DIRECTED
-        if base == Constants.BURDEN_MASK_LOF else base
-    )
+    directed = Constants.BURDEN_DIRECTED_MASKS.get(base, base)
     wanted = {base, directed, f"{base}{suffix}", f"{directed}{suffix}"}
     table = pd.read_csv(path, sep="\t", low_memory=False)
     parsed = table[_EXPOSURE_COLUMN].astype(str).str.extract(_GENE_MASK_RE)
@@ -1268,8 +1266,8 @@ def ukb_burden_rows(
         One row per gene, outcome, ancestry and study.
     """
     base = _ukb_base_mask(variant_sources)
-    if directed and base == Constants.BURDEN_MASK_LOF:
-        base = Constants.BURDEN_MASK_LOF_DIRECTED
+    if directed:
+        base = Constants.BURDEN_DIRECTED_MASKS.get(base, base)
     pair = [VariantListColumns.OUT_GENE, HarmonisedColumns.OUTCOME]
     has_prefer: set[tuple] = set()
     if prefer:

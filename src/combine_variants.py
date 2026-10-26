@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """combine_variants
 
-Combine the PTVs, the ClinVar P/LP and the GoF variants of the old per-gene
-lists (`data/raw/gof_variants.tsv`) into one variant list, left-aligned and
+Combine the PTVs, the ClinVar P/LP, and the GoF and AlphaMissense P/LP
+variants of the old per-gene lists (`data/raw/gof_variants.tsv`,
+`data/raw/am_variants.tsv`) into one variant list, left-aligned and
 trimmed against GRCh38, and split per gene. Original and normalised variant ID
 (chr:pos:alleles) are kept.
 """
@@ -271,6 +272,52 @@ def load_gof_variants(path: Path = FileNames.GOF_VARIANTS) -> pd.DataFrame:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def load_am_variants(path: Path = FileNames.AM_VARIANTS) -> pd.DataFrame:
+    """Read the AlphaMissense list as variant-list rows of the kept classes.
+
+    Parameters
+    ----------
+    path : `Path`, optional, default: `FileNames.AM_VARIANTS`
+        The AM rows of the old per-gene lists (`chr`, `pos`, `a1`, `a2`,
+        `source`, `gene`, `am_pathogenicity`, `tri_class`).
+
+    Returns
+    -------
+    am : `pd.DataFrame`
+        The rows with `source` `Constants.AM_VARIANT_SOURCE` and a
+        `tri_class` in `Constants.AM_KEEP_CLASSES`, with the
+        `VariantListColumns` `chr`, `pos`, `a1`, `a2`, `source`, `gene`,
+        `am_pathogenicity` and `tri_class`, as strings. Rows per class
+        are logged.
+
+    Raises
+    ------
+    FileNotFoundError
+        If `path` does not exist.
+    ValueError
+        If `path` has rows of another source.
+    """
+    if not path.exists():
+        raise FileNotFoundError(f"{path} not found (see its SOURCE.md)")
+    vc = VariantListColumns
+    am = pd.read_csv(path, sep="\t", dtype=str)
+    other = sorted(set(am[vc.SOURCE]) - {Constants.AM_VARIANT_SOURCE})
+    if other:
+        raise ValueError(f"{path}: sources other than AM: {other}")
+    for tri_class, n in am[vc.TRI_CLASS].value_counts(dropna=False).items():
+        log_info(f"{path}: {n} AM variants of class {tri_class}")
+    am = am.loc[am[vc.TRI_CLASS].isin(Constants.AM_KEEP_CLASSES)]
+    log_info(
+        f"{path}: {len(am)} AM variants kept "
+        f"({', '.join(Constants.AM_KEEP_CLASSES)})"
+    )
+    return am[[
+        vc.CHROM, vc.POS, vc.A1, vc.A2, vc.SOURCE, vc.GENE,
+        vc.AM_PATHOGENICITY, vc.TRI_CLASS,
+    ]]
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def read_gene_regions(
     path: Path = FileNames.GENE_LIST,
 ) -> dict[str, functions.GeneRegion]:
@@ -387,14 +434,15 @@ def combine_lists(
     ptv: pd.DataFrame,
     plp: pd.DataFrame,
     gof: pd.DataFrame,
+    am: pd.DataFrame,
     regions: dict[str, functions.GeneRegion],
 ) -> pd.DataFrame:
-    """Stack the PTV, P/LP and GoF rows into one normalised variant list.
+    """Stack the PTV, P/LP, GoF and AM rows into one normalised list.
 
     `chr` gets a "chr" prefix (as in the old per-gene lists);
-    `am_pathogenicity` and `tri_class` are added as NA. Rows without a
-    GRCh38 chr, pos or both alleles are dropped (warned per gene and
-    source), as they cannot be matched or extracted. The rest is normalised
+    `am_pathogenicity` and `tri_class` are NA except for the AM rows. Rows
+    without a GRCh38 chr, pos or both alleles are dropped (warned per gene
+    and source), as they cannot be matched or extracted. The rest is normalised
     by `normalise_list`; rows that become the same site, gene and source
     keep the first (warned). A site in several sources keeps one row per
     source.
@@ -407,6 +455,8 @@ def combine_lists(
         From `load_plp_variants`.
     gof : `pd.DataFrame`
         From `load_gof_variants`.
+    am : `pd.DataFrame`
+        From `load_am_variants`.
     regions : `dict[str, functions.GeneRegion]`
         From `read_gene_regions`.
 
@@ -418,7 +468,7 @@ def combine_lists(
         several sources, are logged.
     """
     vc = VariantListColumns
-    variants = pd.concat([ptv, plp, gof], ignore_index=True)
+    variants = pd.concat([ptv, plp, gof, am], ignore_index=True)
     chrom = variants[vc.CHROM].astype("string").str.removeprefix("chr")
     variants[vc.CHROM] = "chr" + chrom
     for column in LIST_COLUMNS:
@@ -541,6 +591,7 @@ if __name__ == "__main__":
             load_ptv_variants(),
             load_plp_variants(),
             load_gof_variants(),
+            load_am_variants(),
             read_gene_regions(),
         )
         FileNames.LIPID_VARIANTS.parent.mkdir(parents=True, exist_ok=True)

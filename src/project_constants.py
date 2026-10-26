@@ -168,6 +168,11 @@ class Constants:
     PTV_VARIANT_SOURCE: str = "PTV"
     LOFTEE_KEEP: str = "HC"
     VEP_CANONICAL: str = "YES"
+    # variant-list source of the AlphaMissense missense variants of the old
+    # per-gene lists (`FileNames.AM_VARIANTS`); only `AM_KEEP_CLASSES`
+    # (`tri_class`) are listed, as lower gene function (not flipped)
+    AM_VARIANT_SOURCE: str = "AM"
+    AM_KEEP_CLASSES: tuple[str, ...] = ("Pathogenic/Likely pathogenic",)
     # marvel extraction lists (combine_variants.py): the `ID` of a
     # variant's form before normalisation is its `variant_id` + this
     # suffix, so both forms are extracted and collapsed afterwards
@@ -349,6 +354,31 @@ class Constants:
     BURDEN_MASK_LOF: str = "lof"
     BURDEN_MASK_LOF_DIRECTED: str = "lof_directed"
     BURDEN_MASK_GOF: str = "gof"
+    # variant set (mask) -> its variant-list sources (`--variant-sources`
+    # of the meta-analysis run), in plotting order. A site is in a mask
+    # when it is in one of the sources, except GoF + ClinVar raising
+    # sites, which are in the gof mask only; lof = PTV + ClinVar
+    BURDEN_VARIANT_SETS: dict[str, tuple[str, ...]] = {
+        "gof": (GOF_VARIANT_SOURCE,),
+        "am": (AM_VARIANT_SOURCE,),
+        "ptv": (PTV_VARIANT_SOURCE,),
+        "clinvar": (CLINVAR_VARIANT_SOURCE,),
+        "lof": (PTV_VARIANT_SOURCE, CLINVAR_VARIANT_SOURCE),
+        "ptv_am": (PTV_VARIANT_SOURCE, AM_VARIANT_SOURCE),
+        "am_clinvar": (AM_VARIANT_SOURCE, CLINVAR_VARIANT_SOURCE),
+        "ptv_clinvar_am": (
+            PTV_VARIANT_SOURCE, CLINVAR_VARIANT_SOURCE, AM_VARIANT_SOURCE,
+        ),
+    }
+    # mask -> its directed form: without the ClinVar-only sites lacking a
+    # lowering direction (masks with ClinVar only; the others are directed
+    # as they are)
+    BURDEN_DIRECTED_MASKS: dict[str, str] = {
+        "clinvar": "clinvar_directed",
+        BURDEN_MASK_LOF: BURDEN_MASK_LOF_DIRECTED,
+        "am_clinvar": "am_clinvar_directed",
+        "ptv_clinvar_am": "ptv_clinvar_am_directed",
+    }
     # mask suffix of the fallback exposures: only the sites the preferred
     # studies (`BURDEN_PREFER_STUDIES`) lack for `BURDEN_FALLBACK_OUTCOME`
     # (meta_analysis.py `--prefer-groups`); tested against that outcome
@@ -1248,6 +1278,9 @@ class FileNames:
     # GoF rows of the old per-gene lists (`GOF_VARIANT_SOURCE`; snapshot
     # before combine_variants.py overwrote them; sites only, committed)
     GOF_VARIANTS: Path = Paths.DATA_RAW / "gof_variants.tsv"
+    # AM rows of the old per-gene lists (`AM_VARIANT_SOURCE`, all classes;
+    # snapshot as `GOF_VARIANTS`; sites only, committed)
+    AM_VARIANTS: Path = Paths.DATA_RAW / "am_variants.tsv"
     VARIANT_LIST_TEMPLATE: str = str(Paths.DATA_TEMP / "{gene}_variants.tsv")
     # curated gene x ClinVar condition -> `ClinVarDirection`
     CLINVAR_CONDITION_DIRECTION: Path = (
@@ -1410,6 +1443,22 @@ class FigureNames:
     SIGNIFICANCE_TITLE: str = "Significance"
     OUTCOME_TITLE: str = "Outcomes"
     LIPID_TITLE: str = "Lipids"
+    VARIANT_SET_TITLE: str = "Variant set"
+    # variant set (`Constants.BURDEN_VARIANT_SETS` key) -> name, in
+    # plotting order
+    VARIANT_SETS: dict[str, str] = {
+        "gof": "GoF",
+        "am": "AM",
+        "ptv": "PTV",
+        "clinvar": "ClinVar",
+        "lof": "PTV + ClinVar",
+        "ptv_am": "PTV + AM",
+        "am_clinvar": "AM + ClinVar",
+        "ptv_clinvar_am": "PTV + ClinVar + AM",
+    }
+    VARIANT_SET_RANK: dict[str, int] = {
+        name: i for i, name in enumerate(VARIANT_SETS)
+    }
     # main-analysis figures: a full file name without suffix, or, ending
     # in '_', the start of one; every other figure goes to
     # `Paths.FIGURES_SENSITIVITY` (`figure_utils.save`)
@@ -1418,6 +1467,7 @@ class FigureNames:
         "forest_pooled_annotated_eur_gof",
         "forest_sources_annotated_eur_",
         "forest_apoe_genotype_EUR",
+        "forest_variant_sets_annotated_eur_CETP",
     )
 
 
@@ -1453,6 +1503,18 @@ class FigureStyle:
         "hdl_c": "#c51b7d",
         "apoa": "#f1b6da",
         "tg": "#e08214",
+    }
+    # variant-set forest: marker colour per variant set (Okabe-Ito; the
+    # main PTV + ClinVar set black)
+    VARIANT_SET_COLOURS: dict[str, str] = {
+        "gof": "#D55E00",
+        "am": "#0072B2",
+        "ptv": "#009E73",
+        "clinvar": "#CC79A7",
+        "lof": "#000000",
+        "ptv_am": "#56B4E9",
+        "am_clinvar": "#E69F00",
+        "ptv_clinvar_am": "#882255",
     }
     STUDY_COLOUR: str = "#bdbdbd"
     POOLED_SIZE: float = 14
