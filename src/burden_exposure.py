@@ -23,7 +23,8 @@ listed variants.
   BURDEN_SWAP_FRACTION` (or that matches the list with a1/a2 swapped)
   counts the other allele: carriers are then the samples with dosage
   below 2 - threshold.
-- Sites with a MAF above `--max-maf` are left out.
+- Sites with a MAF above `--max-maf` are left out (default `Constants.
+  BURDEN_MAX_MAF` = 0.5: none).
 
 Writes per gene `FileNames.BURDEN_EXPOSURE_TEMPLATE` (main and fallback),
 one cnf per gene x subset x file (`Paths.MARVEL_BURDEN_CONFIG`, format of
@@ -943,7 +944,7 @@ def _init_cmd_args() -> argparse.ArgumentParser:
     parser.add_argument(
         "--max-maf",
         type=float,
-        default=Constants.REGION_MAX_MAF,
+        default=Constants.BURDEN_MAX_MAF,
         help="leave out sites with a higher MAF (default: %(default)s)",
     )
     parser.add_argument(
