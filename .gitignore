@@ -45,7 +45,8 @@ __pycache__
 *.gz
 
 # directories
-docs/
+docs/*
+!docs/reports/
 data/
 *cache*/
 bin/
