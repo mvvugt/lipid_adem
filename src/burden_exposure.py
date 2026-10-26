@@ -4,16 +4,19 @@ Build the UKB carrier-burden exposures and the old marvel (10039b6) run
 files for them (Snellius).
 
 Per gene, the listed variants (`lipid_variants.tsv`) are collapsed into
-0/1 carrier columns `<GENE>_<mask>` (`Constants.BURDEN_MASK_*`): a sample
+0/1 carrier columns `<GENE>_<mask>` (`Constants.BURDEN_VARIANT_SETS`): a sample
 is 1 when it carries any of the mask's sites, else 0 (a missing call
 counts as non-carrier and is counted in the summary). Carriers come from
 the old wide carriers files (`FileNames.OLD_CARRIERS_TEMPLATE`, `f.eid`
 plus one dosage column per variant), read in chunks and only for the
 listed variants.
 
-- lof: PTV + ClinVar sites that are not raising; lof_directed: lof
-  without the ClinVar-only sites lacking a lowering direction; gof: GoF +
-  ClinVar raising sites (the sites `meta_analysis.orient` flips).
+- gof: GoF + ClinVar raising sites (the sites `meta_analysis.orient`
+  flips); every other mask: the sites of its sources (PTV, ClinVar, AM;
+  lof = PTV + ClinVar) that are not GoF/raising. The masks with ClinVar
+  also get a directed form (`Constants.BURDEN_DIRECTED_MASKS`, e.g.
+  lof_directed): without the ClinVar-only sites lacking a lowering
+  direction.
 - `<GENE>_<mask>_fb` (`Constants.BURDEN_FALLBACK_SUFFIX`): the same masks
   without the sites the preferred studies (`Constants.
   BURDEN_PREFER_STUDIES`, Thomassen) have for `Constants.
@@ -23,7 +26,8 @@ listed variants.
   BURDEN_SWAP_FRACTION` (or that matches the list with a1/a2 swapped)
   counts the other allele: carriers are then the samples with dosage
   below 2 - threshold.
-- Sites with a MAF above `--max-maf` are left out.
+- Sites with a MAF above `--max-maf` are left out (default `Constants.
+  BURDEN_MAX_MAF` = 0.5: none).
 
 Writes per gene `FileNames.BURDEN_EXPOSURE_TEMPLATE` (main and fallback),
 one cnf per gene x subset x file (`Paths.MARVEL_BURDEN_CONFIG`, format of
@@ -76,10 +80,19 @@ _VL = VariantListColumns
 _HC = HarmonisedColumns
 # pandas renames repeated header names to `<name>.<n>`
 _DUPLICATE_SUFFIX = re.compile(r"\.\d+$")
-_MASKS: tuple[str, ...] = (
-    Constants.BURDEN_MASK_LOF,
-    Constants.BURDEN_MASK_LOF_DIRECTED,
-    Constants.BURDEN_MASK_GOF,
+# every variant set (`Constants.BURDEN_VARIANT_SETS`), each followed by
+# its directed form when it has one
+_MASKS: tuple[str, ...] = tuple(
+    mask
+    for base in Constants.BURDEN_VARIANT_SETS
+    for mask in (base, Constants.BURDEN_DIRECTED_MASKS.get(base))
+    if mask is not None
+)
+# variant-list sources of lower gene function (all non-gof sets)
+_LOF_SOURCES: tuple[str, ...] = (
+    Constants.PTV_VARIANT_SOURCE,
+    Constants.CLINVAR_VARIANT_SOURCE,
+    Constants.AM_VARIANT_SOURCE,
 )
 _SWAPPED_MATCHES = frozenset({_C.MATCH_SWAPPED, _C.MATCH_SWAPPED_ORIG})
 # summary columns
@@ -169,11 +182,7 @@ def read_sites(path: Path, genes: list[str]) -> pd.DataFrame:
     source = table[_VL.SOURCE]
     direction = table[_VL.CLINVAR_DIRECTION]
     is_clinvar = source == Constants.CLINVAR_VARIANT_SOURCE
-    known = source.isin([
-        Constants.PTV_VARIANT_SOURCE,
-        Constants.CLINVAR_VARIANT_SOURCE,
-        Constants.GOF_VARIANT_SOURCE,
-    ])
+    known = source.isin([Constants.GOF_VARIANT_SOURCE, *_LOF_SOURCES])
     if (~known).any():
         log_warn(
             f"{int((~known).sum())} rows of other sources "
@@ -182,32 +191,48 @@ def read_sites(path: Path, genes: list[str]) -> pd.DataFrame:
     table["_gof"] = (source == Constants.GOF_VARIANT_SOURCE) | (
         is_clinvar & (direction == ClinVarDirection.RAISING)
     )
-    table["_lof"] = known & ~table["_gof"]
-    table["_clear"] = (known & ~is_clinvar) | (
-        is_clinvar & (direction == ClinVarDirection.LOWERING)
+    # per lower-function source: the site is listed there (not raising)
+    for list_source in _LOF_SOURCES:
+        table[f"_in_{list_source}"] = (
+            (source == list_source) & ~table["_gof"]
+        )
+    table["_clinvar_lowering"] = is_clinvar & (
+        direction == ClinVarDirection.LOWERING
     )
+    flags = [
+        "_gof", "_clinvar_lowering",
+        *(f"_in_{list_source}" for list_source in _LOF_SOURCES),
+    ]
     sites = table.groupby([_VL.GENE, _C.NEW_KEY], as_index=False).agg(
         orig_key=("orig_key", "first"),
-        _gof=("_gof", "any"),
-        _lof=("_lof", "any"),
-        _clear=("_clear", "any"),
+        **{flag: (flag, "any") for flag in flags},
     )
     # a site is flipped as a whole by orient() when any row is GoF/raising
-    both = sites["_gof"] & sites["_lof"]
+    any_lof = sites[[f"_in_{s}" for s in _LOF_SOURCES]].any(axis=1)
+    both = sites["_gof"] & any_lof
     if both.any():
         log_warn(
             f"{int(both.sum())} site(s) both LoF-listed and GoF/raising, "
             "in the gof mask only: "
             + ", ".join(sites.loc[both, _C.NEW_KEY])
         )
-    sites[Constants.BURDEN_MASK_GOF] = sites["_gof"]
-    sites[Constants.BURDEN_MASK_LOF] = sites["_lof"] & ~sites["_gof"]
-    sites[Constants.BURDEN_MASK_LOF_DIRECTED] = (
-        sites[Constants.BURDEN_MASK_LOF] & sites["_clear"]
-    )
-    sites = sites.rename(columns={_VL.GENE: _S_GENE}).drop(
-        columns=["_gof", "_lof", "_clear"]
-    )
+    for mask, mask_sources in Constants.BURDEN_VARIANT_SETS.items():
+        if mask == Constants.BURDEN_MASK_GOF:
+            sites[mask] = sites["_gof"]
+            continue
+        in_mask = sites[[f"_in_{s}" for s in mask_sources]].any(axis=1)
+        sites[mask] = in_mask & ~sites["_gof"]
+        directed = Constants.BURDEN_DIRECTED_MASKS.get(mask)
+        if directed is None:
+            continue
+        # clear direction: in a source other than ClinVar, or ClinVar
+        # lowering
+        clear = sites["_clinvar_lowering"].copy()
+        for list_source in mask_sources:
+            if list_source != Constants.CLINVAR_VARIANT_SOURCE:
+                clear |= sites[f"_in_{list_source}"]
+        sites[directed] = sites[mask] & clear
+    sites = sites.rename(columns={_VL.GENE: _S_GENE}).drop(columns=flags)
     for gene, part in sites.groupby(_S_GENE):
         log_info(
             f"{gene}: {len(part)} listed sites; "
@@ -943,7 +968,7 @@ def _init_cmd_args() -> argparse.ArgumentParser:
     parser.add_argument(
         "--max-maf",
         type=float,
-        default=Constants.REGION_MAX_MAF,
+        default=Constants.BURDEN_MAX_MAF,
         help="leave out sites with a higher MAF (default: %(default)s)",
     )
     parser.add_argument(
