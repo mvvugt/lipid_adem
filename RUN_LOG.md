@@ -22,118 +22,118 @@ Output:
 
 ## [10] gwas_cat_prep (`/home/rmgpmva/projects/lipid_adem/src/gwas_cat_prep.py`)
 - first run: 2026-09-21 22:45:06
-- last run: 2026-10-07 10:52:52
-- commit: `648f324`
+- last run: 2026-10-24 10:35:19
+- commit: `04d2c6c`
 
 Output:
 ```text
-[info]  2026-10-07 10:49:37 9 genes, 84 icd codes
-[stage] 2026-10-07 10:49:37 resolve_genes
-[stage] 2026-10-07 10:49:37 resolve_efo
-[info]  2026-10-07 10:49:38 trait ids checked: 21, obsolete replaced: 0
-[info]  2026-10-07 10:49:38 MONDO_0011057 (all_cause_dementia) in Constants.EXCLUDED_EFO_IDS, skipped
-[info]  2026-10-07 10:49:38 MONDO_0011057 (vascular_dementia) in Constants.EXCLUDED_EFO_IDS, skipped
-[stage] 2026-10-07 10:49:38 finngen_manual
-[info]  2026-10-07 10:49:41 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/study_outcome_review.tsv: 673 outcome x study exclusions for 10 outcomes
-[info]  2026-10-07 10:49:41 catalog studies with aou, ukb excluded for every outcome
-[info]  2026-10-07 10:49:41 all_cause_dementia: own results for finngen; catalog studies with these cohorts excluded
-[info]  2026-10-07 10:49:41 alzheimers_dementia: own results for finngen; catalog studies with these cohorts excluded
-[info]  2026-10-07 10:49:41 coronary_heart_disease: own results for finngen; catalog studies with these cohorts excluded
-[info]  2026-10-07 10:49:41 frontotemporal_dementia: own results for finngen; catalog studies with these cohorts excluded
-[info]  2026-10-07 10:49:41 hf: own results for finngen; catalog studies with these cohorts excluded
-[info]  2026-10-07 10:49:41 parkinsons_disease_dementia: own results for finngen; catalog studies with these cohorts excluded
-[info]  2026-10-07 10:49:41 stroke: own results for finngen; catalog studies with these cohorts excluded
-[info]  2026-10-07 10:49:41 sudden_cardiac_death: own results for finngen; catalog studies with these cohorts excluded
-[info]  2026-10-07 10:49:41 vascular_dementia: own results for finngen; catalog studies with these cohorts excluded
-[stage] 2026-10-07 10:49:41 discover_gwas
-[info]  2026-10-07 10:49:48 EFO_0003913 (exact): 56 studies -> 38 dropped for cohort overlap (aou, finngen, ukb) -> 9 with full sumstats -> 9 included, 0 included with blank cohort
-[info]  2026-10-07 10:49:49 EFO_0003913 (exact): 56 studies -> 38 dropped for cohort overlap (aou, ukb) -> 9 with full sumstats -> 9 included, 0 included with blank cohort
-[info]  2026-10-07 10:49:49 EFO_0003913 (exact): 56 studies -> 38 dropped for cohort overlap (aou, ukb) -> 9 with full sumstats -> 9 included, 0 included with blank cohort
-[info]  2026-10-07 10:49:58 EFO_0004269 (exact): 76 studies -> 28 dropped for cohort overlap (aou, finngen, ukb) -> 9 dropped by review -> 9 with full sumstats -> 9 included, 1 included with blank cohort
-[info]  2026-10-07 10:49:59 EFO_0004269 (exact): 76 studies -> 28 dropped for cohort overlap (aou, ukb) -> 9 dropped by review -> 9 with full sumstats -> 9 included, 1 included with blank cohort
-[info]  2026-10-07 10:49:59 EFO_0004269 (exact): 76 studies -> 28 dropped for cohort overlap (aou, ukb) -> 9 dropped by review -> 9 with full sumstats -> 9 included, 1 included with blank cohort
-[info]  2026-10-07 10:50:01 EFO_0006799 (with child traits, cap per term and 30 total): 1 studies -> 0 dropped for cohort overlap (aou, ukb) -> 0 with full sumstats -> 0 included, 0 included with blank cohort
-[info]  2026-10-07 10:50:03 EFO_0008584 (exact): 2 studies -> 2 dropped for cohort overlap (aou, finngen, ukb) -> 0 with full sumstats -> 0 included, 0 included with blank cohort
-[info]  2026-10-07 10:50:03 EFO_0008584 (exact): 2 studies -> 2 dropped for cohort overlap (aou, ukb) -> 0 with full sumstats -> 0 included, 0 included with blank cohort
-[info]  2026-10-07 10:50:04 EFO_0008584 (exact): 2 studies -> 2 dropped for cohort overlap (aou, ukb) -> 0 with full sumstats -> 0 included, 0 included with blank cohort
-[info]  2026-10-07 10:50:07 EFO_0009492 (exact): 21 studies -> 10 dropped for cohort overlap (aou, finngen, ukb) -> 8 with full sumstats -> 8 included, 0 included with blank cohort
-[info]  2026-10-07 10:50:08 EFO_0009492 (exact): 21 studies -> 10 dropped for cohort overlap (aou, ukb) -> 8 with full sumstats -> 8 included, 0 included with blank cohort
-[info]  2026-10-07 10:50:08 EFO_0009492 (exact): 21 studies -> 10 dropped for cohort overlap (aou, ukb) -> 8 with full sumstats -> 8 included, 0 included with blank cohort
-[info]  2026-10-07 10:50:10 EFO_0009493 (exact): 10 studies -> 4 dropped for cohort overlap (aou, finngen, ukb) -> 5 dropped by review -> 0 with full sumstats -> 0 included, 0 included with blank cohort
-[info]  2026-10-07 10:50:11 EFO_0009493 (exact): 10 studies -> 4 dropped for cohort overlap (aou, ukb) -> 5 dropped by review -> 0 with full sumstats -> 0 included, 0 included with blank cohort
-[info]  2026-10-07 10:50:11 EFO_0009493 (exact): 10 studies -> 4 dropped for cohort overlap (aou, ukb) -> 5 dropped by review -> 0 with full sumstats -> 0 included, 0 included with blank cohort
-[info]  2026-10-07 10:50:13 EFO_0011057 (with child traits, cap per term and 30 total): 4 studies -> 0 dropped for cohort overlap (aou, finngen, ukb) -> 4 dropped by review -> 0 with full sumstats -> 0 included, 0 included with blank cohort
-[info]  2026-10-07 10:50:17 MONDO_0004648 (with child traits, cap per term and 30 total): 15 studies -> 4 dropped for cohort overlap (aou, finngen, ukb) -> 1 with full sumstats -> 1 included, 0 included with blank cohort
-[info]  2026-10-07 10:50:18 MONDO_0004648 (with child traits, cap per term and 30 total): 15 studies -> 4 dropped for cohort overlap (aou, finngen, ukb) -> 3 dropped by review -> 1 with full sumstats -> 1 included, 0 included with blank cohort
-[info]  2026-10-07 10:50:20 MONDO_0004781 (exact): 11 studies -> 6 dropped for cohort overlap (aou, finngen, ukb) -> 1 with full sumstats -> 1 included, 0 included with blank cohort
-[info]  2026-10-07 10:50:21 MONDO_0004781 (exact): 11 studies -> 6 dropped for cohort overlap (aou, ukb) -> 1 with full sumstats -> 1 included, 0 included with blank cohort
-[info]  2026-10-07 10:50:21 MONDO_0004781 (exact): 11 studies -> 6 dropped for cohort overlap (aou, ukb) -> 1 with full sumstats -> 1 included, 0 included with blank cohort
-[info]  2026-10-07 10:50:56 MONDO_0004975 (with child traits, cap per term and 30 total): 261 studies -> 37 dropped for cohort overlap (aou, finngen, ukb) -> 72 dropped by review -> 7 with full sumstats -> 7 included, 2 included with blank cohort
-[info]  2026-10-07 10:50:59 MONDO_0004975 (with child traits, cap per term and 30 total): 261 studies -> 37 dropped for cohort overlap (aou, finngen, ukb) -> 60 dropped by review -> 9 with full sumstats -> 9 included, 3 included with blank cohort
-[info]  2026-10-07 10:51:27 MONDO_0005010 (exact): 207 studies -> 41 dropped for cohort overlap (aou, finngen, ukb) -> 74 dropped by review -> 16 with full sumstats -> 16 included, 5 included with blank cohort
-[info]  2026-10-07 10:51:28 MONDO_0005010 (exact): 207 studies -> 41 dropped for cohort overlap (aou, ukb) -> 76 dropped by review -> 15 with full sumstats -> 15 included, 5 included with blank cohort
-[info]  2026-10-07 10:51:29 MONDO_0005010 (exact): 207 studies -> 41 dropped for cohort overlap (aou, ukb) -> 76 dropped by review -> 15 with full sumstats -> 15 included, 5 included with blank cohort
-[info]  2026-10-07 10:51:47 MONDO_0005098 (exact): 134 studies -> 46 dropped for cohort overlap (aou, finngen, ukb) -> 16 dropped by review -> 24 with full sumstats -> 22 included, 0 included with blank cohort
-[info]  2026-10-07 10:51:47 MONDO_0005098 (exact): 134 studies -> 46 dropped for cohort overlap (aou, ukb) -> 16 dropped by review -> 24 with full sumstats -> 22 included, 0 included with blank cohort
-[info]  2026-10-07 10:51:48 MONDO_0005098 (exact): 134 studies -> 46 dropped for cohort overlap (aou, ukb) -> 16 dropped by review -> 24 with full sumstats -> 22 included, 0 included with blank cohort
-[info]  2026-10-07 10:51:52 MONDO_0005099 (exact): 19 studies -> 9 dropped for cohort overlap (aou, finngen, ukb) -> 4 with full sumstats -> 4 included, 0 included with blank cohort
-[info]  2026-10-07 10:51:52 MONDO_0005099 (exact): 19 studies -> 9 dropped for cohort overlap (aou, ukb) -> 4 with full sumstats -> 4 included, 0 included with blank cohort
-[info]  2026-10-07 10:51:52 MONDO_0005099 (exact): 19 studies -> 9 dropped for cohort overlap (aou, ukb) -> 4 with full sumstats -> 4 included, 0 included with blank cohort
-[info]  2026-10-07 10:52:03 MONDO_0005252 (exact): 77 studies -> 37 dropped for cohort overlap (aou, finngen, ukb) -> 12 dropped by review -> 18 with full sumstats -> 16 included, 0 included with blank cohort
-[info]  2026-10-07 10:52:04 MONDO_0005252 (exact): 77 studies -> 34 dropped for cohort overlap (aou, ukb) -> 13 dropped by review -> 20 with full sumstats -> 17 included, 0 included with blank cohort
-[info]  2026-10-07 10:52:11 MONDO_0005267 (exact): 58 studies -> 41 dropped for cohort overlap (aou, finngen, ukb) -> 6 dropped by review -> 4 with full sumstats -> 4 included, 0 included with blank cohort
-[info]  2026-10-07 10:52:12 MONDO_0005267 (exact): 58 studies -> 41 dropped for cohort overlap (aou, ukb) -> 6 dropped by review -> 4 with full sumstats -> 4 included, 0 included with blank cohort
-[info]  2026-10-07 10:52:12 MONDO_0005267 (exact): 58 studies -> 41 dropped for cohort overlap (aou, ukb) -> 6 dropped by review -> 4 with full sumstats -> 4 included, 0 included with blank cohort
-[info]  2026-10-07 10:52:15 MONDO_0005394 (exact): 10 studies -> 4 dropped for cohort overlap (aou, finngen, ukb) -> 3 with full sumstats -> 3 included, 0 included with blank cohort
-[info]  2026-10-07 10:52:15 MONDO_0005394 (exact): 10 studies -> 4 dropped for cohort overlap (aou, ukb) -> 3 with full sumstats -> 3 included, 0 included with blank cohort
-[info]  2026-10-07 10:52:16 MONDO_0005394 (exact): 10 studies -> 4 dropped for cohort overlap (aou, ukb) -> 3 with full sumstats -> 3 included, 0 included with blank cohort
-[info]  2026-10-07 10:52:18 MONDO_0008243 (with child traits, cap per term and 30 total): 1 studies -> 0 dropped for cohort overlap (aou, finngen, ukb) -> 0 with full sumstats -> 0 included, 0 included with blank cohort
-[info]  2026-10-07 10:52:18 MONDO_0008243 (with child traits, cap per term and 30 total): 1 studies -> 0 dropped for cohort overlap (aou, finngen, ukb) -> 0 with full sumstats -> 0 included, 0 included with blank cohort
-[info]  2026-10-07 10:52:23 MONDO_0013792 (exact): 30 studies -> 11 dropped for cohort overlap (aou, finngen, ukb) -> 5 dropped by review -> 7 with full sumstats -> 7 included, 0 included with blank cohort
-[info]  2026-10-07 10:52:23 MONDO_0013792 (exact): 30 studies -> 11 dropped for cohort overlap (aou, ukb) -> 2 dropped by review -> 7 with full sumstats -> 7 included, 0 included with blank cohort
-[info]  2026-10-07 10:52:24 MONDO_0013792 (exact): 30 studies -> 11 dropped for cohort overlap (aou, ukb) -> 2 dropped by review -> 7 with full sumstats -> 7 included, 0 included with blank cohort
-[info]  2026-10-07 10:52:25 EFO ids with 0 GWAS Catalog studies: 2
-[stage] 2026-10-07 10:52:25 write_tasks
-[info]  2026-10-07 10:52:31 wrote 124 tasks (311 study x outcome rows, 9 gene regions) to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/tasks.tsv
-[info]  2026-10-07 10:52:31 archived /myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/filter_task_logs -> /myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/filter_task_logs_20261007_092533
-[stage] 2026-10-07 10:52:31 scale_meta
-[warn]  2026-10-07 10:52:46 GCST90477959: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90477959)
-[warn]  2026-10-07 10:52:46 GCST90477958: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90477958)
-[warn]  2026-10-07 10:52:46 GCST90246093: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90246093)
-[warn]  2026-10-07 10:52:46 GCST90399712: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90399712)
-[warn]  2026-10-07 10:52:46 GCST90399711: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90399711)
-[warn]  2026-10-07 10:52:46 GCST90726898: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90726898)
-[warn]  2026-10-07 10:52:46 GCST90246094: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90246094)
-[warn]  2026-10-07 10:52:46 GCST90246086: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90246086)
-[warn]  2026-10-07 10:52:46 GCST90246085: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90246085)
-[warn]  2026-10-07 10:52:46 GCST90726916: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90726916)
-[warn]  2026-10-07 10:52:47 GCST90432123: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90432123)
-[warn]  2026-10-07 10:52:47 GCST90246098: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90246098)
-[warn]  2026-10-07 10:52:47 GCST90726915: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90726915)
-[warn]  2026-10-07 10:52:47 GCST90432122: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90432122)
-[warn]  2026-10-07 10:52:47 GCST90480188: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90480188)
-[warn]  2026-10-07 10:52:47 GCST90477978: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90477978)
-[warn]  2026-10-07 10:52:47 GCST90477977: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90477977)
-[warn]  2026-10-07 10:52:48 GCST90246096: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90246096)
-[warn]  2026-10-07 10:52:48 GCST90018650: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90018650)
-[warn]  2026-10-07 10:52:48 GCST90726750: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90726750)
-[warn]  2026-10-07 10:52:48 GCST90704648: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90704648)
-[warn]  2026-10-07 10:52:48 GCST90727420: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90727420)
-[warn]  2026-10-07 10:52:48 GCST90565439: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90565439)
-[warn]  2026-10-07 10:52:48 GCST90566388: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90566388)
-[warn]  2026-10-07 10:52:48 GCST90276158: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90276158)
-[warn]  2026-10-07 10:52:48 GCST90276157: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90276157)
-[warn]  2026-10-07 10:52:48 GCST007511: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST007511)
-[warn]  2026-10-07 10:52:48 GCST003452: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST003452)
-[warn]  2026-10-07 10:52:48 GCST002245: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST002245)
-[warn]  2026-10-07 10:52:48 GCST90861026: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90861026)
-[warn]  2026-10-07 10:52:48 GCST90861027: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90861027)
-[warn]  2026-10-07 10:52:48 GCST90861029: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90861029)
-[warn]  2026-10-07 10:52:48 GCST90861030: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90861030)
-[warn]  2026-10-07 10:52:48 GCST90476370: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90476370)
-[warn]  2026-10-07 10:52:48 GCST90018586: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90018586)
-[info]  2026-10-07 10:52:48 metadata yaml read for 115 included studies, scale: unknown=115
-[info]  2026-10-07 10:52:49 wrote 2636 study-discovery rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/study_discovery_log.tsv.gz
+[info]  2026-10-24 10:20:05 8 genes, 85 icd codes
+[stage] 2026-10-24 10:20:05 resolve_genes
+[stage] 2026-10-24 10:20:05 resolve_efo
+[info]  2026-10-24 10:20:05 trait ids checked: 21, obsolete replaced: 0
+[info]  2026-10-24 10:20:05 MONDO_0011057 (all_cause_dementia) in Constants.EXCLUDED_EFO_IDS, skipped
+[info]  2026-10-24 10:20:05 MONDO_0011057 (vascular_dementia) in Constants.EXCLUDED_EFO_IDS, skipped
+[stage] 2026-10-24 10:20:05 finngen_manual
+[info]  2026-10-24 10:20:06 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/study_outcome_review.tsv: 673 outcome x study exclusions for 10 outcomes
+[info]  2026-10-24 10:20:06 catalog studies with aou, ukb excluded for every outcome
+[info]  2026-10-24 10:20:06 all_cause_dementia: own results for finngen, ukb; catalog studies with these cohorts excluded
+[info]  2026-10-24 10:20:06 alzheimers_dementia: own results for finngen, ukb; catalog studies with these cohorts excluded
+[info]  2026-10-24 10:20:06 ascvd: own results for finngen; catalog studies with these cohorts excluded
+[info]  2026-10-24 10:20:06 coronary_heart_disease: own results for finngen; catalog studies with these cohorts excluded
+[info]  2026-10-24 10:20:06 frontotemporal_dementia: own results for finngen, ukb; catalog studies with these cohorts excluded
+[info]  2026-10-24 10:20:06 hf: own results for finngen; catalog studies with these cohorts excluded
+[info]  2026-10-24 10:20:06 parkinsons_disease_dementia: own results for finngen; catalog studies with these cohorts excluded
+[info]  2026-10-24 10:20:06 stroke: own results for finngen; catalog studies with these cohorts excluded
+[info]  2026-10-24 10:20:06 sudden_cardiac_death: own results for finngen; catalog studies with these cohorts excluded
+[info]  2026-10-24 10:20:06 vascular_dementia: own results for finngen, ukb; catalog studies with these cohorts excluded
+[stage] 2026-10-24 10:20:06 discover_gwas
+[info]  2026-10-24 10:22:09 EFO_0003913 (exact): 56 studies -> 38 dropped for cohort overlap (aou, finngen, ukb) -> 9 with full sumstats -> 9 included, 0 included with blank cohort
+[info]  2026-10-24 10:22:10 EFO_0003913 (exact): 56 studies -> 38 dropped for cohort overlap (aou, ukb) -> 9 with full sumstats -> 9 included, 0 included with blank cohort
+[info]  2026-10-24 10:22:10 EFO_0003913 (exact): 56 studies -> 38 dropped for cohort overlap (aou, ukb) -> 9 with full sumstats -> 9 included, 0 included with blank cohort
+[info]  2026-10-24 10:24:47 EFO_0004269 (exact): 76 studies -> 28 dropped for cohort overlap (aou, finngen, ukb) -> 9 dropped by review -> 9 with full sumstats -> 9 included, 1 included with blank cohort
+[info]  2026-10-24 10:24:47 EFO_0004269 (exact): 76 studies -> 28 dropped for cohort overlap (aou, ukb) -> 9 dropped by review -> 9 with full sumstats -> 9 included, 1 included with blank cohort
+[info]  2026-10-24 10:24:48 EFO_0004269 (exact): 76 studies -> 28 dropped for cohort overlap (aou, ukb) -> 9 dropped by review -> 9 with full sumstats -> 9 included, 1 included with blank cohort
+[info]  2026-10-24 10:24:57 EFO_0006799 (with child traits, cap per term and 30 total): 1 studies -> 0 dropped for cohort overlap (aou, ukb) -> 0 with full sumstats -> 0 included, 0 included with blank cohort
+[info]  2026-10-24 10:25:03 EFO_0008584 (exact): 2 studies -> 2 dropped for cohort overlap (aou, finngen, ukb) -> 0 with full sumstats -> 0 included, 0 included with blank cohort
+[info]  2026-10-24 10:25:03 EFO_0008584 (exact): 2 studies -> 2 dropped for cohort overlap (aou, ukb) -> 0 with full sumstats -> 0 included, 0 included with blank cohort
+[info]  2026-10-24 10:25:03 EFO_0008584 (exact): 2 studies -> 2 dropped for cohort overlap (aou, ukb) -> 0 with full sumstats -> 0 included, 0 included with blank cohort
+[info]  2026-10-24 10:25:46 EFO_0009492 (exact): 21 studies -> 10 dropped for cohort overlap (aou, finngen, ukb) -> 8 with full sumstats -> 8 included, 0 included with blank cohort
+[info]  2026-10-24 10:25:46 EFO_0009492 (exact): 21 studies -> 10 dropped for cohort overlap (aou, ukb) -> 8 with full sumstats -> 8 included, 0 included with blank cohort
+[info]  2026-10-24 10:25:46 EFO_0009492 (exact): 21 studies -> 10 dropped for cohort overlap (aou, ukb) -> 8 with full sumstats -> 8 included, 0 included with blank cohort
+[info]  2026-10-24 10:26:10 EFO_0009493 (exact): 10 studies -> 4 dropped for cohort overlap (aou, finngen, ukb) -> 5 dropped by review -> 0 with full sumstats -> 0 included, 0 included with blank cohort
+[info]  2026-10-24 10:26:10 EFO_0009493 (exact): 10 studies -> 4 dropped for cohort overlap (aou, ukb) -> 5 dropped by review -> 0 with full sumstats -> 0 included, 0 included with blank cohort
+[info]  2026-10-24 10:26:10 EFO_0009493 (exact): 10 studies -> 4 dropped for cohort overlap (aou, ukb) -> 5 dropped by review -> 0 with full sumstats -> 0 included, 0 included with blank cohort
+[info]  2026-10-24 10:26:22 EFO_0011057 (with child traits, cap per term and 30 total): 4 studies -> 0 dropped for cohort overlap (aou, finngen, ukb) -> 4 dropped by review -> 0 with full sumstats -> 0 included, 0 included with blank cohort
+[info]  2026-10-24 10:26:39 MONDO_0004648 (with child traits, cap per term and 30 total): 16 studies -> 5 dropped for cohort overlap (aou, finngen, ukb) -> 1 with full sumstats -> 1 included, 0 included with blank cohort
+[info]  2026-10-24 10:26:39 MONDO_0004648 (with child traits, cap per term and 30 total): 16 studies -> 5 dropped for cohort overlap (aou, finngen, ukb) -> 3 dropped by review -> 1 with full sumstats -> 1 included, 0 included with blank cohort
+[info]  2026-10-24 10:26:52 MONDO_0004781 (exact): 11 studies -> 6 dropped for cohort overlap (aou, finngen, ukb) -> 1 with full sumstats -> 1 included, 0 included with blank cohort
+[info]  2026-10-24 10:26:52 MONDO_0004781 (exact): 11 studies -> 6 dropped for cohort overlap (aou, ukb) -> 1 with full sumstats -> 1 included, 0 included with blank cohort
+[info]  2026-10-24 10:26:53 MONDO_0004781 (exact): 11 studies -> 6 dropped for cohort overlap (aou, ukb) -> 1 with full sumstats -> 1 included, 0 included with blank cohort
+[info]  2026-10-24 10:31:18 MONDO_0004975 (with child traits, cap per term and 30 total): 269 studies -> 44 dropped for cohort overlap (aou, finngen, ukb) -> 72 dropped by review -> 7 with full sumstats -> 7 included, 2 included with blank cohort
+[info]  2026-10-24 10:31:20 MONDO_0004975 (with child traits, cap per term and 30 total): 269 studies -> 44 dropped for cohort overlap (aou, finngen, ukb) -> 60 dropped by review -> 9 with full sumstats -> 9 included, 3 included with blank cohort
+[info]  2026-10-24 10:33:34 MONDO_0005010 (exact): 207 studies -> 41 dropped for cohort overlap (aou, finngen, ukb) -> 74 dropped by review -> 16 with full sumstats -> 16 included, 5 included with blank cohort
+[info]  2026-10-24 10:33:35 MONDO_0005010 (exact): 207 studies -> 41 dropped for cohort overlap (aou, ukb) -> 76 dropped by review -> 15 with full sumstats -> 15 included, 5 included with blank cohort
+[info]  2026-10-24 10:33:36 MONDO_0005010 (exact): 207 studies -> 41 dropped for cohort overlap (aou, ukb) -> 76 dropped by review -> 15 with full sumstats -> 15 included, 5 included with blank cohort
+[info]  2026-10-24 10:34:19 MONDO_0005098 (exact): 134 studies -> 46 dropped for cohort overlap (aou, finngen, ukb) -> 16 dropped by review -> 24 with full sumstats -> 22 included, 0 included with blank cohort
+[info]  2026-10-24 10:34:20 MONDO_0005098 (exact): 134 studies -> 46 dropped for cohort overlap (aou, ukb) -> 16 dropped by review -> 24 with full sumstats -> 22 included, 0 included with blank cohort
+[info]  2026-10-24 10:34:21 MONDO_0005098 (exact): 134 studies -> 46 dropped for cohort overlap (aou, ukb) -> 16 dropped by review -> 24 with full sumstats -> 22 included, 0 included with blank cohort
+[info]  2026-10-24 10:34:24 MONDO_0005099 (exact): 19 studies -> 9 dropped for cohort overlap (aou, finngen, ukb) -> 4 with full sumstats -> 4 included, 0 included with blank cohort
+[info]  2026-10-24 10:34:24 MONDO_0005099 (exact): 19 studies -> 9 dropped for cohort overlap (aou, ukb) -> 4 with full sumstats -> 4 included, 0 included with blank cohort
+[info]  2026-10-24 10:34:25 MONDO_0005099 (exact): 19 studies -> 9 dropped for cohort overlap (aou, ukb) -> 4 with full sumstats -> 4 included, 0 included with blank cohort
+[info]  2026-10-24 10:34:38 MONDO_0005252 (exact): 77 studies -> 37 dropped for cohort overlap (aou, finngen, ukb) -> 12 dropped by review -> 18 with full sumstats -> 16 included, 0 included with blank cohort
+[info]  2026-10-24 10:34:38 MONDO_0005252 (exact): 77 studies -> 34 dropped for cohort overlap (aou, ukb) -> 13 dropped by review -> 20 with full sumstats -> 17 included, 0 included with blank cohort
+[info]  2026-10-24 10:34:48 MONDO_0005267 (exact): 58 studies -> 41 dropped for cohort overlap (aou, finngen, ukb) -> 6 dropped by review -> 4 with full sumstats -> 4 included, 0 included with blank cohort
+[info]  2026-10-24 10:34:48 MONDO_0005267 (exact): 58 studies -> 41 dropped for cohort overlap (aou, ukb) -> 6 dropped by review -> 4 with full sumstats -> 4 included, 0 included with blank cohort
+[info]  2026-10-24 10:34:48 MONDO_0005267 (exact): 58 studies -> 41 dropped for cohort overlap (aou, ukb) -> 6 dropped by review -> 4 with full sumstats -> 4 included, 0 included with blank cohort
+[info]  2026-10-24 10:34:52 MONDO_0005394 (exact): 10 studies -> 4 dropped for cohort overlap (aou, finngen, ukb) -> 3 with full sumstats -> 3 included, 0 included with blank cohort
+[info]  2026-10-24 10:34:52 MONDO_0005394 (exact): 10 studies -> 4 dropped for cohort overlap (aou, ukb) -> 3 with full sumstats -> 3 included, 0 included with blank cohort
+[info]  2026-10-24 10:34:53 MONDO_0005394 (exact): 10 studies -> 4 dropped for cohort overlap (aou, ukb) -> 3 with full sumstats -> 3 included, 0 included with blank cohort
+[info]  2026-10-24 10:34:54 MONDO_0008243 (with child traits, cap per term and 30 total): 1 studies -> 0 dropped for cohort overlap (aou, finngen, ukb) -> 0 with full sumstats -> 0 included, 0 included with blank cohort
+[info]  2026-10-24 10:34:55 MONDO_0008243 (with child traits, cap per term and 30 total): 1 studies -> 0 dropped for cohort overlap (aou, finngen, ukb) -> 0 with full sumstats -> 0 included, 0 included with blank cohort
+[info]  2026-10-24 10:34:59 MONDO_0013792 (exact): 30 studies -> 11 dropped for cohort overlap (aou, finngen, ukb) -> 5 dropped by review -> 7 with full sumstats -> 7 included, 0 included with blank cohort
+[info]  2026-10-24 10:35:00 MONDO_0013792 (exact): 30 studies -> 11 dropped for cohort overlap (aou, ukb) -> 2 dropped by review -> 7 with full sumstats -> 7 included, 0 included with blank cohort
+[info]  2026-10-24 10:35:00 MONDO_0013792 (exact): 30 studies -> 11 dropped for cohort overlap (aou, ukb) -> 2 dropped by review -> 7 with full sumstats -> 7 included, 0 included with blank cohort
+[info]  2026-10-24 10:35:01 EFO ids with 0 GWAS Catalog studies: 2
+[stage] 2026-10-24 10:35:02 write_tasks
+[info]  2026-10-24 10:35:02 wrote 125 tasks (312 study x outcome rows, 8 gene regions) to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/tasks.tsv
+[stage] 2026-10-24 10:35:02 scale_meta
+[warn]  2026-10-24 10:35:18 GCST90480807: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90480807)
+[warn]  2026-10-24 10:35:18 GCST90477959: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90477959)
+[warn]  2026-10-24 10:35:18 GCST90477958: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90477958)
+[warn]  2026-10-24 10:35:18 GCST90246093: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90246093)
+[warn]  2026-10-24 10:35:18 GCST90399711: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90399711)
+[warn]  2026-10-24 10:35:18 GCST90726898: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90726898)
+[warn]  2026-10-24 10:35:18 GCST90246094: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90246094)
+[warn]  2026-10-24 10:35:18 GCST90246086: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90246086)
+[warn]  2026-10-24 10:35:18 GCST90246085: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90246085)
+[warn]  2026-10-24 10:35:18 GCST90726916: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90726916)
+[warn]  2026-10-24 10:35:18 GCST90432123: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90432123)
+[warn]  2026-10-24 10:35:18 GCST90246098: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90246098)
+[warn]  2026-10-24 10:35:18 GCST90726915: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90726915)
+[warn]  2026-10-24 10:35:19 GCST90432122: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90432122)
+[warn]  2026-10-24 10:35:19 GCST90480188: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90480188)
+[warn]  2026-10-24 10:35:19 GCST90477978: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90477978)
+[warn]  2026-10-24 10:35:19 GCST90477977: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90477977)
+[warn]  2026-10-24 10:35:19 GCST90246096: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90246096)
+[warn]  2026-10-24 10:35:19 GCST90018650: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90018650)
+[warn]  2026-10-24 10:35:19 GCST90726750: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90726750)
+[warn]  2026-10-24 10:35:19 GCST90704648: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90704648)
+[warn]  2026-10-24 10:35:19 GCST90727420: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90727420)
+[warn]  2026-10-24 10:35:19 GCST90565439: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90565439)
+[warn]  2026-10-24 10:35:19 GCST90566388: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90566388)
+[warn]  2026-10-24 10:35:19 GCST90276158: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90276158)
+[warn]  2026-10-24 10:35:19 GCST90276157: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90276157)
+[warn]  2026-10-24 10:35:19 GCST007511: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST007511)
+[warn]  2026-10-24 10:35:19 GCST003452: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST003452)
+[warn]  2026-10-24 10:35:19 GCST002245: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST002245)
+[warn]  2026-10-24 10:35:19 GCST90861026: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90861026)
+[warn]  2026-10-24 10:35:19 GCST90861027: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90861027)
+[warn]  2026-10-24 10:35:19 GCST90861029: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90861029)
+[warn]  2026-10-24 10:35:19 GCST90861030: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90861030)
+[warn]  2026-10-24 10:35:19 GCST90476370: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90476370)
+[warn]  2026-10-24 10:35:19 GCST90018586: metadata yaml not read (429 Client Error: Too Many Requests for url: https://www.ebi.ac.uk/gwas/rest/api/v2/studies/GCST90018586)
+[info]  2026-10-24 10:35:19 metadata yaml read for 115 included studies, scale: unknown=115
+[info]  2026-10-24 10:35:19 wrote 2655 study-discovery rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/study_discovery_log.tsv.gz
 
 ```
 
@@ -512,53 +512,57 @@ Output:
 
 ```
 
-## [25] marvel_results_table (`/home/rmgpmva/projects/lipid_adem/src/marvel_results_table.py --ancestry MULTI`)
+## [25] marvel_results_table (`/home/rmgpmva/projects/lipid_adem/src/marvel_results_table.py --ancestry MULTI --refresh`)
 - first run: 2026-10-08 09:54:25
-- last run: 2026-10-13 17:44:55
-- commit: `8781963`
+- last run: 2026-10-24 14:48:46
+- commit: `6fc4384`
 
 Output:
 ```text
-[stage] 2026-10-13 17:41:00 compare
-[info]  2026-10-13 17:41:00 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/marvel_tasks.tsv: 18 rows, 6 genes
-[info]  2026-10-13 17:41:02 /myriadfs/home/rmgpmva/projects/lipid_adem/results/CETP: 667 loose result files
-[info]  2026-10-13 17:41:05 /myriadfs/home/rmgpmva/projects/lipid_adem/results/CETP_all_apoe: 667 loose result files
-[info]  2026-10-13 17:41:09 /myriadfs/home/rmgpmva/projects/lipid_adem/results/CETP_eur: 667 loose result files
-[info]  2026-10-13 17:41:26 CETP: 874437 loose rows, 0 new, 874437 already in the store
-[info]  2026-10-13 17:41:29 /myriadfs/home/rmgpmva/projects/lipid_adem/results/HMGCR: 714 loose result files
-[info]  2026-10-13 17:41:32 /myriadfs/home/rmgpmva/projects/lipid_adem/results/HMGCR_all_apoe: 714 loose result files
-[info]  2026-10-13 17:41:36 /myriadfs/home/rmgpmva/projects/lipid_adem/results/HMGCR_eur: 714 loose result files
-[info]  2026-10-13 17:41:53 HMGCR: 936054 loose rows, 0 new, 936054 already in the store
-[info]  2026-10-13 17:41:58 /myriadfs/home/rmgpmva/projects/lipid_adem/results/NPC1L1: 1257 loose result files
-[info]  2026-10-13 17:42:04 /myriadfs/home/rmgpmva/projects/lipid_adem/results/NPC1L1_all_apoe: 1257 loose result files
-[info]  2026-10-13 17:42:12 /myriadfs/home/rmgpmva/projects/lipid_adem/results/NPC1L1_eur: 1257 loose result files
-[info]  2026-10-13 17:42:19 NPC1L1: 1671810 loose rows, 1504629 new, 167181 already in the store
-[warn]  2026-10-13 17:42:19 NPC1L1: 1504629 rows added to NPC1L1_results.tsv.gz (1265 exposures; Model name: model_1, model_2, model_3; Stratification name: EUR, EUR_e22_e32, EUR_e33, EUR_e43, EUR_e44, e22_e32, e33, e43, e44; Variable: all_cause_dementia_algo, all_cause_dementia_combined, alzheimers_disease_algo, alzheimers_disease_combined, ascvd_ii, frontotemporal_dementia_algo, vascular_dementia_algo)
-[info]  2026-10-13 17:42:24 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PCSK9: 1047 loose result files
-[info]  2026-10-13 17:42:29 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PCSK9_all_apoe: 1047 loose result files
-[info]  2026-10-13 17:42:36 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PCSK9_eur: 1047 loose result files
-[info]  2026-10-13 17:42:48 PCSK9: 1392510 loose rows, 835506 new, 557004 already in the store
-[warn]  2026-10-13 17:42:48 PCSK9: 835506 rows added to PCSK9_results.tsv.gz (1055 exposures; Model name: model_1, model_2, model_3; Stratification name: EUR, EUR_e22_e32, EUR_e33, EUR_e43, EUR_e44, overall; Variable: all_cause_dementia_algo, all_cause_dementia_combined, alzheimers_disease_algo, alzheimers_disease_combined, ascvd_ii, frontotemporal_dementia_algo, vascular_dementia_algo)
-[info]  2026-10-13 17:42:50 /myriadfs/home/rmgpmva/projects/lipid_adem/results/ANGPTL3: 324 loose result files
-[info]  2026-10-13 17:42:52 /myriadfs/home/rmgpmva/projects/lipid_adem/results/ANGPTL3_all_apoe: 324 loose result files
-[info]  2026-10-13 17:42:54 /myriadfs/home/rmgpmva/projects/lipid_adem/results/ANGPTL3_eur: 324 loose result files
-[info]  2026-10-13 17:43:01 ANGPTL3: 424764 loose rows, 0 new, 424764 already in the store
-[info]  2026-10-13 17:43:02 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PPARA: 343 loose result files
-[info]  2026-10-13 17:43:04 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PPARA_all_apoe: 343 loose result files
-[info]  2026-10-13 17:43:07 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PPARA_eur: 343 loose result files
-[info]  2026-10-13 17:43:14 PPARA: 449673 loose rows, 0 new, 449673 already in the store
-[stage] 2026-10-13 17:43:14 write_stores
-[info]  2026-10-13 17:43:59 NPC1L1: wrote 1671810 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/marvel/NPC1L1_results.tsv.gz
-[info]  2026-10-13 17:44:35 PCSK9: wrote 1392510 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/marvel/PCSK9_results.tsv.gz
-[stage] 2026-10-13 17:44:35 marvel_table
-[info]  2026-10-13 17:44:37 ANGPTL3: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo, ascvd_ii
-[info]  2026-10-13 17:44:39 CETP: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo, ascvd_ii
-[info]  2026-10-13 17:44:43 HMGCR: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo, ascvd_ii
-[info]  2026-10-13 17:44:48 NPC1L1: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo, ascvd_ii
-[info]  2026-10-13 17:44:53 PCSK9: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo, ascvd_ii
-[info]  2026-10-13 17:44:54 PPARA: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo, ascvd_ii
-[info]  2026-10-13 17:44:54 wrote 240 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/marvel_results.tsv
-[info]  2026-10-13 17:44:54 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/apoe_strata.tsv: all marvel strata already listed
+[stage] 2026-10-24 14:46:28 compare
+[info]  2026-10-24 14:46:28 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/marvel_tasks.tsv: 18 rows, 6 genes
+[info]  2026-10-24 14:46:30 /myriadfs/home/rmgpmva/projects/lipid_adem/results/CETP: 667 loose result files
+[info]  2026-10-24 14:46:33 /myriadfs/home/rmgpmva/projects/lipid_adem/results/CETP_all_apoe: 667 loose result files
+[info]  2026-10-24 14:46:38 /myriadfs/home/rmgpmva/projects/lipid_adem/results/CETP_eur: 667 loose result files
+[info]  2026-10-24 14:46:39 CETP: refreshed, 1339320 rows
+[info]  2026-10-24 14:46:41 /myriadfs/home/rmgpmva/projects/lipid_adem/results/HMGCR: 714 loose result files
+[info]  2026-10-24 14:46:45 /myriadfs/home/rmgpmva/projects/lipid_adem/results/HMGCR_all_apoe: 714 loose result files
+[warn]  2026-10-24 14:46:45 /myriadfs/home/rmgpmva/projects/lipid_adem/results/HMGCR_eur: outdir not found, skipped
+[info]  2026-10-24 14:46:46 HMGCR: refreshed, 741560 rows
+[warn]  2026-10-24 14:46:46 /myriadfs/home/rmgpmva/projects/lipid_adem/results/NPC1L1: outdir not found, skipped
+[warn]  2026-10-24 14:46:46 /myriadfs/home/rmgpmva/projects/lipid_adem/results/NPC1L1_all_apoe: outdir not found, skipped
+[warn]  2026-10-24 14:46:46 /myriadfs/home/rmgpmva/projects/lipid_adem/results/NPC1L1_eur: outdir not found, skipped
+[info]  2026-10-24 14:46:46 NPC1L1: no loose result files, store unchanged
+[warn]  2026-10-24 14:46:46 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PCSK9: outdir not found, skipped
+[warn]  2026-10-24 14:46:46 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PCSK9_all_apoe: outdir not found, skipped
+[warn]  2026-10-24 14:46:46 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PCSK9_eur: outdir not found, skipped
+[info]  2026-10-24 14:46:46 PCSK9: no loose result files, store unchanged
+[info]  2026-10-24 14:46:47 /myriadfs/home/rmgpmva/projects/lipid_adem/results/ANGPTL3: 324 loose result files
+[info]  2026-10-24 14:46:48 /myriadfs/home/rmgpmva/projects/lipid_adem/results/ANGPTL3_all_apoe: 324 loose result files
+[info]  2026-10-24 14:46:50 /myriadfs/home/rmgpmva/projects/lipid_adem/results/ANGPTL3_eur: 324 loose result files
+[info]  2026-10-24 14:46:51 ANGPTL3: refreshed, 652560 rows
+[info]  2026-10-24 14:46:52 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PPARA: 343 loose result files
+[info]  2026-10-24 14:46:54 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PPARA_all_apoe: 343 loose result files
+[info]  2026-10-24 14:46:56 /myriadfs/home/rmgpmva/projects/lipid_adem/results/PPARA_eur: 343 loose result files
+[info]  2026-10-24 14:46:56 PPARA: refreshed, 653000 rows
+[stage] 2026-10-24 14:46:56 write_stores
+[info]  2026-10-24 14:46:56 CETP: old store kept as CETP_results.20261024_144628.tsv.gz
+[info]  2026-10-24 14:47:30 CETP: wrote 1339320 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/marvel/CETP_results.tsv.gz
+[info]  2026-10-24 14:47:30 HMGCR: old store kept as HMGCR_results.20261024_144628.tsv.gz
+[info]  2026-10-24 14:47:48 HMGCR: wrote 741560 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/marvel/HMGCR_results.tsv.gz
+[info]  2026-10-24 14:47:48 ANGPTL3: old store kept as ANGPTL3_results.20261024_144628.tsv.gz
+[info]  2026-10-24 14:48:05 ANGPTL3: wrote 652560 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/marvel/ANGPTL3_results.tsv.gz
+[info]  2026-10-24 14:48:05 PPARA: old store kept as PPARA_results.20261024_144628.tsv.gz
+[info]  2026-10-24 14:48:22 PPARA: wrote 653000 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/marvel/PPARA_results.tsv.gz
+[stage] 2026-10-24 14:48:22 marvel_table
+[info]  2026-10-24 14:48:25 ANGPTL3: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo
+[info]  2026-10-24 14:48:29 CETP: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo
+[info]  2026-10-24 14:48:31 HMGCR: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo
+[info]  2026-10-24 14:48:37 NPC1L1: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo
+[info]  2026-10-24 14:48:42 PCSK9: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo
+[info]  2026-10-24 14:48:44 PPARA: variables not in Constants.MARVEL_UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo
+[info]  2026-10-24 14:48:45 wrote 450 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/marvel_results.tsv
+[info]  2026-10-24 14:48:45 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/apoe_strata.tsv: 60 marvel rows added
 
 ```
 
@@ -2545,29 +2549,58 @@ Output:
 2026-10-06 17:09:48,842 - INFO - Wrote 313818 rows to /Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/data/raw/clinvar_variants.tsv
 ```
 
-## [40] match_variants (`/home/mvanvugt/projects/lipid_adem/src/match_variants.py --region-rare --max-maf 0.01`)
+## [40] match_variants (`/home/rmgpmva/projects/lipid_adem/src/match_variants.py`)
 - first run: 2026-10-01 09:59:12
-- last run: 2026-10-26 08:28:19
+- last run: 2026-10-26 07:31:44
 - commit: `6fc4384` (dirty)
-- status: failed
 
 Output:
 ```text
-[stage] 2026-10-26 08:28:19 load_gwas
-[warn]  2026-10-26 08:28:19 /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/gene_regions.tsv not found: rows outside the gene region are not counted
-
---- error output (raw) ---
-[stage] 2026-10-26 08:28:19 load_gwas
-[warn]  2026-10-26 08:28:19 /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/gene_regions.tsv not found: rows outside the gene region are not counted
-Traceback (most recent call last):
-  File "/home/mvanvugt/projects/lipid_adem/src/match_variants.py", line 811, in main
-    match_variants(region_rare=args.region_rare, max_maf=args.max_maf)
-    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/mvanvugt/projects/lipid_adem/src/match_variants.py", line 739, in match_variants
-    raise FileNotFoundError(
-        f"{FileNames.GENE_REGIONS_FILE} is needed for --region-rare"
-    )
-FileNotFoundError: /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/gene_regions.tsv is needed for --region-rare
+[stage] 2026-10-26 07:31:11 load_variant_lists
+[info]  2026-10-26 07:31:11 /myriadfs/home/rmgpmva/projects/lipid_adem/data/processed/lipid_variants.tsv: 882 rows
+[info]  2026-10-26 07:31:11 0 duplicate rows removed
+[info]  2026-10-26 07:31:11 ANGPTL3 ClinVar: 12 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 07:31:11 ANGPTL3 PTV: 56 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 07:31:11 APOA1 ClinVar: 33 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 07:31:11 APOA1 PTV: 15 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 07:31:11 APOB ClinVar: 236 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 07:31:11 APOB PTV: 172 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 07:31:11 APOE ClinVar: 20 rows, 0 without alleles, 20 outside gene region
+[info]  2026-10-26 07:31:11 CETP ClinVar: 10 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 07:31:11 CETP GoF: 1 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 07:31:11 CETP PTV: 58 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 07:31:11 HMGCR ClinVar: 7 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 07:31:11 HMGCR PTV: 39 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 07:31:11 NPC1L1 PTV: 96 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 07:31:11 PCSK9 ClinVar: 18 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 07:31:11 PCSK9 GoF: 18 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 07:31:11 PCSK9 PTV: 68 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 07:31:11 PPARA PTV: 23 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 07:31:11 normalisation: variant-list rows unchanged=862 no_sequence=20
+[stage] 2026-10-26 07:31:11 load_gwas
+[info]  2026-10-26 07:31:39 /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/merged_associations.tsv.gz: 657228 rows, 657228 variant-level (summary-stats, curated)
+[info]  2026-10-26 07:31:41 curated: 25 rows without chrom/pos or effect allele, cannot be matched
+[stage] 2026-10-26 07:31:42 match
+[info]  2026-10-26 07:31:43 ANGPTL3 ClinVar: 12 variants, 6 matched, GWAS rows: summary-stats=383
+[info]  2026-10-26 07:31:43 ANGPTL3 PTV: 56 variants, 54 matched, GWAS rows: summary-stats=2229
+[info]  2026-10-26 07:31:43 APOA1 ClinVar: 33 variants, 0 matched, GWAS rows: none
+[info]  2026-10-26 07:31:43 APOA1 PTV: 15 variants, 0 matched, GWAS rows: none
+[info]  2026-10-26 07:31:43 APOB ClinVar: 236 variants, 3 matched, GWAS rows: summary-stats=137
+[info]  2026-10-26 07:31:43 APOB PTV: 172 variants, 0 matched, GWAS rows: none
+[info]  2026-10-26 07:31:43 APOE ClinVar: 20 variants, 1 matched, GWAS rows: summary-stats=16
+[info]  2026-10-26 07:31:43 CETP ClinVar: 10 variants, 6 matched, GWAS rows: summary-stats=275
+[info]  2026-10-26 07:31:43 CETP GoF: 1 variants, 1 matched, GWAS rows: summary-stats=305
+[info]  2026-10-26 07:31:43 CETP PTV: 58 variants, 58 matched, GWAS rows: summary-stats=2553
+[info]  2026-10-26 07:31:43 HMGCR ClinVar: 7 variants, 4 matched, GWAS rows: summary-stats=61
+[info]  2026-10-26 07:31:43 HMGCR PTV: 39 variants, 39 matched, GWAS rows: summary-stats=675
+[info]  2026-10-26 07:31:43 NPC1L1 PTV: 96 variants, 56 matched, GWAS rows: summary-stats=988
+[info]  2026-10-26 07:31:43 PCSK9 ClinVar: 18 variants, 1 matched, GWAS rows: summary-stats=64
+[info]  2026-10-26 07:31:43 PCSK9 GoF: 18 variants, 9 matched, GWAS rows: summary-stats=537
+[info]  2026-10-26 07:31:43 PCSK9 PTV: 68 variants, 26 matched, GWAS rows: summary-stats=445
+[info]  2026-10-26 07:31:43 PPARA PTV: 23 variants, 22 matched, GWAS rows: summary-stats=719
+[info]  2026-10-26 07:31:43 a1 vs Ensembl ref: 3977 matched SNV rows checked, 0 where a1 is not the Ensembl ref
+[stage] 2026-10-26 07:31:43 write
+[info]  2026-10-26 07:31:44 wrote 9387 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/matched_variants.tsv.gz
 
 ```
 
@@ -2597,14 +2630,14 @@ Include: reviewed by expert panel + criteria provided, multiple submitters, no c
 
 ## [50] marvel_assoc_job
 - first run: 2026-10-07 13:49:03
-- last run: 2026-10-24 17:15:11
+- last run: 2026-10-25 15:53:14
 - commit: `6fc4384` (dirty)
 
 Output:
 ```text
-[info]  2026-10-24 15:36:26 task 1: rows 1-2
-[info]  2026-10-24 16:26:08 CETP: results in /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/validation/step2/CETP
-[info]  2026-10-24 17:15:11 PCSK9: results in /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/validation/step2/PCSK9
+<<<<<<< HEAD
+[info]  2026-10-23 10:38:06 task 5: rows 5-5
+[info]  2026-10-25 15:53:13 NPC1L1: results in /myriadfs/home/rmgpmva/projects/lipid_adem/results/NPC1L1_eur
 
 ```
 
@@ -2668,88 +2701,92 @@ Output:
 
 ```
 
-## [55] combine_variants (`/home/mvanvugt/projects/lipid_adem/src/combine_variants.py`)
+## [55] combine_variants (`/home/rmgpmva/projects/lipid_adem/src/combine_variants.py`)
 - first run: 2026-10-21 13:50:41
-- last run: 2026-10-21 13:50:41
-- commit: `e9443d3` (dirty)
+- last run: 2026-10-24 10:19:52
+- commit: `04d2c6c`
 
 Output:
 ```text
-[info]  2026-10-21 13:49:03 /gpfs/home6/mvanvugt/projects/lipid_adem/data/processed/ptv_variants.tsv.gz: 527 PTVs
-[info]  2026-10-21 13:49:03 /gpfs/home6/mvanvugt/projects/lipid_adem/data/processed/plp_variants.tsv: 1900 rows; /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: 86 rows
-[info]  2026-10-21 13:49:03 0 P/LP rows with ref = alt dropped
-[warn]  2026-10-21 13:49:03 APOE condition 'Alzheimer disease 3, protection against, due to APOE3-Christchurch' not in /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
-[warn]  2026-10-21 13:49:03 APOA1 condition 'nan' not in /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
-[warn]  2026-10-21 13:49:03 ANGPTL3 condition 'nan' not in /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
-[warn]  2026-10-21 13:49:03 PPARA condition 'nan' not in /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
-[warn]  2026-10-21 13:49:03 PCSK9 condition 'nan' not in /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
-[warn]  2026-10-21 13:49:03 HMGCR condition 'nan' not in /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
-[warn]  2026-10-21 13:49:03 NPC1L1 condition 'nan' not in /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
-[warn]  2026-10-21 13:49:03 CETP condition 'nan' not in /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
-[warn]  2026-10-21 13:49:03 APOB condition 'nan' not in /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
-[warn]  2026-10-21 13:49:03 APOE condition 'nan' not in /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
-[info]  2026-10-21 13:49:03 262 truncating P/LP variants set to lowering, 213 of them against their conditions
-[info]  2026-10-21 13:49:03 ANGPTL3 ClinVar P/LP: 12 variants lowering
-[info]  2026-10-21 13:49:03 ANGPTL3 ClinVar P/LP: 2 variants unknown
-[info]  2026-10-21 13:49:03 APOA1 ClinVar P/LP: 11 variants altered
-[info]  2026-10-21 13:49:03 APOA1 ClinVar P/LP: 2 variants conflicting
-[info]  2026-10-21 13:49:03 APOA1 ClinVar P/LP: 16 variants lowering
-[info]  2026-10-21 13:49:03 APOA1 ClinVar P/LP: 6 variants unknown
-[info]  2026-10-21 13:49:03 APOB ClinVar P/LP: 5 variants altered
-[info]  2026-10-21 13:49:03 APOB ClinVar P/LP: 6 variants conflicting
-[info]  2026-10-21 13:49:03 APOB ClinVar P/LP: 224 variants lowering
-[info]  2026-10-21 13:49:03 APOB ClinVar P/LP: 3 variants unknown
-[info]  2026-10-21 13:49:03 APOE ClinVar P/LP: 12 variants altered
-[info]  2026-10-21 13:49:03 APOE ClinVar P/LP: 3 variants lowering
-[info]  2026-10-21 13:49:03 APOE ClinVar P/LP: 6 variants unknown
-[info]  2026-10-21 13:49:03 CETP ClinVar P/LP: 10 variants lowering
-[info]  2026-10-21 13:49:03 CETP ClinVar P/LP: 2 variants unknown
-[info]  2026-10-21 13:49:03 HMGCR ClinVar P/LP: 6 variants lowering
-[info]  2026-10-21 13:49:03 HMGCR ClinVar P/LP: 3 variants unknown
-[info]  2026-10-21 13:49:03 NPC1L1 ClinVar P/LP: 2 variants unknown
-[info]  2026-10-21 13:49:03 PCSK9 ClinVar P/LP: 2 variants lowering
-[info]  2026-10-21 13:49:03 PCSK9 ClinVar P/LP: 16 variants raising
-[info]  2026-10-21 13:49:03 PCSK9 ClinVar P/LP: 2 variants unknown
-[info]  2026-10-21 13:49:03 PPARA ClinVar P/LP: 2 variants unknown
-[warn]  2026-10-21 13:49:03 ANGPTL3 ClinVar: 2 rows without GRCh38 chr/pos/alleles
-[warn]  2026-10-21 13:49:03 APOA1 ClinVar: 2 rows without GRCh38 chr/pos/alleles
-[warn]  2026-10-21 13:49:03 APOB ClinVar: 2 rows without GRCh38 chr/pos/alleles
-[warn]  2026-10-21 13:49:03 APOE ClinVar: 1 rows without GRCh38 chr/pos/alleles
-[warn]  2026-10-21 13:49:03 CETP ClinVar: 2 rows without GRCh38 chr/pos/alleles
-[warn]  2026-10-21 13:49:03 HMGCR ClinVar: 2 rows without GRCh38 chr/pos/alleles
-[warn]  2026-10-21 13:49:03 NPC1L1 ClinVar: 2 rows without GRCh38 chr/pos/alleles
-[warn]  2026-10-21 13:49:03 PCSK9 ClinVar: 2 rows without GRCh38 chr/pos/alleles
-[warn]  2026-10-21 13:49:03 PPARA ClinVar: 2 rows without GRCh38 chr/pos/alleles
-[info]  2026-10-21 13:50:41 normalisation ClinVar: no_sequence=20
-[info]  2026-10-21 13:50:41 normalisation ClinVar: unchanged=316
-[info]  2026-10-21 13:50:41 normalisation PTV: normalised=18
-[info]  2026-10-21 13:50:41 normalisation PTV: unchanged=509
-[info]  2026-10-21 13:50:41 57 sites are both PTV and ClinVar
-[info]  2026-10-21 13:50:41 ANGPTL3 ClinVar: 12 variants
-[info]  2026-10-21 13:50:41 ANGPTL3 PTV: 56 variants
-[info]  2026-10-21 13:50:41 APOA1 ClinVar: 33 variants
-[info]  2026-10-21 13:50:41 APOA1 PTV: 15 variants
-[info]  2026-10-21 13:50:41 APOB ClinVar: 236 variants
-[info]  2026-10-21 13:50:41 APOB PTV: 172 variants
-[info]  2026-10-21 13:50:41 APOE ClinVar: 20 variants
-[info]  2026-10-21 13:50:41 CETP ClinVar: 10 variants
-[info]  2026-10-21 13:50:41 CETP PTV: 58 variants
-[info]  2026-10-21 13:50:41 HMGCR ClinVar: 7 variants
-[info]  2026-10-21 13:50:41 HMGCR PTV: 39 variants
-[info]  2026-10-21 13:50:41 NPC1L1 PTV: 96 variants
-[info]  2026-10-21 13:50:41 PCSK9 ClinVar: 18 variants
-[info]  2026-10-21 13:50:41 PCSK9 PTV: 68 variants
-[info]  2026-10-21 13:50:41 PPARA PTV: 23 variants
-[info]  2026-10-21 13:50:41 Wrote 863 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/processed/lipid_variants.tsv
-[info]  2026-10-21 13:50:41 marvel lists: 806 sites, 17 with an extra original-form row
-[info]  2026-10-21 13:50:41 Wrote 64 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/ANGPTL3_variants.tsv
-[info]  2026-10-21 13:50:41 Wrote 46 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/APOA1_variants.tsv
-[info]  2026-10-21 13:50:41 Wrote 373 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/APOB_variants.tsv
-[info]  2026-10-21 13:50:41 Wrote 20 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/APOE_variants.tsv
-[info]  2026-10-21 13:50:41 Wrote 66 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/CETP_variants.tsv
-[info]  2026-10-21 13:50:41 Wrote 45 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/HMGCR_variants.tsv
-[info]  2026-10-21 13:50:41 Wrote 99 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/NPC1L1_variants.tsv
-[info]  2026-10-21 13:50:41 Wrote 86 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PCSK9_variants.tsv
-[info]  2026-10-21 13:50:41 Wrote 24 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PPARA_variants.tsv
+[info]  2026-10-24 10:19:52 /myriadfs/home/rmgpmva/projects/lipid_adem/data/processed/ptv_variants.tsv.gz: 527 PTVs
+[info]  2026-10-24 10:19:52 /myriadfs/home/rmgpmva/projects/lipid_adem/data/processed/plp_variants.tsv: 1900 rows; /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: 86 rows
+[info]  2026-10-24 10:19:52 0 P/LP rows with ref = alt dropped
+[warn]  2026-10-24 10:19:52 APOE condition 'Alzheimer disease 3, protection against, due to APOE3-Christchurch' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-24 10:19:52 APOA1 condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-24 10:19:52 ANGPTL3 condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-24 10:19:52 PPARA condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-24 10:19:52 PCSK9 condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-24 10:19:52 HMGCR condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-24 10:19:52 NPC1L1 condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-24 10:19:52 CETP condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-24 10:19:52 APOB condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-24 10:19:52 APOE condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[info]  2026-10-24 10:19:52 262 truncating P/LP variants set to lowering, 213 of them against their conditions
+[info]  2026-10-24 10:19:52 ANGPTL3 ClinVar P/LP: 12 variants lowering
+[info]  2026-10-24 10:19:52 ANGPTL3 ClinVar P/LP: 2 variants unknown
+[info]  2026-10-24 10:19:52 APOA1 ClinVar P/LP: 11 variants altered
+[info]  2026-10-24 10:19:52 APOA1 ClinVar P/LP: 2 variants conflicting
+[info]  2026-10-24 10:19:52 APOA1 ClinVar P/LP: 16 variants lowering
+[info]  2026-10-24 10:19:52 APOA1 ClinVar P/LP: 6 variants unknown
+[info]  2026-10-24 10:19:52 APOB ClinVar P/LP: 5 variants altered
+[info]  2026-10-24 10:19:52 APOB ClinVar P/LP: 6 variants conflicting
+[info]  2026-10-24 10:19:52 APOB ClinVar P/LP: 224 variants lowering
+[info]  2026-10-24 10:19:52 APOB ClinVar P/LP: 3 variants unknown
+[info]  2026-10-24 10:19:52 APOE ClinVar P/LP: 12 variants altered
+[info]  2026-10-24 10:19:52 APOE ClinVar P/LP: 3 variants lowering
+[info]  2026-10-24 10:19:52 APOE ClinVar P/LP: 6 variants unknown
+[info]  2026-10-24 10:19:52 CETP ClinVar P/LP: 10 variants lowering
+[info]  2026-10-24 10:19:52 CETP ClinVar P/LP: 2 variants unknown
+[info]  2026-10-24 10:19:52 HMGCR ClinVar P/LP: 6 variants lowering
+[info]  2026-10-24 10:19:52 HMGCR ClinVar P/LP: 3 variants unknown
+[info]  2026-10-24 10:19:52 NPC1L1 ClinVar P/LP: 2 variants unknown
+[info]  2026-10-24 10:19:52 PCSK9 ClinVar P/LP: 2 variants lowering
+[info]  2026-10-24 10:19:52 PCSK9 ClinVar P/LP: 16 variants raising
+[info]  2026-10-24 10:19:52 PCSK9 ClinVar P/LP: 2 variants unknown
+[info]  2026-10-24 10:19:52 PPARA ClinVar P/LP: 2 variants unknown
+[info]  2026-10-24 10:19:52 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/gof_variants.tsv: 47 GoF variants
+[warn]  2026-10-24 10:19:52 ANGPTL3 ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-24 10:19:52 APOA1 ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-24 10:19:52 APOB ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-24 10:19:52 APOE ClinVar: 1 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-24 10:19:52 CETP ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-24 10:19:52 HMGCR ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-24 10:19:52 NPC1L1 ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-24 10:19:52 PCSK9 ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-24 10:19:52 PPARA ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[info]  2026-10-24 10:19:52 normalisation ClinVar: no_sequence=20
+[info]  2026-10-24 10:19:52 normalisation ClinVar: unchanged=316
+[info]  2026-10-24 10:19:52 normalisation GoF: unchanged=19
+[info]  2026-10-24 10:19:52 normalisation PTV: normalised=18
+[info]  2026-10-24 10:19:52 normalisation PTV: unchanged=509
+[info]  2026-10-24 10:19:52 62 sites are in several sources
+[info]  2026-10-24 10:19:52 ANGPTL3 ClinVar: 12 variants
+[info]  2026-10-24 10:19:52 ANGPTL3 PTV: 56 variants
+[info]  2026-10-24 10:19:52 APOA1 ClinVar: 33 variants
+[info]  2026-10-24 10:19:52 APOA1 PTV: 15 variants
+[info]  2026-10-24 10:19:52 APOB ClinVar: 236 variants
+[info]  2026-10-24 10:19:52 APOB PTV: 172 variants
+[info]  2026-10-24 10:19:52 APOE ClinVar: 20 variants
+[info]  2026-10-24 10:19:52 CETP ClinVar: 10 variants
+[info]  2026-10-24 10:19:52 CETP GoF: 1 variants
+[info]  2026-10-24 10:19:52 CETP PTV: 58 variants
+[info]  2026-10-24 10:19:52 HMGCR ClinVar: 7 variants
+[info]  2026-10-24 10:19:52 HMGCR PTV: 39 variants
+[info]  2026-10-24 10:19:52 NPC1L1 PTV: 96 variants
+[info]  2026-10-24 10:19:52 PCSK9 ClinVar: 18 variants
+[info]  2026-10-24 10:19:52 PCSK9 GoF: 18 variants
+[info]  2026-10-24 10:19:52 PCSK9 PTV: 68 variants
+[info]  2026-10-24 10:19:52 PPARA PTV: 23 variants
+[info]  2026-10-24 10:19:52 Wrote 882 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/processed/lipid_variants.tsv
+[info]  2026-10-24 10:19:52 marvel lists: 820 sites, 17 with an extra original-form row
+[info]  2026-10-24 10:19:52 Wrote 64 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/ANGPTL3_variants.tsv
+[info]  2026-10-24 10:19:52 Wrote 46 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/APOA1_variants.tsv
+[info]  2026-10-24 10:19:52 Wrote 373 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/APOB_variants.tsv
+[info]  2026-10-24 10:19:52 Wrote 20 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/APOE_variants.tsv
+[info]  2026-10-24 10:19:52 Wrote 67 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/CETP_variants.tsv
+[info]  2026-10-24 10:19:52 Wrote 45 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/HMGCR_variants.tsv
+[info]  2026-10-24 10:19:52 Wrote 99 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/NPC1L1_variants.tsv
+[info]  2026-10-24 10:19:52 Wrote 99 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/PCSK9_variants.tsv
+[info]  2026-10-24 10:19:52 Wrote 24 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/PPARA_variants.tsv
 
 ```
