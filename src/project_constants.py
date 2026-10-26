@@ -1448,11 +1448,11 @@ class FigureNames:
     # in '_', the start of one; every other figure goes to
     # `Paths.FIGURES_SENSITIVITY` (`figure_utils.save`)
     MAIN_FIGURES: tuple[str, ...] = (
-        "forest_pooled_annotated_eur",
-        "forest_pooled_annotated_eur_gof",
-        "forest_sources_annotated_eur_",
+        "forest_cohort_burden_eur_controls",
+        "forest_cohort_burden_eur_dementia",
+        "scatter_ascvd_dementia_cohort_burden_eur_",
+        "forest_cohort_variants_CETP",
         "forest_apoe_genotype_EUR",
-        "forest_variant_sets_annotated_eur_CETP",
     )
 
 

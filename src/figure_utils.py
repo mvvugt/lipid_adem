@@ -7,15 +7,16 @@
 ## Script name: figure_utils
 ##
 ## Purpose of script: Shared helpers of the figure scripts
-##     (burden_forest.py, burden_apoe_forest.py, sources_forest.py,
-##     pooled_forest.py, burden_heatmap.py, apoe_genotype_forest.py):
+##     (cohort_burden_forest.py, ascvd_dementia_scatter.py,
+##     cetp_cohort_variants_forest.py, pooled_forest.py,
+##     burden_apoe_forest.py, apoe_genotype_forest.py):
 ##     reading burden files, odds ratios (binary outcomes) and betas
 ##     (lipids) with 95% CI, p-value formatting,
 ##     readable names, significance markers, axis limits and saving.
 ##     Constants shared by the figure scripts are in `project_constants`
 ##     (`FigureColumns`, `FigureNames`, `FigureStyle`).
 ##     Only `project_constants` is imported from the pipeline;
-##     `functions.py` needs the Myriad biomed-api env.
+##     `functions.py` needs the biomed-api env (Snellius).
 ##
 ## Author: M. van Vugt
 ## Date created: 09/10/2026
@@ -32,7 +33,6 @@
 from __future__ import annotations
 
 import os
-import math
 import logging
 import numpy as np
 import pandas as pd
@@ -338,8 +338,8 @@ def study_names() -> dict[str, str]:
     names : `dict[str, str]`
         Accession -> name: ``'Thomassen ε4/ε4'`` from
         `FileNames.APOE_STRATA`, `FINNGEN_NAME` for every phenocode in
-        `FileNames.FINNGEN_MANIFEST`. UKB accessions are named in
-        `study_name`.
+        `FileNames.FINNGEN_MANIFEST`. UKB accessions are not listed
+        (`UKB_PREFIX`).
     """
     names: dict[str, str] = {}
     if FileNames.FINNGEN_MANIFEST.exists():
@@ -355,97 +355,6 @@ def study_names() -> dict[str, str]:
                 f'{str(row[MetaColumns.STUDY_GROUP]).capitalize()} {stratum}'
             )
     return names
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def study_name(accession: str, names: dict[str, str]) -> str:
-    """Readable name of one study.
-
-    Parameters
-    ----------
-    accession : `str`
-        Study accession of a burden row.
-    names : `dict[str, str]`
-        From `study_names` or `source_names`.
-
-    Returns
-    -------
-    name : `str`
-        `FigureNames.UKB` for marvel UKB accessions, else the `names`
-        entry, else the accession itself.
-    """
-    if accession.startswith(UKB_PREFIX):
-        return FigNames.UKB
-    return names.get(accession, accession)
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def source_names() -> dict[str, str]:
-    """Readable source (study group) name per accession.
-
-    Returns
-    -------
-    names : `dict[str, str]`
-        Accession -> name: the capitalised `study_group` of
-        `FileNames.APOE_STRATA` (e.g. all Thomassen strata ->
-        ``'Thomassen'``), `FINNGEN_NAME` for every FinnGen phenocode. UKB
-        accessions are named in `study_name`.
-    """
-    names = {
-        accession: name
-        for accession, name in study_names().items()
-        if name == FINNGEN_NAME
-    }
-    if FileNames.APOE_STRATA.exists():
-        strata = pd.read_csv(FileNames.APOE_STRATA, sep = '\t')
-        names.update(zip(
-            strata[HarmonisedColumns.STUDY_ACCESSION],
-            strata[MetaColumns.STUDY_GROUP].astype(str).str.capitalize(),
-        ))
-    return names
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def source_rows(per_study: pd.DataFrame) -> pd.DataFrame:
-    """One estimate per gene, outcome and source.
-
-    A source with several studies (the Thomassen APOE strata) is the
-    fixed-effect IVW of their estimates, the same pooling as
-    `meta_analysis.py`.
-
-    Parameters
-    ----------
-    per_study : `pd.DataFrame`
-        Burden rows of level ``stratum`` (one per gene, outcome and
-        study), from `load_burden`.
-
-    Returns
-    -------
-    sources : `pd.DataFrame`
-        Gene, outcome, `FigureColumns.ROW_NAME` (source name), beta, SE,
-        p and the `add_or` columns.
-    """
-    gene = VariantListColumns.OUT_GENE
-    outcome = HarmonisedColumns.OUTCOME
-    names = source_names()
-    rows = per_study.copy()
-    rows[FCols.ROW_NAME] = [
-        study_name(str(accession), names)
-        for accession in rows[HarmonisedColumns.STUDY_ACCESSION]
-    ]
-    rows['_weight'] = 1.0 / rows[MetaColumns.SE] ** 2
-    rows['_weighted'] = rows['_weight'] * rows[MetaColumns.BETA]
-    sums = (
-        rows.groupby([gene, outcome, FCols.ROW_NAME], sort = False)[
-            ['_weight', '_weighted']]
-        .sum()
-        .reset_index()
-    )
-    sums[MetaColumns.BETA] = sums['_weighted'] / sums['_weight']
-    sums[MetaColumns.SE] = 1.0 / np.sqrt(sums['_weight'])
-    z = (sums[MetaColumns.BETA] / sums[MetaColumns.SE]).abs()
-    sums[MetaColumns.P] = [math.erfc(value / math.sqrt(2)) for value in z]
-    return add_or(sums.drop(columns = ['_weight', '_weighted']))
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
