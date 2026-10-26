@@ -243,7 +243,7 @@ run_mamba biomed-api "${ROOT}"/src/match_variants.py --region-rare \
 # <SNELLIUS_ENV>: needs pandas and log_tools (not biomed_api)
 sbatch --partition=rome --cpus-per-task=1 --mem=8G --time=04:00:00          \
     --job-name=burden_exposure --output="${ROOT}"/src/logs/%x_%j.log           \
-    --wrap "mamba run --no-capture-output -n <SNELLIUS_ENV> \
+    --wrap "mamba run --no-capture-output -n prot_misc \
         python ${ROOT}/src/burden_exposure.py"
 # [snellius] old marvel per job-array row (gene x subset x main/_fb file);
 # 16G fits the 1/8-node billing unit of rome
@@ -259,7 +259,7 @@ sbatch --array=1-"${N_TASKS}" --partition=rome --cpus-per-task=1 --mem=16G \
 # [snellius] add the burden results to the per-gene stores; then rerun
 # MERGE and INTERMEDIATE MATCH, so matched_burden.tsv.gz holds them
 run_mamba biomed-api "${ROOT}"/src/marvel_results_table.py --ancestry MULTI \
-    --tasks "${TASKS}"
+    --tasks "${TASKS}" --refresh
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
