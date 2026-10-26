@@ -28,6 +28,9 @@ class Paths:
     RESULTS_OUTPUT: Path = HERE / "results" / "output"
     # per-gene marvel result stores (`marvel_results_table.py`)
     MARVEL_STORE: Path = HERE / "results" / "marvel"
+    # carrier-burden runs (burden_exposure.py): cnfs and per-task outdirs
+    MARVEL_BURDEN_CONFIG: Path = HERE / "config" / "marvel_burden"
+    MARVEL_BURDEN_OUT: Path = HERE / "results" / "marvel_burden"
     # MARVELous two-source run (submit_two_source.sh, Snellius): extract
     # chunks plus the burden and per-variant aggregate/associate outputs
     MARVEL_RUN: Path = DATA_TEMP / "marvel"
@@ -151,6 +154,8 @@ class Constants:
     ENSEMBL_BAD_MIN_ROWS: int = 20
     # GWAS result sources with single variants (gene-burden has none)
     VARIANT_LEVEL_SOURCES: tuple[str, ...] = ("summary-stats", "curated")
+    # `source` of gene-level rows (Open Targets, marvel carrier masks)
+    GENE_BURDEN_SOURCE: str = "gene-burden"
     # variant-list source flipped in the meta-analysis so the a1 allele's
     # effect is reported
     GOF_VARIANT_SOURCE: str = "GoF"
@@ -285,7 +290,11 @@ class Constants:
     # `stratification` blank
     MARVEL_DEFAULT_STRATIFICATION: str = "overall"
     # marvel `Exposure` naming a gene-level carrier mask, e.g. "CETP PTV"
-    MARVEL_GENE_MASK_PATTERN: str = r"^(?P<gene>\S+)\s+(?P<mask>\S.*)$"
+    # (old stores) or "CETP_lof" (burden_exposure.py); gene symbols hold
+    # no "_", so the first "_" or space separates gene and mask
+    MARVEL_GENE_MASK_PATTERN: str = (
+        r"^(?P<gene>[^\s_]+)(?:\s+|_)(?P<mask>\S.*)$"
+    )
     # marvel `Model` (regression method) -> `EffectScale`; other methods
     # are `EffectScale.UNKNOWN`
     MARVEL_METHOD_SCALE: dict[str, str] = {
@@ -333,6 +342,38 @@ class Constants:
     MARVEL_CARRIER_THRESHOLD: float = 0.5
     # rows per chunk when streaming an old wide carriers file
     OLD_CARRIERS_CHUNK_ROWS: int = 50_000
+    # UKB carrier burden (burden_exposure.py): masks of the 0/1 exposure
+    # columns `<GENE>_<mask>`. lof: PTV + ClinVar not raising; directed:
+    # lof without ClinVar-only sites lacking a lowering direction; gof:
+    # GoF + ClinVar raising (sites `meta_analysis.orient` flips)
+    BURDEN_MASK_LOF: str = "lof"
+    BURDEN_MASK_LOF_DIRECTED: str = "lof_directed"
+    BURDEN_MASK_GOF: str = "gof"
+    # mask suffix of the fallback exposures: only the sites the preferred
+    # studies (`BURDEN_PREFER_STUDIES`) lack for `BURDEN_FALLBACK_OUTCOME`
+    # (meta_analysis.py `--prefer-groups`); tested against that outcome
+    # only (`FileNames.BURDEN_EXPOSURE_TEMPLATE` suffix as well)
+    BURDEN_FALLBACK_SUFFIX: str = "_fb"
+    BURDEN_FALLBACK_OUTCOME: str = "alzheimers_dementia"
+    # Thomassen et al. 2026 APOE-stratum AD GWAS (src/lipid_adem.sh)
+    BURDEN_PREFER_STUDIES: tuple[str, ...] = (
+        "GCST90861026",
+        "GCST90861027",
+        "GCST90861029",
+        "GCST90861030",
+    )
+    # a column whose carrier fraction exceeds this counts the other
+    # allele: carriers are then the samples with dosage < 2 - threshold
+    BURDEN_SWAP_FRACTION: float = 0.5
+    # covariate models of the burden cnfs (`MARVEL_MODEL_MAP` keys; the
+    # same as create_config.py without model_2)
+    BURDEN_MODELS: dict[str, tuple[str, ...]] = {
+        "model_1": (),
+        "model_3": ("Sex", "PC1", "PC2", "PC3", "PC4", "PC5", "PC6"),
+    }
+    # UKB subsets of the burden runs (create_config.py names); old marvel
+    # (10039b6) always adds `overall`
+    BURDEN_SUBSETS: tuple[str, ...] = ("all_apoe", "eur")
     # effect-scale inference (`functions.infer_effect_scales`): median of
     # r = SE * sqrt(2f(1-f)N) over a study's variants with MAF above
     # EFFECT_SCALE_MIN_MAF; log-OR gives r = 1/sqrt(phi(1-phi)) >= 2,
@@ -393,6 +434,7 @@ class RunlogOrder:
     APOE_EXPOSURE: int = 5
     GWAS_CAT_PREP: int = 10
     FILTER_GWAS_CAT: int = 20
+    BURDEN_EXPOSURE: int = 22
     MARVEL_RESULTS_TABLE: int = 25
     COMPARE_MARVEL_RUNS: int = 27
     MERGE_ASSOCIATIONS: int = 30
@@ -1213,6 +1255,16 @@ class FileNames:
     # pyjasub job array for the per-gene marvel runs (one cnf per gene,
     # written by src/create_config.py)
     MARVEL_TASKS: Path = Paths.DATA_RAW / "marvel_tasks.tsv"
+    # UKB carrier burden (burden_exposure.py): per gene the 0/1 exposure
+    # file (`{suffix}` "" or `Constants.BURDEN_FALLBACK_SUFFIX`), the
+    # sites/carriers summary and the old marvel (10039b6) job array
+    BURDEN_EXPOSURE_TEMPLATE: str = str(
+        Paths.DATA_TEMP / "{gene}_burden_exposure{suffix}.tsv.gz"
+    )
+    BURDEN_EXPOSURE_SUMMARY: Path = (
+        Paths.RESULTS_OUTPUT / "burden_exposure_summary.tsv.gz"
+    )
+    MARVEL_BURDEN_TASKS: Path = Paths.DATA_RAW / "marvel_burden_tasks.tsv"
     # marvel run of APOE diplotype -> outcomes: its own job array, so its
     # results never enter marvel_results.tsv as variants
     MARVEL_APOE_TASKS: Path = Paths.DATA_RAW / "marvel_apoe_tasks.tsv"
@@ -1261,6 +1313,9 @@ class FileNames:
     )
     # merged-associations rows matching a (non-AM) gene variant-list entry
     MATCHED_VARIANTS: Path = Paths.RESULTS_OUTPUT / "matched_variants.tsv.gz"
+    # marvel gene-burden rows of the merged associations (burden_exposure.py
+    # masks), written by match_variants.py for meta_analysis --ukb-burden
+    MATCHED_BURDEN: Path = Paths.RESULTS_OUTPUT / "matched_burden.tsv.gz"
     # `match_variants.py --region-rare` output (Constants.REGION_*)
     MATCHED_REGION_VARIANTS: Path = (
         Paths.RESULTS_OUTPUT / "matched_region_variants.tsv.gz"

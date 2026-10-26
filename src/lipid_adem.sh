@@ -181,6 +181,37 @@ run_mamba biomed-api "${ROOT}"/src/match_variants.py --region-rare \
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# UKB CARRIER BURDEN
+
+# [snellius] 0/1 carrier exposure per gene and mask (<GENE>_lof,
+# <GENE>_lof_directed, <GENE>_gof; _fb: without the Thomassen AD sites of
+# matched_variants.tsv.gz), the old marvel (10039b6) cnfs and the job array
+# data/raw/marvel_burden_tasks.tsv. Needs data/temp/<GENE>_variant_extraction
+# .tsv.gz, matched_variants.tsv.gz and the lipids_full_pheno.tsv.gz copied
+# from Myriad; exposure files are individual-level, never commit them.
+# <SNELLIUS_ENV>: needs pandas and log_tools (not biomed_api)
+sbatch --partition=rome --cpus-per-task=1 --mem=8G --time=04:00:00          \
+    --job-name=burden_exposure --output="${ROOT}"/src/logs/%x_%j.log           \
+    --wrap "mamba run --no-capture-output -n <SNELLIUS_ENV> \
+        python ${ROOT}/src/burden_exposure.py"
+# [snellius] old marvel per job-array row (gene x subset x main/_fb file);
+# 16G fits the 1/8-node billing unit of rome
+TASKS="${ROOT}"/data/raw/marvel_burden_tasks.tsv
+N_TASKS=$(( $(wc -l < "${TASKS}") - 1 ))
+TASK_LOGS="${ROOT}"/src/logs/marvel_burden_logs
+mkdir -p "${TASK_LOGS}"
+sbatch --array=1-"${N_TASKS}" --partition=rome --cpus-per-task=1 --mem=16G \
+    --time=04:00:00 --job-name=marvel_burden                                   \
+    --output="${TASK_LOGS}"/%x_%A_%a.log                                       \
+    --wrap "MARVEL_ENV=marvel_old ${ROOT}/src/marvel_assoc.sh ${TASKS} \
+        \${TMPDIR} 1 \${SLURM_ARRAY_TASK_ID}"
+# [snellius] add the burden results to the per-gene stores; then rerun
+# MERGE and INTERMEDIATE MATCH, so matched_burden.tsv.gz holds them
+run_mamba biomed-api "${ROOT}"/src/marvel_results_table.py --ancestry MULTI \
+    --tasks "${TASKS}"
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # META-ANALYSIS
 
 # [myriad] fixed-effect IVW meta-analysis of the matched variants
@@ -227,7 +258,10 @@ for outcome in "${OTHER_OUTCOMES[@]}"; do
     done
 done
 
-# one set of runs on PTV + ClinVar, one on the GoF variants (labels + _gof)
+# one set of runs on PTV + ClinVar, one on the GoF variants (labels + _gof);
+# --ukb-burden: the gene burden takes UKB's carrier-burden estimate
+# (UKB CARRIER BURDEN, matched_burden.tsv.gz) instead of the IVW over UKB's
+# variants (lof / gof masks, _fb where Thomassen has the gene and outcome)
 for variant_set in ptv_clinvar gof; do
     if [[ "${variant_set}" == ptv_clinvar ]]; then
         VARIANT_SOURCES=(PTV ClinVar)
@@ -244,7 +278,7 @@ for variant_set in ptv_clinvar gof; do
         --prefer-groups thomassen \
         --fallback-groups "${LIST_UKB_EUR_GROUPS[@]}" \
         "${LIST_FINNGEN_STUDIES[@]}" \
-        --label "annotated_eur${SET_SUFFIX}"
+        --label "annotated_eur${SET_SUFFIX}" --ukb-burden
     # [myriad] sensitivity using all UKB samples
     run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry MULTI \
         --studies "${THOMASSEN_STUDIES[@]}" "${LIST_UKB_STUDIES[@]}" \
@@ -253,7 +287,7 @@ for variant_set in ptv_clinvar gof; do
         --prefer-groups thomassen \
         --fallback-groups "${LIST_UKB_GROUPS[@]}" \
         "${LIST_FINNGEN_STUDIES[@]}" \
-        --label "maf_filter_all${SET_SUFFIX}"
+        --label "maf_filter_all${SET_SUFFIX}" --ukb-burden
     # [myriad] sensitivity: main analysis without orientation by gene
     # function (no GoF / ClinVar-raising flips, a2 allele effects)
     run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
@@ -263,7 +297,8 @@ for variant_set in ptv_clinvar gof; do
         --prefer-groups thomassen \
         --fallback-groups "${LIST_UKB_EUR_GROUPS[@]}" \
         "${LIST_FINNGEN_STUDIES[@]}" \
-        --label "annotated_eur_unoriented${SET_SUFFIX}" --no-orient
+        --label "annotated_eur_unoriented${SET_SUFFIX}" --no-orient \
+        --ukb-burden
 done
 
 # [myriad] without the variant lists: every rare variant in the gene region,
