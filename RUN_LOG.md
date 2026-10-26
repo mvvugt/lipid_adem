@@ -516,114 +516,113 @@ Output:
 
 ## [22] burden_exposure (`/home/mvanvugt/projects/lipid_adem/src/burden_exposure.py`)
 - first run: 2026-10-26 11:05:30
-- last run: 2026-10-26 11:05:30
-- commit: `fdddf24` (dirty)
+- last run: 2026-10-26 14:58:53
+- commit: `df2e492` (dirty)
 
 Output:
 ```text
-[stage] 2026-10-26 11:04:03 variant sets
-[info]  2026-10-26 11:04:03 ANGPTL3: 62 listed sites; lof 62, lof_directed 62, gof 0
-[info]  2026-10-26 11:04:03 CETP: 63 listed sites; lof 62, lof_directed 62, gof 1
-[info]  2026-10-26 11:04:03 HMGCR: 45 listed sites; lof 45, lof_directed 44, gof 0
-[info]  2026-10-26 11:04:03 NPC1L1: 96 listed sites; lof 96, lof_directed 96, gof 0
-[info]  2026-10-26 11:04:03 PCSK9: 99 listed sites; lof 70, lof_directed 70, gof 29
-[info]  2026-10-26 11:04:03 PPARA: 23 listed sites; lof 23, lof_directed 23, gof 0
-[info]  2026-10-26 11:04:03 CETP: 1 sites in preferred studies
-[info]  2026-10-26 11:04:04 genotype: e3e3=276035, e3e4=110438, e2e3=57188, e2e4=11672, e4e4=11202, e2e2=3025, Unknown=27
-[info]  2026-10-26 11:04:04 population: eur_unrelated=328588, eur_related=64495, nan=56362, sas_related=9394, afr_related=9141, oth_related=1607
-[stage] 2026-10-26 11:04:04 CETP
-[info]  2026-10-26 11:04:04 CETP_variant_extraction.tsv.gz: 668 columns, 1 not a variant (ID, merged names), 195 repeated, 231 hold a listed site (59 sites)
-[info]  2026-10-26 11:04:11 CETP: 469835 samples
-[warn]  2026-10-26 11:04:11 CETP: 1 site(s) with MAF > 0.01 left out: 16:56983407:G:A
-[info]  2026-10-26 11:04:11 CETP_lof: 58 of 62 sites, 473 carriers
-[info]  2026-10-26 11:04:11 CETP_lof_fb: 58 of 62 sites, 473 carriers
-[info]  2026-10-26 11:04:11 CETP_lof_directed: 58 of 62 sites, 473 carriers
-[info]  2026-10-26 11:04:11 CETP_lof_directed_fb: 58 of 62 sites, 473 carriers
-[warn]  2026-10-26 11:04:11 CETP_gof: no carriers (1 sites), not written
-[warn]  2026-10-26 11:04:11 CETP_gof_fb: no carriers (0 sites), not written
-[info]  2026-10-26 11:04:14 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/CETP_burden_exposure.tsv.gz
-[info]  2026-10-26 11:04:16 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/CETP_burden_exposure_fb.tsv.gz
-[info]  2026-10-26 11:04:16 CETP_all_apoe: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/CETP_all_apoe.cnf
-[info]  2026-10-26 11:04:16 CETP_eur: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/CETP_eur.cnf
-[info]  2026-10-26 11:04:16 CETP_all_apoe_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/CETP_all_apoe_fb.cnf
-[info]  2026-10-26 11:04:16 CETP_eur_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/CETP_eur_fb.cnf
-[stage] 2026-10-26 11:04:16 HMGCR
-[info]  2026-10-26 11:04:16 HMGCR_variant_extraction.tsv.gz: 715 columns, 1 not a variant (ID, merged names), 282 repeated, 316 hold a listed site (42 sites)
-[info]  2026-10-26 11:04:24 HMGCR: 469835 samples
-[info]  2026-10-26 11:04:25 HMGCR_lof: 42 of 45 sites, 85 carriers
-[info]  2026-10-26 11:04:25 HMGCR_lof_fb: 42 of 45 sites, 85 carriers
-[info]  2026-10-26 11:04:25 HMGCR_lof_directed: 41 of 44 sites, 81 carriers
-[info]  2026-10-26 11:04:25 HMGCR_lof_directed_fb: 41 of 44 sites, 81 carriers
-[warn]  2026-10-26 11:04:25 HMGCR_gof: no carriers (0 sites), not written
-[warn]  2026-10-26 11:04:25 HMGCR_gof_fb: no carriers (0 sites), not written
-[info]  2026-10-26 11:04:27 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/HMGCR_burden_exposure.tsv.gz
-[info]  2026-10-26 11:04:29 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/HMGCR_burden_exposure_fb.tsv.gz
-[info]  2026-10-26 11:04:29 HMGCR_all_apoe: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/HMGCR_all_apoe.cnf
-[info]  2026-10-26 11:04:29 HMGCR_eur: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/HMGCR_eur.cnf
-[info]  2026-10-26 11:04:29 HMGCR_all_apoe_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/HMGCR_all_apoe_fb.cnf
-[info]  2026-10-26 11:04:29 HMGCR_eur_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/HMGCR_eur_fb.cnf
-[stage] 2026-10-26 11:04:29 NPC1L1
-[info]  2026-10-26 11:04:29 NPC1L1_variant_extraction.tsv.gz: 1262 columns, 1 not a variant (ID, merged names), 236 repeated, 327 hold a listed site (93 sites)
-[info]  2026-10-26 11:04:43 NPC1L1: 469835 samples
-[info]  2026-10-26 11:04:44 NPC1L1_lof: 93 of 96 sites, 669 carriers
-[info]  2026-10-26 11:04:44 NPC1L1_lof_fb: 93 of 96 sites, 669 carriers
-[info]  2026-10-26 11:04:44 NPC1L1_lof_directed: 93 of 96 sites, 669 carriers
-[info]  2026-10-26 11:04:44 NPC1L1_lof_directed_fb: 93 of 96 sites, 669 carriers
-[warn]  2026-10-26 11:04:44 NPC1L1_gof: no carriers (0 sites), not written
-[warn]  2026-10-26 11:04:44 NPC1L1_gof_fb: no carriers (0 sites), not written
-[info]  2026-10-26 11:04:46 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/NPC1L1_burden_exposure.tsv.gz
-[info]  2026-10-26 11:04:48 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/NPC1L1_burden_exposure_fb.tsv.gz
-[info]  2026-10-26 11:04:48 NPC1L1_all_apoe: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/NPC1L1_all_apoe.cnf
-[info]  2026-10-26 11:04:48 NPC1L1_eur: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/NPC1L1_eur.cnf
-[info]  2026-10-26 11:04:48 NPC1L1_all_apoe_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/NPC1L1_all_apoe_fb.cnf
-[info]  2026-10-26 11:04:48 NPC1L1_eur_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/NPC1L1_eur_fb.cnf
-[stage] 2026-10-26 11:04:48 PCSK9
-[info]  2026-10-26 11:04:48 PCSK9_variant_extraction.tsv.gz: 1048 columns, 1 not a variant (ID, merged names), 425 repeated, 466 hold a listed site (82 sites)
-[info]  2026-10-26 11:05:03 PCSK9: 469835 samples
-[info]  2026-10-26 11:05:04 PCSK9_lof: 68 of 70 sites, 937 carriers
-[info]  2026-10-26 11:05:04 PCSK9_lof_fb: 68 of 70 sites, 937 carriers
-[info]  2026-10-26 11:05:04 PCSK9_lof_directed: 68 of 70 sites, 937 carriers
-[info]  2026-10-26 11:05:04 PCSK9_lof_directed_fb: 68 of 70 sites, 937 carriers
-[info]  2026-10-26 11:05:04 PCSK9_gof: 14 of 29 sites, 953 carriers
-[info]  2026-10-26 11:05:04 PCSK9_gof_fb: 14 of 29 sites, 953 carriers
-[info]  2026-10-26 11:05:06 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PCSK9_burden_exposure.tsv.gz
-[info]  2026-10-26 11:05:09 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PCSK9_burden_exposure_fb.tsv.gz
-[info]  2026-10-26 11:05:09 PCSK9_all_apoe: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/PCSK9_all_apoe.cnf
-[info]  2026-10-26 11:05:09 PCSK9_eur: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/PCSK9_eur.cnf
-[info]  2026-10-26 11:05:09 PCSK9_all_apoe_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/PCSK9_all_apoe_fb.cnf
-[info]  2026-10-26 11:05:09 PCSK9_eur_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/PCSK9_eur_fb.cnf
-[stage] 2026-10-26 11:05:09 ANGPTL3
-[info]  2026-10-26 11:05:09 ANGPTL3_variant_extraction.tsv.gz: 325 columns, 1 not a variant (ID, merged names), 4 repeated, 58 hold a listed site (54 sites)
-[info]  2026-10-26 11:05:12 ANGPTL3: 469835 samples
-[info]  2026-10-26 11:05:12 ANGPTL3_lof: 54 of 62 sites, 974 carriers
-[info]  2026-10-26 11:05:12 ANGPTL3_lof_fb: 54 of 62 sites, 974 carriers
-[info]  2026-10-26 11:05:12 ANGPTL3_lof_directed: 54 of 62 sites, 974 carriers
-[info]  2026-10-26 11:05:12 ANGPTL3_lof_directed_fb: 54 of 62 sites, 974 carriers
-[warn]  2026-10-26 11:05:12 ANGPTL3_gof: no carriers (0 sites), not written
-[warn]  2026-10-26 11:05:12 ANGPTL3_gof_fb: no carriers (0 sites), not written
-[info]  2026-10-26 11:05:14 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/ANGPTL3_burden_exposure.tsv.gz
-[info]  2026-10-26 11:05:17 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/ANGPTL3_burden_exposure_fb.tsv.gz
-[info]  2026-10-26 11:05:17 ANGPTL3_all_apoe: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/ANGPTL3_all_apoe.cnf
-[info]  2026-10-26 11:05:17 ANGPTL3_eur: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/ANGPTL3_eur.cnf
-[info]  2026-10-26 11:05:17 ANGPTL3_all_apoe_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/ANGPTL3_all_apoe_fb.cnf
-[info]  2026-10-26 11:05:17 ANGPTL3_eur_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/ANGPTL3_eur_fb.cnf
-[stage] 2026-10-26 11:05:17 PPARA
-[info]  2026-10-26 11:05:17 PPARA_variant_extraction.tsv.gz: 344 columns, 1 not a variant (ID, merged names), 43 repeated, 59 hold a listed site (22 sites)
-[info]  2026-10-26 11:05:20 PPARA: 469835 samples
-[info]  2026-10-26 11:05:20 PPARA_lof: 22 of 23 sites, 73 carriers
-[info]  2026-10-26 11:05:20 PPARA_lof_fb: 22 of 23 sites, 73 carriers
-[info]  2026-10-26 11:05:20 PPARA_lof_directed: 22 of 23 sites, 73 carriers
-[info]  2026-10-26 11:05:20 PPARA_lof_directed_fb: 22 of 23 sites, 73 carriers
-[warn]  2026-10-26 11:05:20 PPARA_gof: no carriers (0 sites), not written
-[warn]  2026-10-26 11:05:20 PPARA_gof_fb: no carriers (0 sites), not written
-[info]  2026-10-26 11:05:22 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PPARA_burden_exposure.tsv.gz
-[info]  2026-10-26 11:05:24 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PPARA_burden_exposure_fb.tsv.gz
-[info]  2026-10-26 11:05:24 PPARA_all_apoe: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/PPARA_all_apoe.cnf
-[info]  2026-10-26 11:05:24 PPARA_eur: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/PPARA_eur.cnf
-[info]  2026-10-26 11:05:24 PPARA_all_apoe_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/PPARA_all_apoe_fb.cnf
-[info]  2026-10-26 11:05:24 PPARA_eur_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/PPARA_eur_fb.cnf
-[info]  2026-10-26 11:05:30 wrote 24 job-array rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/marvel_burden_tasks.tsv
-[info]  2026-10-26 11:05:30 wrote 36 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/burden_exposure_summary.tsv.gz
+[stage] 2026-10-26 14:57:30 variant sets
+[info]  2026-10-26 14:57:31 ANGPTL3: 62 listed sites; lof 62, lof_directed 62, gof 0
+[info]  2026-10-26 14:57:31 CETP: 63 listed sites; lof 62, lof_directed 62, gof 1
+[info]  2026-10-26 14:57:31 HMGCR: 45 listed sites; lof 45, lof_directed 44, gof 0
+[info]  2026-10-26 14:57:31 NPC1L1: 96 listed sites; lof 96, lof_directed 96, gof 0
+[info]  2026-10-26 14:57:31 PCSK9: 99 listed sites; lof 70, lof_directed 70, gof 29
+[info]  2026-10-26 14:57:31 PPARA: 23 listed sites; lof 23, lof_directed 23, gof 0
+[info]  2026-10-26 14:57:31 CETP: 1 sites in preferred studies
+[info]  2026-10-26 14:57:31 genotype: e3e3=276035, e3e4=110438, e2e3=57188, e2e4=11672, e4e4=11202, e2e2=3025, Unknown=27
+[info]  2026-10-26 14:57:32 population: eur_unrelated=328588, eur_related=64495, nan=56362, sas_related=9394, afr_related=9141, oth_related=1607
+[stage] 2026-10-26 14:57:32 CETP
+[info]  2026-10-26 14:57:32 CETP_variant_extraction.tsv.gz: 668 columns, 1 not a variant (ID, merged names), 195 repeated, 231 hold a listed site (59 sites)
+[info]  2026-10-26 14:57:39 CETP: 469835 samples
+[info]  2026-10-26 14:57:39 CETP_lof: 58 of 62 sites, 473 carriers
+[info]  2026-10-26 14:57:39 CETP_lof_fb: 58 of 62 sites, 473 carriers
+[info]  2026-10-26 14:57:39 CETP_lof_directed: 58 of 62 sites, 473 carriers
+[info]  2026-10-26 14:57:39 CETP_lof_directed_fb: 58 of 62 sites, 473 carriers
+[info]  2026-10-26 14:57:39 CETP_gof: 1 of 1 sites, 34836 carriers
+[warn]  2026-10-26 14:57:39 CETP_gof_fb: no carriers (0 sites), not written
+[info]  2026-10-26 14:57:42 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/CETP_burden_exposure.tsv.gz
+[info]  2026-10-26 14:57:44 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/CETP_burden_exposure_fb.tsv.gz
+[info]  2026-10-26 14:57:44 CETP_all_apoe: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/CETP_all_apoe.cnf
+[info]  2026-10-26 14:57:44 CETP_eur: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/CETP_eur.cnf
+[info]  2026-10-26 14:57:44 CETP_all_apoe_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/CETP_all_apoe_fb.cnf
+[info]  2026-10-26 14:57:44 CETP_eur_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/CETP_eur_fb.cnf
+[stage] 2026-10-26 14:57:44 HMGCR
+[info]  2026-10-26 14:57:44 HMGCR_variant_extraction.tsv.gz: 715 columns, 1 not a variant (ID, merged names), 282 repeated, 316 hold a listed site (42 sites)
+[info]  2026-10-26 14:57:53 HMGCR: 469835 samples
+[info]  2026-10-26 14:57:53 HMGCR_lof: 42 of 45 sites, 85 carriers
+[info]  2026-10-26 14:57:53 HMGCR_lof_fb: 42 of 45 sites, 85 carriers
+[info]  2026-10-26 14:57:53 HMGCR_lof_directed: 41 of 44 sites, 81 carriers
+[info]  2026-10-26 14:57:53 HMGCR_lof_directed_fb: 41 of 44 sites, 81 carriers
+[warn]  2026-10-26 14:57:53 HMGCR_gof: no carriers (0 sites), not written
+[warn]  2026-10-26 14:57:53 HMGCR_gof_fb: no carriers (0 sites), not written
+[info]  2026-10-26 14:57:55 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/HMGCR_burden_exposure.tsv.gz
+[info]  2026-10-26 14:57:57 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/HMGCR_burden_exposure_fb.tsv.gz
+[info]  2026-10-26 14:57:57 HMGCR_all_apoe: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/HMGCR_all_apoe.cnf
+[info]  2026-10-26 14:57:57 HMGCR_eur: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/HMGCR_eur.cnf
+[info]  2026-10-26 14:57:57 HMGCR_all_apoe_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/HMGCR_all_apoe_fb.cnf
+[info]  2026-10-26 14:57:57 HMGCR_eur_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/HMGCR_eur_fb.cnf
+[stage] 2026-10-26 14:57:57 NPC1L1
+[info]  2026-10-26 14:57:58 NPC1L1_variant_extraction.tsv.gz: 1262 columns, 1 not a variant (ID, merged names), 236 repeated, 327 hold a listed site (93 sites)
+[info]  2026-10-26 14:58:11 NPC1L1: 469835 samples
+[info]  2026-10-26 14:58:12 NPC1L1_lof: 93 of 96 sites, 669 carriers
+[info]  2026-10-26 14:58:12 NPC1L1_lof_fb: 93 of 96 sites, 669 carriers
+[info]  2026-10-26 14:58:12 NPC1L1_lof_directed: 93 of 96 sites, 669 carriers
+[info]  2026-10-26 14:58:12 NPC1L1_lof_directed_fb: 93 of 96 sites, 669 carriers
+[warn]  2026-10-26 14:58:12 NPC1L1_gof: no carriers (0 sites), not written
+[warn]  2026-10-26 14:58:12 NPC1L1_gof_fb: no carriers (0 sites), not written
+[info]  2026-10-26 14:58:14 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/NPC1L1_burden_exposure.tsv.gz
+[info]  2026-10-26 14:58:16 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/NPC1L1_burden_exposure_fb.tsv.gz
+[info]  2026-10-26 14:58:16 NPC1L1_all_apoe: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/NPC1L1_all_apoe.cnf
+[info]  2026-10-26 14:58:16 NPC1L1_eur: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/NPC1L1_eur.cnf
+[info]  2026-10-26 14:58:16 NPC1L1_all_apoe_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/NPC1L1_all_apoe_fb.cnf
+[info]  2026-10-26 14:58:16 NPC1L1_eur_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/NPC1L1_eur_fb.cnf
+[stage] 2026-10-26 14:58:16 PCSK9
+[info]  2026-10-26 14:58:16 PCSK9_variant_extraction.tsv.gz: 1048 columns, 1 not a variant (ID, merged names), 425 repeated, 466 hold a listed site (82 sites)
+[info]  2026-10-26 14:58:31 PCSK9: 469835 samples
+[info]  2026-10-26 14:58:32 PCSK9_lof: 68 of 70 sites, 937 carriers
+[info]  2026-10-26 14:58:32 PCSK9_lof_fb: 68 of 70 sites, 937 carriers
+[info]  2026-10-26 14:58:32 PCSK9_lof_directed: 68 of 70 sites, 937 carriers
+[info]  2026-10-26 14:58:32 PCSK9_lof_directed_fb: 68 of 70 sites, 937 carriers
+[info]  2026-10-26 14:58:32 PCSK9_gof: 14 of 29 sites, 953 carriers
+[info]  2026-10-26 14:58:32 PCSK9_gof_fb: 14 of 29 sites, 953 carriers
+[info]  2026-10-26 14:58:34 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PCSK9_burden_exposure.tsv.gz
+[info]  2026-10-26 14:58:37 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PCSK9_burden_exposure_fb.tsv.gz
+[info]  2026-10-26 14:58:37 PCSK9_all_apoe: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/PCSK9_all_apoe.cnf
+[info]  2026-10-26 14:58:37 PCSK9_eur: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/PCSK9_eur.cnf
+[info]  2026-10-26 14:58:37 PCSK9_all_apoe_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/PCSK9_all_apoe_fb.cnf
+[info]  2026-10-26 14:58:37 PCSK9_eur_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/PCSK9_eur_fb.cnf
+[stage] 2026-10-26 14:58:37 ANGPTL3
+[info]  2026-10-26 14:58:37 ANGPTL3_variant_extraction.tsv.gz: 325 columns, 1 not a variant (ID, merged names), 4 repeated, 58 hold a listed site (54 sites)
+[info]  2026-10-26 14:58:40 ANGPTL3: 469835 samples
+[info]  2026-10-26 14:58:40 ANGPTL3_lof: 54 of 62 sites, 974 carriers
+[info]  2026-10-26 14:58:40 ANGPTL3_lof_fb: 54 of 62 sites, 974 carriers
+[info]  2026-10-26 14:58:40 ANGPTL3_lof_directed: 54 of 62 sites, 974 carriers
+[info]  2026-10-26 14:58:40 ANGPTL3_lof_directed_fb: 54 of 62 sites, 974 carriers
+[warn]  2026-10-26 14:58:40 ANGPTL3_gof: no carriers (0 sites), not written
+[warn]  2026-10-26 14:58:40 ANGPTL3_gof_fb: no carriers (0 sites), not written
+[info]  2026-10-26 14:58:42 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/ANGPTL3_burden_exposure.tsv.gz
+[info]  2026-10-26 14:58:45 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/ANGPTL3_burden_exposure_fb.tsv.gz
+[info]  2026-10-26 14:58:45 ANGPTL3_all_apoe: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/ANGPTL3_all_apoe.cnf
+[info]  2026-10-26 14:58:45 ANGPTL3_eur: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/ANGPTL3_eur.cnf
+[info]  2026-10-26 14:58:45 ANGPTL3_all_apoe_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/ANGPTL3_all_apoe_fb.cnf
+[info]  2026-10-26 14:58:45 ANGPTL3_eur_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/ANGPTL3_eur_fb.cnf
+[stage] 2026-10-26 14:58:45 PPARA
+[info]  2026-10-26 14:58:45 PPARA_variant_extraction.tsv.gz: 344 columns, 1 not a variant (ID, merged names), 43 repeated, 59 hold a listed site (22 sites)
+[info]  2026-10-26 14:58:48 PPARA: 469835 samples
+[info]  2026-10-26 14:58:48 PPARA_lof: 22 of 23 sites, 73 carriers
+[info]  2026-10-26 14:58:48 PPARA_lof_fb: 22 of 23 sites, 73 carriers
+[info]  2026-10-26 14:58:48 PPARA_lof_directed: 22 of 23 sites, 73 carriers
+[info]  2026-10-26 14:58:48 PPARA_lof_directed_fb: 22 of 23 sites, 73 carriers
+[warn]  2026-10-26 14:58:48 PPARA_gof: no carriers (0 sites), not written
+[warn]  2026-10-26 14:58:48 PPARA_gof_fb: no carriers (0 sites), not written
+[info]  2026-10-26 14:58:50 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PPARA_burden_exposure.tsv.gz
+[info]  2026-10-26 14:58:52 wrote 469835 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PPARA_burden_exposure_fb.tsv.gz
+[info]  2026-10-26 14:58:52 PPARA_all_apoe: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/PPARA_all_apoe.cnf
+[info]  2026-10-26 14:58:52 PPARA_eur: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/PPARA_eur.cnf
+[info]  2026-10-26 14:58:52 PPARA_all_apoe_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/PPARA_all_apoe_fb.cnf
+[info]  2026-10-26 14:58:52 PPARA_eur_fb: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_burden/PPARA_eur_fb.cnf
+[info]  2026-10-26 14:58:52 wrote 24 job-array rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/marvel_burden_tasks.tsv
+[info]  2026-10-26 14:58:52 wrote 36 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/burden_exposure_summary.tsv.gz
 
 ```
 
@@ -2229,13 +2228,19 @@ Include: reviewed by expert panel + criteria provided, multiple submitters, no c
 
 ## [50] marvel_assoc_job
 - first run: 2026-10-07 13:49:03
-- last run: 2026-10-26 11:32:50
-- commit: `fdddf24` (dirty)
+- last run: 2026-10-26 15:00:58
+- commit: `df2e492` (dirty)
+
+Δ vs previous run (was `df2e492` (dirty)):
+```diff
+@@ -1 +1 @@
+-[info]  2026-10-26 15:00:45 task 24: rows 24-24
++[info]  2026-10-26 15:00:58 task 21: rows 21-21
+```
 
 Output:
 ```text
-[info]  2026-10-26 11:25:01 task 14: rows 14-14
-[info]  2026-10-26 11:32:50 PCSK9: results in /gpfs/home6/mvanvugt/projects/lipid_adem/results/marvel_burden/PCSK9_eur
+[info]  2026-10-26 15:00:58 task 21: rows 21-21
 
 ```
 
