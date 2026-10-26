@@ -1,10 +1,13 @@
 #!/bin/bash -l
-#$ -N merge_associations
-#$ -o /myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/merge_associations.log
-#$ -j y
-#$ -l h_rt=08:00:00
-#$ -l mem=4G
-#$ -wd /myriadfs/home/rmgpmva/projects/lipid_adem
+#SBATCH -J merge_associations
+#SBATCH -o /home/mvanvugt/projects/lipid_adem/src/logs/merge_associations.log
+#SBATCH --time=08:00:00
+#SBATCH --mem=40G
+#SBATCH --partition=fat_rome
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mail-user=m.vanvugt1@amsterdamumc.nl
+#SBATCH --mail-type=FAIL
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
