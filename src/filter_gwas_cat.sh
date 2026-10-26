@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# pyjasub task-script wrapper for GWAS catalog extraction
+# SLURM array-task wrapper for GWAS catalog extraction (src/lipid_adem.sh)
 
 # Parameters
 # ----------
-#   $1 - ja_file  : Path to data/temp/tasks.tsv (pyjasub job-array file,
+#   $1 - ja_file  : Path to data/temp/tasks.tsv (job-array file,
 #                   one row per study).
 #   $2 - tmp_loc  : Temp/scratch location (unused here -- filter_gwas_cat.py
 #                   writes straight to each row's `outfile` column).

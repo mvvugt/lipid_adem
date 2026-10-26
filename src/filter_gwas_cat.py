@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Runs once per pyjasub array task over `--step` rows of the job-array file
+Runs once per SLURM array task (src/lipid_adem.sh) over `--step` rows of
+the job-array file
 (data/temp/tasks.tsv), one row per study. For each study, remote-queries
 its summary stats (GWAS Catalog harmonised or raw, or FinnGen, per the
 row's `source`) for every gene region in data/temp/gene_regions.tsv in one
@@ -319,7 +320,8 @@ def run_task(tasks_file: Path, task_id: int, step: int) -> None:
     errors = []
     if failed:
         errors.append(
-            f"{len(failed)} row(s) failed, rerun pyjasub: {', '.join(failed)}"
+            f"{len(failed)} row(s) failed, rerun the array task: "
+            f"{', '.join(failed)}"
         )
     if mismatched:
         errors.append(
@@ -345,7 +347,7 @@ def _init_cmd_args() -> argparse.ArgumentParser:
         "--tasks-file",
         type=Path,
         required=True,
-        help="pyjasub job-array file (data/temp/tasks.tsv)",
+        help="job-array file (data/temp/tasks.tsv)",
     )
     parser.add_argument(
         "--task-id",

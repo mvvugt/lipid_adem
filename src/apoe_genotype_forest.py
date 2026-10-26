@@ -157,7 +157,7 @@ TABLES = (
 ## Load data
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# job-array file: `outdir` (Myriad path) and `subset` per run
+# job-array file: `outdir` (cluster path) and `subset` per run
 tasks = pd.read_csv(FileNames.MARVEL_APOE_TASKS, sep = '\t', dtype = str)
 unknown = sorted(set(tasks['subset']) - set(SUBSET_POPULATIONS))
 if unknown:

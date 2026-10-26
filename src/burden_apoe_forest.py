@@ -14,7 +14,7 @@
 ##     p >= 0.05, square p < 0.05, diamond below the Bonferroni threshold
 ##     0.05 / (genes x outcomes with a pooled estimate in the main run).
 ##     Run locally in the `plot-misc` env on burden files copied from
-##     Myriad into `results/output/`. Writes
+##     Snellius into `results/output/`. Writes
 ##     `results/figures/sensitivity/forest_apoe_<label>_<outcome>.pdf`.
 ##
 ## Author: M. van Vugt

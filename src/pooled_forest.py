@@ -16,7 +16,7 @@
 ##     panel to the right shows their betas (95% CI, native UKB units),
 ##     each gene at the same height, with its own Bonferroni threshold
 ##     (genes x lipids). Run
-##     locally in the `plot-misc` env on burden files copied from Myriad into
+##     locally in the `plot-misc` env on burden files copied from Snellius into
 ##     `results/output/`. Writes
 ##     `results/figures/forest_pooled_<label>.pdf` (main analysis,
 ##     `FigureNames.MAIN_FIGURES`) or `results/figures/sensitivity/`.

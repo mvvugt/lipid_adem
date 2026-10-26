@@ -4,7 +4,7 @@ Resolves gene coordinates and outcome-to-EFO mappings (persisting any new
 lookups back to data/raw/gene_list.txt and data/raw/icd_codes.txt),
 discovers GWAS Catalog studies, curated FinnGen phenocodes, and curated
 not-yet-API-indexed GWAS Catalog studies per outcome, and writes the
-pyjasub job-array file (one row per study) that src/filter_gwas_cat.sh
+job-array file (one row per study) that src/filter_gwas_cat.sh
 consumes, with its study-outcome labels and gene regions, plus a
 study-discovery audit log listing every discovered study across all
 sources with its inclusion status and reason.
@@ -752,7 +752,7 @@ def build_tasks() -> None:
         f"{FileNames.TASKS_FILE}"
     )
 
-    # pyjasub errors if the job-array file is newer than an existing log dir
+    # keep the array logs of an earlier job-array file apart
     functions.archive_dir(Paths.FILTER_TASK_LOGS)
 
     log_stage("scale_meta")

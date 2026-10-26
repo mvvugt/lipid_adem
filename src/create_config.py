@@ -7,7 +7,7 @@
 ## Script name: create_config
 ##
 ## Purpose of script: Create one marvel configuration file per task row for
-## the association runs (src/marvel_assoc.sh, config/marvel_task.cnf); the
+## the association runs (src/marvel_assoc.sh, src/lipid_adem.sh); the
 ## row's `subset` sets the UKB samples (all, EUR) and APOE strata
 ##
 ## Author: M. van Vugt
@@ -18,7 +18,8 @@
 ## Email: m.vanvugt1@amsterdamumc.nl
 ##
 ## Notes: marvel https://gitlab.com/mvvugt/marvel, commit eed4510, branch
-## annotation. Run in the marvel env on Myriad after replacing every
+## annotation; now run in the marvel_old env (10039b6) on Snellius (see
+## src/lipid_adem.sh) after replacing every
 ## <placeholder> below and in data/raw/marvel_tasks.tsv.
 ##
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

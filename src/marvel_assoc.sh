@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# pyjasub task-script wrapper for per-gene marvel association runs
+# SLURM array-task wrapper for per-gene marvel association runs
+# (src/lipid_adem.sh)
 
 # Parameters
 # ----------
-#   $1 - ja_file  : Path to data/raw/marvel_tasks.tsv (pyjasub job-array
+#   $1 - ja_file  : Path to data/raw/marvel_tasks.tsv (job-array
 #                   file, one row per gene: rowidx, gene, carriers, outdir,
 #                   config). The configs are written by
 #                   src/create_config.py -a.
@@ -16,8 +17,9 @@
 #
 # Environment
 # -----------
-#   MARVEL_ENV    : mamba env with marvel (commit eed4510, branch
-#                   annotation) installed; default `marvel`.
+#   MARVEL_ENV    : mamba env with marvel installed; default `marvel`.
+#                   src/lipid_adem.sh sets `marvel_old` (10039b6) until
+#                   the validation passes.
 #
 # Returns
 # -------

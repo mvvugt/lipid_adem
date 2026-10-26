@@ -14,7 +14,7 @@
 USAGE=$(cat <<EOF
 ====== merge_associations ======
 
-Myriad (SGE) job wrapper for merge_associations.py: gathers the filtered
+Snellius (SLURM) job wrapper for merge_associations.py: gathers the filtered
 sumstats listed in data/temp/study_outcomes.tsv, adds curated GWAS Catalog
 associations and Open Targets gene-burden evidence, and writes
 results/output/merged_associations.tsv.gz.
@@ -32,7 +32,7 @@ EOF
 . shflags
 
 DEFINE_string 'root' \
-    '/myriadfs/home/rmgpmva/projects/lipid_adem' \
+    "${HOME}/projects/lipid_adem" \
     'Root directory of the project' 'r'
 # shellcheck disable=SC2034  # FLAGS_verbose read by bh_init.sh
 DEFINE_boolean 'verbose' false 'Print more output' 'v'
@@ -50,8 +50,8 @@ VERBOSE_TO_STDERR=1
 . bh_init.sh
 
 echo_prog_name "$0"
-info_msg "SGE job ID: ${JOB_ID:-n/a} | name: ${JOB_NAME:-n/a}" \
-    "| node: ${HOSTNAME:-n/a} | slots: ${NSLOTS:-n/a}"
+info_msg "SLURM job ID: ${SLURM_JOB_ID:-n/a} | name: ${SLURM_JOB_NAME:-n/a}" \
+    "| node: ${SLURM_JOB_NODELIST:-n/a} | cpus: ${SLURM_CPUS_PER_TASK:-n/a}"
 set_verbose_arg
 
 ROOT="${FLAGS_root}"
@@ -100,7 +100,7 @@ fi
 # log_error and the raw-output tail.
 log_info "using root directory: ${ROOT}"
 log_info "study-outcomes file: ${STUDY_OUTCOMES_FILE}" no-record
-log_info "running on node: $(hostname), job id: ${JOB_ID:-NA}" no-record
+log_info "running on node: $(hostname), job id: ${SLURM_JOB_ID:-NA}" no-record
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
