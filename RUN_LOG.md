@@ -2702,40 +2702,40 @@ Output:
 
 ```
 
-## [90] archive_results (`src/archive_results.py --apply --tag 20261026_snellius`)
+## [90] archive_results (`src/archive_results.py --apply --tag 20261026_myriad`)
 - first run: 2026-10-26 22:35:39
-- last run: 2026-10-26 22:36:21
-- commit: `635c4ad` (dirty)
+- last run: 2026-10-26 21:40:48
+- commit: `a14bc5e`
 
-Δ vs previous run (was `635c4ad` (dirty)):
+Δ vs previous run (was `a14bc5e`):
 stage `collect`:
 ```diff
 @@ -5,4 +5,3 @@
- [info]  2026-10-26 22:36:19 lists_early: 24 files (output retired 24)
- [info]  2026-10-26 22:36:19 maf_filter_all: 10 files (output current 4, output redundant 6)
- [info]  2026-10-26 22:36:19 region_rare: 12 files (output current 12)
--[info]  2026-10-26 22:35:38 dry run: nothing written (use --apply)
+ [info]  2026-10-26 21:39:34 lists_early: 24 files (output retired 24)
+ [info]  2026-10-26 21:39:34 maf_filter_all: 20 files (output current 10, output redundant 6, output stale 4)
+ [info]  2026-10-26 21:39:34 region_rare: 12 files (output current 12)
+-[info]  2026-10-26 21:37:58 dry run: nothing written (use --apply)
 ```
 
 Output:
 ```text
-[stage] 2026-10-26 22:36:18 collect
-[info]  2026-10-26 22:36:19 annotated_eur: 10 files (output current 4, output redundant 4, output stale 2)
-[info]  2026-10-26 22:36:19 annotated_eur_unoriented: 10 files (output current 4, output redundant 4, output stale 2)
-[info]  2026-10-26 22:36:19 broad_per_variant: 18 files (output current 5, output stale 13)
-[info]  2026-10-26 22:36:19 early_snapshots: 3 files (output retired 3)
-[info]  2026-10-26 22:36:19 lists_early: 24 files (output retired 24)
-[info]  2026-10-26 22:36:19 maf_filter_all: 10 files (output current 4, output redundant 6)
-[info]  2026-10-26 22:36:19 region_rare: 12 files (output current 12)
-[stage] 2026-10-26 22:36:19 archive
-[info]  2026-10-26 22:36:19 wrote 87 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/archive/20261026_snellius/inventory.tsv.gz
-[info]  2026-10-26 22:36:19 annotated_eur: 10 files -> /gpfs/home6/mvanvugt/projects/lipid_adem/results/archive/20261026_snellius/annotated_eur (output.tar.gz)
-[info]  2026-10-26 22:36:19 annotated_eur_unoriented: 10 files -> /gpfs/home6/mvanvugt/projects/lipid_adem/results/archive/20261026_snellius/annotated_eur_unoriented (output.tar.gz)
-[info]  2026-10-26 22:36:19 broad_per_variant: 18 files -> /gpfs/home6/mvanvugt/projects/lipid_adem/results/archive/20261026_snellius/broad_per_variant (output.tar.gz)
-[info]  2026-10-26 22:36:20 early_snapshots: 3 files -> /gpfs/home6/mvanvugt/projects/lipid_adem/results/archive/20261026_snellius/early_snapshots (plain files)
-[info]  2026-10-26 22:36:21 lists_early: 24 files -> /gpfs/home6/mvanvugt/projects/lipid_adem/results/archive/20261026_snellius/lists_early (output.tar.gz)
-[info]  2026-10-26 22:36:21 maf_filter_all: 10 files -> /gpfs/home6/mvanvugt/projects/lipid_adem/results/archive/20261026_snellius/maf_filter_all (output.tar.gz)
-[info]  2026-10-26 22:36:21 region_rare: 12 files -> /gpfs/home6/mvanvugt/projects/lipid_adem/results/archive/20261026_snellius/region_rare (output.tar.gz)
-[info]  2026-10-26 22:36:21 wrote /gpfs/home6/mvanvugt/projects/lipid_adem/results/archive/20261026_snellius/README.md
+[stage] 2026-10-26 21:39:34 collect
+[info]  2026-10-26 21:39:34 annotated_eur: 20 files (output current 10, output redundant 6, output stale 4)
+[info]  2026-10-26 21:39:34 annotated_eur_unoriented: 20 files (output current 4, output redundant 12, output stale 4)
+[info]  2026-10-26 21:39:34 broad_per_variant: 18 files (output current 5, output stale 13)
+[info]  2026-10-26 21:39:34 early_snapshots: 3 files (output retired 3)
+[info]  2026-10-26 21:39:34 lists_early: 24 files (output retired 24)
+[info]  2026-10-26 21:39:34 maf_filter_all: 20 files (output current 10, output redundant 6, output stale 4)
+[info]  2026-10-26 21:39:34 region_rare: 12 files (output current 12)
+[stage] 2026-10-26 21:39:34 archive
+[info]  2026-10-26 21:39:34 wrote 117 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/archive/20261026_myriad/inventory.tsv.gz
+[info]  2026-10-26 21:39:34 annotated_eur: 20 files -> /myriadfs/home/rmgpmva/projects/lipid_adem/results/archive/20261026_myriad/annotated_eur (output.tar.gz)
+[info]  2026-10-26 21:39:34 annotated_eur_unoriented: 20 files -> /myriadfs/home/rmgpmva/projects/lipid_adem/results/archive/20261026_myriad/annotated_eur_unoriented (output.tar.gz)
+[info]  2026-10-26 21:39:34 broad_per_variant: 18 files -> /myriadfs/home/rmgpmva/projects/lipid_adem/results/archive/20261026_myriad/broad_per_variant (output.tar.gz)
+[info]  2026-10-26 21:40:01 early_snapshots: 3 files -> /myriadfs/home/rmgpmva/projects/lipid_adem/results/archive/20261026_myriad/early_snapshots (plain files)
+[info]  2026-10-26 21:40:17 lists_early: 24 files -> /myriadfs/home/rmgpmva/projects/lipid_adem/results/archive/20261026_myriad/lists_early (output.tar.gz)
+[info]  2026-10-26 21:40:24 maf_filter_all: 20 files -> /myriadfs/home/rmgpmva/projects/lipid_adem/results/archive/20261026_myriad/maf_filter_all (output.tar.gz)
+[info]  2026-10-26 21:40:36 region_rare: 12 files -> /myriadfs/home/rmgpmva/projects/lipid_adem/results/archive/20261026_myriad/region_rare (output.tar.gz)
+[info]  2026-10-26 21:40:42 wrote /myriadfs/home/rmgpmva/projects/lipid_adem/results/archive/20261026_myriad/README.md
 
 ```
