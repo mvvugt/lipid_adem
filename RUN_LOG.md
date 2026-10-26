@@ -2150,57 +2150,69 @@ Output:
 
 ## [40] match_variants (`/home/rmgpmva/projects/lipid_adem/src/match_variants.py`)
 - first run: 2026-10-01 09:59:12
-- last run: 2026-10-26 12:39:42
-- commit: `8a9b6e7`
+- last run: 2026-10-26 17:46:07
+- commit: `ecae536`
 
 Output:
 ```text
-[stage] 2026-10-26 12:39:08 load_variant_lists
-[info]  2026-10-26 12:39:08 /myriadfs/home/rmgpmva/projects/lipid_adem/data/processed/lipid_variants.tsv: 882 rows
-[info]  2026-10-26 12:39:08 0 duplicate rows removed
-[info]  2026-10-26 12:39:08 ANGPTL3 ClinVar: 12 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-26 12:39:08 ANGPTL3 PTV: 56 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-26 12:39:08 APOA1 ClinVar: 33 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-26 12:39:08 APOA1 PTV: 15 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-26 12:39:08 APOB ClinVar: 236 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-26 12:39:08 APOB PTV: 172 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-26 12:39:08 APOE ClinVar: 20 rows, 0 without alleles, 20 outside gene region
-[info]  2026-10-26 12:39:08 CETP ClinVar: 10 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-26 12:39:08 CETP GoF: 1 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-26 12:39:08 CETP PTV: 58 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-26 12:39:08 HMGCR ClinVar: 7 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-26 12:39:08 HMGCR PTV: 39 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-26 12:39:08 NPC1L1 PTV: 96 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-26 12:39:08 PCSK9 ClinVar: 18 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-26 12:39:08 PCSK9 GoF: 18 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-26 12:39:08 PCSK9 PTV: 68 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-26 12:39:08 PPARA PTV: 23 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-26 12:39:08 normalisation: variant-list rows unchanged=862 no_sequence=20
-[stage] 2026-10-26 12:39:08 load_gwas
-[info]  2026-10-26 12:39:38 /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/merged_associations.tsv.gz: 594167 rows, 593113 variant-level (summary-stats, curated)
-[info]  2026-10-26 12:39:38 wrote 1054 marvel gene-burden rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/matched_burden.tsv.gz
-[info]  2026-10-26 12:39:40 curated: 25 rows without chrom/pos or effect allele, cannot be matched
-[stage] 2026-10-26 12:39:41 match
-[info]  2026-10-26 12:39:41 ANGPTL3 ClinVar: 12 variants, 3 matched, GWAS rows: summary-stats=71
-[info]  2026-10-26 12:39:41 ANGPTL3 PTV: 56 variants, 3 matched, GWAS rows: summary-stats=71
-[info]  2026-10-26 12:39:41 APOA1 ClinVar: 33 variants, 0 matched, GWAS rows: none
-[info]  2026-10-26 12:39:41 APOA1 PTV: 15 variants, 0 matched, GWAS rows: none
-[info]  2026-10-26 12:39:42 APOB ClinVar: 236 variants, 3 matched, GWAS rows: summary-stats=137
-[info]  2026-10-26 12:39:42 APOB PTV: 172 variants, 0 matched, GWAS rows: none
-[info]  2026-10-26 12:39:42 APOE ClinVar: 20 variants, 1 matched, GWAS rows: summary-stats=16
-[info]  2026-10-26 12:39:42 CETP ClinVar: 10 variants, 2 matched, GWAS rows: summary-stats=47
-[info]  2026-10-26 12:39:42 CETP GoF: 1 variants, 1 matched, GWAS rows: summary-stats=205
-[info]  2026-10-26 12:39:42 CETP PTV: 58 variants, 6 matched, GWAS rows: summary-stats=120
-[info]  2026-10-26 12:39:42 HMGCR ClinVar: 7 variants, 0 matched, GWAS rows: none
-[info]  2026-10-26 12:39:42 HMGCR PTV: 39 variants, 0 matched, GWAS rows: none
-[info]  2026-10-26 12:39:42 NPC1L1 PTV: 96 variants, 6 matched, GWAS rows: summary-stats=107
-[info]  2026-10-26 12:39:42 PCSK9 ClinVar: 18 variants, 1 matched, GWAS rows: summary-stats=64
-[info]  2026-10-26 12:39:42 PCSK9 GoF: 18 variants, 6 matched, GWAS rows: summary-stats=410
-[info]  2026-10-26 12:39:42 PCSK9 PTV: 68 variants, 3 matched, GWAS rows: summary-stats=141
-[info]  2026-10-26 12:39:42 PPARA PTV: 23 variants, 0 matched, GWAS rows: none
-[info]  2026-10-26 12:39:42 a1 vs Ensembl ref: 1163 matched SNV rows checked, 0 where a1 is not the Ensembl ref
-[stage] 2026-10-26 12:39:42 write
-[info]  2026-10-26 12:39:42 wrote 1389 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/matched_variants.tsv.gz
+[stage] 2026-10-26 17:45:08 load_variant_lists
+[info]  2026-10-26 17:45:08 /myriadfs/home/rmgpmva/projects/lipid_adem/data/processed/lipid_variants.tsv: 9224 rows
+[info]  2026-10-26 17:45:08 0 duplicate rows removed
+[info]  2026-10-26 17:45:08 ANGPTL3 AM: 493 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 ANGPTL3 ClinVar: 12 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 ANGPTL3 PTV: 56 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 APOA1 ClinVar: 33 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 APOA1 PTV: 15 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 APOB ClinVar: 236 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 APOB PTV: 172 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 APOE ClinVar: 20 rows, 0 without alleles, 20 outside gene region
+[info]  2026-10-26 17:45:08 CETP AM: 439 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 CETP ClinVar: 10 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 CETP GoF: 1 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 CETP PTV: 58 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 HMGCR AM: 2623 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 HMGCR ClinVar: 7 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 HMGCR PTV: 39 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 NPC1L1 AM: 2507 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 NPC1L1 PTV: 96 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 PCSK9 AM: 737 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 PCSK9 ClinVar: 18 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 PCSK9 GoF: 18 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 PCSK9 PTV: 68 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 PPARA AM: 1543 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:08 PPARA PTV: 23 rows, 0 without alleles, 0 outside gene region
+[info]  2026-10-26 17:45:09 normalisation: variant-list rows unchanged=9204 no_sequence=20
+[stage] 2026-10-26 17:45:09 load_gwas
+[info]  2026-10-26 17:45:35 /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/merged_associations.tsv.gz: 598492 rows, 593113 variant-level (summary-stats, curated)
+[info]  2026-10-26 17:45:51 wrote 5379 marvel gene-burden rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/matched_burden.tsv.gz
+[info]  2026-10-26 17:45:53 curated: 25 rows without chrom/pos or effect allele, cannot be matched
+[stage] 2026-10-26 17:45:54 match
+[info]  2026-10-26 17:45:54 ANGPTL3 AM: 493 variants, 7 matched, GWAS rows: summary-stats=172
+[info]  2026-10-26 17:45:54 ANGPTL3 ClinVar: 12 variants, 3 matched, GWAS rows: summary-stats=71
+[info]  2026-10-26 17:45:54 ANGPTL3 PTV: 56 variants, 3 matched, GWAS rows: summary-stats=71
+[info]  2026-10-26 17:45:54 APOA1 ClinVar: 33 variants, 0 matched, GWAS rows: none
+[info]  2026-10-26 17:45:54 APOA1 PTV: 15 variants, 0 matched, GWAS rows: none
+[info]  2026-10-26 17:45:54 APOB ClinVar: 236 variants, 3 matched, GWAS rows: summary-stats=137
+[info]  2026-10-26 17:45:54 APOB PTV: 172 variants, 0 matched, GWAS rows: none
+[info]  2026-10-26 17:45:54 APOE ClinVar: 20 variants, 1 matched, GWAS rows: summary-stats=16
+[info]  2026-10-26 17:45:54 CETP AM: 439 variants, 3 matched, GWAS rows: summary-stats=113
+[info]  2026-10-26 17:45:54 CETP ClinVar: 10 variants, 2 matched, GWAS rows: summary-stats=47
+[info]  2026-10-26 17:45:54 CETP GoF: 1 variants, 1 matched, GWAS rows: summary-stats=205
+[info]  2026-10-26 17:45:54 CETP PTV: 58 variants, 6 matched, GWAS rows: summary-stats=120
+[info]  2026-10-26 17:45:54 HMGCR AM: 2623 variants, 4 matched, GWAS rows: summary-stats=21
+[info]  2026-10-26 17:45:54 HMGCR ClinVar: 7 variants, 0 matched, GWAS rows: none
+[info]  2026-10-26 17:45:54 HMGCR PTV: 39 variants, 0 matched, GWAS rows: none
+[info]  2026-10-26 17:45:54 NPC1L1 AM: 2507 variants, 17 matched, GWAS rows: summary-stats=520
+[info]  2026-10-26 17:45:54 NPC1L1 PTV: 96 variants, 6 matched, GWAS rows: summary-stats=107
+[info]  2026-10-26 17:45:54 PCSK9 AM: 737 variants, 2 matched, GWAS rows: summary-stats=56
+[info]  2026-10-26 17:45:54 PCSK9 ClinVar: 18 variants, 1 matched, GWAS rows: summary-stats=64
+[info]  2026-10-26 17:45:54 PCSK9 GoF: 18 variants, 6 matched, GWAS rows: summary-stats=410
+[info]  2026-10-26 17:45:54 PCSK9 PTV: 68 variants, 3 matched, GWAS rows: summary-stats=141
+[info]  2026-10-26 17:45:54 PPARA AM: 1543 variants, 6 matched, GWAS rows: summary-stats=153
+[info]  2026-10-26 17:45:54 PPARA PTV: 23 variants, 0 matched, GWAS rows: none
+[info]  2026-10-26 17:45:54 a1 vs Ensembl ref: 2198 matched SNV rows checked, 0 where a1 is not the Ensembl ref
+[stage] 2026-10-26 17:45:54 write
+[info]  2026-10-26 17:45:59 wrote 2424 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/matched_variants.tsv.gz
 
 ```
 
@@ -2242,138 +2254,138 @@ Output:
 
 ## [50] meta_analysis (`/home/rmgpmva/projects/lipid_adem/src/meta_analysis.py --ancestry MULTI --studies marvel_ukb_MULTI_all_cause_dementia marvel_ukb_MULTI_all_cause_dementia_e44 marvel_ukb_MULTI_all_cause_dementia_e43 marvel_ukb_MULTI_all_cause_dementia_e33 marvel_ukb_MULTI_all_cause_dementia_e22_e32 marvel_ukb_MULTI_alzheimers_dementia marvel_ukb_MULTI_alzheimers_dementia_e44 marvel_ukb_MULTI_alzheimers_dementia_e43 marvel_ukb_MULTI_alzheimers_dementia_e33 marvel_ukb_MULTI_alzheimers_dementia_e22_e32 marvel_ukb_MULTI_vascular_dementia marvel_ukb_MULTI_vascular_dementia_e44 marvel_ukb_MULTI_vascular_dementia_e43 marvel_ukb_MULTI_vascular_dementia_e33 marvel_ukb_MULTI_vascular_dementia_e22_e32 marvel_ukb_MULTI_frontotemporal_dementia marvel_ukb_MULTI_frontotemporal_dementia_e44 marvel_ukb_MULTI_frontotemporal_dementia_e43 marvel_ukb_MULTI_frontotemporal_dementia_e33 marvel_ukb_MULTI_frontotemporal_dementia_e22_e32 --region-rare --stratified --label ukb_dementia_region_rare`)
 - first run: 2026-10-01 10:26:24
-- last run: 2026-10-26 12:50:20
-- commit: `8a9b6e7`
+- last run: 2026-10-26 18:13:34
+- commit: `ecae536`
 
-Δ vs previous run (was `8a9b6e7`):
+Δ vs previous run (was `ecae536`):
 stage `load_matched`:
 ```diff
 @@ -1,5 +1,5 @@
- [info]  2026-10-26 12:48:09 /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/matched_region_variants.tsv.gz: 347357 rows, 10047 variants
- [info]  2026-10-26 12:48:09 20375 rows of excluded gene(s) APOE dropped
- [info]  2026-10-26 12:48:11 326982 of 326982 rows kept (MULTI pools every ancestry) (all: AFR=87047, AMR=42782, CSA=36051, EAS=10748, EUR=81062, MULTI=69061, NR=231)
--[info]  2026-10-26 12:45:04 study_accession in marvel_ukb_MULTI_all_cause_dementia, marvel_ukb_MULTI_all_cause_dementia_e44, marvel_ukb_MULTI_all_cause_dementia_e43, marvel_ukb_MULTI_all_cause_dementia_e33, marvel_ukb_MULTI_all_cause_dementia_e22_e32, marvel_ukb_MULTI_alzheimers_dementia, marvel_ukb_MULTI_alzheimers_dementia_e44, marvel_ukb_MULTI_alzheimers_dementia_e43, marvel_ukb_MULTI_alzheimers_dementia_e33, marvel_ukb_MULTI_alzheimers_dementia_e22_e32, marvel_ukb_MULTI_vascular_dementia, marvel_ukb_MULTI_vascular_dementia_e44, marvel_ukb_MULTI_vascular_dementia_e43, marvel_ukb_MULTI_vascular_dementia_e33, marvel_ukb_MULTI_vascular_dementia_e22_e32, marvel_ukb_MULTI_frontotemporal_dementia, marvel_ukb_MULTI_frontotemporal_dementia_e44, marvel_ukb_MULTI_frontotemporal_dementia_e43, marvel_ukb_MULTI_frontotemporal_dementia_e33, marvel_ukb_MULTI_frontotemporal_dementia_e22_e32, F5_DEMENTIA_INCLAVO, G6_ALZHEIMER, F5_VASCDEM, FTD: 21335 of 326982 rows kept
--[info]  2026-10-26 12:45:04 MULTI: 21335 rows pooled across ancestries (EUR=5704, MULTI=15631), relabelled MULTI; a study reported both per ancestry and combined is counted twice unless --studies excludes one
-+[info]  2026-10-26 12:48:11 study_accession in marvel_ukb_MULTI_all_cause_dementia, marvel_ukb_MULTI_all_cause_dementia_e44, marvel_ukb_MULTI_all_cause_dementia_e43, marvel_ukb_MULTI_all_cause_dementia_e33, marvel_ukb_MULTI_all_cause_dementia_e22_e32, marvel_ukb_MULTI_alzheimers_dementia, marvel_ukb_MULTI_alzheimers_dementia_e44, marvel_ukb_MULTI_alzheimers_dementia_e43, marvel_ukb_MULTI_alzheimers_dementia_e33, marvel_ukb_MULTI_alzheimers_dementia_e22_e32, marvel_ukb_MULTI_vascular_dementia, marvel_ukb_MULTI_vascular_dementia_e44, marvel_ukb_MULTI_vascular_dementia_e43, marvel_ukb_MULTI_vascular_dementia_e33, marvel_ukb_MULTI_vascular_dementia_e22_e32, marvel_ukb_MULTI_frontotemporal_dementia, marvel_ukb_MULTI_frontotemporal_dementia_e44, marvel_ukb_MULTI_frontotemporal_dementia_e43, marvel_ukb_MULTI_frontotemporal_dementia_e33, marvel_ukb_MULTI_frontotemporal_dementia_e22_e32: 15631 of 326982 rows kept
-+[info]  2026-10-26 12:48:11 MULTI: 15631 rows pooled across ancestries (MULTI=15631), relabelled MULTI; a study reported both per ancestry and combined is counted twice unless --studies excludes one
+ [info]  2026-10-26 18:11:12 /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/matched_region_variants.tsv.gz: 347357 rows, 10047 variants
+ [info]  2026-10-26 18:11:12 20375 rows of excluded gene(s) APOE dropped
+ [info]  2026-10-26 18:11:14 326982 of 326982 rows kept (MULTI pools every ancestry) (all: AFR=87047, AMR=42782, CSA=36051, EAS=10748, EUR=81062, MULTI=69061, NR=231)
+-[info]  2026-10-26 18:07:33 study_accession in marvel_ukb_MULTI_all_cause_dementia, marvel_ukb_MULTI_all_cause_dementia_e44, marvel_ukb_MULTI_all_cause_dementia_e43, marvel_ukb_MULTI_all_cause_dementia_e33, marvel_ukb_MULTI_all_cause_dementia_e22_e32, marvel_ukb_MULTI_alzheimers_dementia, marvel_ukb_MULTI_alzheimers_dementia_e44, marvel_ukb_MULTI_alzheimers_dementia_e43, marvel_ukb_MULTI_alzheimers_dementia_e33, marvel_ukb_MULTI_alzheimers_dementia_e22_e32, marvel_ukb_MULTI_vascular_dementia, marvel_ukb_MULTI_vascular_dementia_e44, marvel_ukb_MULTI_vascular_dementia_e43, marvel_ukb_MULTI_vascular_dementia_e33, marvel_ukb_MULTI_vascular_dementia_e22_e32, marvel_ukb_MULTI_frontotemporal_dementia, marvel_ukb_MULTI_frontotemporal_dementia_e44, marvel_ukb_MULTI_frontotemporal_dementia_e43, marvel_ukb_MULTI_frontotemporal_dementia_e33, marvel_ukb_MULTI_frontotemporal_dementia_e22_e32, F5_DEMENTIA_INCLAVO, G6_ALZHEIMER, F5_VASCDEM, FTD: 21335 of 326982 rows kept
+-[info]  2026-10-26 18:07:33 MULTI: 21335 rows pooled across ancestries (EUR=5704, MULTI=15631), relabelled MULTI; a study reported both per ancestry and combined is counted twice unless --studies excludes one
++[info]  2026-10-26 18:11:15 study_accession in marvel_ukb_MULTI_all_cause_dementia, marvel_ukb_MULTI_all_cause_dementia_e44, marvel_ukb_MULTI_all_cause_dementia_e43, marvel_ukb_MULTI_all_cause_dementia_e33, marvel_ukb_MULTI_all_cause_dementia_e22_e32, marvel_ukb_MULTI_alzheimers_dementia, marvel_ukb_MULTI_alzheimers_dementia_e44, marvel_ukb_MULTI_alzheimers_dementia_e43, marvel_ukb_MULTI_alzheimers_dementia_e33, marvel_ukb_MULTI_alzheimers_dementia_e22_e32, marvel_ukb_MULTI_vascular_dementia, marvel_ukb_MULTI_vascular_dementia_e44, marvel_ukb_MULTI_vascular_dementia_e43, marvel_ukb_MULTI_vascular_dementia_e33, marvel_ukb_MULTI_vascular_dementia_e22_e32, marvel_ukb_MULTI_frontotemporal_dementia, marvel_ukb_MULTI_frontotemporal_dementia_e44, marvel_ukb_MULTI_frontotemporal_dementia_e43, marvel_ukb_MULTI_frontotemporal_dementia_e33, marvel_ukb_MULTI_frontotemporal_dementia_e22_e32: 15631 of 326982 rows kept
++[info]  2026-10-26 18:11:15 MULTI: 15631 rows pooled across ancestries (MULTI=15631), relabelled MULTI; a study reported both per ancestry and combined is counted twice unless --studies excludes one
 ```
 stage `prepare_effects`:
 ```diff
 @@ -1 +1 @@
--[info]  2026-10-26 12:45:05 21335 usable rows, 0 with SE derived from p
-+[info]  2026-10-26 12:48:11 15631 usable rows, 0 with SE derived from p
+-[info]  2026-10-26 18:07:34 21335 usable rows, 0 with SE derived from p
++[info]  2026-10-26 18:11:15 15631 usable rows, 0 with SE derived from p
 ```
 stage `orient`:
 ```diff
 @@ -1 +1 @@
--[info]  2026-10-26 12:45:05 3217 variants oriented as a2
-+[info]  2026-10-26 12:48:11 1821 variants oriented as a2
+-[info]  2026-10-26 18:07:34 3217 variants oriented as a2
++[info]  2026-10-26 18:11:15 1821 variants oriented as a2
 ```
 stage `dedupe`:
 ```diff
 @@ -1,4 +1,4 @@
--[info]  2026-10-26 12:45:05 8 duplicate rows removed
-+[info]  2026-10-26 12:48:11 0 duplicate rows removed
- [info]  2026-10-26 12:48:11 0 estimates removed as copies of another study
- [info]  2026-10-26 12:49:10 0 duplicate rows removed
- [info]  2026-10-26 12:49:10 0 estimates removed as copies of another study
+-[info]  2026-10-26 18:07:34 8 duplicate rows removed
++[info]  2026-10-26 18:11:15 0 duplicate rows removed
+ [info]  2026-10-26 18:11:15 0 estimates removed as copies of another study
+ [info]  2026-10-26 18:12:22 0 duplicate rows removed
+ [info]  2026-10-26 18:12:22 0 estimates removed as copies of another study
 ```
 stage `meta_analyse`:
 ```diff
 @@ -1,4 +1,4 @@
--[info]  2026-10-26 12:45:55 12477 groups, 96 pooling more than one estimate
--[info]  2026-10-26 12:46:45 12573 groups, 0 pooling more than one estimate
-+[info]  2026-10-26 12:48:40 6877 groups, 0 pooling more than one estimate
-+[info]  2026-10-26 12:49:09 6877 groups, 0 pooling more than one estimate
- [info]  2026-10-26 12:49:44 8754 groups, 0 pooling more than one estimate
- [info]  2026-10-26 12:50:19 8754 groups, 0 pooling more than one estimate
+-[info]  2026-10-26 18:08:25 12477 groups, 96 pooling more than one estimate
+-[info]  2026-10-26 18:09:16 12573 groups, 0 pooling more than one estimate
++[info]  2026-10-26 18:11:44 6877 groups, 0 pooling more than one estimate
++[info]  2026-10-26 18:12:12 6877 groups, 0 pooling more than one estimate
+ [info]  2026-10-26 18:12:55 8754 groups, 0 pooling more than one estimate
+ [info]  2026-10-26 18:13:27 8754 groups, 0 pooling more than one estimate
 ```
 stage `gene_burden`:
 ```diff
 @@ -1,2 +1,2 @@
--[info]  2026-10-26 12:46:45 gene burden: 32 pooled and 56 per-study rows
-+[info]  2026-10-26 12:49:09 gene burden: 24 pooled and 24 per-study rows
- [info]  2026-10-26 12:50:19 gene burden: 96 pooled and 96 per-study rows
+-[info]  2026-10-26 18:09:16 gene burden: 32 pooled and 56 per-study rows
++[info]  2026-10-26 18:12:12 gene burden: 24 pooled and 24 per-study rows
+ [info]  2026-10-26 18:13:28 gene burden: 96 pooled and 96 per-study rows
 ```
 stage `write`:
 ```diff
 @@ -1,4 +1,4 @@
--[info]  2026-10-26 12:46:46 wrote 25050 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_armb_dementia_region_rare.tsv.gz
--[info]  2026-10-26 12:46:46 wrote 88 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_armb_dementia_region_rare.tsv.gz
--[info]  2026-10-26 12:47:52 wrote 17508 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_armb_dementia_region_rare_apoe_strata.tsv.gz
--[info]  2026-10-26 12:47:52 wrote 192 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_armb_dementia_region_rare_apoe_strata.tsv.gz
-+[info]  2026-10-26 12:49:10 wrote 13754 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_ukb_dementia_region_rare.tsv.gz
-+[info]  2026-10-26 12:49:10 wrote 48 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_ukb_dementia_region_rare.tsv.gz
-+[info]  2026-10-26 12:50:20 wrote 17508 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_ukb_dementia_region_rare_apoe_strata.tsv.gz
-+[info]  2026-10-26 12:50:20 wrote 192 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_ukb_dementia_region_rare_apoe_strata.tsv.gz
+-[info]  2026-10-26 18:09:17 wrote 25050 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_armb_dementia_region_rare.tsv.gz
+-[info]  2026-10-26 18:09:23 wrote 88 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_armb_dementia_region_rare.tsv.gz
+-[info]  2026-10-26 18:10:34 wrote 17508 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_armb_dementia_region_rare_apoe_strata.tsv.gz
+-[info]  2026-10-26 18:10:39 wrote 192 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_armb_dementia_region_rare_apoe_strata.tsv.gz
++[info]  2026-10-26 18:12:16 wrote 13754 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_ukb_dementia_region_rare.tsv.gz
++[info]  2026-10-26 18:12:22 wrote 48 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_ukb_dementia_region_rare.tsv.gz
++[info]  2026-10-26 18:13:28 wrote 17508 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_ukb_dementia_region_rare_apoe_strata.tsv.gz
++[info]  2026-10-26 18:13:28 wrote 192 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_ukb_dementia_region_rare_apoe_strata.tsv.gz
 ```
 
 Output:
 ```text
-[info]  2026-10-26 12:47:55 ancestry MULTI, pooled by variant_site, outcome, ancestry_group
-[stage] 2026-10-26 12:47:55 load_matched
-[info]  2026-10-26 12:48:09 /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/matched_region_variants.tsv.gz: 347357 rows, 10047 variants
-[info]  2026-10-26 12:48:09 20375 rows of excluded gene(s) APOE dropped
-[info]  2026-10-26 12:48:11 326982 of 326982 rows kept (MULTI pools every ancestry) (all: AFR=87047, AMR=42782, CSA=36051, EAS=10748, EUR=81062, MULTI=69061, NR=231)
-[info]  2026-10-26 12:48:11 study_accession in marvel_ukb_MULTI_all_cause_dementia, marvel_ukb_MULTI_all_cause_dementia_e44, marvel_ukb_MULTI_all_cause_dementia_e43, marvel_ukb_MULTI_all_cause_dementia_e33, marvel_ukb_MULTI_all_cause_dementia_e22_e32, marvel_ukb_MULTI_alzheimers_dementia, marvel_ukb_MULTI_alzheimers_dementia_e44, marvel_ukb_MULTI_alzheimers_dementia_e43, marvel_ukb_MULTI_alzheimers_dementia_e33, marvel_ukb_MULTI_alzheimers_dementia_e22_e32, marvel_ukb_MULTI_vascular_dementia, marvel_ukb_MULTI_vascular_dementia_e44, marvel_ukb_MULTI_vascular_dementia_e43, marvel_ukb_MULTI_vascular_dementia_e33, marvel_ukb_MULTI_vascular_dementia_e22_e32, marvel_ukb_MULTI_frontotemporal_dementia, marvel_ukb_MULTI_frontotemporal_dementia_e44, marvel_ukb_MULTI_frontotemporal_dementia_e43, marvel_ukb_MULTI_frontotemporal_dementia_e33, marvel_ukb_MULTI_frontotemporal_dementia_e22_e32: 15631 of 326982 rows kept
-[info]  2026-10-26 12:48:11 MULTI: 15631 rows pooled across ancestries (MULTI=15631), relabelled MULTI; a study reported both per ancestry and combined is counted twice unless --studies excludes one
-[stage] 2026-10-26 12:48:11 effect_scale
-[stage] 2026-10-26 12:48:11 prepare_effects
-[info]  2026-10-26 12:48:11 15631 usable rows, 0 with SE derived from p
-[stage] 2026-10-26 12:48:11 resolve_ambiguous
-[stage] 2026-10-26 12:48:11 orient
-[info]  2026-10-26 12:48:11 1821 variants oriented as a2
-[stage] 2026-10-26 12:48:11 apoe_strata
-[info]  2026-10-26 12:48:11 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/apoe_strata.tsv: 104 studies with an APOE stratum entry
-[info]  2026-10-26 12:48:11 study group marvel_ukb_MULTI_all_cause_dementia, stratum all: 1 studies
-[info]  2026-10-26 12:48:11 study group marvel_ukb_MULTI_all_cause_dementia, stratum e22_e32: 1 studies
-[info]  2026-10-26 12:48:11 study group marvel_ukb_MULTI_all_cause_dementia, stratum e33: 1 studies
-[info]  2026-10-26 12:48:11 study group marvel_ukb_MULTI_all_cause_dementia, stratum e43: 1 studies
-[info]  2026-10-26 12:48:11 study group marvel_ukb_MULTI_all_cause_dementia, stratum e44: 1 studies
-[info]  2026-10-26 12:48:11 study group marvel_ukb_MULTI_alzheimers_dementia, stratum all: 1 studies
-[info]  2026-10-26 12:48:11 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e22_e32: 1 studies
-[info]  2026-10-26 12:48:11 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e33: 1 studies
-[info]  2026-10-26 12:48:11 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e43: 1 studies
-[info]  2026-10-26 12:48:11 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e44: 1 studies
-[info]  2026-10-26 12:48:11 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum all: 1 studies
-[info]  2026-10-26 12:48:11 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e22_e32: 1 studies
-[info]  2026-10-26 12:48:11 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e33: 1 studies
-[info]  2026-10-26 12:48:11 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e43: 1 studies
-[info]  2026-10-26 12:48:11 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e44: 1 studies
-[info]  2026-10-26 12:48:11 study group marvel_ukb_MULTI_vascular_dementia, stratum all: 1 studies
-[info]  2026-10-26 12:48:11 study group marvel_ukb_MULTI_vascular_dementia, stratum e22_e32: 1 studies
-[info]  2026-10-26 12:48:11 study group marvel_ukb_MULTI_vascular_dementia, stratum e33: 1 studies
-[info]  2026-10-26 12:48:11 study group marvel_ukb_MULTI_vascular_dementia, stratum e43: 1 studies
-[info]  2026-10-26 12:48:11 study group marvel_ukb_MULTI_vascular_dementia, stratum e44: 1 studies
-[stage] 2026-10-26 12:48:11 pooled_run
-[info]  2026-10-26 12:48:11 pooled run, study group marvel_ukb_MULTI_all_cause_dementia: unstratified run, strata left out
-[info]  2026-10-26 12:48:11 pooled run, study group marvel_ukb_MULTI_alzheimers_dementia: unstratified run, strata left out
-[info]  2026-10-26 12:48:11 pooled run, study group marvel_ukb_MULTI_frontotemporal_dementia: unstratified run, strata left out
-[info]  2026-10-26 12:48:11 pooled run, study group marvel_ukb_MULTI_vascular_dementia: unstratified run, strata left out
-[stage] 2026-10-26 12:48:11 dedupe
-[info]  2026-10-26 12:48:11 0 duplicate rows removed
-[info]  2026-10-26 12:48:11 0 estimates removed as copies of another study
-[stage] 2026-10-26 12:48:11 meta_analyse
-[info]  2026-10-26 12:48:40 6877 groups, 0 pooling more than one estimate
-[info]  2026-10-26 12:49:09 6877 groups, 0 pooling more than one estimate
-[stage] 2026-10-26 12:49:09 gene_burden
-[info]  2026-10-26 12:49:09 gene burden: 24 pooled and 24 per-study rows
-[stage] 2026-10-26 12:49:09 write
-[info]  2026-10-26 12:49:10 wrote 13754 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_ukb_dementia_region_rare.tsv.gz
-[info]  2026-10-26 12:49:10 wrote 48 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_ukb_dementia_region_rare.tsv.gz
-[stage] 2026-10-26 12:49:10 apoe_strata_run
-[info]  2026-10-26 12:49:10 8754 rows from APOE strata: pooled per stratum
-[stage] 2026-10-26 12:49:10 dedupe
-[info]  2026-10-26 12:49:10 0 duplicate rows removed
-[info]  2026-10-26 12:49:10 0 estimates removed as copies of another study
-[stage] 2026-10-26 12:49:10 meta_analyse
-[info]  2026-10-26 12:49:44 8754 groups, 0 pooling more than one estimate
-[info]  2026-10-26 12:50:19 8754 groups, 0 pooling more than one estimate
-[stage] 2026-10-26 12:50:19 gene_burden
-[info]  2026-10-26 12:50:19 gene burden: 96 pooled and 96 per-study rows
-[stage] 2026-10-26 12:50:19 write
-[info]  2026-10-26 12:50:20 wrote 17508 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_ukb_dementia_region_rare_apoe_strata.tsv.gz
-[info]  2026-10-26 12:50:20 wrote 192 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_ukb_dementia_region_rare_apoe_strata.tsv.gz
+[info]  2026-10-26 18:10:58 ancestry MULTI, pooled by variant_site, outcome, ancestry_group
+[stage] 2026-10-26 18:10:58 load_matched
+[info]  2026-10-26 18:11:12 /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/matched_region_variants.tsv.gz: 347357 rows, 10047 variants
+[info]  2026-10-26 18:11:12 20375 rows of excluded gene(s) APOE dropped
+[info]  2026-10-26 18:11:14 326982 of 326982 rows kept (MULTI pools every ancestry) (all: AFR=87047, AMR=42782, CSA=36051, EAS=10748, EUR=81062, MULTI=69061, NR=231)
+[info]  2026-10-26 18:11:15 study_accession in marvel_ukb_MULTI_all_cause_dementia, marvel_ukb_MULTI_all_cause_dementia_e44, marvel_ukb_MULTI_all_cause_dementia_e43, marvel_ukb_MULTI_all_cause_dementia_e33, marvel_ukb_MULTI_all_cause_dementia_e22_e32, marvel_ukb_MULTI_alzheimers_dementia, marvel_ukb_MULTI_alzheimers_dementia_e44, marvel_ukb_MULTI_alzheimers_dementia_e43, marvel_ukb_MULTI_alzheimers_dementia_e33, marvel_ukb_MULTI_alzheimers_dementia_e22_e32, marvel_ukb_MULTI_vascular_dementia, marvel_ukb_MULTI_vascular_dementia_e44, marvel_ukb_MULTI_vascular_dementia_e43, marvel_ukb_MULTI_vascular_dementia_e33, marvel_ukb_MULTI_vascular_dementia_e22_e32, marvel_ukb_MULTI_frontotemporal_dementia, marvel_ukb_MULTI_frontotemporal_dementia_e44, marvel_ukb_MULTI_frontotemporal_dementia_e43, marvel_ukb_MULTI_frontotemporal_dementia_e33, marvel_ukb_MULTI_frontotemporal_dementia_e22_e32: 15631 of 326982 rows kept
+[info]  2026-10-26 18:11:15 MULTI: 15631 rows pooled across ancestries (MULTI=15631), relabelled MULTI; a study reported both per ancestry and combined is counted twice unless --studies excludes one
+[stage] 2026-10-26 18:11:15 effect_scale
+[stage] 2026-10-26 18:11:15 prepare_effects
+[info]  2026-10-26 18:11:15 15631 usable rows, 0 with SE derived from p
+[stage] 2026-10-26 18:11:15 resolve_ambiguous
+[stage] 2026-10-26 18:11:15 orient
+[info]  2026-10-26 18:11:15 1821 variants oriented as a2
+[stage] 2026-10-26 18:11:15 apoe_strata
+[info]  2026-10-26 18:11:15 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/apoe_strata.tsv: 104 studies with an APOE stratum entry
+[info]  2026-10-26 18:11:15 study group marvel_ukb_MULTI_all_cause_dementia, stratum all: 1 studies
+[info]  2026-10-26 18:11:15 study group marvel_ukb_MULTI_all_cause_dementia, stratum e22_e32: 1 studies
+[info]  2026-10-26 18:11:15 study group marvel_ukb_MULTI_all_cause_dementia, stratum e33: 1 studies
+[info]  2026-10-26 18:11:15 study group marvel_ukb_MULTI_all_cause_dementia, stratum e43: 1 studies
+[info]  2026-10-26 18:11:15 study group marvel_ukb_MULTI_all_cause_dementia, stratum e44: 1 studies
+[info]  2026-10-26 18:11:15 study group marvel_ukb_MULTI_alzheimers_dementia, stratum all: 1 studies
+[info]  2026-10-26 18:11:15 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e22_e32: 1 studies
+[info]  2026-10-26 18:11:15 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e33: 1 studies
+[info]  2026-10-26 18:11:15 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e43: 1 studies
+[info]  2026-10-26 18:11:15 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e44: 1 studies
+[info]  2026-10-26 18:11:15 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum all: 1 studies
+[info]  2026-10-26 18:11:15 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e22_e32: 1 studies
+[info]  2026-10-26 18:11:15 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e33: 1 studies
+[info]  2026-10-26 18:11:15 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e43: 1 studies
+[info]  2026-10-26 18:11:15 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e44: 1 studies
+[info]  2026-10-26 18:11:15 study group marvel_ukb_MULTI_vascular_dementia, stratum all: 1 studies
+[info]  2026-10-26 18:11:15 study group marvel_ukb_MULTI_vascular_dementia, stratum e22_e32: 1 studies
+[info]  2026-10-26 18:11:15 study group marvel_ukb_MULTI_vascular_dementia, stratum e33: 1 studies
+[info]  2026-10-26 18:11:15 study group marvel_ukb_MULTI_vascular_dementia, stratum e43: 1 studies
+[info]  2026-10-26 18:11:15 study group marvel_ukb_MULTI_vascular_dementia, stratum e44: 1 studies
+[stage] 2026-10-26 18:11:15 pooled_run
+[info]  2026-10-26 18:11:15 pooled run, study group marvel_ukb_MULTI_all_cause_dementia: unstratified run, strata left out
+[info]  2026-10-26 18:11:15 pooled run, study group marvel_ukb_MULTI_alzheimers_dementia: unstratified run, strata left out
+[info]  2026-10-26 18:11:15 pooled run, study group marvel_ukb_MULTI_frontotemporal_dementia: unstratified run, strata left out
+[info]  2026-10-26 18:11:15 pooled run, study group marvel_ukb_MULTI_vascular_dementia: unstratified run, strata left out
+[stage] 2026-10-26 18:11:15 dedupe
+[info]  2026-10-26 18:11:15 0 duplicate rows removed
+[info]  2026-10-26 18:11:15 0 estimates removed as copies of another study
+[stage] 2026-10-26 18:11:15 meta_analyse
+[info]  2026-10-26 18:11:44 6877 groups, 0 pooling more than one estimate
+[info]  2026-10-26 18:12:12 6877 groups, 0 pooling more than one estimate
+[stage] 2026-10-26 18:12:12 gene_burden
+[info]  2026-10-26 18:12:12 gene burden: 24 pooled and 24 per-study rows
+[stage] 2026-10-26 18:12:12 write
+[info]  2026-10-26 18:12:16 wrote 13754 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_ukb_dementia_region_rare.tsv.gz
+[info]  2026-10-26 18:12:22 wrote 48 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_ukb_dementia_region_rare.tsv.gz
+[stage] 2026-10-26 18:12:22 apoe_strata_run
+[info]  2026-10-26 18:12:22 8754 rows from APOE strata: pooled per stratum
+[stage] 2026-10-26 18:12:22 dedupe
+[info]  2026-10-26 18:12:22 0 duplicate rows removed
+[info]  2026-10-26 18:12:22 0 estimates removed as copies of another study
+[stage] 2026-10-26 18:12:22 meta_analyse
+[info]  2026-10-26 18:12:55 8754 groups, 0 pooling more than one estimate
+[info]  2026-10-26 18:13:27 8754 groups, 0 pooling more than one estimate
+[stage] 2026-10-26 18:13:27 gene_burden
+[info]  2026-10-26 18:13:28 gene burden: 96 pooled and 96 per-study rows
+[stage] 2026-10-26 18:13:28 write
+[info]  2026-10-26 18:13:28 wrote 17508 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_ukb_dementia_region_rare_apoe_strata.tsv.gz
+[info]  2026-10-26 18:13:28 wrote 192 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_ukb_dementia_region_rare_apoe_strata.tsv.gz
 
 ```
 
@@ -2400,90 +2412,101 @@ Output:
 
 ## [55] combine_variants (`/home/rmgpmva/projects/lipid_adem/src/combine_variants.py`)
 - first run: 2026-10-21 13:50:41
-- last run: 2026-10-24 10:19:52
-- commit: `04d2c6c`
+- last run: 2026-10-26 15:04:34
+- commit: `ecae536`
 
 Output:
 ```text
-[info]  2026-10-24 10:19:52 /myriadfs/home/rmgpmva/projects/lipid_adem/data/processed/ptv_variants.tsv.gz: 527 PTVs
-[info]  2026-10-24 10:19:52 /myriadfs/home/rmgpmva/projects/lipid_adem/data/processed/plp_variants.tsv: 1900 rows; /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: 86 rows
-[info]  2026-10-24 10:19:52 0 P/LP rows with ref = alt dropped
-[warn]  2026-10-24 10:19:52 APOE condition 'Alzheimer disease 3, protection against, due to APOE3-Christchurch' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
-[warn]  2026-10-24 10:19:52 APOA1 condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
-[warn]  2026-10-24 10:19:52 ANGPTL3 condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
-[warn]  2026-10-24 10:19:52 PPARA condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
-[warn]  2026-10-24 10:19:52 PCSK9 condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
-[warn]  2026-10-24 10:19:52 HMGCR condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
-[warn]  2026-10-24 10:19:52 NPC1L1 condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
-[warn]  2026-10-24 10:19:52 CETP condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
-[warn]  2026-10-24 10:19:52 APOB condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
-[warn]  2026-10-24 10:19:52 APOE condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
-[info]  2026-10-24 10:19:52 262 truncating P/LP variants set to lowering, 213 of them against their conditions
-[info]  2026-10-24 10:19:52 ANGPTL3 ClinVar P/LP: 12 variants lowering
-[info]  2026-10-24 10:19:52 ANGPTL3 ClinVar P/LP: 2 variants unknown
-[info]  2026-10-24 10:19:52 APOA1 ClinVar P/LP: 11 variants altered
-[info]  2026-10-24 10:19:52 APOA1 ClinVar P/LP: 2 variants conflicting
-[info]  2026-10-24 10:19:52 APOA1 ClinVar P/LP: 16 variants lowering
-[info]  2026-10-24 10:19:52 APOA1 ClinVar P/LP: 6 variants unknown
-[info]  2026-10-24 10:19:52 APOB ClinVar P/LP: 5 variants altered
-[info]  2026-10-24 10:19:52 APOB ClinVar P/LP: 6 variants conflicting
-[info]  2026-10-24 10:19:52 APOB ClinVar P/LP: 224 variants lowering
-[info]  2026-10-24 10:19:52 APOB ClinVar P/LP: 3 variants unknown
-[info]  2026-10-24 10:19:52 APOE ClinVar P/LP: 12 variants altered
-[info]  2026-10-24 10:19:52 APOE ClinVar P/LP: 3 variants lowering
-[info]  2026-10-24 10:19:52 APOE ClinVar P/LP: 6 variants unknown
-[info]  2026-10-24 10:19:52 CETP ClinVar P/LP: 10 variants lowering
-[info]  2026-10-24 10:19:52 CETP ClinVar P/LP: 2 variants unknown
-[info]  2026-10-24 10:19:52 HMGCR ClinVar P/LP: 6 variants lowering
-[info]  2026-10-24 10:19:52 HMGCR ClinVar P/LP: 3 variants unknown
-[info]  2026-10-24 10:19:52 NPC1L1 ClinVar P/LP: 2 variants unknown
-[info]  2026-10-24 10:19:52 PCSK9 ClinVar P/LP: 2 variants lowering
-[info]  2026-10-24 10:19:52 PCSK9 ClinVar P/LP: 16 variants raising
-[info]  2026-10-24 10:19:52 PCSK9 ClinVar P/LP: 2 variants unknown
-[info]  2026-10-24 10:19:52 PPARA ClinVar P/LP: 2 variants unknown
-[info]  2026-10-24 10:19:52 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/gof_variants.tsv: 47 GoF variants
-[warn]  2026-10-24 10:19:52 ANGPTL3 ClinVar: 2 rows without GRCh38 chr/pos/alleles
-[warn]  2026-10-24 10:19:52 APOA1 ClinVar: 2 rows without GRCh38 chr/pos/alleles
-[warn]  2026-10-24 10:19:52 APOB ClinVar: 2 rows without GRCh38 chr/pos/alleles
-[warn]  2026-10-24 10:19:52 APOE ClinVar: 1 rows without GRCh38 chr/pos/alleles
-[warn]  2026-10-24 10:19:52 CETP ClinVar: 2 rows without GRCh38 chr/pos/alleles
-[warn]  2026-10-24 10:19:52 HMGCR ClinVar: 2 rows without GRCh38 chr/pos/alleles
-[warn]  2026-10-24 10:19:52 NPC1L1 ClinVar: 2 rows without GRCh38 chr/pos/alleles
-[warn]  2026-10-24 10:19:52 PCSK9 ClinVar: 2 rows without GRCh38 chr/pos/alleles
-[warn]  2026-10-24 10:19:52 PPARA ClinVar: 2 rows without GRCh38 chr/pos/alleles
-[info]  2026-10-24 10:19:52 normalisation ClinVar: no_sequence=20
-[info]  2026-10-24 10:19:52 normalisation ClinVar: unchanged=316
-[info]  2026-10-24 10:19:52 normalisation GoF: unchanged=19
-[info]  2026-10-24 10:19:52 normalisation PTV: normalised=18
-[info]  2026-10-24 10:19:52 normalisation PTV: unchanged=509
-[info]  2026-10-24 10:19:52 62 sites are in several sources
-[info]  2026-10-24 10:19:52 ANGPTL3 ClinVar: 12 variants
-[info]  2026-10-24 10:19:52 ANGPTL3 PTV: 56 variants
-[info]  2026-10-24 10:19:52 APOA1 ClinVar: 33 variants
-[info]  2026-10-24 10:19:52 APOA1 PTV: 15 variants
-[info]  2026-10-24 10:19:52 APOB ClinVar: 236 variants
-[info]  2026-10-24 10:19:52 APOB PTV: 172 variants
-[info]  2026-10-24 10:19:52 APOE ClinVar: 20 variants
-[info]  2026-10-24 10:19:52 CETP ClinVar: 10 variants
-[info]  2026-10-24 10:19:52 CETP GoF: 1 variants
-[info]  2026-10-24 10:19:52 CETP PTV: 58 variants
-[info]  2026-10-24 10:19:52 HMGCR ClinVar: 7 variants
-[info]  2026-10-24 10:19:52 HMGCR PTV: 39 variants
-[info]  2026-10-24 10:19:52 NPC1L1 PTV: 96 variants
-[info]  2026-10-24 10:19:52 PCSK9 ClinVar: 18 variants
-[info]  2026-10-24 10:19:52 PCSK9 GoF: 18 variants
-[info]  2026-10-24 10:19:52 PCSK9 PTV: 68 variants
-[info]  2026-10-24 10:19:52 PPARA PTV: 23 variants
-[info]  2026-10-24 10:19:52 Wrote 882 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/processed/lipid_variants.tsv
-[info]  2026-10-24 10:19:52 marvel lists: 820 sites, 17 with an extra original-form row
-[info]  2026-10-24 10:19:52 Wrote 64 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/ANGPTL3_variants.tsv
-[info]  2026-10-24 10:19:52 Wrote 46 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/APOA1_variants.tsv
-[info]  2026-10-24 10:19:52 Wrote 373 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/APOB_variants.tsv
-[info]  2026-10-24 10:19:52 Wrote 20 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/APOE_variants.tsv
-[info]  2026-10-24 10:19:52 Wrote 67 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/CETP_variants.tsv
-[info]  2026-10-24 10:19:52 Wrote 45 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/HMGCR_variants.tsv
-[info]  2026-10-24 10:19:52 Wrote 99 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/NPC1L1_variants.tsv
-[info]  2026-10-24 10:19:52 Wrote 99 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/PCSK9_variants.tsv
-[info]  2026-10-24 10:19:52 Wrote 24 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/PPARA_variants.tsv
+[info]  2026-10-26 15:04:33 /myriadfs/home/rmgpmva/projects/lipid_adem/data/processed/ptv_variants.tsv.gz: 527 PTVs
+[info]  2026-10-26 15:04:33 /myriadfs/home/rmgpmva/projects/lipid_adem/data/processed/plp_variants.tsv: 1900 rows; /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: 86 rows
+[info]  2026-10-26 15:04:33 0 P/LP rows with ref = alt dropped
+[warn]  2026-10-26 15:04:33 APOE condition 'Alzheimer disease 3, protection against, due to APOE3-Christchurch' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-26 15:04:33 APOA1 condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-26 15:04:33 ANGPTL3 condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-26 15:04:33 PPARA condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-26 15:04:33 PCSK9 condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-26 15:04:33 HMGCR condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-26 15:04:33 NPC1L1 condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-26 15:04:33 CETP condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-26 15:04:33 APOB condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[warn]  2026-10-26 15:04:33 APOE condition 'nan' not in /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/clinvar_condition_direction.tsv: counted as unknown
+[info]  2026-10-26 15:04:33 262 truncating P/LP variants set to lowering, 213 of them against their conditions
+[info]  2026-10-26 15:04:33 ANGPTL3 ClinVar P/LP: 12 variants lowering
+[info]  2026-10-26 15:04:33 ANGPTL3 ClinVar P/LP: 2 variants unknown
+[info]  2026-10-26 15:04:33 APOA1 ClinVar P/LP: 11 variants altered
+[info]  2026-10-26 15:04:33 APOA1 ClinVar P/LP: 2 variants conflicting
+[info]  2026-10-26 15:04:33 APOA1 ClinVar P/LP: 16 variants lowering
+[info]  2026-10-26 15:04:33 APOA1 ClinVar P/LP: 6 variants unknown
+[info]  2026-10-26 15:04:33 APOB ClinVar P/LP: 5 variants altered
+[info]  2026-10-26 15:04:33 APOB ClinVar P/LP: 6 variants conflicting
+[info]  2026-10-26 15:04:33 APOB ClinVar P/LP: 224 variants lowering
+[info]  2026-10-26 15:04:33 APOB ClinVar P/LP: 3 variants unknown
+[info]  2026-10-26 15:04:33 APOE ClinVar P/LP: 12 variants altered
+[info]  2026-10-26 15:04:33 APOE ClinVar P/LP: 3 variants lowering
+[info]  2026-10-26 15:04:33 APOE ClinVar P/LP: 6 variants unknown
+[info]  2026-10-26 15:04:33 CETP ClinVar P/LP: 10 variants lowering
+[info]  2026-10-26 15:04:33 CETP ClinVar P/LP: 2 variants unknown
+[info]  2026-10-26 15:04:33 HMGCR ClinVar P/LP: 6 variants lowering
+[info]  2026-10-26 15:04:33 HMGCR ClinVar P/LP: 3 variants unknown
+[info]  2026-10-26 15:04:33 NPC1L1 ClinVar P/LP: 2 variants unknown
+[info]  2026-10-26 15:04:33 PCSK9 ClinVar P/LP: 2 variants lowering
+[info]  2026-10-26 15:04:33 PCSK9 ClinVar P/LP: 16 variants raising
+[info]  2026-10-26 15:04:33 PCSK9 ClinVar P/LP: 2 variants unknown
+[info]  2026-10-26 15:04:33 PPARA ClinVar P/LP: 2 variants unknown
+[info]  2026-10-26 15:04:33 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/gof_variants.tsv: 47 GoF variants
+[info]  2026-10-26 15:04:33 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/am_variants.tsv: 17323 AM variants of class Benign/Likely Benign
+[info]  2026-10-26 15:04:33 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/am_variants.tsv: 8342 AM variants of class Pathogenic/Likely pathogenic
+[info]  2026-10-26 15:04:33 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/am_variants.tsv: 2874 AM variants of class Uncertain significance
+[info]  2026-10-26 15:04:33 /myriadfs/home/rmgpmva/projects/lipid_adem/data/raw/am_variants.tsv: 8342 AM variants kept (Pathogenic/Likely pathogenic)
+[warn]  2026-10-26 15:04:33 ANGPTL3 ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-26 15:04:33 APOA1 ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-26 15:04:33 APOB ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-26 15:04:33 APOE ClinVar: 1 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-26 15:04:33 CETP ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-26 15:04:33 HMGCR ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-26 15:04:33 NPC1L1 ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-26 15:04:33 PCSK9 ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[warn]  2026-10-26 15:04:33 PPARA ClinVar: 2 rows without GRCh38 chr/pos/alleles
+[info]  2026-10-26 15:04:33 normalisation AM: unchanged=8342
+[info]  2026-10-26 15:04:33 normalisation ClinVar: no_sequence=20
+[info]  2026-10-26 15:04:33 normalisation ClinVar: unchanged=316
+[info]  2026-10-26 15:04:33 normalisation GoF: unchanged=19
+[info]  2026-10-26 15:04:33 normalisation PTV: normalised=18
+[info]  2026-10-26 15:04:33 normalisation PTV: unchanged=509
+[info]  2026-10-26 15:04:33 66 sites are in several sources
+[info]  2026-10-26 15:04:33 ANGPTL3 AM: 493 variants
+[info]  2026-10-26 15:04:33 ANGPTL3 ClinVar: 12 variants
+[info]  2026-10-26 15:04:33 ANGPTL3 PTV: 56 variants
+[info]  2026-10-26 15:04:33 APOA1 ClinVar: 33 variants
+[info]  2026-10-26 15:04:33 APOA1 PTV: 15 variants
+[info]  2026-10-26 15:04:33 APOB ClinVar: 236 variants
+[info]  2026-10-26 15:04:33 APOB PTV: 172 variants
+[info]  2026-10-26 15:04:33 APOE ClinVar: 20 variants
+[info]  2026-10-26 15:04:33 CETP AM: 439 variants
+[info]  2026-10-26 15:04:33 CETP ClinVar: 10 variants
+[info]  2026-10-26 15:04:33 CETP GoF: 1 variants
+[info]  2026-10-26 15:04:33 CETP PTV: 58 variants
+[info]  2026-10-26 15:04:33 HMGCR AM: 2623 variants
+[info]  2026-10-26 15:04:33 HMGCR ClinVar: 7 variants
+[info]  2026-10-26 15:04:33 HMGCR PTV: 39 variants
+[info]  2026-10-26 15:04:33 NPC1L1 AM: 2507 variants
+[info]  2026-10-26 15:04:33 NPC1L1 PTV: 96 variants
+[info]  2026-10-26 15:04:33 PCSK9 AM: 737 variants
+[info]  2026-10-26 15:04:33 PCSK9 ClinVar: 18 variants
+[info]  2026-10-26 15:04:33 PCSK9 GoF: 18 variants
+[info]  2026-10-26 15:04:33 PCSK9 PTV: 68 variants
+[info]  2026-10-26 15:04:33 PPARA AM: 1543 variants
+[info]  2026-10-26 15:04:33 PPARA PTV: 23 variants
+[info]  2026-10-26 15:04:34 Wrote 9224 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/processed/lipid_variants.tsv
+[info]  2026-10-26 15:04:34 marvel lists: 9156 sites, 17 with an extra original-form row
+[info]  2026-10-26 15:04:34 Wrote 556 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/ANGPTL3_variants.tsv
+[info]  2026-10-26 15:04:34 Wrote 46 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/APOA1_variants.tsv
+[info]  2026-10-26 15:04:34 Wrote 373 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/APOB_variants.tsv
+[info]  2026-10-26 15:04:34 Wrote 20 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/APOE_variants.tsv
+[info]  2026-10-26 15:04:34 Wrote 506 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/CETP_variants.tsv
+[info]  2026-10-26 15:04:34 Wrote 2668 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/HMGCR_variants.tsv
+[info]  2026-10-26 15:04:34 Wrote 2606 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/NPC1L1_variants.tsv
+[info]  2026-10-26 15:04:34 Wrote 831 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/PCSK9_variants.tsv
+[info]  2026-10-26 15:04:34 Wrote 1567 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/PPARA_variants.tsv
 
 ```
