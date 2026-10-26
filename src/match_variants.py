@@ -19,6 +19,7 @@ function.
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -327,8 +328,16 @@ def _normalise_variant_list(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def load_gwas_rows() -> pd.DataFrame:
+def load_gwas_rows(burden_out: Path | None = None) -> pd.DataFrame:
     """Read the variant-level rows of the merged associations table.
+
+    Parameters
+    ----------
+    burden_out : `Path` or `NoneType`, optional, default: `None`
+        When given, the marvel gene-burden rows (`source` ``gene-burden``,
+        `source_db` starting with `Constants.MARVEL_SOURCE_DB_PREFIX`;
+        burden_exposure.py carrier masks) are written there for
+        meta_analysis.py `--ukb-burden`.
 
     Returns
     -------
@@ -365,6 +374,19 @@ def load_gwas_rows() -> pd.DataFrame:
         f"{FileNames.MERGED_ASSOCIATIONS}: {len(results)} rows, {len(gwas)} "
         f"variant-level ({', '.join(Constants.VARIANT_LEVEL_SOURCES)})"
     )
+    if burden_out is not None:
+        is_marvel_burden = (
+            results[HarmonisedColumns.SOURCE] == Constants.GENE_BURDEN_SOURCE
+        ) & results[HarmonisedColumns.SOURCE_DB].astype(
+            "string"
+        ).str.startswith(Constants.MARVEL_SOURCE_DB_PREFIX, na=False)
+        functions.write_table_atomic(
+            results.loc[is_marvel_burden].reset_index(drop=True), burden_out
+        )
+        log_info(
+            f"wrote {int(is_marvel_burden.sum())} marvel gene-burden rows "
+            f"to {burden_out}"
+        )
     del results
 
     gwas[_ROW_KEY] = gwas.index
@@ -749,7 +771,7 @@ def match_variants(
         variants = load_variant_lists()
 
         log_stage("load_gwas")
-        gwas = load_gwas_rows()
+        gwas = load_gwas_rows(burden_out=FileNames.MATCHED_BURDEN)
         out_path = FileNames.MATCHED_VARIANTS
 
     log_stage("match")
