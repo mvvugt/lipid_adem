@@ -365,6 +365,10 @@ class Constants:
     # a column whose carrier fraction exceeds this counts the other
     # allele: carriers are then the samples with dosage < 2 - threshold
     BURDEN_SWAP_FRACTION: float = 0.5
+    # default `burden_exposure.py --max-maf`: 0.5 keeps every listed site,
+    # as the summary-statistic sources (no MAF filter outside
+    # `--region-rare`)
+    BURDEN_MAX_MAF: float = 0.5
     # covariate models of the burden cnfs (`MARVEL_MODEL_MAP` keys; the
     # same as create_config.py without model_2)
     BURDEN_MODELS: dict[str, tuple[str, ...]] = {
@@ -1360,9 +1364,9 @@ class FigureNames:
     OUTCOMES: dict[str, str] = {
         "ascvd": "ASCVD",
         "alzheimers_dementia": "Alzheimer's disease",
+        "all_cause_dementia": "All-cause dementia",
         "vascular_dementia": "Vascular dementia",
         "frontotemporal_dementia": "Frontotemporal dementia",
-        "all_cause_dementia": "All-cause dementia",
     }
     OUTCOME_RANK: dict[str, int] = {
         name: i for i, name in enumerate(OUTCOMES)
@@ -1370,11 +1374,11 @@ class FigureNames:
     # lipid outcome key (`Constants.LIPID_OUTCOMES`) -> name with the UKB
     # unit, in plotting order
     LIPIDS: dict[str, str] = {
-        "ldl_c": "LDL-C (mmol/L)",
-        "apob": "ApoB (g/L)",
         "hdl_c": "HDL-C (mmol/L)",
         "apoa": "ApoA1 (g/L)",
         "tg": "Triglycerides (mmol/L)",
+        "ldl_c": "LDL-C (mmol/L)",
+        "apob": "ApoB (g/L)",
     }
     LIPID_RANK: dict[str, int] = {
         name: i for i, name in enumerate(LIPIDS)
