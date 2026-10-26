@@ -55,7 +55,7 @@ import pandas as pd
 from log_tools.emitter import log_info, log_stage, log_warn
 from log_tools.setup import runlog_setup
 
-from compare_marvel_runs import (
+from variant_keys import (
     _join_unique,
     _write_table_atomic,
     key_from_id,
