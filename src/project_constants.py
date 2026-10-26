@@ -185,19 +185,6 @@ class Constants:
     ORIG_ID_SUFFIX: str = "_orig"
     # assembly suffix of the P/LP coordinate columns used for matching
     PLP_ASSEMBLY_SUFFIX: str = "_grch38"
-    # pseudo variant-list source of `match_variants.py --region-rare`: every
-    # rare GWAS variant in the gene region, a1 = GRCh38 ref, a2 = alt
-    REGION_VARIANT_SOURCE: str = "region_rare"
-    # default MAF threshold (exclusive) of `--region-rare`
-    REGION_MAX_MAF: float = 0.01
-    # APOE e4 (p.Cys130Arg, rs429358) and e2 (p.Arg176Cys, rs7412) as
-    # `variant_site`; they define APOE-stratified GWAS, so any run that
-    # holds them is repeated without them (APOE_SENSITIVITY_LABEL)
-    APOE_ISOFORM_SITES: tuple[str, ...] = (
-        "19:44908684:T:C",
-        "19:44908822:C:T",
-    )
-    APOE_SENSITIVITY_LABEL: str = "no_apoe_e2e4"
     # variant-list genes left out of meta_analysis.py and the figures
     # (figure_utils.load_burden).
     # APOE is out of gene_list.txt (2026-10-08); this drops it from the
@@ -239,9 +226,6 @@ class Constants:
     # separator between the ancestry and the APOE stratum in a marvel
     # `Stratification name`, e.g. ``EUR_e44`` (create_config.py)
     MARVEL_ANCESTRY_SEP: str = "_"
-    # burden sensitivity: ClinVar-only variants without a lowering/raising
-    # direction left out
-    DIRECTED_BURDEN_LABEL: str = "directed_only"
     # file label of the meta-analysis pooled per APOE stratum
     APOE_STRATA_LABEL: str = "apoe_strata"
     # ClinVar `rcv_molecular_consequence` values that make a P/LP variant
@@ -401,8 +385,7 @@ class Constants:
     # allele: carriers are then the samples with dosage < 2 - threshold
     BURDEN_SWAP_FRACTION: float = 0.5
     # default `burden_exposure.py --max-maf`: 0.5 keeps every listed site,
-    # as the summary-statistic sources (no MAF filter outside
-    # `--region-rare`)
+    # as the summary-statistic sources (no MAF filter)
     BURDEN_MAX_MAF: float = 0.5
     # covariate models of the burden cnfs (`MARVEL_MODEL_MAP` keys; the
     # same as create_config.py without model_2)
@@ -1359,10 +1342,6 @@ class FileNames:
     # marvel gene-burden rows of the merged associations (burden_exposure.py
     # masks), written by match_variants.py for meta_analysis --ukb-burden
     MATCHED_BURDEN: Path = Paths.RESULTS_OUTPUT / "matched_burden.tsv.gz"
-    # `match_variants.py --region-rare` output (Constants.REGION_*)
-    MATCHED_REGION_VARIANTS: Path = (
-        Paths.RESULTS_OUTPUT / "matched_region_variants.tsv.gz"
-    )
     # IVW meta-analysis per `Ancestry` code; `{suffix}` is "" or
     # "_<label>" (`meta_analysis.py --label`)
     META_ANALYSIS_TEMPLATE: str = "meta_{ancestry}{suffix}.tsv.gz"

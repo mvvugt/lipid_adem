@@ -16,16 +16,12 @@ sources (`--studies`, `--outcomes`, `--variant-sources`); `--stratified`
 adds each study's own estimate. Next to the per-variant table a gene
 burden table is written: the IVW of the oriented variant effects per gene,
 per study and pooled over studies. ClinVar variants with a raising condition
-are flipped like GoF variants. Runs holding the APOE e2/e4 sites are repeated
-without them (sensitivity, `_no_apoe_e2e4` files).
+are flipped like GoF variants. `--ukb-burden` takes each UKB study's gene
+estimate from its carrier burden (`matched_burden.tsv.gz`) instead.
 
 APOE strata (`data/raw/apoe_strata.tsv`): the pooled run takes, per study
 group, its unstratified study or else its strata; studies that are strata
 are also pooled per stratum (`_apoe_strata` files).
-
-`--region-rare` pools `matched_region_variants.tsv.gz` instead: every rare
-variant in the gene region, effects of the GRCh38 alt allele (unoriented;
-rare variants taken as independent).
 """
 
 
@@ -247,8 +243,7 @@ def load_matched(path: Path = FileNames.MATCHED_VARIANTS) -> pd.DataFrame:
     Parameters
     ----------
     path : `Path`, optional, default: `FileNames.MATCHED_VARIANTS`
-        The matched table; `FileNames.MATCHED_REGION_VARIANTS` for the
-        `--region-rare` run of match_variants.py.
+        The matched table.
 
     Returns
     -------
@@ -701,7 +696,7 @@ def ivw(rows: pd.DataFrame, keys: list[str], beta: str) -> pd.DataFrame:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def orient(rows: pd.DataFrame, by_function: bool = True) -> pd.DataFrame:
+def orient(rows: pd.DataFrame) -> pd.DataFrame:
     """Orient every row's effect per variant.
 
     The a2 allele is used, or a1 when any of the variant's list sources
@@ -714,9 +709,6 @@ def orient(rows: pd.DataFrame, by_function: bool = True) -> pd.DataFrame:
     ----------
     rows : `pd.DataFrame`
         From `prepare_effects`.
-    by_function : `bool`, optional, default: `True`
-        When `False`, nothing is flipped: every variant is oriented to a2
-        (sensitivity analysis without the gene-function coding).
 
     Returns
     -------
@@ -742,10 +734,6 @@ def orient(rows: pd.DataFrame, by_function: bool = True) -> pd.DataFrame:
 
     is_gof = rows[site].isin(gof_sites)
     is_raising = rows[site].isin(raising_sites)
-    if not by_function:
-        log_info("orientation by gene function off: every variant on a2")
-        is_gof[:] = False
-        is_raising[:] = False
     sign = np.where(is_gof | is_raising, -1.0, 1.0)
     oriented = rows.copy()
     oriented[MetaColumns.ORIENTATION] = np.select(
@@ -1116,7 +1104,6 @@ def load_ukb_burden(
     studies: list[str] | None,
     outcomes: list[str] | None,
     variant_sources: list[str] | None,
-    orient_by_function: bool,
     path: Path = FileNames.MATCHED_BURDEN,
     summary_path: Path = FileNames.BURDEN_EXPOSURE_SUMMARY,
 ) -> pd.DataFrame:
@@ -1130,9 +1117,6 @@ def load_ukb_burden(
         `--studies` and `--outcomes`; `None` keeps all.
     variant_sources : `list[str]` or `None`
         `--variant-sources`, which pick the mask (`_ukb_base_mask`).
-    orient_by_function : `bool`
-        When `True`, gof effects are negated, as `orient` flips GoF
-        sites, so every effect is that of lower gene function.
     path : `Path`, optional, default: `FileNames.MATCHED_BURDEN`
         match_variants.py output.
     summary_path : `Path`, optional
@@ -1142,7 +1126,7 @@ def load_ukb_burden(
     -------
     ukb : `pd.DataFrame`
         One row per gene, outcome, ancestry, study and mask (the base
-        mask, its directed variant and their fallback forms):
+        mask and its fallback form):
         `OUT_GENE`, `OUTCOME`, `ANCESTRY_GROUP`, `STUDY_ACCESSION`,
         `_MASK_KEY`, `BETA_ORIENTED`, `SE_USED`, `N_VARIANTS`,
         `VARIANTS`, `TRAIT_LABEL`.
@@ -1159,8 +1143,7 @@ def load_ukb_burden(
         )
     base = _ukb_base_mask(variant_sources)
     suffix = Constants.BURDEN_FALLBACK_SUFFIX
-    directed = Constants.BURDEN_DIRECTED_MASKS.get(base, base)
-    wanted = {base, directed, f"{base}{suffix}", f"{directed}{suffix}"}
+    wanted = {base, f"{base}{suffix}"}
     table = pd.read_csv(path, sep="\t", low_memory=False)
     parsed = table[_EXPOSURE_COLUMN].astype(str).str.extract(_GENE_MASK_RE)
     table[VariantListColumns.OUT_GENE] = parsed["gene"]
@@ -1185,8 +1168,8 @@ def load_ukb_burden(
     if (~usable).any():
         log_warn(f"{int((~usable).sum())} UKB burden rows without beta/SE")
     ukb, beta, se = ukb.loc[usable], beta[usable], se[usable]
-    sign = -1.0 if orient_by_function and base == Constants.BURDEN_MASK_GOF \
-        else 1.0
+    # as `orient` flips GoF sites: every effect is that of lower function
+    sign = -1.0 if base == Constants.BURDEN_MASK_GOF else 1.0
     ukb[MetaColumns.BETA_ORIENTED] = beta * sign
     ukb[MetaColumns.SE_USED] = se
     ukb[MetaColumns.N_VARIANTS] = pd.NA
@@ -1238,7 +1221,6 @@ def ukb_burden_rows(
     variant_sources: list[str] | None,
     prefer: list[str] | None,
     fallback: list[str] | None,
-    directed: bool,
 ) -> pd.DataFrame:
     """Pick per gene, outcome and UKB study the mask to use.
 
@@ -1257,8 +1239,6 @@ def ukb_burden_rows(
         `--variant-sources` (`_ukb_base_mask`).
     prefer, fallback : `list[str]` or `None`
         `--prefer-groups` and `--fallback-groups`.
-    directed : `bool`
-        Use the directed mask (`_directed_only` burden).
 
     Returns
     -------
@@ -1266,8 +1246,6 @@ def ukb_burden_rows(
         One row per gene, outcome, ancestry and study.
     """
     base = _ukb_base_mask(variant_sources)
-    if directed:
-        base = Constants.BURDEN_DIRECTED_MASKS.get(base, base)
     pair = [VariantListColumns.OUT_GENE, HarmonisedColumns.OUTCOME]
     has_prefer: set[tuple] = set()
     if prefer:
@@ -1316,18 +1294,13 @@ def meta_analysis(
     per_study: bool = False,
     label: str | None = None,
     require_log_or: bool = False,
-    region_rare: bool = False,
     prefer_groups: list[str] | None = None,
     fallback_groups: list[str] | None = None,
-    orient_by_function: bool = True,
     ukb_burden: bool = False,
 ) -> None:
     """Run the meta-analysis for one ancestry group and write it.
 
-    Writes the per-variant meta-analysis and the gene burden. When the
-    rows hold the APOE e2/e4 sites (`Constants.APOE_ISOFORM_SITES`), both
-    are written again without them, with suffix
-    ``_<label>_no_apoe_e2e4``.
+    Writes the per-variant meta-analysis and the gene burden.
 
     Studies are grouped with `load_apoe_strata`. The pooled run uses per
     study group its unstratified study, or else its strata
@@ -1357,12 +1330,6 @@ def meta_analysis(
     require_log_or : `bool`, optional, default: `False`
         Drop studies whose `study_effect_scale` is not log-OR
         (`check_effect_scales`); otherwise they are only warned about.
-    region_rare : `bool`, optional, default: `False`
-        Read `FileNames.MATCHED_REGION_VARIANTS` (match_variants.py
-        `--region-rare`: every rare variant in the gene region) instead of
-        the list matches. Effects are those of the GRCh38 alt allele, not
-        oriented by gene function, so the burden pools variants that lower
-        and raise function alike.
     prefer_groups : `list[str]` or `None`, optional, default: `None`
         Study groups (`load_apoe_strata`; an unlisted study is its own
         group, named by its accession) used per variant (gene, outcome,
@@ -1371,13 +1338,11 @@ def meta_analysis(
     fallback_groups : `list[str]` or `None`, optional, default: `None`
         Study groups used for a variant only when no `prefer_groups`
         group has it.
-    orient_by_function : `bool`, optional, default: `True`
-        Passed to `orient` as `by_function`; `False` keeps every effect
-        on the a2 allele (no GoF / ClinVar-raising flips).
     ukb_burden : `bool`, optional, default: `False`
         In the gene burden, use the UKB carrier-burden estimates
         (`FileNames.MATCHED_BURDEN`, `load_ukb_burden`) instead of the IVW
-        over UKB's variants; the per-variant tables are unchanged.
+        over UKB's variants; the per-variant tables are unchanged. With
+        no per-variant rows left, only the gene burden is written.
 
     Returns
     -------
@@ -1389,22 +1354,100 @@ def meta_analysis(
         If there is no matched-variants table, or no matched-burden table
         with `ukb_burden`.
     ValueError
-        If `ukb_burden` is combined with `region_rare` or with variant
-        sources no carrier burden matches.
+        If `ukb_burden` is combined with variant sources no carrier
+        burden matches.
     """
-    if ukb_burden and region_rare:
-        raise ValueError("--ukb-burden does not apply to --region-rare")
     if ukb_burden:
         _ukb_base_mask(variant_sources)
     keys = list(MetaColumns.KEYS)
     log_info(f"ancestry {ancestry}, pooled by {', '.join(keys)}")
 
-    log_stage("load_matched")
-    matched = load_matched(
-        FileNames.MATCHED_REGION_VARIANTS
-        if region_rare
-        else FileNames.MATCHED_VARIANTS
+    rows = _prepare_rows(
+        ancestry, studies, outcomes, variant_sources, require_log_or,
     )
+    if rows is None:
+        if not ukb_burden:
+            return
+        log_info(
+            "no per-variant rows: the gene burden is the UKB carrier "
+            "burden only, no per-variant table written"
+        )
+        rows = _empty_rows(keys)
+
+    log_stage("apoe_strata")
+    strata = load_apoe_strata()
+    rows = _add_apoe_strata(rows, strata)
+    if prefer_groups and not rows.empty:
+        log_stage("choose_groups")
+        rows = choose_groups(rows, prefer_groups, fallback_groups or [])
+        if rows.empty and not ukb_burden:
+            log_warn("no rows left after choosing groups; no output written")
+            return
+    ukb: pd.DataFrame | None = None
+    if ukb_burden:
+        log_stage("ukb_burden")
+        loaded = _add_apoe_strata(
+            load_ukb_burden(ancestry, studies, outcomes, variant_sources),
+            strata,
+        )
+        ukb = ukb_burden_rows(
+            loaded, rows, variant_sources, prefer_groups, fallback_groups,
+        )
+
+    suffix = f"_{label}" if label else ""
+    log_stage("pooled_run")
+    _analyse_and_write(
+        _pooled_rows(rows), keys, ancestry, per_study, suffix,
+        None if ukb is None else _pooled_rows(ukb),
+    )
+
+    is_stratum = rows[MetaColumns.APOE_STRATUM] != ApoeStratum.ALL
+    # the UKB carrier burden has its own strata, also when no per-variant
+    # rows of a stratum are left
+    ukb_strata = ukb is not None and bool(
+        (ukb[MetaColumns.APOE_STRATUM] != ApoeStratum.ALL).any()
+    )
+    if is_stratum.any() or ukb_strata:
+        log_stage("apoe_strata_run")
+        log_info(
+            f"{int(is_stratum.sum())} rows from APOE strata: pooled per "
+            "stratum"
+        )
+        _analyse_and_write(
+            rows.loc[is_stratum].copy(),
+            [*keys, MetaColumns.APOE_STRATUM],
+            ancestry,
+            per_study,
+            f"{suffix}_{Constants.APOE_STRATA_LABEL}",
+            None if ukb is None else ukb.loc[
+                ukb[MetaColumns.APOE_STRATUM] != ApoeStratum.ALL
+            ].copy(),
+        )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _prepare_rows(
+    ancestry: str,
+    studies: list[str] | None,
+    outcomes: list[str] | None,
+    variant_sources: list[str] | None,
+    require_log_or: bool,
+) -> pd.DataFrame | None:
+    """Load, filter and orient the run's per-variant rows.
+
+    Parameters
+    ----------
+    ancestry, studies, outcomes, variant_sources, require_log_or
+        As `meta_analysis`.
+
+    Returns
+    -------
+    rows : `pd.DataFrame` or `None`
+        From `orient`, after the variant-source filter; `None` (logged)
+        when no rows are left.
+    """
+    log_stage("load_matched")
+    matched = load_matched(FileNames.MATCHED_VARIANTS)
     is_excluded = matched[VariantListColumns.OUT_GENE].isin(
         Constants.EXCLUDED_GENES
     )
@@ -1430,7 +1473,7 @@ def meta_analysis(
     )
     if not is_ancestry.any():
         log_warn(f"no {ancestry} rows, nothing to pool; no output written")
-        return
+        return None
     matched = matched.loc[is_ancestry].copy()
     matched = _keep_values(
         matched, HarmonisedColumns.STUDY_ACCESSION, studies
@@ -1451,7 +1494,7 @@ def meta_analysis(
     matched = check_effect_scales(matched, require_log_or)
     if matched.empty:
         log_warn("no rows left after filtering; no output written")
-        return
+        return None
 
     log_stage("prepare_effects")
     rows = prepare_effects(matched)
@@ -1461,67 +1504,37 @@ def meta_analysis(
     rows = resolve_ambiguous(rows)
 
     log_stage("orient")
-    rows = orient(rows, by_function=orient_by_function)
+    rows = orient(rows)
     rows = _keep_values(rows, VariantListColumns.OUT_SOURCE, variant_sources)
     if rows.empty:
         log_warn("no rows left after filtering; no output written")
-        return
+        return None
+    return rows
 
-    log_stage("apoe_strata")
-    strata = load_apoe_strata()
-    rows = _add_apoe_strata(rows, strata)
-    if prefer_groups:
-        log_stage("choose_groups")
-        rows = choose_groups(rows, prefer_groups, fallback_groups or [])
-        if rows.empty:
-            log_warn("no rows left after choosing groups; no output written")
-            return
-    ukb: dict[bool, pd.DataFrame] | None = None
-    if ukb_burden:
-        log_stage("ukb_burden")
-        loaded = _add_apoe_strata(
-            load_ukb_burden(
-                ancestry, studies, outcomes, variant_sources,
-                orient_by_function,
-            ),
-            strata,
-        )
-        ukb = {
-            directed: ukb_burden_rows(
-                loaded, rows, variant_sources, prefer_groups,
-                fallback_groups, directed,
-            )
-            for directed in (False, True)
-        }
 
-    suffix = f"_{label}" if label else ""
-    log_stage("pooled_run")
-    _run_with_sensitivity(
-        _pooled_rows(rows), keys, ancestry, per_study, suffix,
-        None if ukb is None
-        else {key: _pooled_rows(part) for key, part in ukb.items()},
-    )
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _empty_rows(keys: list[str]) -> pd.DataFrame:
+    """Per-variant rows without any row, for a UKB-burden-only run.
 
-    is_stratum = rows[MetaColumns.APOE_STRATUM] != ApoeStratum.ALL
-    if is_stratum.any():
-        log_stage("apoe_strata_run")
-        log_info(
-            f"{int(is_stratum.sum())} rows from APOE strata: pooled per "
-            "stratum"
-        )
-        _run_with_sensitivity(
-            rows.loc[is_stratum].copy(),
-            [*keys, MetaColumns.APOE_STRATUM],
-            ancestry,
-            per_study,
-            f"{suffix}_{Constants.APOE_STRATA_LABEL}",
-            None if ukb is None else {
-                key: part.loc[
-                    part[MetaColumns.APOE_STRATUM] != ApoeStratum.ALL
-                ].copy()
-                for key, part in ukb.items()
-            },
-        )
+    Parameters
+    ----------
+    keys : `list[str]`
+        Grouping columns (`MetaColumns.KEYS`).
+
+    Returns
+    -------
+    rows : `pd.DataFrame`
+        No rows; the columns the APOE-strata, group and `gene_burden`
+        steps read.
+    """
+    columns = [
+        VariantListColumns.OUT_GENE, *keys,
+        HarmonisedColumns.STUDY_ACCESSION, MetaColumns.BETA_ORIENTED,
+        MetaColumns.SE_USED, HarmonisedColumns.TRAIT_LABEL,
+        VariantListColumns.OUT_SOURCE,
+        VariantListColumns.OUT_CLINVAR_DIRECTION,
+    ]
+    return pd.DataFrame(columns=list(dict.fromkeys(columns)))
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1731,99 +1744,17 @@ def choose_groups(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _run_with_sensitivity(
-    rows: pd.DataFrame,
-    keys: list[str],
-    ancestry: str,
-    per_study: bool,
-    suffix: str,
-    ukb: dict[bool, pd.DataFrame] | None = None,
-) -> None:
-    """Analyse and write the rows, then again without APOE e2/e4.
-
-    The sensitivity run (suffix ``<suffix>_no_apoe_e2e4``) is only done
-    when the rows hold a `Constants.APOE_ISOFORM_SITES` variant.
-
-    Parameters
-    ----------
-    rows : `pd.DataFrame`
-        From `orient`, after the variant-source filter.
-    keys : `list[str]`
-        Grouping columns.
-    ancestry : `str`
-        The run's `Ancestry` code, used in the file names.
-    per_study : `bool`
-        Also write each study's own per-variant estimate.
-    suffix : `str`
-        Appended to the file names.
-    ukb : `dict[bool, pd.DataFrame]` or `None`, optional, default: `None`
-        UKB carrier-burden rows (`ukb_burden_rows`), keyed by `directed`;
-        passed to `_analyse_and_write`.
-
-    Returns
-    -------
-    `None`
-    """
-    _analyse_and_write(rows, keys, ancestry, per_study, suffix, ukb)
-
-    is_isoform = rows[MetaColumns.VARIANT_SITE].isin(
-        Constants.APOE_ISOFORM_SITES
-    )
-    if is_isoform.any():
-        log_stage("apoe_sensitivity")
-        log_info(
-            f"{int(is_isoform.sum())} rows at the APOE e2/e4 sites "
-            f"{', '.join(Constants.APOE_ISOFORM_SITES)}: repeating the run "
-            "without them"
-        )
-        _analyse_and_write(
-            rows.loc[~is_isoform].copy(),
-            keys,
-            ancestry,
-            per_study,
-            f"{suffix}_{Constants.APOE_SENSITIVITY_LABEL}",
-            ukb,
-        )
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _directed_sites(rows: pd.DataFrame) -> set[str]:
-    """Find the variants whose gene-function direction is clear.
-
-    Parameters
-    ----------
-    rows : `pd.DataFrame`
-        From `orient`.
-
-    Returns
-    -------
-    sites : `set[str]`
-        `variant_site` values with at least one row from a list other
-        than ClinVar (PTV, GoF, ...) or with ClinVar direction `lowering`
-        or `raising`.
-    """
-    clear = (
-        rows[VariantListColumns.OUT_SOURCE] != Constants.CLINVAR_VARIANT_SOURCE
-    ) | rows[VariantListColumns.OUT_CLINVAR_DIRECTION].isin(
-        [ClinVarDirection.LOWERING, ClinVarDirection.RAISING]
-    )
-    return set(rows.loc[clear, MetaColumns.VARIANT_SITE])
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _analyse_and_write(
     rows: pd.DataFrame,
     keys: list[str],
     ancestry: str,
     per_study: bool,
     suffix: str,
-    ukb: dict[bool, pd.DataFrame] | None = None,
+    ukb: pd.DataFrame | None = None,
 ) -> None:
     """Dedupe the oriented rows, pool them, add the burden and write both.
 
-    When some variants are ClinVar-only with a direction other than
-    lowering/raising (`_directed_sites`), the burden is also written
-    without them (``<suffix>_directed_only``).
+    Without per-variant rows only the UKB carrier burden is written.
 
     Parameters
     ----------
@@ -1837,16 +1768,28 @@ def _analyse_and_write(
         Also write each study's own per-variant estimate.
     suffix : `str`
         Appended to the file names (``""`` or ``_<label>...``).
-    ukb : `dict[bool, pd.DataFrame]` or `None`, optional, default: `None`
-        UKB carrier-burden rows keyed by `directed` (`ukb_burden_rows`);
-        `False` for the burden, `True` for the directed-only burden.
+    ukb : `pd.DataFrame` or `None`, optional, default: `None`
+        UKB carrier-burden rows (`ukb_burden_rows`).
 
     Returns
     -------
     `None`
     """
-    # before dedupe, which may keep a variant's ClinVar row over its PTV row
-    directed_sites = _directed_sites(rows)
+    if rows.empty:
+        if ukb is None:
+            log_warn(f"no rows for {suffix or 'the run'}; no output written")
+            return
+        # UKB carrier burden only: no per-variant table
+        log_stage("gene_burden")
+        burden = gene_burden(rows, keys, ukb)
+        log_stage("write")
+        Paths.RESULTS_OUTPUT.mkdir(parents=True, exist_ok=True)
+        path = Paths.RESULTS_OUTPUT / FileNames.BURDEN_TEMPLATE.format(
+            ancestry=ancestry, suffix=suffix
+        )
+        functions.write_table_atomic(burden, path)
+        log_info(f"wrote {len(burden)} rows to {path}")
+        return
 
     log_stage("dedupe")
     n_before = len(rows)
@@ -1875,28 +1818,11 @@ def _analyse_and_write(
         )
 
     log_stage("gene_burden")
-    burden = gene_burden(rows, keys, None if ukb is None else ukb[False])
+    burden = gene_burden(rows, keys, ukb)
     outputs = [
         (FileNames.META_ANALYSIS_TEMPLATE, pooled, suffix),
         (FileNames.BURDEN_TEMPLATE, burden, suffix),
     ]
-    is_directed = rows[MetaColumns.VARIANT_SITE].isin(directed_sites)
-    if not is_directed.all():
-        log_info(
-            f"{rows.loc[~is_directed, MetaColumns.VARIANT_SITE].nunique()} "
-            "variants are ClinVar only without a lowering/raising "
-            "direction: burden repeated without them"
-        )
-        outputs.append(
-            (
-                FileNames.BURDEN_TEMPLATE,
-                gene_burden(
-                    rows.loc[is_directed], keys,
-                    None if ukb is None else ukb[True],
-                ),
-                f"{suffix}_{Constants.DIRECTED_BURDEN_LABEL}",
-            )
-        )
 
     log_stage("write")
     Paths.RESULTS_OUTPUT.mkdir(parents=True, exist_ok=True)
@@ -1963,15 +1889,6 @@ def _init_cmd_args() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
-        "--region-rare",
-        action="store_true",
-        help=(
-            f"read {FileNames.MATCHED_REGION_VARIANTS.name} (every rare "
-            "variant in the gene region, match_variants.py --region-rare); "
-            "effects of the alt allele, not oriented by gene function"
-        ),
-    )
-    parser.add_argument(
         "--prefer-groups",
         nargs="+",
         metavar="GROUP",
@@ -1988,14 +1905,6 @@ def _init_cmd_args() -> argparse.ArgumentParser:
         help=(
             "study groups used for a variant only when no "
             "--prefer-groups group has it"
-        ),
-    )
-    parser.add_argument(
-        "--no-orient",
-        action="store_true",
-        help=(
-            "do not flip GoF / ClinVar-raising variants: every effect is "
-            "that of the a2 (alt) allele; combine with --label"
         ),
     )
     parser.add_argument(
@@ -2017,8 +1926,6 @@ def _parse_cmd_args(parser: argparse.ArgumentParser) -> argparse.Namespace:
     args = parser.parse_args()
     if bool(args.prefer_groups) != bool(args.fallback_groups):
         parser.error("--prefer-groups and --fallback-groups go together")
-    if args.ukb_burden and args.region_rare:
-        parser.error("--ukb-burden does not apply to --region-rare")
     return args
 
 
@@ -2039,10 +1946,8 @@ def main() -> None:
             per_study=args.stratified,
             label=args.label,
             require_log_or=args.require_log_or,
-            region_rare=args.region_rare,
             prefer_groups=args.prefer_groups,
             fallback_groups=args.fallback_groups,
-            orient_by_function=not args.no_orient,
             ukb_burden=args.ukb_burden,
         )
 

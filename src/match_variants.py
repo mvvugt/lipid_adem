@@ -4,12 +4,6 @@ Matches the variant-level GWAS lookups in the merged associations table to the
 PTV + ClinVar P/LP variant list (`data/processed/lipid_variants.tsv`,
 combine_variants.py), and writes the matched rows. Each ClinVar variant is
 labelled with the lipid direction of its conditions.
-
-`--region-rare` ignores the lists: every GWAS row in its gene region with
-MAF < `--max-maf` (marvel rows, which have no MAF, are all kept) is matched
-to a list of those sites with a1 = GRCh38 ref and a2 = alt, and written to
-`matched_region_variants.tsv.gz`. These effects are not oriented by gene
-function.
 """
 
 
@@ -412,175 +406,6 @@ def load_gwas_rows(burden_out: Path | None = None) -> pd.DataFrame:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def select_region_rare(
-    gwas: pd.DataFrame,
-    regions: dict[str, tuple[str, int, int]],
-    max_maf: float,
-) -> pd.DataFrame:
-    """Keep the rare GWAS rows inside their gene's region.
-
-    A row is kept when it lies in the region of its `gene` and its MAF is
-    below `max_maf`. Rows without a MAF are kept only for marvel results
-    (`source_db` starting with `Constants.MARVEL_SOURCE_DB_PREFIX`, which
-    carry no MAF); other rows without a MAF are dropped. Counts are logged.
-
-    Parameters
-    ----------
-    gwas : `pd.DataFrame`
-        From `load_gwas_rows`.
-    regions : `dict[str, tuple[str, int, int]]`
-        From `_read_gene_regions`.
-    max_maf : `float`
-        Exclusive MAF threshold.
-
-    Returns
-    -------
-    rare : `pd.DataFrame`
-        The kept rows, index reset.
-    """
-    hc = HarmonisedColumns
-    inside = pd.Series(
-        [
-            not pd.isna(chrom)
-            and not pd.isna(pos)
-            and gene in regions
-            and chrom == regions[gene][0]
-            and regions[gene][1] <= pos <= regions[gene][2]
-            for gene, chrom, pos in zip(
-                gwas[hc.GENE], gwas[_CHROM_KEY], gwas[_POS_KEY]
-            )
-        ],
-        index=gwas.index,
-        dtype=bool,
-    )
-    maf = pd.to_numeric(gwas[hc.MAF], errors="coerce")
-    is_marvel = (
-        gwas[hc.SOURCE_DB]
-        .astype("string")
-        .str.startswith(Constants.MARVEL_SOURCE_DB_PREFIX)
-        .fillna(False)
-        .astype(bool)
-    )
-    no_maf = maf.isna()
-    rare = maf < max_maf
-    keep = inside & (rare | (no_maf & is_marvel))
-    log_info(
-        f"region-rare: {len(gwas)} rows, {int((~inside).sum())} outside "
-        f"their gene region, {int((inside & ~no_maf & ~rare).sum())} with "
-        f"MAF >= {max_maf}, {int((inside & no_maf & ~is_marvel).sum())} "
-        f"without MAF (not marvel) dropped, "
-        f"{int((inside & no_maf & is_marvel).sum())} marvel rows without MAF "
-        f"kept; {int(keep.sum())} rows kept"
-    )
-    return gwas[keep].reset_index(drop=True)
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def build_region_list(
-    rare: pd.DataFrame, regions: dict[str, tuple[str, int, int]]
-) -> pd.DataFrame:
-    """Build a pseudo variant list from the rare GWAS rows themselves.
-
-    One entry per gene and site of the rows with both alleles, with `a1`
-    the GRCh38 reference and `a2` the alternate allele (from
-    `functions.normalise_variant`), so every study's effect is turned to
-    the alt allele by `match_rows`. Sites whose reference allele cannot be
-    told (no sequence, neither allele fits) get the alleles in
-    alphabetical order (counted). Rows with only an effect allele add no
-    site but can still match one.
-
-    Parameters
-    ----------
-    rare : `pd.DataFrame`
-        From `select_region_rare`.
-    regions : `dict[str, tuple[str, int, int]]`
-        From `_read_gene_regions`; their reference sequences are fetched
-        (or read from the Ensembl cache).
-
-    Returns
-    -------
-    variants : `pd.DataFrame`
-        Variant-list rows as `load_variant_lists` returns them: `gene`,
-        `source` (`Constants.REGION_VARIANT_SOURCE`), `a1`, `a2`,
-        `_CHROM_KEY`, `_POS_KEY`, the `*_orig` columns and `norm_status`;
-        `tri_class` and `clinvar_direction` empty.
-
-    Raises
-    ------
-    ReaderError
-        If a reference sequence cannot be fetched from Ensembl.
-    """
-    vc = VariantListColumns
-    hc = HarmonisedColumns
-    sites = (
-        rare.loc[
-            rare[_OTHER_KEY] != "",
-            [hc.GENE, _CHROM_KEY, _POS_KEY, _EFFECT_KEY, _OTHER_KEY],
-        ]
-        .drop_duplicates()
-        .reset_index(drop=True)
-    )
-    sequences = functions.region_sequences(
-        {
-            gene: functions.GeneRegion(chrom=chrom, start=start, end=end)
-            for gene, (chrom, start, end) in regions.items()
-        }
-    )
-    results = [
-        functions.normalise_variant(chrom, pos, effect, other, sequences)
-        for chrom, pos, effect, other in zip(
-            sites[_CHROM_KEY],
-            sites[_POS_KEY],
-            sites[_EFFECT_KEY],
-            sites[_OTHER_KEY],
-        )
-    ]
-    a1: list[str] = []
-    a2: list[str] = []
-    n_unknown_ref = 0
-    for result in results:
-        if result.effect_is_ref is None:
-            n_unknown_ref += 1
-            first, second = sorted([result.other, result.effect])
-        elif result.effect_is_ref:
-            first, second = result.effect, result.other
-        else:
-            first, second = result.other, result.effect
-        a1.append(first)
-        a2.append(second)
-    variants = pd.DataFrame(
-        {
-            vc.GENE: sites[hc.GENE],
-            vc.SOURCE: Constants.REGION_VARIANT_SOURCE,
-            _CHROM_KEY: sites[_CHROM_KEY],
-            _POS_KEY: pd.array(
-                [result.pos for result in results], dtype="Int64"
-            ),
-            vc.A1: a1,
-            vc.A2: a2,
-            vc.TRI_CLASS: pd.NA,
-            vc.NORM_STATUS: [result.status for result in results],
-            vc.CLINVAR_DIRECTION: pd.NA,
-        }
-    )
-    variants[vc.POS_ORIG] = sites[_POS_KEY]
-    variants[vc.A1_ORIG] = variants[vc.A1]
-    variants[vc.A2_ORIG] = variants[vc.A2]
-    n_sites = len(variants)
-    variants = variants.drop_duplicates(
-        [vc.GENE, _CHROM_KEY, _POS_KEY, vc.A1, vc.A2]
-    ).reset_index(drop=True)
-    log_info(
-        f"region-rare list: {len(variants)} sites ({n_sites - len(variants)} "
-        f"duplicates after ref/alt ordering removed), {n_unknown_ref} "
-        "without a known reference allele (alleles in alphabetical order)"
-    )
-    for gene, n in variants[vc.GENE].value_counts().sort_index().items():
-        log_info(f"region-rare list: {gene} {n} sites")
-    return variants
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def match_rows(gwas: pd.DataFrame, variants: pd.DataFrame) -> pd.DataFrame:
     """Pair GWAS rows with variant-list rows at the same site and alleles.
 
@@ -731,19 +556,8 @@ def _check_a1_is_ref(matched: pd.DataFrame) -> None:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def match_variants(
-    region_rare: bool = False, max_maf: float = Constants.REGION_MAX_MAF
-) -> None:
+def match_variants() -> None:
     """Match merged-associations GWAS rows to the variant lists and write them.
-
-    Parameters
-    ----------
-    region_rare : `bool`, optional, default: `False`
-        Instead of the variant lists, match every rare GWAS row in its gene
-        region to a list built from those rows (`select_region_rare`,
-        `build_region_list`) and write `FileNames.MATCHED_REGION_VARIANTS`.
-    max_maf : `float`, optional, default: `Constants.REGION_MAX_MAF`
-        Exclusive MAF threshold of `region_rare`.
 
     Returns
     -------
@@ -754,25 +568,12 @@ def match_variants(
     FileNotFoundError
         If there are no variant lists or no merged associations table.
     """
-    if region_rare:
-        log_stage("load_gwas")
-        regions = _read_gene_regions()
-        if not regions:
-            raise FileNotFoundError(
-                f"{FileNames.GENE_REGIONS_FILE} is needed for --region-rare"
-            )
-        gwas = select_region_rare(load_gwas_rows(), regions, max_maf)
+    log_stage("load_variant_lists")
+    variants = load_variant_lists()
 
-        log_stage("build_region_list")
-        variants = build_region_list(gwas, regions)
-        out_path = FileNames.MATCHED_REGION_VARIANTS
-    else:
-        log_stage("load_variant_lists")
-        variants = load_variant_lists()
-
-        log_stage("load_gwas")
-        gwas = load_gwas_rows(burden_out=FileNames.MATCHED_BURDEN)
-        out_path = FileNames.MATCHED_VARIANTS
+    log_stage("load_gwas")
+    gwas = load_gwas_rows(burden_out=FileNames.MATCHED_BURDEN)
+    out_path = FileNames.MATCHED_VARIANTS
 
     log_stage("match")
     matched = match_rows(gwas, variants)
@@ -794,31 +595,13 @@ def _init_cmd_args() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Match GWAS lookups to the PTV + ClinVar variant list."
     )
-    parser.add_argument(
-        "--region-rare",
-        action="store_true",
-        help="ignore the variant lists: match every GWAS row in its gene "
-        "region with MAF < --max-maf (marvel rows without MAF kept), "
-        f"oriented to the GRCh38 alt allele; writes "
-        f"{FileNames.MATCHED_REGION_VARIANTS.name}",
-    )
-    parser.add_argument(
-        "--max-maf",
-        type=float,
-        default=Constants.REGION_MAX_MAF,
-        help="exclusive MAF threshold of --region-rare "
-        "(default: %(default)s)",
-    )
     return parser
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _parse_cmd_args(parser: argparse.ArgumentParser) -> argparse.Namespace:
     """Parse and validate command-line arguments."""
-    args = parser.parse_args()
-    if not 0 < args.max_maf <= 0.5:
-        parser.error("--max-maf must be in (0, 0.5]")
-    return args
+    return parser.parse_args()
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -827,10 +610,11 @@ def _parse_cmd_args(parser: argparse.ArgumentParser) -> argparse.Namespace:
 def main() -> None:
     """Entry point for the CLI."""
     parser = _init_cmd_args()
-    args = _parse_cmd_args(parser)
+    # no options; parsed for --help
+    _parse_cmd_args(parser)
 
     with runlog_setup(root=Paths.HERE, order=RunlogOrder.MATCH_VARIANTS):
-        match_variants(region_rare=args.region_rare, max_maf=args.max_maf)
+        match_variants()
 
 
 if __name__ == "__main__":
