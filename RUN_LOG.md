@@ -491,19 +491,6 @@ Output:
 - last run: 2026-10-26 19:16:12
 - commit: `7a3cab3` (dirty)
 
-Δ vs previous run (was `7a3cab3` (dirty)):
-```diff
-@@ -1,4 +1,4 @@
--[info]  2026-10-26 19:11:39 chr16:56960000-56985000: 426 of 8662 variant columns kept (0 merged names, drop_merged=True)
--[info]  2026-10-26 19:15:31 wrote 469835 rows x 427 columns to data/temp/validation/step2b/CETP_carriers.tsv.gz
--[info]  2026-10-26 19:15:31 negative values written as NA: 44844 cells
--[info]  2026-10-26 19:15:31 value counts over variant cells: {'0': 195904414, '2': 2430237, '1': 1770215, 'NA': 44844}
-+[info]  2026-10-26 19:11:39 chr1:55038000-55066000: 539 of 8662 variant columns kept (0 merged names, drop_merged=True)
-+[info]  2026-10-26 19:16:12 wrote 469835 rows x 540 columns to data/temp/validation/step2b/PCSK9_carriers.tsv.gz
-+[info]  2026-10-26 19:16:12 negative values written as NA: 2665 cells
-+[info]  2026-10-26 19:16:12 value counts over variant cells: {'0': 252289475, '2': 754253, '1': 194672, 'NA': 2665}
-```
-
 Output:
 ```text
 [info]  2026-10-26 19:11:39 chr1:55038000-55066000: 539 of 8662 variant columns kept (0 merged names, drop_merged=True)
@@ -2524,69 +2511,6 @@ Output:
 - last run: 2026-10-26 18:13:34
 - commit: `ecae536`
 
-Δ vs previous run (was `ecae536`):
-stage `load_matched`:
-```diff
-@@ -1,5 +1,5 @@
- [info]  2026-10-26 18:11:12 /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/matched_region_variants.tsv.gz: 347357 rows, 10047 variants
- [info]  2026-10-26 18:11:12 20375 rows of excluded gene(s) APOE dropped
- [info]  2026-10-26 18:11:14 326982 of 326982 rows kept (MULTI pools every ancestry) (all: AFR=87047, AMR=42782, CSA=36051, EAS=10748, EUR=81062, MULTI=69061, NR=231)
--[info]  2026-10-26 18:07:33 study_accession in marvel_ukb_MULTI_all_cause_dementia, marvel_ukb_MULTI_all_cause_dementia_e44, marvel_ukb_MULTI_all_cause_dementia_e43, marvel_ukb_MULTI_all_cause_dementia_e33, marvel_ukb_MULTI_all_cause_dementia_e22_e32, marvel_ukb_MULTI_alzheimers_dementia, marvel_ukb_MULTI_alzheimers_dementia_e44, marvel_ukb_MULTI_alzheimers_dementia_e43, marvel_ukb_MULTI_alzheimers_dementia_e33, marvel_ukb_MULTI_alzheimers_dementia_e22_e32, marvel_ukb_MULTI_vascular_dementia, marvel_ukb_MULTI_vascular_dementia_e44, marvel_ukb_MULTI_vascular_dementia_e43, marvel_ukb_MULTI_vascular_dementia_e33, marvel_ukb_MULTI_vascular_dementia_e22_e32, marvel_ukb_MULTI_frontotemporal_dementia, marvel_ukb_MULTI_frontotemporal_dementia_e44, marvel_ukb_MULTI_frontotemporal_dementia_e43, marvel_ukb_MULTI_frontotemporal_dementia_e33, marvel_ukb_MULTI_frontotemporal_dementia_e22_e32, F5_DEMENTIA_INCLAVO, G6_ALZHEIMER, F5_VASCDEM, FTD: 21335 of 326982 rows kept
--[info]  2026-10-26 18:07:33 MULTI: 21335 rows pooled across ancestries (EUR=5704, MULTI=15631), relabelled MULTI; a study reported both per ancestry and combined is counted twice unless --studies excludes one
-+[info]  2026-10-26 18:11:15 study_accession in marvel_ukb_MULTI_all_cause_dementia, marvel_ukb_MULTI_all_cause_dementia_e44, marvel_ukb_MULTI_all_cause_dementia_e43, marvel_ukb_MULTI_all_cause_dementia_e33, marvel_ukb_MULTI_all_cause_dementia_e22_e32, marvel_ukb_MULTI_alzheimers_dementia, marvel_ukb_MULTI_alzheimers_dementia_e44, marvel_ukb_MULTI_alzheimers_dementia_e43, marvel_ukb_MULTI_alzheimers_dementia_e33, marvel_ukb_MULTI_alzheimers_dementia_e22_e32, marvel_ukb_MULTI_vascular_dementia, marvel_ukb_MULTI_vascular_dementia_e44, marvel_ukb_MULTI_vascular_dementia_e43, marvel_ukb_MULTI_vascular_dementia_e33, marvel_ukb_MULTI_vascular_dementia_e22_e32, marvel_ukb_MULTI_frontotemporal_dementia, marvel_ukb_MULTI_frontotemporal_dementia_e44, marvel_ukb_MULTI_frontotemporal_dementia_e43, marvel_ukb_MULTI_frontotemporal_dementia_e33, marvel_ukb_MULTI_frontotemporal_dementia_e22_e32: 15631 of 326982 rows kept
-+[info]  2026-10-26 18:11:15 MULTI: 15631 rows pooled across ancestries (MULTI=15631), relabelled MULTI; a study reported both per ancestry and combined is counted twice unless --studies excludes one
-```
-stage `prepare_effects`:
-```diff
-@@ -1 +1 @@
--[info]  2026-10-26 18:07:34 21335 usable rows, 0 with SE derived from p
-+[info]  2026-10-26 18:11:15 15631 usable rows, 0 with SE derived from p
-```
-stage `orient`:
-```diff
-@@ -1 +1 @@
--[info]  2026-10-26 18:07:34 3217 variants oriented as a2
-+[info]  2026-10-26 18:11:15 1821 variants oriented as a2
-```
-stage `dedupe`:
-```diff
-@@ -1,4 +1,4 @@
--[info]  2026-10-26 18:07:34 8 duplicate rows removed
-+[info]  2026-10-26 18:11:15 0 duplicate rows removed
- [info]  2026-10-26 18:11:15 0 estimates removed as copies of another study
- [info]  2026-10-26 18:12:22 0 duplicate rows removed
- [info]  2026-10-26 18:12:22 0 estimates removed as copies of another study
-```
-stage `meta_analyse`:
-```diff
-@@ -1,4 +1,4 @@
--[info]  2026-10-26 18:08:25 12477 groups, 96 pooling more than one estimate
--[info]  2026-10-26 18:09:16 12573 groups, 0 pooling more than one estimate
-+[info]  2026-10-26 18:11:44 6877 groups, 0 pooling more than one estimate
-+[info]  2026-10-26 18:12:12 6877 groups, 0 pooling more than one estimate
- [info]  2026-10-26 18:12:55 8754 groups, 0 pooling more than one estimate
- [info]  2026-10-26 18:13:27 8754 groups, 0 pooling more than one estimate
-```
-stage `gene_burden`:
-```diff
-@@ -1,2 +1,2 @@
--[info]  2026-10-26 18:09:16 gene burden: 32 pooled and 56 per-study rows
-+[info]  2026-10-26 18:12:12 gene burden: 24 pooled and 24 per-study rows
- [info]  2026-10-26 18:13:28 gene burden: 96 pooled and 96 per-study rows
-```
-stage `write`:
-```diff
-@@ -1,4 +1,4 @@
--[info]  2026-10-26 18:09:17 wrote 25050 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_armb_dementia_region_rare.tsv.gz
--[info]  2026-10-26 18:09:23 wrote 88 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_armb_dementia_region_rare.tsv.gz
--[info]  2026-10-26 18:10:34 wrote 17508 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_armb_dementia_region_rare_apoe_strata.tsv.gz
--[info]  2026-10-26 18:10:39 wrote 192 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_armb_dementia_region_rare_apoe_strata.tsv.gz
-+[info]  2026-10-26 18:12:16 wrote 13754 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_ukb_dementia_region_rare.tsv.gz
-+[info]  2026-10-26 18:12:22 wrote 48 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_ukb_dementia_region_rare.tsv.gz
-+[info]  2026-10-26 18:13:28 wrote 17508 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/meta_MULTI_ukb_dementia_region_rare_apoe_strata.tsv.gz
-+[info]  2026-10-26 18:13:28 wrote 192 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/results/output/burden_MULTI_ukb_dementia_region_rare_apoe_strata.tsv.gz
-```
-
 Output:
 ```text
 [info]  2026-10-26 18:10:58 ancestry MULTI, pooled by variant_site, outcome, ancestry_group
@@ -2775,5 +2699,43 @@ Output:
 [info]  2026-10-26 15:04:34 Wrote 2606 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/NPC1L1_variants.tsv
 [info]  2026-10-26 15:04:34 Wrote 831 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/PCSK9_variants.tsv
 [info]  2026-10-26 15:04:34 Wrote 1567 rows to /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/PPARA_variants.tsv
+
+```
+
+## [90] archive_results (`src/archive_results.py --apply --tag 20261026_snellius`)
+- first run: 2026-10-26 22:35:39
+- last run: 2026-10-26 22:36:21
+- commit: `635c4ad` (dirty)
+
+Δ vs previous run (was `635c4ad` (dirty)):
+stage `collect`:
+```diff
+@@ -5,4 +5,3 @@
+ [info]  2026-10-26 22:36:19 lists_early: 24 files (output retired 24)
+ [info]  2026-10-26 22:36:19 maf_filter_all: 10 files (output current 4, output redundant 6)
+ [info]  2026-10-26 22:36:19 region_rare: 12 files (output current 12)
+-[info]  2026-10-26 22:35:38 dry run: nothing written (use --apply)
+```
+
+Output:
+```text
+[stage] 2026-10-26 22:36:18 collect
+[info]  2026-10-26 22:36:19 annotated_eur: 10 files (output current 4, output redundant 4, output stale 2)
+[info]  2026-10-26 22:36:19 annotated_eur_unoriented: 10 files (output current 4, output redundant 4, output stale 2)
+[info]  2026-10-26 22:36:19 broad_per_variant: 18 files (output current 5, output stale 13)
+[info]  2026-10-26 22:36:19 early_snapshots: 3 files (output retired 3)
+[info]  2026-10-26 22:36:19 lists_early: 24 files (output retired 24)
+[info]  2026-10-26 22:36:19 maf_filter_all: 10 files (output current 4, output redundant 6)
+[info]  2026-10-26 22:36:19 region_rare: 12 files (output current 12)
+[stage] 2026-10-26 22:36:19 archive
+[info]  2026-10-26 22:36:19 wrote 87 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/archive/20261026_snellius/inventory.tsv.gz
+[info]  2026-10-26 22:36:19 annotated_eur: 10 files -> /gpfs/home6/mvanvugt/projects/lipid_adem/results/archive/20261026_snellius/annotated_eur (output.tar.gz)
+[info]  2026-10-26 22:36:19 annotated_eur_unoriented: 10 files -> /gpfs/home6/mvanvugt/projects/lipid_adem/results/archive/20261026_snellius/annotated_eur_unoriented (output.tar.gz)
+[info]  2026-10-26 22:36:19 broad_per_variant: 18 files -> /gpfs/home6/mvanvugt/projects/lipid_adem/results/archive/20261026_snellius/broad_per_variant (output.tar.gz)
+[info]  2026-10-26 22:36:20 early_snapshots: 3 files -> /gpfs/home6/mvanvugt/projects/lipid_adem/results/archive/20261026_snellius/early_snapshots (plain files)
+[info]  2026-10-26 22:36:21 lists_early: 24 files -> /gpfs/home6/mvanvugt/projects/lipid_adem/results/archive/20261026_snellius/lists_early (output.tar.gz)
+[info]  2026-10-26 22:36:21 maf_filter_all: 10 files -> /gpfs/home6/mvanvugt/projects/lipid_adem/results/archive/20261026_snellius/maf_filter_all (output.tar.gz)
+[info]  2026-10-26 22:36:21 region_rare: 12 files -> /gpfs/home6/mvanvugt/projects/lipid_adem/results/archive/20261026_snellius/region_rare (output.tar.gz)
+[info]  2026-10-26 22:36:21 wrote /gpfs/home6/mvanvugt/projects/lipid_adem/results/archive/20261026_snellius/README.md
 
 ```
