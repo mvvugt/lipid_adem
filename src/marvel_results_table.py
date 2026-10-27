@@ -17,7 +17,11 @@ outcome variable, exposure):
   is written for any gene.
 
 `--refresh` builds every store anew from the loose files; the old store
-is kept, renamed with a time stamp. `--archive` packs each outdir's loose
+is kept, renamed with a time stamp. `--replace` names job-array files
+whose loose files win: every store or other loose row from a result file
+of the same name is replaced by theirs (old store kept with a time stamp,
+as for `--refresh`), e.g. a rerun of a few variants
+(`data/raw/marvel_selected_tasks.tsv`). `--archive` packs each outdir's loose
 files into a dated tar once they are in the store, checks the tar and
 only then deletes them.
 
@@ -426,7 +430,105 @@ def _describe_added(added: pd.DataFrame) -> str:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def plan_gene(gene: str, outdirs: list[Path], refresh: bool) -> GeneUpdate:
+def _stack(frames: list[pd.DataFrame]) -> pd.DataFrame:
+    """Stack the non-empty frames (store, added and replacing rows).
+
+    Parameters
+    ----------
+    frames : `list[pd.DataFrame]`
+        Frames with the store columns; empty ones are skipped.
+
+    Returns
+    -------
+    stacked : `pd.DataFrame`
+        Their rows in order, a fresh index.
+    """
+    kept = [frame for frame in frames if not frame.empty]
+    if not kept:
+        return pd.DataFrame()
+    return pd.concat(kept, ignore_index=True)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _read_replacing(
+    gene: str, outdirs: list[Path], update: GeneUpdate
+) -> tuple[pd.DataFrame, set[str]]:
+    """Read the loose files that replace store rows (`--replace`).
+
+    Parameters
+    ----------
+    gene : `str`
+        Gene symbol (log lines).
+    outdirs : `list[Path]`
+        The gene's outdirs of the `--replace` task files.
+    update : `GeneUpdate`
+        Gets the files read (`loose_files`) and the conflicts among them.
+
+    Returns
+    -------
+    replacing : `pd.DataFrame`
+        Deduped rows (see `dedupe_loose`); empty when none.
+    files : `set[str]`
+        Their `MarvelColumns.RESULT_FILE` names: every store or other
+        loose row from a file of that name is replaced.
+    """
+    if not outdirs:
+        return pd.DataFrame(), set()
+    replacing, files = read_loose(outdirs)
+    update.loose_files.update(files)
+    if replacing.empty:
+        log_info(f"{gene}: no loose files to replace with")
+        return replacing, set()
+    replacing, update.conflicts = dedupe_loose(replacing)
+    names = set(replacing[MarvelColumns.RESULT_FILE])
+    log_info(
+        f"{gene}: {len(replacing)} rows of {len(names)} result files "
+        "replace the rows of the same files"
+    )
+    return replacing, names
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def _drop_files(
+    rows: pd.DataFrame, names: set[str], gene: str, what: str
+) -> pd.DataFrame:
+    """Drop the rows read from the replaced result files.
+
+    Parameters
+    ----------
+    rows : `pd.DataFrame`
+        Store or loose rows with `MarvelColumns.RESULT_FILE`.
+    names : `set[str]`
+        Replaced result file names.
+    gene : `str`
+        Gene symbol (log lines).
+    what : `str`
+        ``store`` or ``loose`` (log lines).
+
+    Returns
+    -------
+    kept : `pd.DataFrame`
+        `rows` without those files' rows.
+    """
+    if rows.empty or not names:
+        return rows
+    is_replaced = rows[MarvelColumns.RESULT_FILE].isin(names)
+    if is_replaced.any():
+        log_info(
+            f"{gene}: {int(is_replaced.sum())} {what} rows of "
+            f"{rows.loc[is_replaced, MarvelColumns.RESULT_FILE].nunique()} "
+            "replaced result files left out"
+        )
+    return rows.loc[~is_replaced].reset_index(drop=True)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def plan_gene(
+    gene: str,
+    outdirs: list[Path],
+    refresh: bool,
+    replace_outdirs: list[Path] | None = None,
+) -> GeneUpdate:
     """Work out the store update of one gene, without writing anything.
 
     Parameters
@@ -437,6 +539,10 @@ def plan_gene(gene: str, outdirs: list[Path], refresh: bool) -> GeneUpdate:
         The gene's outdirs.
     refresh : `bool`
         Ignore the current store and build it from the loose files only.
+    replace_outdirs : `list[Path]` or `None`, optional, default: `None`
+        Outdirs whose loose files replace, per result file name, the rows
+        of the store and of `outdirs` (`--replace`); the old store is
+        then kept aside.
 
     Returns
     -------
@@ -448,20 +554,27 @@ def plan_gene(gene: str, outdirs: list[Path], refresh: bool) -> GeneUpdate:
     )
     update = GeneUpdate(gene=gene, store_path=store_path)
     loose, update.loose_files = read_loose(outdirs)
-    if loose.empty:
-        log_info(f"{gene}: no loose result files, store unchanged")
-        return update
-    loose, update.conflicts = dedupe_loose(loose)
+    replacing, replaced = _read_replacing(
+        gene, replace_outdirs or [], update
+    )
     if not update.conflicts.empty:
         return update
+    loose = _drop_files(loose, replaced, gene, "loose")
+    if loose.empty and replacing.empty:
+        log_info(f"{gene}: no loose result files, store unchanged")
+        return update
+    if not loose.empty:
+        loose, update.conflicts = dedupe_loose(loose)
+        if not update.conflicts.empty:
+            return update
 
     has_store = store_path.exists() and not refresh
     if not has_store:
-        update.store = loose
-        update.n_added = len(loose)
+        update.store = _stack([loose, replacing])
+        update.n_added = len(update.store)
         update.replaces = store_path.exists()
         action = "refreshed" if refresh else "new store"
-        log_info(f"{gene}: {action}, {len(loose)} rows")
+        log_info(f"{gene}: {action}, {update.n_added} rows")
         return update
 
     store = read_results(store_path)
@@ -471,19 +584,49 @@ def plan_gene(gene: str, outdirs: list[Path], refresh: bool) -> GeneUpdate:
             f"{store_path}: {n_repeated} repeated keys; rebuild it with "
             "--refresh"
         )
-    added, update.n_same, update.conflicts = compare_with_store(store, loose)
+    # replaced rows: changed unless the store already holds exactly the
+    # replacing rows for those files
+    old = store.loc[store[MarvelColumns.RESULT_FILE].isin(replaced)]
+    store = _drop_files(store, replaced, gene, "store")
+    replace_changes = False
+    if not replacing.empty:
+        new, n_same, differ = compare_with_store(old, replacing)
+        replace_changes = (
+            not new.empty or not differ.empty or n_same != len(old)
+        )
+        log_info(
+            f"{gene}: replaced files {len(old)} store rows -> "
+            f"{len(replacing)} rows, "
+            + ("changed" if replace_changes else "unchanged")
+        )
+    if loose.empty:
+        added = loose
+    else:
+        added, update.n_same, update.conflicts = compare_with_store(
+            store, loose
+        )
     update.n_added = len(added)
     log_info(
         f"{gene}: {len(loose)} loose rows, {update.n_added} new, "
         f"{update.n_same} already in the store"
     )
-    if not update.conflicts.empty or added.empty:
+    if not update.conflicts.empty:
         return update
-    log_warn(
-        f"{gene}: {update.n_added} rows added to {store_path.name} "
-        f"({_describe_added(added)})"
-    )
-    update.store = pd.concat([store, added], ignore_index=True)
+    if added.empty and not replace_changes:
+        return update
+    if not added.empty:
+        log_warn(
+            f"{gene}: {update.n_added} rows added to {store_path.name} "
+            f"({_describe_added(added)})"
+        )
+    if replace_changes:
+        log_warn(
+            f"{gene}: {len(old)} rows of {len(replaced)} result files in "
+            f"{store_path.name} replaced by {len(replacing)} rows "
+            f"({_describe_added(replacing)})"
+        )
+        update.replaces = True
+    update.store = _stack([store, added, replacing])
     return update
 
 
@@ -848,6 +991,7 @@ def marvel_results_table(
     model: str = _DEFAULT_MODEL,
     refresh: bool = False,
     archive: bool = False,
+    replace: list[Path] | None = None,
 ) -> None:
     """Update the per-gene stores, then marvel_results.tsv and strata.
 
@@ -867,6 +1011,11 @@ def marvel_results_table(
         with a time stamp).
     archive : `bool`, optional, default: `False`
         Afterwards tar the loose files, check the tar and delete them.
+    replace : `list[Path]` or `None`, optional, default: `None`
+        Job-array files whose outdirs' loose files replace, per result
+        file name, the store rows and the loose rows of `tasks` (e.g. a
+        rerun of a few variants); the old store is kept with a time
+        stamp.
 
     Returns
     -------
@@ -882,8 +1031,14 @@ def marvel_results_table(
 
     log_stage("compare")
     outdirs = read_tasks(tasks)
+    replace_outdirs = read_tasks(replace) if replace else {}
+    genes = list(dict.fromkeys([*outdirs, *replace_outdirs]))
     updates = [
-        plan_gene(gene, dirs, refresh) for gene, dirs in outdirs.items()
+        plan_gene(
+            gene, outdirs.get(gene, []), refresh,
+            replace_outdirs.get(gene, []),
+        )
+        for gene in genes
     ]
     conflicted = [u for u in updates if not u.conflicts.empty]
     if conflicted:
@@ -897,7 +1052,8 @@ def marvel_results_table(
     if refresh:
         archive_glob = FileNames.MARVEL_ARCHIVE_TEMPLATE.format(stamp="*")
         for update in updates:
-            for outdir in outdirs[update.gene]:
+            for outdir in [*outdirs.get(update.gene, []),
+                           *replace_outdirs.get(update.gene, [])]:
                 archives = sorted(outdir.glob(archive_glob))
                 if archives:
                     log_warn(
@@ -920,7 +1076,7 @@ def marvel_results_table(
     stores = {
         u.gene: u.store_path for u in updates if u.store_path.exists()
     }
-    missing = sorted(set(outdirs) - set(stores))
+    missing = sorted(set(genes) - set(stores))
     if missing:
         log_warn(f"no store yet for: {', '.join(missing)}")
     table = build_marvel_table(stores, model, ancestry)
@@ -974,6 +1130,18 @@ def _init_cmd_args() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--replace",
+        type=Path,
+        nargs="+",
+        metavar="TASKS",
+        help=(
+            "job-array file(s) whose loose files replace, per result file "
+            "name, the store rows and the --tasks loose rows (old store "
+            "kept with a time stamp), e.g. "
+            f"{FileNames.MARVEL_SELECTED_TASKS.name}"
+        ),
+    )
+    parser.add_argument(
         "--archive",
         action="store_true",
         help=(
@@ -1007,6 +1175,7 @@ def main() -> None:
             model=args.model,
             refresh=args.refresh,
             archive=args.archive,
+            replace=args.replace,
         )
 
 
