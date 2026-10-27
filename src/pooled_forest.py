@@ -145,7 +145,8 @@ def pooled_rows(data: pd.DataFrame, rank: dict[str, int],
     """
     pooled = data[data[MetaColumns.LEVEL] == MetaLevel.POOLED].copy()
     pooled[FCols.ORDER] = pooled[OUTCOME].map(rank).fillna(len(rank))
-    pooled = pooled.sort_values([GENE, FCols.ORDER, OUTCOME])
+    pooled = pooled.sort_values([GENE, FCols.ORDER, OUTCOME],
+                                key = futils.gene_sort_key)
     pooled[FCols.MARKER] = futils.significance_marker(
             pooled[MetaColumns.P], strict)
     pooled[FCols.COLOUR] = pooled[OUTCOME].map(colours).fillna(
@@ -172,7 +173,8 @@ def shared_y(frames: list[pd.DataFrame]) -> list[pd.DataFrame]:
     frames : `list[pd.DataFrame]`
         Copies with `FigureColumns.Y`.
     """
-    genes = sorted(set().union(*(frame[GENE] for frame in frames)))
+    genes = futils.ordered_genes(set().union(*(frame[GENE]
+                                               for frame in frames)))
     out = [frame.copy() for frame in frames]
     for frame in out:
         frame[FCols.Y] = np.nan
@@ -260,7 +262,8 @@ def draw_panel(fig: plt.Figure, axes: list[gridspec.SubplotSpec],
             label.set_fontstyle('italic')
     else:
         ax.tick_params(axis = 'y', labelleft = False)
-    ax.set_xlabel(FigNames.OR_LABEL if log_x else FigNames.BETA_LABEL,
+    ax.set_xlabel(FigNames.OR_LABEL_THERAPY if log_x
+                  else FigNames.BETA_LABEL_THERAPY,
                   fontsize = FStyle.LAB_SIZE)
     ax.set_title(title, fontweight = 'bold', fontsize = FStyle.TITLE_SIZE,
                  loc = 'left', pad = 6)

@@ -140,7 +140,8 @@ for outcome, out_df in apoe_df.groupby(OUTCOME):
         logger.info(f'{outcome}: no APOE strata, skipped')
         continue
     # per gene all genotypes first, then the strata
-    out_df = out_df.sort_values([GENE, FCols.ORDER]).copy()
+    out_df = out_df.sort_values([GENE, FCols.ORDER],
+                                key = futils.gene_sort_key).copy()
     is_all = out_df[STRATUM] == ApoeStratum.ALL
     out_df[FCols.MARKER] = futils.significance_marker(
         out_df[MetaColumns.P], strict)
@@ -199,7 +200,7 @@ for outcome, out_df in apoe_df.groupby(OUTCOME):
                    width = FStyle.LWD)
     for label in ax.get_yticklabels():
         label.set_fontstyle('italic')
-    xlabel = FigNames.OR_LABEL
+    xlabel = FigNames.OR_LABEL_THERAPY
     ax.set_xlabel(xlabel, fontsize = FStyle.LAB_SIZE)
     ax.set_title(title, fontweight = 'bold', fontsize = FStyle.TITLE_SIZE,
                  loc = 'left', pad = 6)

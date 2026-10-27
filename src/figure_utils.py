@@ -271,13 +271,25 @@ def load_burden(path: Path, keep_lipids: bool = False
     -------
     burden : `pd.DataFrame` or `None`
         Rows of genes not in `Constants.EXCLUDED_GENES` with a finite beta
-        and SE, plus the `add_or` columns; `None` (logged) when the file
-        does not exist.
+        and SE (in the therapeutic direction, as `meta_analysis.py`
+        writes them), plus the `add_or` columns; `None` (logged) when the
+        file does not exist.
+
+    Raises
+    ------
+    ValueError
+        If the file has no `MetaColumns.THERAPY_DIRECTION` column (written
+        before effects were put in the therapeutic direction).
     """
     if not path.exists():
         LOGGER.info(f'{path} not found, skipped')
         return None
     burden = pd.read_csv(path, sep = '\t', low_memory = False)
+    if MetaColumns.THERAPY_DIRECTION not in burden.columns:
+        raise ValueError(
+            f'{path}: no {MetaColumns.THERAPY_DIRECTION} column, so its '
+            'effects are in the old lower-function direction; re-run '
+            'meta_analysis.py')
     is_excluded = burden[VariantListColumns.OUT_GENE].isin(
         Constants.EXCLUDED_GENES)
     if is_excluded.any():

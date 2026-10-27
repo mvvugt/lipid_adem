@@ -4,7 +4,10 @@ Fixed-effect inverse-variance weighted (IVW) meta-analysis of the GWAS
 rows matched to the gene variant lists (`matched_variants.tsv.gz`).
 
 Effects are oriented towards the a2 (alt) allele, flipped to a1 for GoF
-variants. Each run pools the rows of one ancestry group (`--ancestry`,
+variants (lower gene function), then flipped again for genes whose
+drugs raise gene function (`Constants.THERAPY_DIRECTION`), so every
+written effect is in the therapeutic direction (`therapy_direction`
+column). Each run pools the rows of one ancestry group (`--ancestry`,
 default `MetaColumns.DEFAULT_ANCESTRY`; ``MULTI`` pools every ancestry
 together) per variant and outcome
 (`MetaColumns.KEYS`), after keeping one estimate per study, dropping
@@ -55,6 +58,7 @@ from project_constants import (
     Orientation,
     Paths,
     RunlogOrder,
+    TherapyDirection,
     VariantListColumns,
 )
 
@@ -696,6 +700,77 @@ def ivw(rows: pd.DataFrame, keys: list[str], beta: str) -> pd.DataFrame:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def therapy_sign(genes: pd.Series) -> np.ndarray:
+    """Sign that turns a lower-function effect into the therapeutic one.
+
+    Parameters
+    ----------
+    genes : `pd.Series`
+        Gene per row.
+
+    Returns
+    -------
+    sign : `np.ndarray`
+        -1.0 for genes whose drugs raise gene function
+        (`TherapyDirection.RAISING` in `Constants.THERAPY_DIRECTION`),
+        else 1.0.
+
+    Raises
+    ------
+    ValueError
+        If a gene has no entry in `Constants.THERAPY_DIRECTION`.
+    """
+    missing = sorted(set(genes.dropna()) - set(Constants.THERAPY_DIRECTION))
+    if missing:
+        raise ValueError(
+            f"no therapeutic direction for {', '.join(missing)}: add to "
+            "Constants.THERAPY_DIRECTION"
+        )
+    raising = genes.map(Constants.THERAPY_DIRECTION).eq(
+        TherapyDirection.RAISING
+    )
+    return np.where(raising, -1.0, 1.0)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def add_therapy_direction(table: pd.DataFrame) -> pd.DataFrame:
+    """Add `MetaColumns.THERAPY_DIRECTION` from the gene column.
+
+    Parameters
+    ----------
+    table : `pd.DataFrame`
+        An output table with `VariantListColumns.OUT_GENE` (a single gene
+        or genes joined with ";").
+
+    Returns
+    -------
+    table : `pd.DataFrame`
+        Copy with `THERAPY_DIRECTION` right after the gene column.
+
+    Raises
+    ------
+    ValueError
+        If a row's genes have different therapeutic directions.
+    """
+    def direction(genes: object) -> str | None:
+        """The one direction of a row's ";"-joined genes."""
+        if not isinstance(genes, str) or not genes:
+            return None
+        found = {Constants.THERAPY_DIRECTION[gene] for gene in
+                 genes.split(";")}
+        if len(found) > 1:
+            raise ValueError(f"genes {genes}: conflicting therapy direction")
+        return found.pop()
+
+    table = table.copy()
+    gene = VariantListColumns.OUT_GENE
+    values = table[gene].map(direction)
+    table.insert(table.columns.get_loc(gene) + 1,
+                 MetaColumns.THERAPY_DIRECTION, values)
+    return table
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def orient(rows: pd.DataFrame) -> pd.DataFrame:
     """Orient every row's effect per variant.
 
@@ -703,7 +778,10 @@ def orient(rows: pd.DataFrame) -> pd.DataFrame:
     is `Constants.GOF_VARIANT_SOURCE` (`a2_gof_flipped`) or any of its
     rows has `clinvar_direction` `raising` (`a2_clinvar_raising_flipped`;
     GoF wins when both apply). So every effect is that of lower gene
-    function.
+    function. Then genes whose drugs raise gene function are flipped
+    (`therapy_sign`), so every effect is in the therapeutic direction;
+    `ORIENTED_ALLELE` follows both flips, `ORIENTATION` names only the
+    first.
 
     Parameters
     ----------
@@ -734,7 +812,15 @@ def orient(rows: pd.DataFrame) -> pd.DataFrame:
 
     is_gof = rows[site].isin(gof_sites)
     is_raising = rows[site].isin(raising_sites)
-    sign = np.where(is_gof | is_raising, -1.0, 1.0)
+    therapy = therapy_sign(rows[VariantListColumns.OUT_GENE])
+    mixed = (pd.Series(therapy, index=rows.index)
+             .groupby(rows[site]).nunique() > 1)
+    if mixed.any():
+        raise ValueError(
+            "site(s) listed under genes with different therapy "
+            f"directions: {', '.join(mixed.index[mixed])}"
+        )
+    sign = np.where(is_gof | is_raising, -1.0, 1.0) * therapy
     oriented = rows.copy()
     oriented[MetaColumns.ORIENTATION] = np.select(
         [is_gof, is_raising],
@@ -751,6 +837,12 @@ def orient(rows: pd.DataFrame) -> pd.DataFrame:
     per_variant = oriented.drop_duplicates(site)[MetaColumns.ORIENTATION]
     for orientation, n in per_variant.value_counts().items():
         log_info(f"{n} variants oriented as {orientation}")
+    flipped = sorted(set(rows.loc[therapy < 0, VariantListColumns.OUT_GENE]))
+    if flipped:
+        log_info(
+            f"{', '.join(flipped)}: flipped to the therapeutic direction "
+            "(drugs raise gene function)"
+        )
     clinvar = oriented.drop_duplicates(
         [site, VariantListColumns.OUT_CLINVAR_DIRECTION]
     )[VariantListColumns.OUT_CLINVAR_DIRECTION].dropna()
@@ -1781,7 +1873,7 @@ def _analyse_and_write(
             return
         # UKB carrier burden only: no per-variant table
         log_stage("gene_burden")
-        burden = gene_burden(rows, keys, ukb)
+        burden = add_therapy_direction(gene_burden(rows, keys, ukb))
         log_stage("write")
         Paths.RESULTS_OUTPUT.mkdir(parents=True, exist_ok=True)
         path = Paths.RESULTS_OUTPUT / FileNames.BURDEN_TEMPLATE.format(
@@ -1817,12 +1909,19 @@ def _analyse_and_write(
             na_position="first",
         )
 
-    log_stage("gene_burden")
-    burden = gene_burden(rows, keys, ukb)
     outputs = [
-        (FileNames.META_ANALYSIS_TEMPLATE, pooled, suffix),
-        (FileNames.BURDEN_TEMPLATE, burden, suffix),
+        (FileNames.META_ANALYSIS_TEMPLATE, add_therapy_direction(pooled),
+         suffix),
     ]
+    if gene_level:
+        log_stage("gene_burden")
+        burden = gene_burden(rows, keys, ukb)
+        outputs.append(
+            (FileNames.BURDEN_TEMPLATE, add_therapy_direction(burden),
+             suffix)
+        )
+    else:
+        log_info("no gene burden (--no-gene-burden)")
 
     log_stage("write")
     Paths.RESULTS_OUTPUT.mkdir(parents=True, exist_ok=True)

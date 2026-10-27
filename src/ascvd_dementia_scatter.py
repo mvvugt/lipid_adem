@@ -195,9 +195,9 @@ def draw_scatter(ax: plt.Axes, pairs: pd.DataFrame, title: str,
                    bottom = False)
     ax.tick_params(axis = 'both', labelsize = FStyle.AX_LAB_SZ,
                    width = FStyle.LWD)
-    ax.set_xlabel(f'{FigNames.OUTCOMES[X_OUTCOME]}, odds ratio (95% CI)',
-                  fontsize = FStyle.LAB_SIZE)
-    ax.set_ylabel(f'{title}, odds ratio (95% CI)',
+    ax.set_xlabel(f'{FigNames.OUTCOMES[X_OUTCOME]}, odds ratio (95% CI), '
+                  f'{FigNames.THERAPY_SUFFIX}', fontsize = FStyle.LAB_SIZE)
+    ax.set_ylabel(f'{title}, odds ratio (95% CI), {FigNames.THERAPY_SUFFIX}',
                   fontsize = FStyle.LAB_SIZE)
     ax.set_title(title, fontweight = 'bold', fontsize = FStyle.TITLE_SIZE,
                  loc = 'left', pad = 6)

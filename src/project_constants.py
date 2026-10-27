@@ -192,6 +192,20 @@ class Constants:
     # upstream steps are rerun. APOE genotype itself is analysed as an
     # exposure (`FileNames.MARVEL_APOE_TASKS`)
     EXCLUDED_GENES: tuple[str, ...] = ("APOE",)
+    # gene -> how its drugs change gene function (`TherapyDirection`).
+    # meta_analysis.py orients every effect to lower function and then
+    # flips the `RAISING` genes, so every written effect is that of
+    # mimicking therapy (`MetaColumns.THERAPY_DIRECTION` in its output)
+    THERAPY_DIRECTION: dict[str, str] = {
+        "CETP": "lowering",    # CETP inhibitors (anacetrapib, obicetrapib)
+        "HMGCR": "lowering",   # statins
+        "NPC1L1": "lowering",  # ezetimibe
+        "PCSK9": "lowering",   # PCSK9 mAbs, inclisiran
+        "ANGPTL3": "lowering", # evinacumab
+        "APOB": "lowering",    # mipomersen
+        "PPARA": "raising",    # fibrates (PPARα agonists)
+        "APOA1": "raising",    # ApoA-I infusion (CSL112)
+    }
     # identifier column of `FileNames.UKB_PHENO`
     UKB_ID_COLUMN: str = "f.eid"
     # genetic ancestry/relatedness column of `FileNames.UKB_PHENO` and
@@ -921,11 +935,17 @@ class MetaColumns:
     SE_DERIVED: str = "se_derived"
     # BETA_USED for the a2 allele
     BETA_A2: str = "beta_a2"
-    # BETA_A2 for ORIENTED_ALLELE
+    # BETA_A2 for ORIENTED_ALLELE: lower gene function, then flipped for
+    # `TherapyDirection.RAISING` genes (therapeutic direction)
     BETA_ORIENTED: str = "beta_oriented"
-    # "a2" or "a2_gof_flipped", see `Orientation`
+    # "a2" or "a2_gof_flipped", see `Orientation`; the lower-function
+    # step only, the therapy flip is in THERAPY_DIRECTION
     ORIENTATION: str = "orientation"
     ORIENTED_ALLELE: str = "oriented_allele"
+    # the gene's `TherapyDirection` (`Constants.THERAPY_DIRECTION`),
+    # written to the meta-analysis and burden files: effects are in the
+    # therapeutic direction (figure_utils.load_burden requires it)
+    THERAPY_DIRECTION: str = "therapy_direction"
     # per pooled group
     # estimates pooled (k) and the distinct studies among them
     N_ESTIMATES: str = "n_estimates"
@@ -1174,10 +1194,19 @@ class Orientation:
     """Values of the `orientation` column."""
     # effect of the a2 (alt) allele
     A2: str = "a2"
-    # GoF-listed variant: effect of the a1 allele
+    # GoF-listed (or selected GoF) variant: effect of the a1 allele
     A2_GOF_FLIPPED: str = "a2_gof_flipped"
     # ClinVar variant with a raising condition: effect of the a1 allele
     A2_CLINVAR_RAISING_FLIPPED: str = "a2_clinvar_raising_flipped"
+
+
+class TherapyDirection:
+    """Values of `Constants.THERAPY_DIRECTION`."""
+    # drugs lower gene function (inhibitors): effects kept as oriented
+    LOWERING: str = "lowering"
+    # drugs raise gene function (agonists, protein infusion): effects
+    # flipped by meta_analysis.py (`orient`, `load_ukb_burden`)
+    RAISING: str = "raising"
 
 
 class ClinVarDirection:
@@ -1422,6 +1451,14 @@ class FigureNames:
     OR_LABEL: str = "Odds ratio (95% CI)"
     OR_HEADER: str = "OR (95% CI)"
     BETA_LABEL: str = "Beta (95% CI), native units"
+    # gene figures: effects oriented by `Constants.THERAPY_DIRECTION`
+    # (figure_utils.load_burden)
+    THERAPY_SUFFIX: str = "therapeutic direction"
+    OR_LABEL_THERAPY: str = f"{OR_LABEL}, {THERAPY_SUFFIX}"
+    BETA_LABEL_THERAPY: str = f"{BETA_LABEL}, {THERAPY_SUFFIX}"
+    # genes plotted first (at the top) in multi-gene figures, the others
+    # follow alphabetically (figure_utils.ordered_genes)
+    FIRST_GENES: tuple[str, ...] = ("CETP",)
     BETA_HEADER: str = "Beta (95% CI)"
     P_HEADER: str = "P-value"
     # legend titles
