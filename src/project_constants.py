@@ -118,9 +118,10 @@ class Constants:
     ICD10_CODE_PATTERN: str = r"^[A-Z]\d{2}$"
     EFO_ID_PATTERN: str = r"^EFO[:_]\d+$"
     GWAS_CATALOG_API_V2: str = "https://www.ebi.ac.uk/gwas/rest/api/v2"
-    # REST v2 page-size maximum; the default (20) hits biomed-api's
-    # 500-page cap (10k records) for large traits
-    GWAS_CATALOG_PAGE_SIZE: int = 500
+    # the default (20) hits biomed-api's 500-page cap (10k records) for
+    # large traits; 500 (the REST v2 maximum) can exceed biomed-api's 60s
+    # read timeout per page, 200 takes ~20s (cap 100k records)
+    GWAS_CATALOG_PAGE_SIZE: int = 200
     # seconds slept before each retry of a failed (5xx/timeout) REST call
     HTTP_RETRY_BACKOFF: tuple[int, ...] = (30, 60, 120)
     GWAS_CATALOG_FTP_BASE: str = (
@@ -1560,6 +1561,11 @@ class FigureStyle:
         "am_clinvar": "#E69F00",
         "ptv_clinvar_am": "#882255",
     }
+    # selected-variants forest, all variants in one figure: marker colour
+    # per selected GoF variant, in variant-site order (Okabe-Ito)
+    SELECTED_VARIANT_COLOURS: tuple[str, ...] = (
+        "#0072B2", "#D55E00", "#009E73", "#CC79A7", "#E69F00", "#56B4E9",
+    )
     STUDY_COLOUR: str = "#bdbdbd"
     POOLED_SIZE: float = 14
     STUDY_SIZE: float = 9
