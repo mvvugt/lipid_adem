@@ -16,7 +16,8 @@ listed variants.
   lof = PTV + ClinVar) that are not GoF/raising. The masks with ClinVar
   also get a directed form (`Constants.BURDEN_DIRECTED_MASKS`, e.g.
   lof_directed): without the ClinVar-only sites lacking a lowering
-  direction.
+  direction. `SelectedGoF` sites (`Constants.SELECTED_GOF_VARIANT_SOURCE`)
+  are in no mask.
 - `<GENE>_<mask>_fb` (`Constants.BURDEN_FALLBACK_SUFFIX`): the same masks
   without the sites the preferred studies (`Constants.
   BURDEN_PREFER_STUDIES`, Thomassen) have for `Constants.
@@ -182,7 +183,17 @@ def read_sites(path: Path, genes: list[str]) -> pd.DataFrame:
     source = table[_VL.SOURCE]
     direction = table[_VL.CLINVAR_DIRECTION]
     is_clinvar = source == Constants.CLINVAR_VARIANT_SOURCE
-    known = source.isin([Constants.GOF_VARIANT_SOURCE, *_LOF_SOURCES])
+    # selected single GoF variants are reported one by one, never in a
+    # mask (a site also listed as GoF stays in the gof mask)
+    is_selected = source == Constants.SELECTED_GOF_VARIANT_SOURCE
+    if is_selected.any():
+        log_info(
+            f"{int(is_selected.sum())} "
+            f"{Constants.SELECTED_GOF_VARIANT_SOURCE} rows in no mask"
+        )
+    known = is_selected | source.isin(
+        [Constants.GOF_VARIANT_SOURCE, *_LOF_SOURCES]
+    )
     if (~known).any():
         log_warn(
             f"{int((~known).sum())} rows of other sources "

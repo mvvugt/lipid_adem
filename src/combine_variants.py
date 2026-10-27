@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """combine_variants
 
-Combine the PTVs, the ClinVar P/LP, and the GoF and AlphaMissense P/LP
+Combine the PTVs, the ClinVar P/LP, the GoF and AlphaMissense P/LP
 variants of the old per-gene lists (`data/raw/gof_variants.tsv`,
-`data/raw/am_variants.tsv`) into one variant list, left-aligned and
+`data/raw/am_variants.tsv`), and the selected single GoF variants
+(`data/raw/selected_variants.tsv`) into one variant list, left-aligned and
 trimmed against GRCh38, and split per gene. Original and normalised variant ID
 (chr:pos:alleles) are kept.
 """
@@ -272,6 +273,51 @@ def load_gof_variants(path: Path = FileNames.GOF_VARIANTS) -> pd.DataFrame:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def load_selected_variants(
+    path: Path = FileNames.SELECTED_VARIANTS,
+) -> pd.DataFrame:
+    """Read the selected single GoF variants as variant-list rows.
+
+    They are listed whatever their AM/ClinVar class, so they are
+    extracted and matched like the other sources.
+
+    Parameters
+    ----------
+    path : `Path`, optional, default: `FileNames.SELECTED_VARIANTS`
+        Hand-made list (`chr`, `pos`, `a1`, `a2`, `source`, `gene`,
+        `name`).
+
+    Returns
+    -------
+    selected : `pd.DataFrame`
+        The rows with `source` `Constants.SELECTED_GOF_VARIANT_SOURCE`,
+        with the `VariantListColumns` `chr`, `pos`, `a1`, `a2`, `source`
+        and `gene`, as strings.
+
+    Raises
+    ------
+    FileNotFoundError
+        If `path` does not exist.
+    ValueError
+        If `path` has rows of another source.
+    """
+    if not path.exists():
+        raise FileNotFoundError(f"{path} not found (see its SOURCE.md)")
+    vc = VariantListColumns
+    selected = pd.read_csv(path, sep="\t", dtype=str)
+    other = sorted(
+        set(selected[vc.SOURCE]) - {Constants.SELECTED_GOF_VARIANT_SOURCE}
+    )
+    if other:
+        raise ValueError(
+            f"{path}: sources other than "
+            f"{Constants.SELECTED_GOF_VARIANT_SOURCE}: {other}"
+        )
+    log_info(f"{path}: {len(selected)} selected GoF variants")
+    return selected[[vc.CHROM, vc.POS, vc.A1, vc.A2, vc.SOURCE, vc.GENE]]
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def load_am_variants(path: Path = FileNames.AM_VARIANTS) -> pd.DataFrame:
     """Read the AlphaMissense list as variant-list rows of the kept classes.
 
@@ -436,8 +482,9 @@ def combine_lists(
     gof: pd.DataFrame,
     am: pd.DataFrame,
     regions: dict[str, functions.GeneRegion],
+    selected: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
-    """Stack the PTV, P/LP, GoF and AM rows into one normalised list.
+    """Stack the PTV, P/LP, GoF, AM and selected rows into one list.
 
     `chr` gets a "chr" prefix (as in the old per-gene lists);
     `am_pathogenicity` and `tri_class` are NA except for the AM rows. Rows
@@ -459,6 +506,8 @@ def combine_lists(
         From `load_am_variants`.
     regions : `dict[str, functions.GeneRegion]`
         From `read_gene_regions`.
+    selected : `pd.DataFrame` or `None`, optional, default: `None`
+        From `load_selected_variants`; `None` adds none.
 
     Returns
     -------
@@ -468,7 +517,10 @@ def combine_lists(
         several sources, are logged.
     """
     vc = VariantListColumns
-    variants = pd.concat([ptv, plp, gof, am], ignore_index=True)
+    parts = [ptv, plp, gof, am]
+    if selected is not None:
+        parts.append(selected)
+    variants = pd.concat(parts, ignore_index=True)
     chrom = variants[vc.CHROM].astype("string").str.removeprefix("chr")
     variants[vc.CHROM] = "chr" + chrom
     for column in LIST_COLUMNS:
@@ -593,6 +645,7 @@ if __name__ == "__main__":
             load_gof_variants(),
             load_am_variants(),
             read_gene_regions(),
+            selected=load_selected_variants(),
         )
         FileNames.LIPID_VARIANTS.parent.mkdir(parents=True, exist_ok=True)
         functions.write_table_atomic(lipid_variants, FileNames.LIPID_VARIANTS)

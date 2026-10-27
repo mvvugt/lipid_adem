@@ -23,6 +23,15 @@ esac
 # the ClinVar query and the figures run locally
 # TODO after the validation (validation/HANDOFF.md) passes: move the marvel
 # runs (MARVEL_ENV=marvel_old, 10039b6) to the validated marvel version
+# TODO with that move: config/marvel_config_variant.toml (new marvel
+# per-variant run) tests no lipids; add the five lipid outcomes
+# (Constants.MARVEL_UKB_OUTCOMES, OLS) so the selected GoF variants
+# (data/raw/selected_variants.tsv) get every outcome there too
+# TODO after the next full per-variant run (NON-AGGREGATED ANALYSES, or
+# the new marvel): remove the TEMPORARY selected-variant run there, the
+# --replace of marvel_results_table.py (UKB CARRIER BURDEN) and
+# data/raw/marvel_selected_tasks.tsv; the selected variants are then
+# tested with the rest, since they are in lipid_variants.tsv
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -32,8 +41,9 @@ esac
 #   efo_ukb_master_mapping.tsv, finngen_r13_manifest.tsv,
 #   gwas_catalog_manual_studies.tsv, study_outcome_review.tsv,
 #   clinvar_variants.tsv (ClinVar query below), clinvar_condition_direction
-#   .tsv, gof_variants.tsv, am_variants.tsv, apoe_strata.tsv,
-#   marvel_tasks.tsv and marvel_apoe_tasks.tsv, each with its SOURCE.md
+#   .tsv, gof_variants.tsv, am_variants.tsv, selected_variants.tsv,
+#   apoe_strata.tsv, marvel_tasks.tsv, marvel_apoe_tasks.tsv and
+#   marvel_selected_tasks.tsv (Snellius paths), each with its SOURCE.md
 # - [snellius, present] data/processed/lipids_full_pheno.tsv.gz and
 #   pheno_cov.tsv.gz (PHENOTYPES), data/temp/<GENE>_variant_extraction
 #   .tsv.gz (CARRIER EXTRACTION), the VEP VCFs (VARIANT ANNOTATION)
@@ -151,7 +161,9 @@ run_mamba marvel_old "${ROOT}"/src/annotate_clinvar.py
 
 # [snellius] combine PTV + ClinVar + GoF normalised against GRCh38; GoF is the
 # snapshot data/raw/gof_variants.tsv of the old per-gene lists (see its
-# SOURCE.md), which this step overwrites
+# SOURCE.md), which this step overwrites; the three selected CETP GoF
+# variants (data/raw/selected_variants.tsv, source SelectedGoF) are forced
+# in, so they are extracted, tested and matched, but in no burden mask
 run_mamba biomed-api "${ROOT}"/src/combine_variants.py
 
 
@@ -187,7 +199,8 @@ LOF_DIR="${DATA_DIR}/ukbiobank/genetics/b38/lof"
 
 # [snellius] per-variant aggregate + associate on the same extract chunks
 # (one exposure per variant, prefix lipid_vep_plink_marvel_variant); ~100x
-# the tests of the burden run, hence 8 cores and 8 h (estimate)
+# the tests of the burden run, hence 8 cores and 8 h (estimate). NOTE: its
+# toml has no lipid tests yet (see the TODO under SETUP)
 RUN_DIR="${ROOT}/data/temp/marvel"
 sbatch --partition=rome --cpus-per-task=8 --mem=16G --time=08:00:00         \
     --job-name=mv_final_variant                                                \
@@ -234,6 +247,30 @@ TASK_LOGS="${ROOT}"/src/logs/marvel_task_logs
 mkdir -p "${TASK_LOGS}"
 sbatch --array=1-"${N_TASKS}" --partition=rome --cpus-per-task=1 --mem=16G \
     --time=24:00:00 --job-name=marvel_assoc                                    \
+    --output="${TASK_LOGS}"/%x_%A_%a.log                                       \
+    --wrap "MARVEL_ENV=marvel_old ${ROOT}/src/marvel_assoc.sh ${TASKS} \
+        \${TMPDIR} 1 \${SLURM_ARRAY_TASK_ID}"
+
+# [snellius] TEMPORARY, until the next full per-variant run: the selected
+# CETP GoF variants (data/raw/selected_variants.tsv) only, on every outcome
+# (the CETP store's rows have no lipids, the old phenotype file and -2
+# no-calls as dosage). Their columns of the old carriers file, no-calls as
+# NA; then one row per subset (all, all_apoe, eur); 3 variants, so 2 h is
+# ample. Their results replace the store's under UKB CARRIER BURDEN
+# (--replace)
+run_mamba biomed-api "${ROOT}"/validation/subset_carriers.py \
+    --carriers "${ROOT}"/data/temp/CETP_variant_extraction.tsv.gz \
+    --output "${ROOT}"/data/temp/CETP_selected_variant_extraction.tsv.gz \
+    --variants chr16:56981179:G:C chr16:56982180:G:A chr16:56983407:G:A \
+    --negative-to-na
+TASKS="${ROOT}"/data/raw/marvel_selected_tasks.tsv
+mkdir -p "${ROOT}"/config/marvel_selected
+run_mamba marvel_old "${ROOT}"/src/create_config.py -a -t "${TASKS}"
+N_TASKS=$(( $(wc -l < "${TASKS}") - 1 ))
+TASK_LOGS="${ROOT}"/src/logs/marvel_selected_logs
+mkdir -p "${TASK_LOGS}"
+sbatch --array=1-"${N_TASKS}" --partition=rome --cpus-per-task=1 --mem=16G \
+    --time=02:00:00 --job-name=marvel_selected                                 \
     --output="${TASK_LOGS}"/%x_%A_%a.log                                       \
     --wrap "MARVEL_ENV=marvel_old ${ROOT}/src/marvel_assoc.sh ${TASKS} \
         \${TMPDIR} 1 \${SLURM_ARRAY_TASK_ID}"
@@ -286,10 +323,13 @@ sbatch --array=1-"${N_TASKS}" --partition=rome --cpus-per-task=1 --mem=16G \
 # hold both. A store is built from the loose files of the listed task files:
 # always list both. Add --refresh on the first Snellius run (Myriad-built
 # stores are then kept aside with a time stamp), and only while no loose
-# files were archived (--archive)
+# files were archived (--archive). --replace: the selected-variant run's
+# rows replace the CETP store's rows of the same result files (old store
+# kept with a time stamp); drop it after the next full per-variant run
 run_mamba biomed-api "${ROOT}"/src/marvel_results_table.py --ancestry MULTI \
     --tasks "${ROOT}"/data/raw/marvel_tasks.tsv \
-    "${ROOT}"/data/raw/marvel_burden_tasks.tsv
+    "${ROOT}"/data/raw/marvel_burden_tasks.tsv \
+    --replace "${ROOT}"/data/raw/marvel_selected_tasks.tsv
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -357,13 +397,27 @@ for variant_set in "${VARIANT_SETS[@]}"; do
         --label "pooled_eur_${variant_set}" --ukb-burden
 done
 
+# [snellius] separate from the burden analyses: the selected CETP GoF
+# variants (data/raw/selected_variants.tsv) one by one, every study and
+# outcome they have (UKB, FinnGen, GWAS Catalog), each study's estimate
+# (--stratified) and their IVW per variant and outcome; flipped as GoF
+# (lower function); no gene burden; only rows on their outcome's scale
+# (linear lipids, log-OR otherwise)
+for ancestry in EUR MULTI; do
+    run_mamba biomed-api "${ROOT}"/src/meta_analysis.py \
+        --ancestry "${ancestry}" --variant-sources SelectedGoF --stratified \
+        --label "selected_gof_${ancestry,,}" --no-gene-burden \
+        --require-expected-scale
+done
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # FIGURES
 
 # [local] copy results/output/{burden,meta}_*_{cohort_burden,pooled}_*.tsv.gz
-# from Snellius first; only FigureNames.MAIN_FIGURES are written to
-# results/figures, the rest to results/figures/sensitivity
+# and meta_*_selected_gof_*.tsv.gz from Snellius first; only
+# FigureNames.MAIN_FIGURES are written to results/figures, the rest to
+# results/figures/sensitivity
 # [local] main: positive controls (lipids + ASCVD) and dementia, per gene one
 # row per variant set (default PTV, AM, PTV + AM)
 for panel in controls dementia; do

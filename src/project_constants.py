@@ -164,6 +164,9 @@ class Constants:
     # variant-list source flipped in the meta-analysis so the a1 allele's
     # effect is reported
     GOF_VARIANT_SOURCE: str = "GoF"
+    # variant-list source of single GoF variants reported one by one
+    # (`FileNames.SELECTED_VARIANTS`): flipped as GoF, in no burden mask
+    SELECTED_GOF_VARIANT_SOURCE: str = "SelectedGoF"
     # variant-list source of the ClinVar P/LP entries
     # (`FileNames.PLP_VARIANTS`, combine_variants.py)
     CLINVAR_VARIANT_SOURCE: str = "ClinVar"
@@ -873,6 +876,9 @@ class VariantListColumns:
     MARVEL_ID: str = "ID"
     # ClinVar P/LP rows only: a `ClinVarDirection` value (NA otherwise)
     CLINVAR_DIRECTION: str = "clinvar_direction"
+    # `FileNames.SELECTED_VARIANTS` only: figure label (rsID / protein
+    # change); not carried into the combined list
+    NAME: str = "name"
     # added to the matched output, after the merged-associations columns
     OUT_SOURCE: str = "variant_list_source"
     OUT_GENE: str = "variant_list_gene"
@@ -1299,6 +1305,9 @@ class FileNames:
     # AM rows of the old per-gene lists (`AM_VARIANT_SOURCE`, all classes;
     # snapshot as `GOF_VARIANTS`; sites only, committed)
     AM_VARIANTS: Path = Paths.DATA_RAW / "am_variants.tsv"
+    # single GoF variants forced into the list and reported one by one
+    # (`SELECTED_GOF_VARIANT_SOURCE`; sites and names only, committed)
+    SELECTED_VARIANTS: Path = Paths.DATA_RAW / "selected_variants.tsv"
     VARIANT_LIST_TEMPLATE: str = str(Paths.DATA_TEMP / "{gene}_variants.tsv")
     # curated gene x ClinVar condition -> `ClinVarDirection`
     CLINVAR_CONDITION_DIRECTION: Path = (
@@ -1310,6 +1319,10 @@ class FileNames:
     # pyjasub job array for the per-gene marvel runs (one cnf per gene,
     # written by src/create_config.py)
     MARVEL_TASKS: Path = Paths.DATA_RAW / "marvel_tasks.tsv"
+    # per-variant marvel run of the `SELECTED_VARIANTS` only (until the
+    # next full per-variant run); its rows replace the store's
+    # (`marvel_results_table.py --replace`)
+    MARVEL_SELECTED_TASKS: Path = Paths.DATA_RAW / "marvel_selected_tasks.tsv"
     # UKB carrier burden (burden_exposure.py): per gene the 0/1 exposure
     # file (`{suffix}` "" or `Constants.BURDEN_FALLBACK_SUFFIX`), the
     # sites/carriers summary and the old marvel (10039b6) job array
@@ -1497,6 +1510,8 @@ class FigureNames:
         "scatter_ascvd_dementia_cohort_burden_eur_",
         "forest_cohort_variants_CETP",
         "forest_apoe_genotype_EUR",
+        # selected_variants_forest.py, one figure per selected GoF variant
+        "forest_selected_gof_eur_",
     )
 
 

@@ -19,8 +19,12 @@ sources (`--studies`, `--outcomes`, `--variant-sources`); `--stratified`
 adds each study's own estimate. Next to the per-variant table a gene
 burden table is written: the IVW of the oriented variant effects per gene,
 per study and pooled over studies. ClinVar variants with a raising condition
-are flipped like GoF variants. `--ukb-burden` takes each UKB study's gene
-estimate from its carrier burden (`matched_burden.tsv.gz`) instead.
+are flipped like GoF variants, as are the selected single GoF variants
+(`SelectedGoF`). `--ukb-burden` takes each UKB study's gene
+estimate from its carrier burden (`matched_burden.tsv.gz`) instead;
+`--no-gene-burden` writes no gene burden (variants reported one by one),
+and `--require-expected-scale` keeps only rows on their outcome's scale
+(linear for lipids, log-OR otherwise).
 
 APOE strata (`data/raw/apoe_strata.tsv`): the pooled run takes, per study
 group, its unstratified study or else its strata; studies that are strata
@@ -365,6 +369,46 @@ def check_effect_scales(
         f"{other[hc.STUDY_ACCESSION].nunique()} studies dropped"
     )
     return matched.loc[is_log_or].copy()
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def keep_expected_scales(matched: pd.DataFrame) -> pd.DataFrame:
+    """Keep the rows on the effect scale expected for their outcome.
+
+    Lipids (`Constants.LIPID_OUTCOMES`) are expected `EffectScale.LINEAR`,
+    every other outcome `EffectScale.LOG_OR`; rows on another scale
+    (unknown, conflict, log-HR, or linear for a binary outcome) are
+    dropped, so no pool mixes scales.
+
+    Parameters
+    ----------
+    matched : `pd.DataFrame`
+        Matched rows with `outcome` and `study_effect_scale`.
+
+    Returns
+    -------
+    kept : `pd.DataFrame`
+        The rows on their expected scale; the dropped rows are logged
+        per study and scale.
+    """
+    hc = HarmonisedColumns
+    is_lipid = matched[hc.OUTCOME].isin(Constants.LIPID_OUTCOMES)
+    expected = np.where(is_lipid, EffectScale.LINEAR, EffectScale.LOG_OR)
+    is_expected = matched[hc.STUDY_EFFECT_SCALE].to_numpy() == expected
+    dropped = matched.loc[~is_expected]
+    counts = dropped.groupby(
+        [hc.STUDY_ACCESSION, hc.STUDY_EFFECT_SCALE], dropna=False
+    ).size()
+    for (accession, scale), n in counts.items():
+        log_info(
+            f"{accession}: {n} rows on scale {scale}, not the expected "
+            "one for their outcome; dropped"
+        )
+    log_info(
+        f"--require-expected-scale: {len(dropped)} of {len(matched)} rows "
+        f"of {dropped[hc.STUDY_ACCESSION].nunique()} studies dropped"
+    )
+    return matched.loc[is_expected].copy()
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -775,7 +819,8 @@ def orient(rows: pd.DataFrame) -> pd.DataFrame:
     """Orient every row's effect per variant.
 
     The a2 allele is used, or a1 when any of the variant's list sources
-    is `Constants.GOF_VARIANT_SOURCE` (`a2_gof_flipped`) or any of its
+    is `Constants.GOF_VARIANT_SOURCE` or `Constants.
+    SELECTED_GOF_VARIANT_SOURCE` (`a2_gof_flipped`) or any of its
     rows has `clinvar_direction` `raising` (`a2_clinvar_raising_flipped`;
     GoF wins when both apply). So every effect is that of lower gene
     function. Then genes whose drugs raise gene function are flipped
@@ -792,12 +837,22 @@ def orient(rows: pd.DataFrame) -> pd.DataFrame:
     -------
     oriented : `pd.DataFrame`
         `rows` plus `ORIENTATION`, `ORIENTED_ALLELE` and `BETA_ORIENTED`.
+
+    Raises
+    ------
+    ValueError
+        If a variant site is listed under genes with different therapy
+        directions (its rows are pooled together).
     """
     site = MetaColumns.VARIANT_SITE
     gof_sites = set(
         rows.loc[
-            rows[VariantListColumns.OUT_SOURCE]
-            == Constants.GOF_VARIANT_SOURCE,
+            rows[VariantListColumns.OUT_SOURCE].isin(
+                [
+                    Constants.GOF_VARIANT_SOURCE,
+                    Constants.SELECTED_GOF_VARIANT_SOURCE,
+                ]
+            ),
             site,
         ]
     )
@@ -1262,7 +1317,10 @@ def load_ukb_burden(
     ukb, beta, se = ukb.loc[usable], beta[usable], se[usable]
     # as `orient` flips GoF sites: every effect is that of lower function
     sign = -1.0 if base == Constants.BURDEN_MASK_GOF else 1.0
-    ukb[MetaColumns.BETA_ORIENTED] = beta * sign
+    # then, as `orient`, the therapeutic direction
+    ukb[MetaColumns.BETA_ORIENTED] = beta * sign * therapy_sign(
+        ukb[VariantListColumns.OUT_GENE]
+    )
     ukb[MetaColumns.SE_USED] = se
     ukb[MetaColumns.N_VARIANTS] = pd.NA
     ukb[MetaColumns.VARIANTS] = pd.NA
@@ -1389,10 +1447,13 @@ def meta_analysis(
     prefer_groups: list[str] | None = None,
     fallback_groups: list[str] | None = None,
     ukb_burden: bool = False,
+    require_expected_scale: bool = False,
+    gene_level: bool = True,
 ) -> None:
     """Run the meta-analysis for one ancestry group and write it.
 
-    Writes the per-variant meta-analysis and the gene burden.
+    Writes the per-variant meta-analysis and (unless `gene_level` is
+    False) the gene burden.
 
     Studies are grouped with `load_apoe_strata`. The pooled run uses per
     study group its unstratified study, or else its strata
@@ -1435,6 +1496,13 @@ def meta_analysis(
         (`FileNames.MATCHED_BURDEN`, `load_ukb_burden`) instead of the IVW
         over UKB's variants; the per-variant tables are unchanged. With
         no per-variant rows left, only the gene burden is written.
+    require_expected_scale : `bool`, optional, default: `False`
+        Drop rows not on their outcome's expected effect scale
+        (`keep_expected_scales`: linear for lipids, log-OR otherwise).
+    gene_level : `bool`, optional, default: `True`
+        Also write the gene burden (IVW over a gene's variants); False
+        writes the per-variant tables only (variants reported one by
+        one, e.g. `Constants.SELECTED_GOF_VARIANT_SOURCE`).
 
     Returns
     -------
@@ -1447,8 +1515,10 @@ def meta_analysis(
         with `ukb_burden`.
     ValueError
         If `ukb_burden` is combined with variant sources no carrier
-        burden matches.
+        burden matches, or with `gene_level` False.
     """
+    if ukb_burden and not gene_level:
+        raise ValueError("ukb_burden needs the gene burden (gene_level)")
     if ukb_burden:
         _ukb_base_mask(variant_sources)
     keys = list(MetaColumns.KEYS)
@@ -1456,6 +1526,7 @@ def meta_analysis(
 
     rows = _prepare_rows(
         ancestry, studies, outcomes, variant_sources, require_log_or,
+        require_expected_scale,
     )
     if rows is None:
         if not ukb_burden:
@@ -1490,7 +1561,7 @@ def meta_analysis(
     log_stage("pooled_run")
     _analyse_and_write(
         _pooled_rows(rows), keys, ancestry, per_study, suffix,
-        None if ukb is None else _pooled_rows(ukb),
+        None if ukb is None else _pooled_rows(ukb), gene_level,
     )
 
     is_stratum = rows[MetaColumns.APOE_STRATUM] != ApoeStratum.ALL
@@ -1514,6 +1585,7 @@ def meta_analysis(
             None if ukb is None else ukb.loc[
                 ukb[MetaColumns.APOE_STRATUM] != ApoeStratum.ALL
             ].copy(),
+            gene_level,
         )
 
 
@@ -1524,12 +1596,15 @@ def _prepare_rows(
     outcomes: list[str] | None,
     variant_sources: list[str] | None,
     require_log_or: bool,
+    require_expected_scale: bool = False,
 ) -> pd.DataFrame | None:
     """Load, filter and orient the run's per-variant rows.
 
     Parameters
     ----------
     ancestry, studies, outcomes, variant_sources, require_log_or
+        As `meta_analysis`.
+    require_expected_scale : `bool`, optional, default: `False`
         As `meta_analysis`.
 
     Returns
@@ -1584,6 +1659,8 @@ def _prepare_rows(
         matched[ancestry_col] = Ancestry.MULTI
     log_stage("effect_scale")
     matched = check_effect_scales(matched, require_log_or)
+    if require_expected_scale:
+        matched = keep_expected_scales(matched)
     if matched.empty:
         log_warn("no rows left after filtering; no output written")
         return None
@@ -1843,10 +1920,12 @@ def _analyse_and_write(
     per_study: bool,
     suffix: str,
     ukb: pd.DataFrame | None = None,
+    gene_level: bool = True,
 ) -> None:
     """Dedupe the oriented rows, pool them, add the burden and write both.
 
-    Without per-variant rows only the UKB carrier burden is written.
+    Without per-variant rows only the UKB carrier burden is written;
+    without `gene_level` only the per-variant table.
 
     Parameters
     ----------
@@ -1862,6 +1941,8 @@ def _analyse_and_write(
         Appended to the file names (``""`` or ``_<label>...``).
     ukb : `pd.DataFrame` or `None`, optional, default: `None`
         UKB carrier-burden rows (`ukb_burden_rows`).
+    gene_level : `bool`, optional, default: `True`
+        Also write the gene burden.
 
     Returns
     -------
@@ -2016,6 +2097,23 @@ def _init_cmd_args() -> argparse.ArgumentParser:
             "or PTV/ClinVar"
         ),
     )
+    parser.add_argument(
+        "--require-expected-scale",
+        action="store_true",
+        help=(
+            "drop rows not on their outcome's expected effect scale "
+            "(linear for lipids, log-OR otherwise); default: keep them"
+        ),
+    )
+    parser.add_argument(
+        "--no-gene-burden",
+        action="store_true",
+        help=(
+            "write only the per-variant table, no gene burden (variants "
+            f"reported one by one, e.g. "
+            f"{Constants.SELECTED_GOF_VARIANT_SOURCE})"
+        ),
+    )
     return parser
 
 
@@ -2025,6 +2123,12 @@ def _parse_cmd_args(parser: argparse.ArgumentParser) -> argparse.Namespace:
     args = parser.parse_args()
     if bool(args.prefer_groups) != bool(args.fallback_groups):
         parser.error("--prefer-groups and --fallback-groups go together")
+    if args.ukb_burden and args.no_gene_burden:
+        parser.error("--ukb-burden needs the gene burden (no "
+                     "--no-gene-burden)")
+    if args.require_log_or and args.require_expected_scale:
+        parser.error("--require-log-or and --require-expected-scale "
+                     "exclude each other")
     return args
 
 
@@ -2048,6 +2152,8 @@ def main() -> None:
             prefer_groups=args.prefer_groups,
             fallback_groups=args.fallback_groups,
             ukb_burden=args.ukb_burden,
+            require_expected_scale=args.require_expected_scale,
+            gene_level=not args.no_gene_burden,
         )
 
 
