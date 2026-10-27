@@ -8,23 +8,23 @@
 ##
 ## Purpose of script: One figure of the pooled (IVW over cohorts) carrier-
 ##     burden estimates of the `cohort_burden_<anc>_<set>` runs of
-##     `meta_analysis.py`: one forest per outcome side by side, per gene
-##     one row per variant set (`--sets`), 95% CI. `--panel controls`:
-##     the lipids (beta, native UKB units) and ASCVD (OR), the positive
-##     controls; `--panel dementia`: the dementia outcomes (OR), with the
-##     approximate number of cases among carriers (1 / SE^2) right of
-##     each forest. Marker colour shows the variant set, marker shape
-##     significance: circle p >= 0.05, square p < 0.05, diamond below the
-##     Bonferroni threshold 0.05 / (genes x outcomes with an estimate);
-##     the variant sets are nested (PTV + AM holds PTV and AM), so they
-##     do not add tests. Run locally in the `plot-misc` env on burden
-##     files copied from Snellius into `results/output/`. Writes
+##     `meta_analysis.py`: one forest per outcome in a grid (`--n-cols`),
+##     per gene one row per variant set (`--sets`), 95% CI, with side
+##     tables (OR or beta (95% CI), p-value, UKB carriers / cases, lipids
+##     carriers / N). `--panel controls`: the lipids (beta, native UKB
+##     units) and ASCVD (OR), the positive controls; `--panel dementia`:
+##     the dementia outcomes (OR). Marker colour shows the variant set,
+##     marker shape significance: circle p >= 0.05, square p < 0.05,
+##     diamond below the Bonferroni threshold 0.05 / (genes x outcomes with
+##     an estimate); the variant sets are nested (PTV + AM holds PTV and
+##     AM), so they do not add tests. Run locally in the `plot-misc` env on
+##     burden files copied from Snellius into `results/output/`. Writes
 ##     `results/figures/forest_<label>_<panel>.pdf` (main analysis,
 ##     `FigureNames.MAIN_FIGURES`) or `results/figures/sensitivity/`.
 ##
 ## Author: M. van Vugt
 ## Date created: 26/10/2026
-## Last updated: 26/10/2026
+## Last updated: 27/10/2026
 ##
 ## Copyright (c) M. van Vugt, 2026
 ## Email: m.vanvugt1@amsterdamumc.nl
@@ -37,13 +37,8 @@
 import sys
 import logging
 import argparse
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-import matplotlib.transforms as mtransforms
 import numpy as np
 import pandas as pd
-import plot_misc.forest as forest
 import figure_utils as futils
 from pathlib import Path
 from project_constants import (
@@ -90,6 +85,10 @@ parser.add_argument('-p', '--panel',
                     required = True,
                     help = 'controls: lipids + ASCVD; dementia: the '
                     'dementia outcomes')
+parser.add_argument('-n', '--n-cols',
+                    type = int,
+                    default = 2,
+                    help = 'forests per figure row (default: %(default)s)')
 parser.add_argument('-o', '--out-dir',
                     type = Path,
                     default = Paths.RESULTS_FIGURES,
@@ -102,6 +101,8 @@ parser.add_argument('-m', '--max-or',
 args = parser.parse_args()
 if args.max_or <= 1:
     parser.error('--max-or must be > 1')
+if args.n_cols < 1:
+    parser.error('--n-cols must be >= 1')
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -111,21 +112,26 @@ if args.max_or <= 1:
 GENE = VariantListColumns.OUT_GENE
 OUTCOME = HarmonisedColumns.OUTCOME
 VARIANT_SET = 'variant_set'
-# approximate cases among carriers (1 / SE^2), dementia panel only
-N_CASES = 'n_cases_approx'
-N_CASES_HEADER = '~cases'
-# outcomes per panel, in plotting order (left to right)
+# outcomes per panel, in plotting order (row by row)
 PANEL_OUTCOMES = {
     'controls': (*FigNames.LIPIDS, 'ascvd'),
     'dementia': tuple(outcome for outcome in FigNames.OUTCOMES
                       if outcome != 'ascvd'),
 }
-# panel widths (cm): each forest, the ~cases column, the gap between
-FOREST_CM = 3.2
-CASES_CM = 0.6
-GAP_CM = 0.4
-# shading of every other gene block
-BAND_COLOUR = 'lightgrey'
+# side tables: column, header, alignment; the variant sets are shown by
+# colour
+TABLES = (
+    (FCols.OR_TEXT, FigNames.OR_HEADER, 'center'),
+    (FCols.P_TEXT, FigNames.P_HEADER, 'center'),
+    (FCols.CARRIER_TEXT, FigNames.CARRIERS_HEADER, 'center'),
+)
+LIPID_TABLES = (
+    (FCols.BETA_TEXT, FigNames.BETA_HEADER, 'center'),
+    (FCols.P_TEXT, FigNames.P_HEADER, 'center'),
+    (FCols.CARRIER_TEXT, FigNames.CARRIERS_N_HEADER, 'center'),
+)
+# space for the gene names left of each forest (cm)
+LABEL_CM = 0.8
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -202,103 +208,6 @@ def gene_set_y(genes: list[str], sets: list[str]) -> dict[tuple[str, str],
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def draw_forest(fig: plt.Figure, cell: gridspec.SubplotSpec,
-                data: pd.DataFrame, title: str, ylim: tuple[float, float],
-                log_x: bool, gene_labels: bool, cases: bool,
-                bands: list[tuple[float, float]]) -> plt.Axes:
-    """Draw one outcome's forest.
-
-    Parameters
-    ----------
-    fig : `plt.Figure`
-        The figure.
-    cell : `gridspec.SubplotSpec`
-        Grid cell of the forest.
-    data : `pd.DataFrame`
-        The outcome's rows, with `FigureColumns` `Y`, `MARKER`, `COLOUR`,
-        `SIZE` and the CI columns.
-    title : `str`
-        Forest title (the outcome).
-    ylim : `tuple[float, float]`
-        Y limits, shared by the forests.
-    log_x : `bool`
-        Odds ratios on a log axis with reference 1 (`figure_utils.x_axis`);
-        else betas on a linear axis with reference 0
-        (`figure_utils.beta_axis`).
-    gene_labels : `bool`
-        Show the gene names as y tick labels.
-    cases : `bool`
-        Write `N_CASES` right of the forest.
-    bands : `list[tuple[float, float]]`
-        Y ranges shaded grey (every other gene), drawn here rather than by
-        `ForestPlot`, so they match across forests with missing genes.
-
-    Returns
-    -------
-    ax : `plt.Axes`
-        The forest axis.
-    """
-    ax = fig.add_subplot(cell)
-    if log_x:
-        ax.set_xscale('log')
-        x_col, lb_col, ub_col = FCols.OR, FCols.LB, FCols.UB
-    else:
-        x_col, lb_col, ub_col = MetaColumns.BETA, FCols.BETA_LB, FCols.BETA_UB
-    bm_forest = forest.ForestPlot(
-            data = data, x_col = x_col, y_col = FCols.Y,
-            lb_col = lb_col, ub_col = ub_col, g_col = GENE, ax = ax,
-            )
-    _, ax = bm_forest.plot(
-            s_col = FCols.MARKER, c_col = FCols.COLOUR,
-            s_size_col = FCols.SIZE, ci_colour = 'black',
-            ci_lwd = FStyle.LWD, span = False, ylim = ylim,
-            kwargs_scatter_dict = FStyle.SCATTER_KWARGS,
-            kwargs_plot_ci_dict = FStyle.CI_KWARGS,
-            )
-    # formatting
-    for low, high in bands:
-        ax.axhspan(low, high, color = BAND_COLOUR, zorder = 0, lw = 0)
-    ax.axvline(1 if log_x else 0, linewidth = FStyle.LWD, linestyle = '--',
-               c = 'black', zorder = .5)
-    ax.spines[['right', 'top']].set_visible(False)
-    if log_x:
-        x_lim, x_tic = futils.x_axis(data)
-        ax.xaxis.set_major_formatter(
-                matplotlib.ticker.FormatStrFormatter('%g'))
-        ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
-    else:
-        x_lim, x_tic = futils.beta_axis(data)
-    ax.set_xlim(x_lim)
-    ax.set_xticks(x_tic)
-    ax.tick_params(axis = 'both', which = 'minor', bottom = False,
-                   labelsize = FStyle.AX_LAB_SZ, width = FStyle.LWD)
-    ax.tick_params(axis = 'both', labelsize = FStyle.AX_LAB_SZ,
-                   width = FStyle.LWD)
-    if gene_labels:
-        for label in ax.get_yticklabels():
-            label.set_fontstyle('italic')
-    else:
-        ax.tick_params(axis = 'y', labelleft = False)
-    ax.set_xlabel('Odds ratio' if log_x else 'Beta',
-                  fontsize = FStyle.LAB_SIZE)
-    ax.set_title(title, fontweight = 'bold', fontsize = FStyle.TITLE_SIZE,
-                 loc = 'left', pad = 6)
-    if cases:
-        # x in axes fraction, y in data units
-        trans = mtransforms.blended_transform_factory(ax.transAxes,
-                                                      ax.transData)
-        x_text = 1 + CASES_CM / FOREST_CM / 2
-        ax.text(x_text, ylim[1], N_CASES_HEADER, transform = trans,
-                ha = 'center', va = 'top', fontsize = FStyle.STEXT_SIZE,
-                fontweight = 'bold', clip_on = False)
-        for y, n in zip(data[FCols.Y], data[N_CASES]):
-            ax.text(x_text, y, f'{n:.0f}', transform = trans,
-                    ha = 'center', va = 'center',
-                    fontsize = FStyle.STEXT_SIZE, clip_on = False)
-    return ax
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def set_legend(sets: list[str]) -> list:
     """Colour legend handles of the variant sets, in plotting order.
 
@@ -334,7 +243,9 @@ logger.info('pooled rows per variant set: ' + ', '.join(
     f'{variant_set} {n}'
     for variant_set, n in pooled[VARIANT_SET].value_counts().items()))
 pooled = futils.add_beta_ci(pooled)
-pooled[N_CASES] = 1 / pooled[MetaColumns.SE] ** 2
+# UKB carriers / cases: a pooled row of these single-cohort runs names
+# its one study in `studies`
+pooled = futils.add_carrier_text(pooled, MetaColumns.STUDIES, VARIANT_SET)
 
 # one Bonferroni threshold for the figure: the genes x outcomes with an
 # estimate, the nested variant sets not counted as extra tests
@@ -346,14 +257,14 @@ pooled[FCols.MARKER] = futils.significance_marker(pooled[MetaColumns.P],
 pooled[FCols.COLOUR] = pooled[VARIANT_SET].map(FStyle.VARIANT_SET_COLOURS)
 pooled[FCols.SIZE] = FStyle.MARKER_SIZE
 
-# shared y: genes alphabetical, per gene the sets in --sets order
-genes = sorted(pooled[GENE].unique())
+# shared y: genes in `futils.ordered_genes` order (CETP first), per gene
+# the sets in --sets order
+genes = futils.ordered_genes(pooled[GENE])
 y_map = gene_set_y(genes, sets)
 pooled[FCols.Y] = [y_map[key] for key in zip(pooled[GENE],
                                               pooled[VARIANT_SET])]
 pooled = pooled.sort_values(FCols.Y).reset_index(drop = True)
-ylim = (min(y_map.values()) - FStyle.FOREST_Y_PAD,
-        max(y_map.values()) + FStyle.FOREST_Y_PAD)
+ylim = futils.table_ylim(list(y_map.values()))
 # grey bands: the 2nd, 4th, ... gene, from 2 below its first to 2 above
 # its last row
 bands = [
@@ -382,30 +293,16 @@ if not panels:
 ## Forest plots
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# one figure, the forests side by side (gene labels on the first), one
-# extra legend row for the variant-set colours
-cases = args.panel == 'dementia'
-forest_cm = FOREST_CM + (CASES_CM if cases else 0)
-ratios = [FOREST_CM]
-for _ in panels[1:]:
-    ratios += [forest_cm - FOREST_CM + GAP_CM, FOREST_CM]
-ratios.append(forest_cm - FOREST_CM + 0.1)
-width_cm = sum(ratios) + 1.0
-height_cm = (FStyle.FOREST_BASE_HEIGHT_CM + FStyle.LEGEND_ROW_CM
-             + FStyle.CM_PER_Y * (ylim[1] - ylim[0]))
-matplotlib.rcParams['axes.linewidth'] = FStyle.LWD
-fig = plt.figure(figsize = (width_cm * FStyle.CM, height_cm * FStyle.CM))
-gs = gridspec.GridSpec(nrows = 1, ncols = len(ratios),
-                       width_ratios = ratios,
-                       figure = fig, wspace = 0.0,
-                       bottom = ((FStyle.FOREST_BOTTOM_CM
-                                  + FStyle.LEGEND_ROW_CM) / height_cm),
-                       top = 1 - FStyle.FOREST_TOP_CM / height_cm)
-axes = []
-for i, (rows, name, log_x) in enumerate(panels):
-    axes.append(draw_forest(fig, gs[2 * i], rows, name, ylim, log_x,
-                            gene_labels = i == 0, cases = cases,
-                            bands = bands))
+# one figure, the forests in a grid row by row, one extra legend row for
+# the variant-set colours
+fig, cells, height_cm = futils.table_grid(
+        len(panels), min(args.n_cols, len(panels)),
+        [column for column, _, _ in TABLES], ylim, n_legend_rows = 2,
+        label_cm = LABEL_CM)
+axes = [futils.draw_table_forest(fig, cell, rows, name, ylim, log_x, GENE,
+                                 TABLES if log_x else LIPID_TABLES, bands,
+                                 italic = True)
+        for cell, (rows, name, log_x) in zip(cells, panels)]
 # add legends below the first forest: variant-set colours above the
 # significance shapes
 futils.add_legend(fig, axes[0], set_legend(sets), FigNames.VARIANT_SET_TITLE,

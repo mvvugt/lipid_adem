@@ -7,12 +7,14 @@
 ## Script name: figure_utils
 ##
 ## Purpose of script: Shared helpers of the figure scripts
-##     (cohort_burden_forest.py, ascvd_dementia_scatter.py,
+##     (cohort_burden_forest.py, variant_sets_forest.py,
+##     sources_forest.py, ascvd_dementia_scatter.py,
 ##     cetp_cohort_variants_forest.py, pooled_forest.py,
 ##     burden_apoe_forest.py, apoe_genotype_forest.py):
 ##     reading burden files, odds ratios (binary outcomes) and betas
-##     (lipids) with 95% CI, p-value formatting,
-##     readable names, significance markers, axis limits and saving.
+##     (lipids) with 95% CI, p-value formatting, UKB carrier counts,
+##     readable names, significance markers, axis limits, grids of
+##     forests with side tables and saving.
 ##     Constants shared by the figure scripts are in `project_constants`
 ##     (`FigureColumns`, `FigureNames`, `FigureStyle`).
 ##     Only `project_constants` is imported from the pipeline;
@@ -33,10 +35,16 @@
 from __future__ import annotations
 
 import os
+import math
 import logging
 import numpy as np
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+import plot_misc.forest as forest
+from collections.abc import Iterable
+from functools import lru_cache
 from pathlib import Path
 from matplotlib.lines import Line2D
 from matplotlib.ticker import MaxNLocator
@@ -47,6 +55,7 @@ from project_constants import (
         FigureStyle as FStyle,
         FileNames,
         HarmonisedColumns,
+        MarvelColumns,
         MetaColumns,
         MetaLevel,
         Paths,
@@ -76,6 +85,16 @@ BETA_N_TICKS = 5
 # p-values below this are shown as this (p = 0 is below double precision)
 P_MIN = 1e-100
 DPI = 300
+# side-table column widths (cm), by text column (`table_grid`)
+TABLE_CM = {
+    FCols.ROW_NAME: 1.2,
+    FCols.OR_TEXT: 1.3,
+    FCols.BETA_TEXT: 1.3,
+    FCols.P_TEXT: 0.8,
+    FCols.CARRIER_TEXT: 1.3,
+}
+# shading of every other row group
+BAND_COLOUR = 'lightgrey'
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -254,6 +273,51 @@ def burden_path(ancestry: str, label: str, extra: str = '') -> Path:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def ordered_genes(genes: Iterable[str]) -> list[str]:
+    """Genes in plotting order: `FigureNames.FIRST_GENES`, then A-Z.
+
+    Parameters
+    ----------
+    genes : `Iterable[str]`
+        Gene names, duplicates allowed.
+
+    Returns
+    -------
+    genes : `list[str]`
+        Unique genes; those in `FIRST_GENES` first, in that order, the
+        others alphabetically.
+    """
+    unique = set(genes)
+    first = [gene for gene in FigNames.FIRST_GENES if gene in unique]
+    return first + sorted(unique - set(first))
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def gene_sort_key(column: pd.Series) -> pd.Series:
+    """`sort_values` key that puts the gene column in `ordered_genes` order.
+
+    Parameters
+    ----------
+    column : `pd.Series`
+        A column being sorted; only `VariantListColumns.OUT_GENE` is
+        changed.
+
+    Returns
+    -------
+    key : `pd.Series`
+        The gene's rank in `ordered_genes`, or `column` unchanged.
+
+    Examples
+    --------
+    >>> data.sort_values([GENE, FCols.ORDER], key = gene_sort_key)
+    """
+    if column.name != VariantListColumns.OUT_GENE:
+        return column
+    rank = {gene: i for i, gene in enumerate(ordered_genes(column))}
+    return column.map(rank)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def load_burden(path: Path, keep_lipids: bool = False
                 ) -> pd.DataFrame | None:
     """Read a burden file and add the odds ratio with its 95% CI.
@@ -367,6 +431,234 @@ def study_names() -> dict[str, str]:
                 f'{str(row[MetaColumns.STUDY_GROUP]).capitalize()} {stratum}'
             )
     return names
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def study_name(accession: str, names: dict[str, str]) -> str:
+    """Readable name of one study.
+
+    Parameters
+    ----------
+    accession : `str`
+        Study accession of a burden row.
+    names : `dict[str, str]`
+        From `study_names` or `source_names`.
+
+    Returns
+    -------
+    name : `str`
+        `FigureNames.UKB` for marvel UKB accessions, else the `names`
+        entry, else the accession itself.
+    """
+    if accession.startswith(UKB_PREFIX):
+        return FigNames.UKB
+    return names.get(accession, accession)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def source_names() -> dict[str, str]:
+    """Readable source (study group) name per accession.
+
+    Returns
+    -------
+    names : `dict[str, str]`
+        Accession -> name: the capitalised `study_group` of
+        `FileNames.APOE_STRATA` (e.g. all Thomassen strata ->
+        ``'Thomassen'``), `FINNGEN_NAME` for every FinnGen phenocode. UKB
+        accessions are named in `study_name`.
+    """
+    names = {
+        accession: name
+        for accession, name in study_names().items()
+        if name == FINNGEN_NAME
+    }
+    if FileNames.APOE_STRATA.exists():
+        strata = pd.read_csv(FileNames.APOE_STRATA, sep = '\t')
+        names.update(zip(
+            strata[HarmonisedColumns.STUDY_ACCESSION],
+            strata[MetaColumns.STUDY_GROUP].astype(str).str.capitalize(),
+        ))
+    return names
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def source_rows(per_study: pd.DataFrame) -> pd.DataFrame:
+    """One estimate per gene, outcome and source.
+
+    A source with several studies (the Thomassen APOE strata) is the
+    fixed-effect IVW of their estimates, the same pooling as
+    `meta_analysis.py`; a source with one study keeps that study's row.
+
+    Parameters
+    ----------
+    per_study : `pd.DataFrame`
+        Burden rows of level ``stratum`` (one per gene, outcome and
+        study), from `load_burden`.
+
+    Returns
+    -------
+    sources : `pd.DataFrame`
+        Gene, outcome, `FigureColumns.ROW_NAME` (source name), beta, SE,
+        p, the `add_or` columns, and, from the source's first study,
+        `STUDY_ACCESSION` and `MetaColumns.VARIANTS` (for
+        `add_carrier_text`).
+    """
+    gene = VariantListColumns.OUT_GENE
+    outcome = HarmonisedColumns.OUTCOME
+    study = HarmonisedColumns.STUDY_ACCESSION
+    names = source_names()
+    rows = per_study.copy()
+    rows[FCols.ROW_NAME] = [
+        study_name(str(accession), names) for accession in rows[study]
+    ]
+    rows['_weight'] = 1.0 / rows[MetaColumns.SE] ** 2
+    rows['_weighted'] = rows['_weight'] * rows[MetaColumns.BETA]
+    keys = [gene, outcome, FCols.ROW_NAME]
+    grouped = rows.groupby(keys, sort = False)
+    sums = grouped[['_weight', '_weighted']].sum()
+    sums = sums.join(grouped[[study, MetaColumns.VARIANTS]].first())
+    sums = sums.reset_index()
+    sums[MetaColumns.BETA] = sums['_weighted'] / sums['_weight']
+    sums[MetaColumns.SE] = 1.0 / np.sqrt(sums['_weight'])
+    z = (sums[MetaColumns.BETA] / sums[MetaColumns.SE]).abs()
+    sums[MetaColumns.P] = [math.erfc(value / math.sqrt(2)) for value in z]
+    return add_or(sums.drop(columns = ['_weight', '_weighted']))
+
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Carrier counts
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@lru_cache(maxsize = 1)
+def _ukb_counts() -> dict[tuple[str, str], tuple[float, float, float]]:
+    """UKB carriers, cases and samples per study and burden exposure.
+
+    Returns
+    -------
+    counts : `dict[tuple[str, str], tuple[float, float, float]]`
+        (study accession, marvel `Exposure`) -> (exposed, cases, samples)
+        from `FileNames.MATCHED_BURDEN`; empty (logged) when the file does
+        not exist. Read once.
+    """
+    path = FileNames.MATCHED_BURDEN
+    if not path.exists():
+        LOGGER.info(f'{path} not found: no carrier counts')
+        return {}
+    prefix = HarmonisedColumns.RAW_PREFIX
+    exposure, exposed, cases, samples = (
+        f'{prefix}{column}' for column in (
+            MarvelColumns.EXPOSURE, MarvelColumns.EXPOSED,
+            MarvelColumns.CASES, MarvelColumns.SAMPLES)
+    )
+    study = HarmonisedColumns.STUDY_ACCESSION
+    table = pd.read_csv(path, sep = '\t', low_memory = False,
+                        usecols = [study, exposure, exposed, cases, samples])
+    numbers = table[[exposed, cases, samples]].apply(pd.to_numeric,
+                                                     errors = 'coerce')
+    return {
+        (str(accession), str(name)): tuple(values)
+        for accession, name, values in zip(table[study], table[exposure],
+                                           numbers.to_numpy())
+    }
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@lru_cache(maxsize = 1)
+def _exposure_sites() -> dict[str, str]:
+    """Sites per burden exposure (burden_exposure.py summary).
+
+    Returns
+    -------
+    sites : `dict[str, str]`
+        Exposure (``<GENE>_<mask>``) -> its sites joined by ``;``; empty
+        (logged) when `FileNames.BURDEN_EXPOSURE_SUMMARY` does not exist.
+        Read once.
+    """
+    path = FileNames.BURDEN_EXPOSURE_SUMMARY
+    if not path.exists():
+        LOGGER.info(f'{path} not found: fallback masks not recognised')
+        return {}
+    summary = pd.read_csv(path, sep = '\t', dtype = str)
+    return dict(zip(summary['exposure'], summary['sites'].fillna('')))
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def burden_exposure(gene: str, variant_set: str, variants: object) -> str:
+    """The marvel exposure behind a UKB carrier-burden row.
+
+    Parameters
+    ----------
+    gene : `str`
+        Variant-list gene.
+    variant_set : `str`
+        Variant set (`Constants.BURDEN_VARIANT_SETS` key, the mask).
+    variants : `object`
+        The row's `MetaColumns.VARIANTS` (sites joined by ``;``), may be
+        NA.
+
+    Returns
+    -------
+    exposure : `str`
+        ``<gene>_<set>_fb`` when `variants` are the sites of that fallback
+        mask and not of the base mask (`meta_analysis.ukb_burden_rows`
+        picked it), else ``<gene>_<set>``.
+    """
+    base = f'{gene}_{variant_set}'
+    fallback = f'{base}{Constants.BURDEN_FALLBACK_SUFFIX}'
+    sites = _exposure_sites()
+    if (isinstance(variants, str) and sites.get(fallback) == variants
+            and sites.get(base) != variants):
+        return fallback
+    return base
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def add_carrier_text(data: pd.DataFrame, study_col: str,
+                     set_col: str) -> pd.DataFrame:
+    """Add the UKB carriers / cases (lipids: carriers / N) side-table text.
+
+    Parameters
+    ----------
+    data : `pd.DataFrame`
+        Rows with `OUT_GENE`, `OUTCOME`, `study_col`, `set_col` and
+        optionally `MetaColumns.VARIANTS`.
+    study_col : `str`
+        Column with the row's one study accession (e.g. `MetaColumns.STUDIES`
+        of a single-study pooled row, or `STUDY_ACCESSION`).
+    set_col : `str`
+        Column with the row's variant set.
+
+    Returns
+    -------
+    data : `pd.DataFrame`
+        Copy with `FigureColumns.CARRIER_TEXT`, e.g. ``'833 / 67,249'``:
+        the carriers and all cases (binary outcomes) or all samples with a
+        measurement (lipids) of the UKB analysis, from
+        `FileNames.MATCHED_BURDEN`. Empty for rows of other studies,
+        several studies, or without counts.
+    """
+    counts = _ukb_counts()
+    variants = (data[MetaColumns.VARIANTS] if MetaColumns.VARIANTS in data
+                else pd.Series(pd.NA, index = data.index))
+    texts = []
+    for gene, outcome, study, variant_set, sites in zip(
+            data[VariantListColumns.OUT_GENE],
+            data[HarmonisedColumns.OUTCOME], data[study_col].astype(str),
+            data[set_col], variants):
+        key = (study, burden_exposure(gene, variant_set, sites))
+        if not study.startswith(UKB_PREFIX) or key not in counts:
+            texts.append('')
+            continue
+        exposed, cases, samples = counts[key]
+        total = samples if outcome in Constants.LIPID_OUTCOMES else cases
+        if np.isfinite(exposed) and np.isfinite(total):
+            texts.append(f'{exposed:,.0f} / {total:,.0f}')
+        else:
+            texts.append('')
+    data = data.copy()
+    data[FCols.CARRIER_TEXT] = texts
+    return data
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -626,6 +918,247 @@ def beta_axis(data: pd.DataFrame) -> tuple[tuple[float, float], list[float]]:
     ticks = [float(t) for t in locator.tick_values(low, high)
              if low <= t <= high]
     return (low, high), ticks
+
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Forests with side tables
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def table_ylim(y: pd.Series | list[float]) -> tuple[float, float]:
+    """Y limits of a table forest: little space above the first row.
+
+    Parameters
+    ----------
+    y : `pd.Series` or `list[float]`
+        Y coordinates of all rows (`set_y` spacing).
+
+    Returns
+    -------
+    ylim : `tuple[float, float]`
+        The first row minus `FigureStyle.TABLE_Y_PAD_TOP`, the last plus
+        `TABLE_Y_PAD_BOTTOM`; the forest draws the first row at the top.
+    """
+    return (float(min(y)) - FStyle.TABLE_Y_PAD_TOP,
+            float(max(y)) + FStyle.TABLE_Y_PAD_BOTTOM)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def group_bands(data: pd.DataFrame, group_col: str
+                ) -> list[tuple[float, float]]:
+    """Y ranges of every other row group, to shade grey.
+
+    Parameters
+    ----------
+    data : `pd.DataFrame`
+        Rows with `FigureColumns.Y` (`set_y` spacing) and `group_col`.
+    group_col : `str`
+        Column of the groups.
+
+    Returns
+    -------
+    bands : `list[tuple[float, float]]`
+        The 2nd, 4th, ... group from the top, from 2 above its first to 2
+        below its last row.
+    """
+    spans = (data.groupby(group_col, sort = False)[FCols.Y]
+             .agg(['min', 'max']).sort_values('min'))
+    return [(low - 2, high + 2) for low, high in spans.to_numpy()[1::2]]
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def table_grid(n_panels: int, n_cols: int, columns: list[str],
+               ylim: tuple[float, float], n_legend_rows: int = 1,
+               label_cm: float = FStyle.TABLE_LABEL_CM,
+               ) -> tuple[plt.Figure, list[list[gridspec.SubplotSpec]],
+                          float]:
+    """Figure with a grid of panels, each a forest and its side tables.
+
+    Parameters
+    ----------
+    n_panels : `int`
+        Number of panels, filled row by row.
+    n_cols : `int`
+        Panels per row.
+    columns : `list[str]`
+        Side-table text columns of each panel (`TABLE_CM` keys).
+    ylim : `tuple[float, float]`
+        Y limits shared by the panels (sets the panel height).
+    n_legend_rows : `int`, optional, default: `1`
+        Titled legends below the grid.
+    label_cm : `float`, optional, default: `FigureStyle.TABLE_LABEL_CM`
+        Space for the y tick labels left of each forest (cm).
+
+    Returns
+    -------
+    fig : `plt.Figure`
+    cells : `list[list[gridspec.SubplotSpec]]`
+        Per panel the forest cell, then one per side table.
+    height_cm : `float`
+        Figure height, to place the legends.
+    """
+    n_rows = math.ceil(n_panels / n_cols)
+    panel_cm = FStyle.CM_PER_Y * (ylim[1] - ylim[0])
+    panel_widths = [label_cm, FStyle.TABLE_FOREST_CM,
+                    *(TABLE_CM[column] for column in columns)]
+    widths = panel_widths * n_cols
+    heights = [panel_cm]
+    for _ in range(n_rows - 1):
+        heights += [FStyle.TABLE_ROW_GAP_CM, panel_cm]
+    bottom_cm = (FStyle.FOREST_BOTTOM_CM
+                 + FStyle.LEGEND_ROW_CM * (n_legend_rows - 1))
+    height_cm = FStyle.FOREST_TOP_CM + sum(heights) + bottom_cm
+    matplotlib.rcParams['axes.linewidth'] = FStyle.LWD
+    fig = plt.figure(figsize = (sum(widths) * FStyle.CM,
+                                height_cm * FStyle.CM))
+    gs = gridspec.GridSpec(nrows = len(heights), ncols = len(widths),
+                           width_ratios = widths, height_ratios = heights,
+                           figure = fig, wspace = 0.0, hspace = 0.0,
+                           left = 0.0, right = 1.0,
+                           bottom = bottom_cm / height_cm,
+                           top = 1 - FStyle.FOREST_TOP_CM / height_cm)
+    cells = []
+    for i in range(n_panels):
+        row, col = divmod(i, n_cols)
+        # skip the tick-label column
+        start = col * len(panel_widths) + 1
+        cells.append([gs[2 * row, j]
+                      for j in range(start, start + len(panel_widths) - 1)])
+    return fig, cells, height_cm
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def draw_table(ax: plt.Axes, data: pd.DataFrame, column: str, header: str,
+               align: str, ylim: tuple[float, float],
+               bands: list[tuple[float, float]]) -> None:
+    """Write one side-table column next to a forest.
+
+    Parameters
+    ----------
+    ax : `plt.Axes`
+        Empty axis right of the forest.
+    data : `pd.DataFrame`
+        The forest's rows, with `FigureColumns.Y` and `column`.
+    column : `str`
+        Text column.
+    header : `str`
+        Bold header above the column.
+    align : `str`
+        ``'left'`` or ``'center'``.
+    ylim : `tuple[float, float]`
+        The forest axis's y limits (as returned by its `get_ylim`, so the
+        orientation matches).
+    bands : `list[tuple[float, float]]`
+        Y ranges shaded grey, as in the forest.
+
+    Returns
+    -------
+    `None`
+    """
+    ax.set_ylim(ylim)
+    ax.set_xlim(0, 1)
+    ax.axis('off')
+    for low, high in bands:
+        ax.axhspan(low, high, color = BAND_COLOUR, zorder = 0, lw = 0)
+    x = 0.05 if align == 'left' else 0.5
+    for y, text in zip(data[FCols.Y], data[column]):
+        ax.text(x, y, '' if pd.isna(text) else str(text), ha = align,
+                va = 'center', fontsize = FStyle.STEXT_SIZE)
+    ax.text(x, 1.0, header, transform = ax.transAxes, ha = align,
+            va = 'bottom', fontsize = FStyle.STEXT_SIZE,
+            fontweight = 'bold')
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def draw_table_forest(fig: plt.Figure, cells: list[gridspec.SubplotSpec],
+                      data: pd.DataFrame, title: str,
+                      ylim: tuple[float, float], log_x: bool, tick_col: str,
+                      tables: tuple[tuple[str, str, str], ...],
+                      bands: list[tuple[float, float]],
+                      italic: bool = False) -> plt.Axes:
+    """Draw one forest with its side tables.
+
+    Parameters
+    ----------
+    fig : `plt.Figure`
+        The figure.
+    cells : `list[gridspec.SubplotSpec]`
+        From `table_grid`: the forest, then one per side table.
+    data : `pd.DataFrame`
+        Rows with `FigureColumns` `Y`, `MARKER`, `COLOUR`, `SIZE`, the CI
+        columns and the table columns.
+    title : `str`
+        Forest title.
+    ylim : `tuple[float, float]`
+        From `table_ylim`, shared by the panels.
+    log_x : `bool`
+        Odds ratios on a log axis with reference 1 (`x_axis`); else betas
+        on a linear axis with reference 0 (`beta_axis`).
+    tick_col : `str`
+        Column of the y tick labels (one per group).
+    tables : `tuple[tuple[str, str, str], ...]`
+        Side tables: column, header, alignment.
+    bands : `list[tuple[float, float]]`
+        Y ranges shaded grey across the forest and its tables.
+    italic : `bool`, optional, default: `False`
+        Italic y tick labels (gene names).
+
+    Returns
+    -------
+    ax : `plt.Axes`
+        The forest axis.
+    """
+    ax = fig.add_subplot(cells[0])
+    if log_x:
+        ax.set_xscale('log')
+        x_col, lb_col, ub_col = FCols.OR, FCols.LB, FCols.UB
+    else:
+        x_col, lb_col, ub_col = MetaColumns.BETA, FCols.BETA_LB, FCols.BETA_UB
+    ax.set_zorder(1)
+    bm_forest = forest.ForestPlot(
+            data = data, x_col = x_col, y_col = FCols.Y,
+            lb_col = lb_col, ub_col = ub_col, g_col = tick_col, ax = ax,
+            )
+    _, ax = bm_forest.plot(
+            s_col = FCols.MARKER, c_col = FCols.COLOUR,
+            s_size_col = FCols.SIZE, ci_colour = 'black',
+            ci_lwd = FStyle.LWD, span = False, ylim = ylim,
+            kwargs_scatter_dict = FStyle.SCATTER_KWARGS,
+            kwargs_plot_ci_dict = FStyle.CI_KWARGS,
+            )
+    # formatting
+    for low, high in bands:
+        ax.axhspan(low, high, color = BAND_COLOUR, zorder = 0, lw = 0)
+    ax.axvline(1 if log_x else 0, linewidth = FStyle.LWD, linestyle = '--',
+               c = 'black', zorder = .5)
+    ax.spines[['right', 'top']].set_visible(False)
+    if log_x:
+        x_lim, x_tic = x_axis(data)
+        ax.xaxis.set_major_formatter(
+                matplotlib.ticker.FormatStrFormatter('%g'))
+        ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+    else:
+        x_lim, x_tic = beta_axis(data)
+    ax.set_xlim(x_lim)
+    ax.set_xticks(x_tic)
+    ax.tick_params(axis = 'both', which = 'minor', bottom = False,
+                   labelsize = FStyle.AX_LAB_SZ, width = FStyle.LWD)
+    ax.tick_params(axis = 'both', labelsize = FStyle.AX_LAB_SZ,
+                   width = FStyle.LWD)
+    if italic:
+        for label in ax.get_yticklabels():
+            label.set_fontstyle('italic')
+    ax.set_xlabel(FigNames.OR_LABEL_THERAPY if log_x
+                  else FigNames.BETA_LABEL_THERAPY,
+                  fontsize = FStyle.LAB_SIZE)
+    ax.set_title(title, fontweight = 'bold', fontsize = FStyle.TITLE_SIZE,
+                 loc = 'left', pad = 6)
+    # side tables
+    for cell, (column, header, align) in zip(cells[1:], tables):
+        side_ax = fig.add_subplot(cell)
+        draw_table(side_ax, data, column, header, align, ax.get_ylim(),
+                   bands)
+    return ax
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

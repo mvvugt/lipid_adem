@@ -372,9 +372,25 @@ for panel in controls dementia; do
     run_mamba plot-misc "${ROOT}"/src/cohort_burden_forest.py \
         --ancestry MULTI --label cohort_burden_multi --panel "${panel}"
 done
+# [local] main: per gene the binary outcomes (left) and lipids (right),
+# one row per variant set (all sets)
+run_mamba plot-misc "${ROOT}"/src/variant_sets_forest.py --ancestry EUR \
+    --label cohort_burden_eur
 # [local] main: CETP UKB burden vs the FinnGen variants (why the pooled
 # sensitivity differs)
 run_mamba plot-misc "${ROOT}"/src/cetp_cohort_variants_forest.py
+# [local] sensitivity: per variant set and outcome each source (UKB,
+# FinnGen, Thomassen) next to the pooled estimate (why pooling removes
+# the UKB dementia signal)
+run_mamba plot-misc "${ROOT}"/src/sources_forest.py --ancestry EUR \
+    --label pooled_eur
+# [local] main (EUR; MULTI as sensitivity): the selected CETP GoF variants
+# one by one: per variant each study and the IVW, binary outcomes (OR) and
+# lipids (beta)
+for ancestry in EUR MULTI; do
+    run_mamba plot-misc "${ROOT}"/src/selected_variants_forest.py \
+        --ancestry "${ancestry}" --label "selected_gof_${ancestry,,}"
+done
 for variant_set in "${VARIANT_SETS[@]}"; do
     # [local] main: ASCVD vs dementia odds ratio per gene
     run_mamba plot-misc "${ROOT}"/src/ascvd_dementia_scatter.py \

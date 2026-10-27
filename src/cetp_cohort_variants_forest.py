@@ -13,8 +13,11 @@
 ##     its FinnGen estimate (from the `pooled_<anc>_<set>` runs, where
 ##     FinnGen adds only single variants) next to the UKB estimate of the
 ##     same variant (per-variant rows of the `cohort_burden` runs, written
-##     with `--stratified`). All effects oriented to lower gene function,
-##     OR with 95% CI. Run locally in the `plot-misc` env on files copied
+##     with `--stratified`). All effects oriented to the therapeutic
+##     direction (`Constants.THERAPY_DIRECTION`; CETP: lower function),
+##     OR with 95% CI, with side tables (OR (95% CI), p-value, UKB
+##     carriers / cases of the burden rows); the forests in a grid
+##     (`--n-cols`). Run locally in the `plot-misc` env on files copied
 ##     from Snellius into `results/output/`. Writes
 ##     `results/figures/forest_cohort_variants_<gene>.pdf` (main analysis,
 ##     `FigureNames.MAIN_FIGURES`) or `results/figures/sensitivity/`.
@@ -34,11 +37,8 @@
 import sys
 import logging
 import argparse
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 import pandas as pd
-import plot_misc.forest as forest
+import matplotlib.pyplot as plt
 import figure_utils as futils
 from pathlib import Path
 from project_constants import (
@@ -93,6 +93,10 @@ parser.add_argument('-d', '--outcomes',
                     default = ['alzheimers_dementia', 'all_cause_dementia',
                                'vascular_dementia'],
                     help = 'outcomes, one forest each (default: %(default)s)')
+parser.add_argument('-n', '--n-cols',
+                    type = int,
+                    default = 1,
+                    help = 'forests per figure row (default: %(default)s)')
 parser.add_argument('-o', '--out-dir',
                     type = Path,
                     default = Paths.RESULTS_FIGURES,
@@ -105,6 +109,8 @@ parser.add_argument('-m', '--max-or',
 args = parser.parse_args()
 if args.max_or <= 1:
     parser.error('--max-or must be > 1')
+if args.n_cols < 1:
+    parser.error('--n-cols must be >= 1')
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -122,13 +128,22 @@ ROW_LABEL = 'row_label'
 BURDEN_BLOCK = 'UKB carrier burden'
 FINNGEN_ROW = futils.FINNGEN_NAME
 UKB_ROW = FigNames.UKB
+# helper columns: variant set of the burden rows and the row's one study,
+# for the carrier counts
+VARIANT_SET = 'variant_set'
+ROW_STUDY = '_study'
 # colours of the per-variant rows
 FINNGEN_COLOUR = FStyle.POOLED_COLOUR
 UKB_COLOUR = FStyle.STUDY_COLOUR
-# forest width and gap between forests (cm)
-FOREST_CM = 3.5
-GAP_CM = 0.4
-BAND_COLOUR = 'lightgrey'
+# side tables: column, header, alignment; carriers / cases of the
+# burden rows only
+TABLES = (
+    (FCols.OR_TEXT, FigNames.OR_HEADER, 'center'),
+    (FCols.P_TEXT, FigNames.P_HEADER, 'center'),
+    (FCols.CARRIER_TEXT, FigNames.CARRIERS_HEADER, 'center'),
+)
+# space for the block and row labels left of each forest (cm)
+LABEL_CM = 3.0
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -200,6 +215,7 @@ def burden_rows() -> pd.DataFrame:
                       & burden[OUTCOME].isin(args.outcomes)].copy()
         rows[BLOCK] = BURDEN_BLOCK
         rows[ROW_LABEL] = FigNames.VARIANT_SETS[variant_set]
+        rows[VARIANT_SET] = variant_set
         rows[FCols.ORDER] = i
         rows[FCols.COLOUR] = FStyle.VARIANT_SET_COLOURS[variant_set]
         frames.append(rows)
@@ -264,11 +280,13 @@ def variant_rows() -> pd.DataFrame:
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def block_y(rows: pd.DataFrame) -> tuple[dict[tuple[str, str], float],
+                                         dict[str, float],
                                          list[tuple[float, float]]]:
-    """Y per block and row label, shared by the forests, and grey bands.
+    """Y per block header and row, shared by the forests, and grey bands.
 
-    Rows 2 apart within a block, 4 between blocks (`figure_utils.set_y`);
-    a block keeps a slot for each of its row labels in every forest.
+    Each block starts with a header slot, its rows follow 2 apart, 4
+    between blocks (`figure_utils.set_y`); a block keeps a slot for each
+    of its row labels in every forest.
 
     Parameters
     ----------
@@ -280,89 +298,63 @@ def block_y(rows: pd.DataFrame) -> tuple[dict[tuple[str, str], float],
     -------
     y : `dict[tuple[str, str], float]`
         (block, row label) -> y.
+    headers : `dict[str, float]`
+        Block -> y of its header.
     bands : `list[tuple[float, float]]`
-        Y ranges of every other block, shaded grey.
+        Y ranges of every other block, header included, shaded grey.
     """
     slots = (rows[[BLOCK, ROW_LABEL, FCols.ORDER]].drop_duplicates()
              .sort_values(FCols.ORDER, kind = 'stable'))
     y: dict[tuple[str, str], float] = {}
+    headers: dict[str, float] = {}
     bands: list[tuple[float, float]] = []
     position = 1.0
     for i, block in enumerate(dict.fromkeys(rows[BLOCK])):
+        headers[block] = position
         labels = slots.loc[slots[BLOCK] == block, ROW_LABEL]
         for j, label in enumerate(labels):
-            y[(block, label)] = position + 2 * j
-        last = position + 2 * (len(labels) - 1)
+            y[(block, label)] = position + 2 * (j + 1)
+        last = position + 2 * len(labels)
         if i % 2:
             bands.append((position - 2, last + 2))
         position = last + 4
-    return y, bands
+    return y, headers, bands
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def draw_forest(fig: plt.Figure, cell: gridspec.SubplotSpec,
-                data: pd.DataFrame, title: str, ylim: tuple[float, float],
-                bands: list[tuple[float, float]],
-                labels: bool) -> plt.Axes:
-    """Draw one outcome's forest.
+def set_row_ticks(ax: plt.Axes, data: pd.DataFrame,
+                  headers: dict[str, float]) -> None:
+    """One y tick per row and a bold one per block header.
+
+    Replaces the ticks `ForestPlot` derives from its group column, which
+    merges rows that share a label (e.g. the UK Biobank row of every
+    variant) into a single misplaced tick.
 
     Parameters
     ----------
-    fig : `plt.Figure`
-        The figure.
-    cell : `gridspec.SubplotSpec`
-        Grid cell of the forest.
+    ax : `plt.Axes`
+        Forest axis from `figure_utils.draw_table_forest`.
     data : `pd.DataFrame`
-        The outcome's rows, with `FigureColumns` `Y`, `MARKER`, `COLOUR`,
-        `SIZE` and the OR columns, and `ROW_LABEL`.
-    title : `str`
-        Forest title (the outcome).
-    ylim : `tuple[float, float]`
-        Y limits, shared by the forests.
-    bands : `list[tuple[float, float]]`
-        Y ranges shaded grey.
-    labels : `bool`
-        Show the block and row labels as y tick labels.
+        The forest's rows, with `FigureColumns.Y` and `ROW_LABEL`.
+    headers : `dict[str, float]`
+        Block -> y of its header, from `block_y`.
 
     Returns
     -------
-    ax : `plt.Axes`
-        The forest axis.
+    `None`
     """
-    ax = fig.add_subplot(cell)
-    ax.set_xscale('log')
-    bm_forest = forest.ForestPlot(
-            data = data, x_col = FCols.OR, y_col = FCols.Y,
-            lb_col = FCols.LB, ub_col = FCols.UB, g_col = '_tick', ax = ax,
-            )
-    _, ax = bm_forest.plot(
-            s_col = FCols.MARKER, c_col = FCols.COLOUR,
-            s_size_col = FCols.SIZE, ci_colour = 'black',
-            ci_lwd = FStyle.LWD, span = False, ylim = ylim,
-            kwargs_scatter_dict = FStyle.SCATTER_KWARGS,
-            kwargs_plot_ci_dict = FStyle.CI_KWARGS,
-            )
-    # formatting
-    for low, high in bands:
-        ax.axhspan(low, high, color = BAND_COLOUR, zorder = 0, lw = 0)
-    ax.axvline(1, linewidth = FStyle.LWD, linestyle = '--', c = 'black',
-               zorder = .5)
-    ax.spines[['right', 'top']].set_visible(False)
-    x_lim, x_tic = futils.x_axis(data)
-    ax.xaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%g'))
-    ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
-    ax.set_xlim(x_lim)
-    ax.set_xticks(x_tic)
-    ax.tick_params(axis = 'both', which = 'minor', bottom = False,
-                   labelsize = FStyle.AX_LAB_SZ, width = FStyle.LWD)
-    ax.tick_params(axis = 'both', labelsize = FStyle.AX_LAB_SZ,
-                   width = FStyle.LWD)
-    if not labels:
-        ax.tick_params(axis = 'y', labelleft = False)
-    ax.set_xlabel('Odds ratio', fontsize = FStyle.LAB_SIZE)
-    ax.set_title(title, fontweight = 'bold', fontsize = FStyle.TITLE_SIZE,
-                 loc = 'left', pad = 6)
-    return ax
+    ticks = {y: label for y, label in zip(data[FCols.Y], data[ROW_LABEL])}
+    ticks.update({y: block for block, y in headers.items()})
+    positions = sorted(ticks)
+    ax.set_yticks(positions, [ticks[y] for y in positions])
+    header_y = set(headers.values())
+    for y, label in zip(positions, ax.get_yticklabels()):
+        if y in header_y:
+            label.set_fontweight('bold')
+    # no tick mark next to the headers
+    for y, tick in zip(positions, ax.yaxis.get_major_ticks()):
+        if y in header_y:
+            tick.tick1line.set_visible(False)
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -381,16 +373,19 @@ logger.info(f'{args.gene}: ' + ', '.join(
 # markers: nominal significance only, no Bonferroni (descriptive figure)
 rows[FCols.MARKER] = futils.significance_marker(rows[MetaColumns.P], 0.0)
 rows[FCols.SIZE] = FStyle.MARKER_SIZE
-y_map, bands = block_y(rows)
+y_map, headers, bands = block_y(rows)
 rows[FCols.Y] = [y_map[key] for key in zip(rows[BLOCK], rows[ROW_LABEL])]
-# y tick label per row: the block name on its first row
-first = rows.groupby(BLOCK)[FCols.Y].transform('min') == rows[FCols.Y]
-rows['_tick'] = [f'{block}: {label}' if is_first else label
-                 for block, label, is_first in zip(rows[BLOCK],
-                                                   rows[ROW_LABEL], first)]
+# unique group per row for `ForestPlot`; the shown ticks are set after
+# drawing (`set_row_ticks`)
+rows['_tick'] = rows[BLOCK] + ': ' + rows[ROW_LABEL]
 rows = rows.sort_values(FCols.Y).reset_index(drop = True)
-ylim = (min(y_map.values()) - FStyle.FOREST_Y_PAD,
-        max(y_map.values()) + FStyle.FOREST_Y_PAD)
+ylim = futils.table_ylim([*y_map.values(), *headers.values()])
+# UKB carriers / cases of the burden rows: their pooled row names the one
+# study in `studies`; the per-variant rows have no variant set, so no
+# counts
+rows[ROW_STUDY] = rows[HarmonisedColumns.STUDY_ACCESSION].fillna(
+        rows[MetaColumns.STUDIES])
+rows = futils.add_carrier_text(rows, ROW_STUDY, VARIANT_SET)
 
 panels = []
 for outcome in args.outcomes:
@@ -409,23 +404,17 @@ if not panels:
 ## Forest plots
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ratios = [FOREST_CM]
-for _ in panels[1:]:
-    ratios += [GAP_CM, FOREST_CM]
-width_cm = sum(ratios) + 3.0
-height_cm = (FStyle.FOREST_BASE_HEIGHT_CM + FStyle.LEGEND_ROW_CM
-             + FStyle.CM_PER_Y * (ylim[1] - ylim[0]))
-matplotlib.rcParams['axes.linewidth'] = FStyle.LWD
-fig = plt.figure(figsize = (width_cm * FStyle.CM, height_cm * FStyle.CM))
-gs = gridspec.GridSpec(nrows = 1, ncols = len(ratios),
-                       width_ratios = ratios,
-                       figure = fig, wspace = 0.0,
-                       bottom = ((FStyle.FOREST_BOTTOM_CM
-                                  + FStyle.LEGEND_ROW_CM) / height_cm),
-                       top = 1 - FStyle.FOREST_TOP_CM / height_cm)
-axes = [draw_forest(fig, gs[2 * i], data, name, ylim, bands,
-                    labels = i == 0)
-        for i, (data, name) in enumerate(panels)]
+# the forests in a grid row by row, one extra legend row for the row
+# colours
+fig, cells, height_cm = futils.table_grid(
+        len(panels), min(args.n_cols, len(panels)),
+        [column for column, _, _ in TABLES], ylim, n_legend_rows = 2,
+        label_cm = LABEL_CM)
+axes = [futils.draw_table_forest(fig, cell, data, name, ylim, True, '_tick',
+                                 TABLES, bands)
+        for cell, (data, name) in zip(cells, panels)]
+for ax, (data, _) in zip(axes, panels):
+    set_row_ticks(ax, data, headers)
 # legends below the first forest: row colours above the significance shapes
 colours = {FigNames.VARIANT_SETS[variant_set]:
            FStyle.VARIANT_SET_COLOURS[variant_set]

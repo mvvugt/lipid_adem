@@ -1401,6 +1401,9 @@ class FigureColumns:
     OR_TEXT: str = "or_text"
     BETA_TEXT: str = "beta_text"
     P_TEXT: str = "p_text"
+    # UKB carriers / cases (binary) or carriers / N (lipids)
+    # (`figure_utils.add_carrier_text`)
+    CARRIER_TEXT: str = "carrier_text"
     # row order within a group
     ORDER: str = "order"
 
@@ -1461,6 +1464,9 @@ class FigureNames:
     FIRST_GENES: tuple[str, ...] = ("CETP",)
     BETA_HEADER: str = "Beta (95% CI)"
     P_HEADER: str = "P-value"
+    CARRIERS_HEADER: str = "Carriers / Cases"
+    CARRIERS_N_HEADER: str = "Carriers / N"
+    SOURCE_HEADER: str = "Source"
     # legend titles
     SIGNIFICANCE_TITLE: str = "Significance"
     OUTCOME_TITLE: str = "Outcomes"
@@ -1487,6 +1493,7 @@ class FigureNames:
     MAIN_FIGURES: tuple[str, ...] = (
         "forest_cohort_burden_eur_controls",
         "forest_cohort_burden_eur_dementia",
+        "forest_variant_sets_cohort_burden_eur_",
         "scatter_ascvd_dementia_cohort_burden_eur_",
         "forest_cohort_variants_CETP",
         "forest_apoe_genotype_EUR",
@@ -1561,6 +1568,15 @@ class FigureStyle:
     FOREST_BASE_HEIGHT_NO_LEGEND_CM: float = 1.1
     FOREST_TOP_CM: float = 0.35
     FOREST_Y_PAD: float = 3
+    # forests with side tables in a grid (`figure_utils.table_grid`): y
+    # padding above the first row (top of the axis) and below the last
+    # one, rows being 2 apart and groups 4; forest width, space for the
+    # y tick labels left of it and the gap between panel rows (cm)
+    TABLE_Y_PAD_TOP: float = 1.5
+    TABLE_Y_PAD_BOTTOM: float = 2
+    TABLE_FOREST_CM: float = 3.2
+    TABLE_LABEL_CM: float = 1.0
+    TABLE_ROW_GAP_CM: float = 1.1
     # default odds-ratio axis limit (`--max-or`)
     MAX_OR: float = 20.0
     # plot_misc ForestPlot / plot_table keyword arguments
