@@ -1,3 +1,3 @@
 rowidx	gene	carriers	outdir	config	subset
-1	APOE_diplotype	/myriadfs/home/rmgpmva/projects/lipid_adem/data/processed/apoe_diplotype.tsv.gz	/myriadfs/home/rmgpmva/projects/lipid_adem/results/APOE_diplotype	/myriadfs/home/rmgpmva/projects/lipid_adem/config/marvel/APOE_diplotype	all
-2	APOE_diplotype	/myriadfs/home/rmgpmva/projects/lipid_adem/data/processed/apoe_diplotype.tsv.gz	/myriadfs/home/rmgpmva/projects/lipid_adem/results/APOE_diplotype_eur	/myriadfs/home/rmgpmva/projects/lipid_adem/config/marvel/APOE_diplotype_eur	eur_overall
+1	APOE_diplotype	/home/mvanvugt/projects/lipid_adem/data/processed/apoe_diplotype.tsv.gz	/home/mvanvugt/projects/lipid_adem/results/APOE_diplotype	/home/mvanvugt/projects/lipid_adem/config/marvel/APOE_diplotype	all
+2	APOE_diplotype	/home/mvanvugt/projects/lipid_adem/data/processed/apoe_diplotype.tsv.gz	/home/mvanvugt/projects/lipid_adem/results/APOE_diplotype_eur	/home/mvanvugt/projects/lipid_adem/config/marvel/APOE_diplotype_eur	eur_overall
