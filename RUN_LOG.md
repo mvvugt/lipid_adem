@@ -556,31 +556,34 @@ Output:
 
 ```
 
-## [20] filter_gwas_cat (`/myriadfs/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py --tasks-file /myriadfs/home/rmgpmva/projects/lipid_adem/src/logs/filter_task_logs/4_1791376591/run_job_array.job --task-id 1 --step 10`)
+## [20] filter_gwas_cat (`/home/rmgpmva/projects/lipid_adem/src/filter_gwas_cat.py --tasks-file /home/rmgpmva/projects/lipid_adem/data/temp/tasks.tsv --task-id 116 --step 1`)
 - first run: 2026-09-21 22:58:26
-- last run: 2026-10-07 13:43:01
-- commit: `43baa0f`
+- last run: 2026-10-27 13:09:37
+- commit: `23ebede`
 
 Output:
 ```text
-[info]  2026-10-07 13:42:22 rows 1-3 of 3, 9 gene regions
-[info]  2026-10-07 13:42:25 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90476001-GCST90477000/GCST90476595/harmonised/GCST90476595.h.tsv.gz @ 9 regions -> 5086 rows (no MAF filter)
-[info]  2026-10-07 13:42:26 GCST90476595: 5086 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90476595_result.tsv.gz
-[info]  2026-10-07 13:42:29 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90476001-GCST90477000/GCST90476594/harmonised/GCST90476594.h.tsv.gz @ 9 regions -> 3682 rows (no MAF filter)
-[info]  2026-10-07 13:42:36 GCST90476594: 3682 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90476594_result.tsv.gz
-[info]  2026-10-07 13:42:41 http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90018001-GCST90019000/GCST90018650/harmonised/GCST90018650.h.tsv.gz @ 9 regions -> 1496 rows (no MAF filter)
-[info]  2026-10-07 13:42:50 GCST90018650: 1496 rows over 9 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/GCST90018650_result.tsv.gz
+[info]  2026-10-27 13:09:13 rows 116-116 of 125, 8 gene regions
+[info]  2026-10-27 13:09:24 https://storage.googleapis.com/finngen-public-data-r13/summary_stats/finngen_R13_I9_CVD_HARD.gz @ 8 regions -> 2448 rows (no MAF filter)
+[info]  2026-10-27 13:09:27 I9_CVD_HARD: 2448 rows over 8 genes -> /myriadfs/home/rmgpmva/projects/lipid_adem/data/temp/gwas_filtered/I9_CVD_HARD_result.tsv.gz
 
 ```
 
 ## [20] filter_gwas_cat_job
 - first run: 2026-09-28 23:45:21
-- last run: 2026-10-07 13:43:27
-- commit: `43baa0f`
+- last run: 2026-10-27 13:09:56
+- commit: `23ebede`
+
+Δ vs previous run (was `43baa0f`):
+```diff
+@@ -1 +1 @@
+-[info]  2026-10-07 13:41:55 task 1: rows 1-10
++[info]  2026-10-27 13:09:00 task 116: rows 116-116
+```
 
 Output:
 ```text
-[info]  2026-10-07 13:41:55 task 1: rows 1-10
+[info]  2026-10-27 13:09:00 task 116: rows 116-116
 
 ```
 
