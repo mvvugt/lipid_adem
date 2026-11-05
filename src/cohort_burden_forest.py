@@ -42,7 +42,8 @@ import pandas as pd
 import figure_utils as futils
 from pathlib import Path
 from project_constants import (
-        Constants,
+        Burden,
+        Const,
         FigureColumns as FCols,
         FigureNames as FigNames,
         FigureStyle as FStyle,
@@ -76,7 +77,7 @@ parser.add_argument('-l', '--label',
                     'suffix (default: %(default)s)')
 parser.add_argument('-s', '--sets',
                     nargs = '+',
-                    choices = list(Constants.BURDEN_VARIANT_SETS),
+                    choices = list(Burden.VARIANT_SETS),
                     default = ['ptv', 'am', 'ptv_am'],
                     help = 'variant sets, one row each (default: '
                     '%(default)s)')
@@ -91,7 +92,7 @@ parser.add_argument('-n', '--n-cols',
                     help = 'forests per figure row (default: %(default)s)')
 parser.add_argument('-o', '--out-dir',
                     type = Path,
-                    default = Paths.RESULTS_FIGURES,
+                    default = Paths.FIGURES,
                     help = 'output directory (default: %(default)s)')
 parser.add_argument('-m', '--max-or',
                     type = float,
@@ -151,7 +152,7 @@ def load_sets(ancestry: str, label: str, sets: list[str],
         Run label without the variant-set suffix; each run is
         ``<label>_<set>``.
     sets : `list[str]`
-        Variant sets (`Constants.BURDEN_VARIANT_SETS` keys).
+        Variant sets (`Burden.VARIANT_SETS` keys).
     outcomes : `tuple[str, ...]`
         Outcomes to keep.
 
@@ -276,7 +277,7 @@ bands = [
 panels = []
 for outcome in outcomes:
     rows = pooled.loc[pooled[OUTCOME] == outcome]
-    is_lipid = outcome in Constants.LIPID_OUTCOMES
+    is_lipid = outcome in Const.LIPID_OUTCOMES
     name = FigNames.LIPIDS.get(outcome, FigNames.OUTCOMES.get(
         outcome, futils.outcome_name(outcome)))
     if not is_lipid:

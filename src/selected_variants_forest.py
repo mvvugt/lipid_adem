@@ -18,7 +18,7 @@
 ##     strata, GWAS Catalog accessions) and their IVW last, 95% CI, with
 ##     side tables (study, OR or beta (95% CI), p-value). All effects
 ##     oriented to lower gene function (flipped as GoF) and then to the
-##     therapeutic direction (`Constants.THERAPY_DIRECTION`; CETP: lower
+##     therapeutic direction (`TherapyDirection.GENES`; CETP: lower
 ##     function). Marker shape shows significance: circle p >= 0.05,
 ##     square p < 0.05, diamond below the Bonferroni threshold 0.05 /
 ##     (outcomes with a pooled estimate, per panel). Run locally in the
@@ -50,7 +50,7 @@ import pandas as pd
 import figure_utils as futils
 from pathlib import Path
 from project_constants import (
-        Constants,
+        Const,
         FigureColumns as FCols,
         FigureNames as FigNames,
         FigureStyle as FStyle,
@@ -60,6 +60,7 @@ from project_constants import (
         MetaLevel,
         Paths,
         VariantListColumns,
+        VariantSource,
         )
 
 logging.basicConfig(level = logging.INFO,
@@ -85,7 +86,7 @@ parser.add_argument('-l', '--label',
                     '%(default)s)')
 parser.add_argument('-o', '--out-dir',
                     type = Path,
-                    default = Paths.RESULTS_FIGURES,
+                    default = Paths.FIGURES,
                     help = 'output directory (default: %(default)s)')
 parser.add_argument('-m', '--max-or',
                     type = float,
@@ -402,7 +403,7 @@ def variant_panels(rows: pd.DataFrame, title: str,
         before the Bonferroni count; odds ratios outside `--max-or` are
         dropped after it.
     """
-    is_lipid = rows[OUTCOME].isin(Constants.LIPID_OUTCOMES)
+    is_lipid = rows[OUTCOME].isin(Const.LIPID_OUTCOMES)
     is_shown = rows[OUTCOME].isin(FigNames.OUTCOMES)
     dropped = sorted(set(rows.loc[~is_lipid & ~is_shown, OUTCOME]))
     if dropped:
@@ -441,18 +442,18 @@ def variant_panels(rows: pd.DataFrame, title: str,
 ## Load data
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-path = Paths.RESULTS_OUTPUT / FileNames.META_ANALYSIS_TEMPLATE.format(
+path = Paths.OUTPUT / FileNames.META_ANALYSIS_TEMPLATE.format(
         ancestry = args.ancestry, suffix = f'_{args.label}')
 meta = futils.load_burden(path, keep_lipids = True)
 if meta is None:
     sys.exit(f'{path} not found')
-is_selected = meta[SOURCE] == Constants.SELECTED_GOF_VARIANT_SOURCE
+is_selected = meta[SOURCE] == VariantSource.SELECTED_GOF
 if not is_selected.all():
     logger.info(f'{path.name}: {int((~is_selected).sum())} rows of other '
                 'variant-list sources dropped')
 meta = meta.loc[is_selected]
 if meta.empty:
-    sys.exit(f'{path.name}: no {Constants.SELECTED_GOF_VARIANT_SOURCE} '
+    sys.exit(f'{path.name}: no {VariantSource.SELECTED_GOF} '
              'rows')
 names = variant_names()
 

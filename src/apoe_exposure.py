@@ -18,7 +18,13 @@ from log_tools.emitter import log_info, log_stage, log_warn
 from log_tools.setup import runlog_setup
 
 import functions
-from project_constants import Constants, FileNames, Paths, RunlogOrder
+from project_constants import (
+    Apoe,
+    FileNames,
+    Paths,
+    RunlogOrder,
+    Ukb,
+)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -26,8 +32,8 @@ from project_constants import Constants, FileNames, Paths, RunlogOrder
 
 def apoe_indicators(
     genotypes: pd.Series,
-    diplotypes: tuple[str, ...] = Constants.APOE_GENOTYPES,
-    prefix: str = Constants.APOE_DIPLOTYPE_PREFIX,
+    diplotypes: tuple[str, ...] = Apoe.GENOTYPES,
+    prefix: str = Apoe.DIPLOTYPE_PREFIX,
 ) -> pd.DataFrame:
     """One 0/1 carrier column per diplotype.
 
@@ -35,10 +41,10 @@ def apoe_indicators(
     ----------
     genotypes : `pd.Series`
         Diplotype per participant, as strings, without missing values.
-    diplotypes : `tuple[str, ...]`, default: `Constants.APOE_GENOTYPES`
+    diplotypes : `tuple[str, ...]`, default: `Apoe.GENOTYPES`
         Every diplotype `genotypes` may hold; one column each, in this
         order.
-    prefix : `str`, default: `Constants.APOE_DIPLOTYPE_PREFIX`
+    prefix : `str`, default: `Apoe.DIPLOTYPE_PREFIX`
         Column name prefix, e.g. ``APOE_`` gives ``APOE_e4e4``.
 
     Returns
@@ -75,9 +81,8 @@ def apoe_indicators(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# TODO evaluate if this should not just "be" main()
 def apoe_exposure(
-    column: str = Constants.UKB_APOE_COLUMN,
+    column: str = Apoe.UKB_COL,
     pheno: Path = FileNames.UKB_PHENO,
     out: Path = FileNames.APOE_EXPOSURE,
 ) -> None:
@@ -85,10 +90,10 @@ def apoe_exposure(
 
     Parameters
     ----------
-    column : `str`, optional, default: `Constants.UKB_APOE_COLUMN`
+    column : `str`, optional, default: `Apoe.UKB_COL`
         APOE genotype column of `pheno`.
     pheno : `Path`, optional, default: `FileNames.UKB_PHENO`
-        UKB phenotype file with `Constants.UKB_ID_COLUMN`.
+        UKB phenotype file with `Ukb.ID_COL`.
     out : `Path`, optional, default: `FileNames.APOE_EXPOSURE`
         Exposure file to write (gzipped TSV, written atomically).
 
@@ -103,11 +108,9 @@ def apoe_exposure(
     ValueError
         If `column` is not in `pheno`, or from `apoe_indicators`.
     """
-    # check file exists
-    if not pheno.exists():
-        raise FileNotFoundError(f"{pheno} not found")
+    functions.require_file(pheno)
     # check missing columns
-    id_column = Constants.UKB_ID_COLUMN
+    id_column = Ukb.ID_COL
     header = pd.read_csv(pheno, sep="\t", nrows=0).columns
     missing = [name for name in (id_column, column) if name not in header]
     if missing:
@@ -127,7 +130,7 @@ def apoe_exposure(
     log_stage("indicators")
     values = table[column].str.strip()
     no_genotype = values.isna() | values.isin(
-        ["", *Constants.APOE_MISSING_VALUES]
+        ["", *Apoe.MISSING_VALUES]
     )
     if no_genotype.any():
         log_warn(
@@ -165,7 +168,7 @@ def _init_cmd_args() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--column",
-        default=Constants.UKB_APOE_COLUMN,
+        default=Apoe.UKB_COL,
         help=(
             f"APOE genotype column of {FileNames.UKB_PHENO.name} "
             "(default: %(default)s)"

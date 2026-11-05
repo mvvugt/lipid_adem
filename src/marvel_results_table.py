@@ -26,7 +26,7 @@ files into a dated tar once they are in the store, checks the tar and
 only then deletes them.
 
 `marvel_results.tsv` then gets one row per store, outcome
-(`Constants.MARVEL_UKB_OUTCOMES`) and stratification for `--model`. Its
+(`Marvel.UKB_OUTCOMES`) and stratification for `--model`. Its
 non-UKB rows are kept. The `Stratification name` gives each row's
 ancestry and APOE stratum (`parse_stratification`): ``overall`` and an
 `ApoeStratum` code (e.g. ``e44``) are `--ancestry` samples, an `Ancestry`
@@ -59,8 +59,8 @@ from project_constants import (
     Ancestry,
     ApoeStratum,
     ColumnNames,
-    Constants,
     FileNames,
+    Marvel,
     MarvelColumns,
     MetaColumns,
     Paths,
@@ -68,9 +68,9 @@ from project_constants import (
 )
 
 
-# cohort key of these runs (`Constants.PREFERRED_COHORT_ALIASES`)
+# cohort key of these runs (`Gwas.COHORT_ALIASES`)
 _COHORT: str = "ukb"
-_DEFAULT_MODEL: str = Constants.MARVEL_DEFAULT_MODEL
+_DEFAULT_MODEL: str = Marvel.DEFAULT_MODEL
 _STAMP_FORMAT: str = "%Y%m%d_%H%M%S"
 # conflicts listed in the error log before the rest is only counted
 _MAX_CONFLICTS_SHOWN: int = 20
@@ -141,8 +141,7 @@ def read_tasks(paths: list[Path]) -> dict[str, list[Path]]:
     """
     outdirs: dict[str, list[Path]] = {}
     for path in paths:
-        if not path.exists():
-            raise FileNotFoundError(f"{path} not found")
+        functions.require_file(path)
         tasks = pd.read_csv(path, sep="\t", dtype=str).fillna("")
         missing = [
             col for col in ("gene", "outdir") if col not in tasks.columns
@@ -793,13 +792,13 @@ def parse_stratification(
         (`Ancestry` code, `ApoeStratum` code or ``""`` when unstratified);
         `None` for any other name.
     """
-    if name == Constants.MARVEL_DEFAULT_STRATIFICATION:
+    if name == Marvel.DEFAULT_STRAT:
         return ancestry, ""
     if name in ApoeStratum.CODES:
         return ancestry, name
     if name in Ancestry.CODES:
         return name, ""
-    prefix, _, stratum = name.partition(Constants.MARVEL_ANCESTRY_SEP)
+    prefix, _, stratum = name.partition(Marvel.ANCESTRY_SEP)
     if prefix in Ancestry.CODES and stratum in ApoeStratum.CODES:
         return prefix, stratum
     return None
@@ -844,15 +843,15 @@ def build_marvel_table(
             continue
         pairs = store[[mc.VARIABLE, mc.STRATIFICATION_NAME]].drop_duplicates()
         unmapped = sorted(
-            set(pairs[mc.VARIABLE]) - set(Constants.MARVEL_UKB_OUTCOMES)
+            set(pairs[mc.VARIABLE]) - set(Marvel.UKB_OUTCOMES)
         )
         if unmapped:
             log_info(
-                f"{gene}: variables not in Constants.MARVEL_UKB_OUTCOMES, "
+                f"{gene}: variables not in Marvel.UKB_OUTCOMES, "
                 f"left out: {', '.join(unmapped)}"
             )
         for variable, stratification in pairs.itertuples(index=False):
-            outcome = Constants.MARVEL_UKB_OUTCOMES.get(variable)
+            outcome = Marvel.UKB_OUTCOMES.get(variable)
             if outcome is None:
                 continue
             parsed = parse_stratification(stratification, ancestry)
@@ -930,7 +929,7 @@ def add_apoe_strata(table: pd.DataFrame) -> None:
     for (ancestry, outcome), rows in stratified.groupby(
         [ColumnNames.ANCESTRY, "outcome"]
     ):
-        group = f"{Constants.MARVEL_SOURCE_DB_PREFIX}{_COHORT}_{ancestry}_" + (
+        group = f"{Marvel.SOURCE_DB_PREFIX}{_COHORT}_{ancestry}_" + (
             outcome
         )
         wanted.append(

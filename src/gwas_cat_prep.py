@@ -33,33 +33,36 @@ import functions
 from project_constants import (
     Ancestry,
     ColumnNames,
-    Constants,
+    Const,
     EffectScale,
     FileNames,
+    Gwas,
+    OutcomeColumns,
     Paths,
     RunlogOrder,
+    StudyColumns,
 )
 
 
 # Display-only per-study metadata columns in the study-discovery audit log,
 # between `pubmed_id` and `note`.
 META_COLUMNS: list[str] = [
-    ColumnNames.PUB_DATE,
-    ColumnNames.FIRST_AUTHOR,
-    ColumnNames.JOURNAL,
-    ColumnNames.TITLE,
-    ColumnNames.TRAIT,
-    ColumnNames.SAMPLE_SIZE,
+    StudyColumns.PUB_DATE,
+    StudyColumns.FIRST_AUTHOR,
+    StudyColumns.JOURNAL,
+    StudyColumns.TITLE,
+    OutcomeColumns.TRAIT,
+    StudyColumns.SAMPLE_SIZE,
     ColumnNames.ANCESTRY,
     ColumnNames.ANCESTRY_GROUP,
-    ColumnNames.COHORT,
+    StudyColumns.COHORT,
 ]
 # GWAS-SSF metadata per study, after `META_COLUMNS`; filled for included
 # studies only (`_add_scale_meta`)
 SCALE_META_COLUMNS: list[str] = [
-    ColumnNames.EFFECT_STATISTIC,
-    ColumnNames.ANALYSIS_SOFTWARE,
-    ColumnNames.EFFECT_SCALE_META,
+    StudyColumns.EFFECT_STATISTIC,
+    StudyColumns.ANALYSIS_SOFTWARE,
+    StudyColumns.EFFECT_SCALE_META,
 ]
 FINNGEN_COHORT: str = "FinnGen R13"
 FINNGEN_SOFTWARE: str = "REGENIE (Firth)"
@@ -70,9 +73,9 @@ _NO_STUDIES_COUNT_KEY: str = "efo_no_studies"
 _QueryKey = tuple[str, bool, frozenset[str], frozenset[tuple[str, str]]]
 # audit-log trait-query cells for rows not found by a trait search
 _NO_TRAIT_QUERY: dict[str, str] = {
-    ColumnNames.CHILD_TRAITS: "",
-    ColumnNames.MAPPED_TRAIT_ID: "",
-    ColumnNames.MAPPED_TRAIT: "",
+    OutcomeColumns.CHILD_TRAITS: "",
+    OutcomeColumns.MAPPED_TRAIT_ID: "",
+    OutcomeColumns.MAPPED_TRAIT: "",
 }
 
 
@@ -90,11 +93,11 @@ def _is_searchable_efo_id(efo_id: str) -> bool:
     Returns
     -------
     searchable : `bool`
-        `False` for blank/`NA` cells and for `Constants.EXCLUDED_EFO_IDS`.
+        `False` for blank/`NA` cells and for `Gwas.EXCLUDED_EFO_IDS`.
     """
     return (
-        efo_id not in ("", Constants.NA_STRING)
-        and efo_id not in Constants.EXCLUDED_EFO_IDS
+        efo_id not in ("", Const.NA)
+        and efo_id not in Gwas.EXCLUDED_EFO_IDS
     )
 
 
@@ -136,7 +139,7 @@ def _log_discovery_summary(
     )
     scope = (
         "with child traits, cap per term and "
-        f"{Constants.MAX_STUDIES_PER_CHILD_QUERY} total"
+        f"{Gwas.MAX_STUDIES_PER_CHILD_QUERY} total"
         if child_traits
         else "exact"
     )
@@ -146,7 +149,7 @@ def _log_discovery_summary(
     blank = ""
     if cohorts:
         n_overlap = sum(
-            reason.startswith(Constants.COHORT_OVERLAP_REASON_PREFIX)
+            reason.startswith(Gwas.COHORT_OVERLAP_REASON_PREFIX)
             for reason in reasons
         )
         # a blank cohort cannot be checked for overlap, so it is kept
@@ -160,7 +163,7 @@ def _log_discovery_summary(
         )
         blank = f", {n_blank} included with blank cohort"
     n_review = sum(
-        reason.startswith(Constants.REVIEW_REASON_PREFIX) for reason in reasons
+        reason.startswith(Gwas.REVIEW_REASON_PREFIX) for reason in reasons
     )
     review = f" -> {n_review} dropped by review" if n_review else ""
     log_info(
@@ -195,8 +198,8 @@ def _covered_cohorts(
     Returns
     -------
     covered : `dict[str, frozenset[str]]`
-        Outcome -> `Constants.PREFERRED_COHORT_ALIASES` keys:
-        `Constants.ALWAYS_EXCLUDED_COHORTS`, ``finngen`` when any of its
+        Outcome -> `Gwas.COHORT_ALIASES` keys:
+        `Gwas.EXCLUDED_COHORTS`, ``finngen`` when any of its
         non-excluded phenocodes is in the manifest, plus each marvel
         `cohort` listed for it. Every outcome in `icd_df` is a key.
     """
@@ -205,7 +208,7 @@ def _covered_cohorts(
         outcome: set() for outcome in icd_df[ColumnNames.OUTCOME]
     }
     for outcome, cell in zip(
-        icd_df[ColumnNames.OUTCOME], icd_df[ColumnNames.FINNGEN_PHENOCODE]
+        icd_df[ColumnNames.OUTCOME], icd_df[OutcomeColumns.FINNGEN_PHENOCODE]
     ):
         if any(
             studies_by_phenocode[phenocode]
@@ -221,7 +224,7 @@ def _covered_cohorts(
             )
             continue
         covered[outcome].add(cohort)
-    always = sorted(Constants.ALWAYS_EXCLUDED_COHORTS)
+    always = sorted(Gwas.EXCLUDED_COHORTS)
     log_info(
         f"catalog studies with {', '.join(always)} excluded for every outcome"
     )
@@ -232,7 +235,7 @@ def _covered_cohorts(
                 "catalog studies with these cohorts excluded"
             )
     return {
-        outcome: frozenset(cohorts | Constants.ALWAYS_EXCLUDED_COHORTS)
+        outcome: frozenset(cohorts | Gwas.EXCLUDED_COHORTS)
         for outcome, cohorts in covered.items()
     }
 
@@ -259,24 +262,24 @@ def _manual_meta(
     meta : `dict[str, str]`
         One value per column in `META_COLUMNS`.
     """
-    pid = str(manual_row.get(ColumnNames.PUBMED_ID, ""))
+    pid = str(manual_row.get(StudyColumns.PUBMED_ID, ""))
     summary = pubmed.get(int(pid), {}) if pid.isdigit() else {}
     date = summary.get("date")
     fetched = {
-        ColumnNames.PUB_DATE: (
+        StudyColumns.PUB_DATE: (
             date.strftime("%Y-%m-%d") if date is not None else ""
         ),
-        ColumnNames.FIRST_AUTHOR: summary.get("first_author", ""),
-        ColumnNames.JOURNAL: summary.get("journal", ""),
-        ColumnNames.TITLE: summary.get("title", ""),
+        StudyColumns.FIRST_AUTHOR: summary.get("first_author", ""),
+        StudyColumns.JOURNAL: summary.get("journal", ""),
+        StudyColumns.TITLE: summary.get("title", ""),
     }
     curated = {
         col: functions.clean_cell(manual_row.get(col, ""))
         for col in META_COLUMNS
-        if col not in (ColumnNames.TRAIT, ColumnNames.ANCESTRY_GROUP)
+        if col not in (OutcomeColumns.TRAIT, ColumnNames.ANCESTRY_GROUP)
     }
-    curated[ColumnNames.TRAIT] = functions.clean_cell(
-        manual_row.get(ColumnNames.DISEASE_TRAIT, "")
+    curated[OutcomeColumns.TRAIT] = functions.clean_cell(
+        manual_row.get(StudyColumns.DISEASE_TRAIT, "")
     )
     # free text or an Ancestry code; NR when blank
     curated[ColumnNames.ANCESTRY_GROUP] = functions.harmonise_ancestry(
@@ -313,12 +316,12 @@ def _finngen_meta(
     if matches.empty:
         return meta
     row = matches.iloc[0]
-    meta[ColumnNames.TRAIT] = functions.clean_cell(row.get("phenotype", ""))
-    meta[ColumnNames.SAMPLE_SIZE] = (
+    meta[OutcomeColumns.TRAIT] = functions.clean_cell(row.get("phenotype", ""))
+    meta[StudyColumns.SAMPLE_SIZE] = (
         f"{row.get('num_cases', '')} cases, "
         f"{row.get('num_controls', '')} controls"
     )
-    meta[ColumnNames.COHORT] = FINNGEN_COHORT
+    meta[StudyColumns.COHORT] = FINNGEN_COHORT
     return meta
 
 
@@ -328,7 +331,7 @@ def _add_scale_meta(audit_rows: list[dict[str, str]]) -> None:
 
     Included GWAS Catalog and manual studies get their GWAS-SSF metadata
     (`functions.study_meta_yaml`, fetched once per accession); FinnGen
-    rows get `Constants.FINNGEN_EFFECT_SCALE`. Other rows are left blank
+    rows get `Gwas.FINNGEN_SCALE`. Other rows are left blank
     (scale `EffectScale.UNKNOWN`), which saves the requests for studies
     that are not analysed.
 
@@ -343,14 +346,14 @@ def _add_scale_meta(audit_rows: list[dict[str, str]]) -> None:
     `None`
     """
     blank = {
-        ColumnNames.EFFECT_STATISTIC: "",
-        ColumnNames.ANALYSIS_SOFTWARE: "",
-        ColumnNames.EFFECT_SCALE_META: EffectScale.UNKNOWN,
+        StudyColumns.EFFECT_STATISTIC: "",
+        StudyColumns.ANALYSIS_SOFTWARE: "",
+        StudyColumns.EFFECT_SCALE_META: EffectScale.UNKNOWN,
     }
     finngen = {
         **blank,
-        ColumnNames.ANALYSIS_SOFTWARE: FINNGEN_SOFTWARE,
-        ColumnNames.EFFECT_SCALE_META: Constants.FINNGEN_EFFECT_SCALE,
+        StudyColumns.ANALYSIS_SOFTWARE: FINNGEN_SOFTWARE,
+        StudyColumns.EFFECT_SCALE_META: Gwas.FINNGEN_SCALE,
     }
     fetched: dict[str, dict[str, str]] = {}
     for row in audit_rows:
@@ -369,7 +372,7 @@ def _add_scale_meta(audit_rows: list[dict[str, str]]) -> None:
             row.update(blank)
     counts: dict[str, int] = {}
     for meta in fetched.values():
-        scale = meta[ColumnNames.EFFECT_SCALE_META]
+        scale = meta[StudyColumns.EFFECT_SCALE_META]
         counts[scale] = counts.get(scale, 0) + 1
     log_info(
         f"metadata yaml read for {len(fetched)} included studies, scale: "
@@ -390,7 +393,7 @@ def build_tasks() -> None:
     trait IDs are replaced by their current term on every run), discovers
     GWAS Catalog studies per outcome (grouped by the distinct EFO IDs
     under that outcome; child traits included, with the cap per mapped
-    term, for `Constants.CHILD_TRAIT_OUTCOMES`), unions in any curated
+    term, for `Gwas.CHILD_TRAIT_OUTCOMES`), unions in any curated
     not-yet-API-indexed GWAS Catalog accessions for that outcome (see
     data/raw/gwas_catalog_manual_studies.SOURCE.md), validates each
     outcome's curated FinnGen phenocode (if set) against the vendored
@@ -405,7 +408,7 @@ def build_tasks() -> None:
     - `FileNames.GENE_REGIONS_FILE`: the flanked region per gene,
       columns: gene, chrom, start, end; read by the filter tasks.
 
-    Catalog studies listing UKB or AoU (`Constants.ALWAYS_EXCLUDED_COHORTS`)
+    Catalog studies listing UKB or AoU (`Gwas.EXCLUDED_COHORTS`)
     or a cohort the outcome has own results for (FinnGen phenocode, or a
     `FileNames.MARVEL_RESULTS` row; see `_covered_cohorts`) are excluded
     for that outcome before the cap, as are the outcome x study rows
@@ -415,7 +418,9 @@ def build_tasks() -> None:
     (`functions.classify_studies`). Curated manual accessions get
     `source` ``manual``.
 
-    Trait IDs in `Constants.EXCLUDED_EFO_IDS` are not searched. Then
+    Trait IDs in `Gwas.EXCLUDED_EFO_IDS` are not searched (MONDO_0011057,
+    I67.3 Binswanger disease, expands via child traits to general
+    cerebrovascular disease: stroke, TIA, aneurysm). Then
     archives any existing pyjasub log dir (`Paths.FILTER_TASK_LOGS`) via
     `functions.archive_dir`, since pyjasub refuses a newer array file.
 
@@ -476,12 +481,12 @@ def build_tasks() -> None:
         {
             (efo_id, outcome)
             for efo_id, outcome in zip(
-                icd_df[ColumnNames.EFO_ID], icd_df[ColumnNames.OUTCOME]
+                icd_df[OutcomeColumns.EFO_ID], icd_df[ColumnNames.OUTCOME]
             )
-            if efo_id in Constants.EXCLUDED_EFO_IDS
+            if efo_id in Gwas.EXCLUDED_EFO_IDS
         }
     ):
-        log_info(f"{efo_id} ({outcome}) in Constants.EXCLUDED_EFO_IDS, skipped")
+        log_info(f"{efo_id} ({outcome}) in Gwas.EXCLUDED_EFO_IDS, skipped")
     # FinnGen is keyed by curated phenocode(s) instead of a live-discovered
     # EFO ID. A cell may list more than one phenocode (comma-separated)
     # when an outcome is curated against several definitional variants of
@@ -493,12 +498,12 @@ def build_tasks() -> None:
     # One batched PubMed lookup for all curated studies (their GWAS
     # Catalog records 404 until indexed, so PubMed is all we can fetch).
     manual_pubmed = functions.pubmed_summaries(
-        manual_studies_df[ColumnNames.PUBMED_ID].tolist()
+        manual_studies_df[StudyColumns.PUBMED_ID].tolist()
     )
     distinct_phenocodes = sorted(
         {
             phenocode
-            for cell in icd_df[ColumnNames.FINNGEN_PHENOCODE]
+            for cell in icd_df[OutcomeColumns.FINNGEN_PHENOCODE]
             for phenocode in functions.finngen_phenocodes_in_cell(cell)
         }
     )
@@ -531,7 +536,7 @@ def build_tasks() -> None:
         {
             _query_key(efo_id, outcome)
             for efo_id, outcome in zip(
-                icd_df[ColumnNames.EFO_ID], icd_df[ColumnNames.OUTCOME]
+                icd_df[OutcomeColumns.EFO_ID], icd_df[ColumnNames.OUTCOME]
             )
             if _is_searchable_efo_id(efo_id)
         },
@@ -567,7 +572,11 @@ def build_tasks() -> None:
     audit_rows: list[dict[str, str]] = []
     for outcome, group in icd_df.groupby(ColumnNames.OUTCOME):
         outcome_efo_ids = sorted(
-            {e for e in group[ColumnNames.EFO_ID] if _is_searchable_efo_id(e)}
+            {
+                e
+                for e in group[OutcomeColumns.EFO_ID]
+                if _is_searchable_efo_id(e)
+            }
         )
         child_traits = functions.includes_child_traits(outcome)
         accession_to_efo: dict[str, str] = {}
@@ -584,13 +593,15 @@ def build_tasks() -> None:
                         ColumnNames.OUTCOME: outcome,
                         ColumnNames.SOURCE: "gwas_catalog",
                         ColumnNames.STUDY_ACCESSION: record["accession_id"],
-                        ColumnNames.EFO_ID: efo_id,
-                        ColumnNames.CHILD_TRAITS: str(child_traits),
-                        ColumnNames.MAPPED_TRAIT_ID: record["mapped_trait_id"],
-                        ColumnNames.MAPPED_TRAIT: record["mapped_trait"],
+                        OutcomeColumns.EFO_ID: efo_id,
+                        OutcomeColumns.CHILD_TRAITS: str(child_traits),
+                        OutcomeColumns.MAPPED_TRAIT_ID: record[
+                            "mapped_trait_id"
+                        ],
+                        OutcomeColumns.MAPPED_TRAIT: record["mapped_trait"],
                         ColumnNames.STATUS: status,
                         ColumnNames.REASON: record["reason"],
-                        ColumnNames.PUBMED_ID: str(
+                        StudyColumns.PUBMED_ID: str(
                             record.get("pubmed_id") or ""
                         ),
                         **{col: record[col] for col in META_COLUMNS},
@@ -604,7 +615,7 @@ def build_tasks() -> None:
 
         # Curated accessions deposited on the FTP server but not yet
         # searchable via the API; source "manual" so the meta-analysis
-        # can prefer them (Constants.SOURCE_DB_PREFERENCE)
+        # can prefer them (Meta.SOURCE_DB_PREF)
         outcome_review = review.get(outcome, {})
         manual_accessions = [
             accession
@@ -627,7 +638,7 @@ def build_tasks() -> None:
                     ColumnNames.OUTCOME: outcome,
                     ColumnNames.SOURCE: "manual",
                     ColumnNames.STUDY_ACCESSION: manual_row["accession_id"],
-                    ColumnNames.EFO_ID: "",
+                    OutcomeColumns.EFO_ID: "",
                     **_NO_TRAIT_QUERY,
                     ColumnNames.STATUS: (
                         "included"
@@ -635,8 +646,8 @@ def build_tasks() -> None:
                         else "excluded"
                     ),
                     ColumnNames.REASON: manual_reason,
-                    ColumnNames.PUBMED_ID: str(
-                        manual_row.get(ColumnNames.PUBMED_ID, "")
+                    StudyColumns.PUBMED_ID: str(
+                        manual_row.get(StudyColumns.PUBMED_ID, "")
                     ),
                     **_manual_meta(manual_row, manual_pubmed),
                     ColumnNames.NOTE: functions.clean_cell(
@@ -648,7 +659,7 @@ def build_tasks() -> None:
         outcome_phenocodes = sorted(
             {
                 phenocode
-                for cell in group[ColumnNames.FINNGEN_PHENOCODE]
+                for cell in group[OutcomeColumns.FINNGEN_PHENOCODE]
                 for phenocode in functions.finngen_phenocodes_in_cell(cell)
             }
         )
@@ -666,7 +677,7 @@ def build_tasks() -> None:
                     ColumnNames.OUTCOME: outcome,
                     ColumnNames.SOURCE: "finngen",
                     ColumnNames.STUDY_ACCESSION: phenocode,
-                    ColumnNames.EFO_ID: "",
+                    OutcomeColumns.EFO_ID: "",
                     **_NO_TRAIT_QUERY,
                     ColumnNames.STATUS: (
                         "included"
@@ -674,7 +685,7 @@ def build_tasks() -> None:
                         else "excluded"
                     ),
                     ColumnNames.REASON: finngen_reason,
-                    ColumnNames.PUBMED_ID: "",
+                    StudyColumns.PUBMED_ID: "",
                     **_finngen_meta(phenocode, finngen_manifest_df),
                     ColumnNames.NOTE: "",
                 }
@@ -695,7 +706,7 @@ def build_tasks() -> None:
                     ColumnNames.STUDY_ACCESSION: accession,
                     ColumnNames.SOURCE: source,
                     ColumnNames.OUTCOME: outcome,
-                    ColumnNames.EFO_ID: efo_id,
+                    OutcomeColumns.EFO_ID: efo_id,
                     ColumnNames.OUTFILE: str(outfile),
                 }
             )
@@ -710,7 +721,7 @@ def build_tasks() -> None:
             ColumnNames.STUDY_ACCESSION,
             ColumnNames.SOURCE,
             ColumnNames.OUTCOME,
-            ColumnNames.EFO_ID,
+            OutcomeColumns.EFO_ID,
             ColumnNames.OUTFILE,
         ],
     )
@@ -721,7 +732,7 @@ def build_tasks() -> None:
     region_rows: list[dict[str, str | int]] = []
     for _, gene_row in genes_df.iterrows():
         region = functions.gene_row_region(
-            gene_row, Constants.GENE_COORD_FLANK_BP
+            gene_row, Const.GENE_FLANK_BP
         )
         region_rows.append(
             {
@@ -761,13 +772,13 @@ def build_tasks() -> None:
         ColumnNames.OUTCOME,
         ColumnNames.SOURCE,
         ColumnNames.STUDY_ACCESSION,
-        ColumnNames.EFO_ID,
-        ColumnNames.CHILD_TRAITS,
-        ColumnNames.MAPPED_TRAIT_ID,
-        ColumnNames.MAPPED_TRAIT,
+        OutcomeColumns.EFO_ID,
+        OutcomeColumns.CHILD_TRAITS,
+        OutcomeColumns.MAPPED_TRAIT_ID,
+        OutcomeColumns.MAPPED_TRAIT,
         ColumnNames.STATUS,
         ColumnNames.REASON,
-        ColumnNames.PUBMED_ID,
+        StudyColumns.PUBMED_ID,
         *META_COLUMNS,
         *SCALE_META_COLUMNS,
         ColumnNames.NOTE,

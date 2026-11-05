@@ -8,7 +8,7 @@
 ##
 ## Purpose of script: One figure per gene of its pooled (IVW over cohorts)
 ##     carrier-burden estimates per variant set (`--sets`, default all of
-##     `Constants.BURDEN_VARIANT_SETS`), each set its own
+##     `Burden.VARIANT_SETS`), each set its own
 ##     `meta_analysis.py` run ``<label>_<set>``: left the binary outcomes
 ##     (OR), right the lipids (beta, native UKB units), per outcome one
 ##     row per variant set, 95% CI, with side tables (OR or beta (95% CI),
@@ -41,7 +41,7 @@ import pandas as pd
 import figure_utils as futils
 from pathlib import Path
 from project_constants import (
-        Constants,
+        Const,
         FigureColumns as FCols,
         FigureNames as FigNames,
         FigureStyle as FStyle,
@@ -85,7 +85,7 @@ parser.add_argument('-g', '--genes',
                     'estimate)')
 parser.add_argument('-o', '--out-dir',
                     type = Path,
-                    default = Paths.RESULTS_FIGURES,
+                    default = Paths.FIGURES,
                     help = 'output directory (default: %(default)s)')
 parser.add_argument('-m', '--max-or',
                     type = float,
@@ -138,7 +138,7 @@ def load_sets(ancestry: str, label: str, sets: list[str]) -> pd.DataFrame:
         Run label without the variant-set suffix; each run is
         ``<label>_<set>``.
     sets : `list[str]`
-        Variant sets (`Constants.BURDEN_VARIANT_SETS` keys).
+        Variant sets (`Burden.VARIANT_SETS` keys).
 
     Returns
     -------
@@ -251,7 +251,7 @@ def gene_panels(pooled: pd.DataFrame, gene: str) -> list[tuple]:
         pooled_forest.py.
     """
     rows = pooled.loc[pooled[GENE] == gene]
-    is_lipid = rows[OUTCOME].isin(Constants.LIPID_OUTCOMES)
+    is_lipid = rows[OUTCOME].isin(Const.LIPID_OUTCOMES)
     binary = rows.loc[~is_lipid]
     lipids = futils.add_beta_ci(rows.loc[is_lipid])
     panels = []

@@ -4,7 +4,7 @@ Build the UKB carrier-burden exposures and the old marvel (10039b6) run
 files for them (Snellius).
 
 Per gene, the listed variants (`lipid_variants.tsv`) are collapsed into
-0/1 carrier columns `<GENE>_<mask>` (`Constants.BURDEN_VARIANT_SETS`): a sample
+0/1 carrier columns `<GENE>_<mask>` (`Burden.VARIANT_SETS`): a sample
 is 1 when it carries any of the mask's sites, else 0 (a missing call
 counts as non-carrier and is counted in the summary). Carriers come from
 the old wide carriers files (`FileNames.OLD_CARRIERS_TEMPLATE`, `f.eid`
@@ -14,11 +14,11 @@ listed variants.
 - gof: GoF + ClinVar raising sites (the sites `meta_analysis.orient`
   flips); every other mask: the sites of its sources (PTV, ClinVar, AM;
   lof = PTV + ClinVar) that are not GoF/raising. The masks with ClinVar
-  also get a directed form (`Constants.BURDEN_DIRECTED_MASKS`, e.g.
+  also get a directed form (`Burden.DIRECTED_MASKS`, e.g.
   lof_directed): without the ClinVar-only sites lacking a lowering
-  direction. `SelectedGoF` sites (`Constants.SELECTED_GOF_VARIANT_SOURCE`)
+  direction. `SelectedGoF` sites (`VariantSource.SELECTED_GOF`)
   are in no mask.
-- `<GENE>_<mask>_fb` (`Constants.BURDEN_FALLBACK_SUFFIX`): the same masks
+- `<GENE>_<mask>_fb` (`Burden.FALLBACK_SUFFIX`): the same masks
   without the sites the preferred studies (`Constants.
   BURDEN_PREFER_STUDIES`, Thomassen) have for `Constants.
   BURDEN_FALLBACK_OUTCOME` in `matched_variants.tsv.gz`; written to their
@@ -31,7 +31,7 @@ listed variants.
   BURDEN_MAX_MAF` = 0.5: none).
 
 Writes per gene `FileNames.BURDEN_EXPOSURE_TEMPLATE` (main and fallback),
-one cnf per gene x subset x file (`Paths.MARVEL_BURDEN_CONFIG`, format of
+one cnf per gene x subset x file (`Paths.BURDEN_CONFIG`, format of
 marvel 10039b6 as in validation/configs/A), the job-array file
 `FileNames.MARVEL_BURDEN_TASKS` (columns as `marvel_tasks.tsv`, run with
 src/marvel_burden.sh) and the summary `FileNames.BURDEN_EXPOSURE_SUMMARY`.
@@ -64,16 +64,21 @@ from variant_keys import (
     variant_key,
 )
 from project_constants import (
+    Apoe,
     ApoeStratum,
+    Burden,
     ClinVarDirection,
     ColumnNames,
-    Constants,
+    Const,
     FileNames,
     HarmonisedColumns,
+    Marvel,
     MarvelCompareColumns,
     Paths,
     RunlogOrder,
+    Ukb,
     VariantListColumns,
+    VariantSource,
 )
 
 _C = MarvelCompareColumns
@@ -81,19 +86,19 @@ _VL = VariantListColumns
 _HC = HarmonisedColumns
 # pandas renames repeated header names to `<name>.<n>`
 _DUPLICATE_SUFFIX = re.compile(r"\.\d+$")
-# every variant set (`Constants.BURDEN_VARIANT_SETS`), each followed by
+# every variant set (`Burden.VARIANT_SETS`), each followed by
 # its directed form when it has one
 _MASKS: tuple[str, ...] = tuple(
     mask
-    for base in Constants.BURDEN_VARIANT_SETS
-    for mask in (base, Constants.BURDEN_DIRECTED_MASKS.get(base))
+    for base in Burden.VARIANT_SETS
+    for mask in (base, Burden.DIRECTED_MASKS.get(base))
     if mask is not None
 )
 # variant-list sources of lower gene function (all non-gof sets)
 _LOF_SOURCES: tuple[str, ...] = (
-    Constants.PTV_VARIANT_SOURCE,
-    Constants.CLINVAR_VARIANT_SOURCE,
-    Constants.AM_VARIANT_SOURCE,
+    VariantSource.PTV,
+    VariantSource.CLINVAR,
+    VariantSource.AM,
 )
 _SWAPPED_MATCHES = frozenset({_C.MATCH_SWAPPED, _C.MATCH_SWAPPED_ORIG})
 # variant ID column of the --exclude-sites file (as marvel's
@@ -185,24 +190,24 @@ def read_sites(path: Path, genes: list[str]) -> pd.DataFrame:
     table = table.dropna(subset=[_C.NEW_KEY])
     source = table[_VL.SOURCE]
     direction = table[_VL.CLINVAR_DIRECTION]
-    is_clinvar = source == Constants.CLINVAR_VARIANT_SOURCE
+    is_clinvar = source == VariantSource.CLINVAR
     # selected single GoF variants are reported one by one, never in a
     # mask (a site also listed as GoF stays in the gof mask)
-    is_selected = source == Constants.SELECTED_GOF_VARIANT_SOURCE
+    is_selected = source == VariantSource.SELECTED_GOF
     if is_selected.any():
         log_info(
             f"{int(is_selected.sum())} "
-            f"{Constants.SELECTED_GOF_VARIANT_SOURCE} rows in no mask"
+            f"{VariantSource.SELECTED_GOF} rows in no mask"
         )
     known = is_selected | source.isin(
-        [Constants.GOF_VARIANT_SOURCE, *_LOF_SOURCES]
+        [VariantSource.GOF, *_LOF_SOURCES]
     )
     if (~known).any():
         log_warn(
             f"{int((~known).sum())} rows of other sources "
             f"({_join_unique(source[~known])}) in no mask"
         )
-    table["_gof"] = (source == Constants.GOF_VARIANT_SOURCE) | (
+    table["_gof"] = (source == VariantSource.GOF) | (
         is_clinvar & (direction == ClinVarDirection.RAISING)
     )
     # per lower-function source: the site is listed there (not raising)
@@ -230,20 +235,20 @@ def read_sites(path: Path, genes: list[str]) -> pd.DataFrame:
             "in the gof mask only: "
             + ", ".join(sites.loc[both, _C.NEW_KEY])
         )
-    for mask, mask_sources in Constants.BURDEN_VARIANT_SETS.items():
-        if mask == Constants.BURDEN_MASK_GOF:
+    for mask, mask_sources in Burden.VARIANT_SETS.items():
+        if mask == Burden.MASK_GOF:
             sites[mask] = sites["_gof"]
             continue
         in_mask = sites[[f"_in_{s}" for s in mask_sources]].any(axis=1)
         sites[mask] = in_mask & ~sites["_gof"]
-        directed = Constants.BURDEN_DIRECTED_MASKS.get(mask)
+        directed = Burden.DIRECTED_MASKS.get(mask)
         if directed is None:
             continue
         # clear direction: in a source other than ClinVar, or ClinVar
         # lowering
         clear = sites["_clinvar_lowering"].copy()
         for list_source in mask_sources:
-            if list_source != Constants.CLINVAR_VARIANT_SOURCE:
+            if list_source != VariantSource.CLINVAR:
                 clear |= sites[f"_in_{list_source}"]
         sites[directed] = sites[mask] & clear
     sites = sites.rename(columns={_VL.GENE: _S_GENE}).drop(columns=flags)
@@ -344,7 +349,7 @@ def mask_list(
     Notes
     -----
     Unlike `site_carriers`, there is no carrier-fraction swap
-    (`Constants.BURDEN_SWAP_FRACTION`) and no MAF filter: those need the
+    (`Burden.SWAP_FRAC`) and no MAF filter: those need the
     carriers. Missing calls follow marvel's `max_gene_missing`, not the
     non-carrier rule of `collapse_masks`.
     """
@@ -359,7 +364,7 @@ def mask_list(
     spelling = table.dropna(subset=[_C.NEW_KEY]).drop_duplicates(
         subset=[_VL.GENE, _C.NEW_KEY]
     )
-    suffix = Constants.BURDEN_FALLBACK_SUFFIX if fallback else ""
+    suffix = Burden.FALLBACK_SUFFIX if fallback else ""
     parts: list[pd.DataFrame] = []
     for gene, gene_sites in sites.groupby(_S_GENE, sort=False):
         gene_spelling = spelling[spelling[_VL.GENE] == gene]
@@ -446,7 +451,7 @@ def write_mask_lists(
         `matched_variants.tsv.gz`, for the preferred studies' sites.
     prefer_studies : `list` [`str`] or `NoneType`, optional
         Preferred study accessions; default
-        `Constants.BURDEN_PREFER_STUDIES`.
+        `Burden.PREFER_STUDIES`.
     exclude : `Path` or `NoneType`, optional
         `read_exclude_sites` file: sites left out of every mask (e.g.
         indels that marvel matches as swapped to a different indel).
@@ -458,7 +463,7 @@ def write_mask_lists(
     -------
     `None`
     """
-    studies = list(prefer_studies or Constants.BURDEN_PREFER_STUDIES)
+    studies = list(prefer_studies or Burden.PREFER_STUDIES)
     log_stage("variant sets")
     sites = read_sites(variants, genes)
     if exclude is not None:
@@ -476,11 +481,11 @@ def write_mask_lists(
         )
         sites = sites[~drop]
     prefer = read_prefer_sites(
-        matched, studies, Constants.BURDEN_FALLBACK_OUTCOME
+        matched, studies, Burden.FALLBACK_OUTCOME
     )
     for fallback in (False, True):
         log_stage("fallback mask list" if fallback else "mask list")
-        suffix = Constants.BURDEN_FALLBACK_SUFFIX if fallback else ""
+        suffix = Burden.FALLBACK_SUFFIX if fallback else ""
         masks = mask_list(variants, sites, prefer, fallback)
         _write_table_atomic(masks, Path(template.format(suffix=suffix)))
 
@@ -641,7 +646,7 @@ def site_carriers(
         is_swapped = getattr(row, _C.MATCH) in _SWAPPED_MATCHES
         flags = carriers.ref[col] if is_swapped else carriers.alt[col]
         fraction = flags.sum() / n_samples if n_samples else 0.0
-        if fraction > Constants.BURDEN_SWAP_FRACTION:
+        if fraction > Burden.SWAP_FRAC:
             is_swapped = not is_swapped
             flags = carriers.ref[col] if is_swapped else carriers.alt[col]
             log_warn(
@@ -707,7 +712,7 @@ def collapse_masks(
         listed = set(sites.loc[sites[mask], _C.NEW_KEY])
         for suffix, keys in (
             ("", listed),
-            (Constants.BURDEN_FALLBACK_SUFFIX, listed - prefer),
+            (Burden.FALLBACK_SUFFIX, listed - prefer),
         ):
             name = f"{gene}_{mask}{suffix}"
             found = keys & (set(carrier) | above_maf)
@@ -752,19 +757,19 @@ def subset_strata() -> dict[str, dict[str, str]]:
     Returns
     -------
     strata : `dict` [`str`, `dict` [`str`, `str`]]
-        `Constants.BURDEN_SUBSETS` value -> stratification name ->
+        `Burden.SUBSETS` value -> stratification name ->
         criterion (``column=value,value``; ``;`` joins two), as in
         create_config.py.
     """
     pop = (
-        f"{Constants.UKB_POPULATION_COLUMN}="
-        + ",".join(Constants.UKB_EUR_POPULATIONS)
+        f"{Ukb.POP_COL}="
+        + ",".join(Ukb.EUR_POPS)
     )
     apoe = {
-        stratum: f"{Constants.UKB_APOE_COLUMN}={','.join(genotypes)}"
+        stratum: f"{Apoe.UKB_COL}={','.join(genotypes)}"
         for stratum, genotypes in ApoeStratum.GENOTYPES.items()
     }
-    sep = Constants.MARVEL_ANCESTRY_SEP
+    sep = Marvel.ANCESTRY_SEP
     strata = {
         "all_apoe": dict(apoe),
         "eur": {"EUR": pop} | {
@@ -772,10 +777,10 @@ def subset_strata() -> dict[str, dict[str, str]]:
             for stratum, criterion in apoe.items()
         },
     }
-    unknown = sorted(set(Constants.BURDEN_SUBSETS) - set(strata))
+    unknown = sorted(set(Burden.SUBSETS) - set(strata))
     if unknown:
         raise ValueError(f"no stratification for subset(s) {unknown}")
-    return {subset: strata[subset] for subset in Constants.BURDEN_SUBSETS}
+    return {subset: strata[subset] for subset in Burden.SUBSETS}
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -840,15 +845,15 @@ def outcome_tests(fallback: bool) -> tuple[list[str], list[str]]:
     Returns
     -------
     continuous, binary : `list` [`str`]
-        `Constants.MARVEL_UKB_OUTCOMES` variables tested with OLS (lipids)
+        `Marvel.UKB_OUTCOMES` variables tested with OLS (lipids)
         and with GLM-Binom.
     """
     continuous: list[str] = []
     binary: list[str] = []
-    for variable, outcome in Constants.MARVEL_UKB_OUTCOMES.items():
-        if fallback and outcome != Constants.BURDEN_FALLBACK_OUTCOME:
+    for variable, outcome in Marvel.UKB_OUTCOMES.items():
+        if fallback and outcome != Burden.FALLBACK_OUTCOME:
             continue
-        if outcome in Constants.LIPID_OUTCOMES:
+        if outcome in Const.LIPID_OUTCOMES:
             continuous.append(variable)
         else:
             binary.append(variable)
@@ -902,12 +907,12 @@ def cnf_text(
         "[Covs]",
         *(
             f"{model}\t{';'.join(covs) if covs else 'None'}"
-            for model, covs in Constants.BURDEN_MODELS.items()
+            for model, covs in Burden.MODELS.items()
         ),
         "[Stratification]",
         *(f"{name}\t{criterion}" for name, criterion in strata.items()),
         "[Options]",
-        f"id_column\t{Constants.UKB_ID_COLUMN}",
+        f"id_column\t{Ukb.ID_COL}",
         "raise_on_error\tFalse",
         "missingness_strategy\tFalse",
         "extract_variants\tFalse",
@@ -969,7 +974,7 @@ def write_run_files(
     """
     rows: list[dict] = []
     for suffix, exposure_file in files.items():
-        fallback = suffix == Constants.BURDEN_FALLBACK_SUFFIX
+        fallback = suffix == Burden.FALLBACK_SUFFIX
         for subset, subset_strata_ in strata.items():
             name = f"{gene}_{subset}{suffix}"
             config = config_dir / f"{name}.cnf"
@@ -999,10 +1004,10 @@ def burden_exposure(
     carriers_template: str,
     pheno: Path,
     max_maf: float,
-    id_column: str = Constants.UKB_ID_COLUMN,
+    id_column: str = Ukb.ID_COL,
     prefer_studies: list[str] | None = None,
-    config_dir: Path = Paths.MARVEL_BURDEN_CONFIG,
-    out_dir: Path = Paths.MARVEL_BURDEN_OUT,
+    config_dir: Path = Paths.BURDEN_CONFIG,
+    out_dir: Path = Paths.BURDEN_OUT,
     tasks_path: Path = FileNames.MARVEL_BURDEN_TASKS,
     summary_path: Path = FileNames.BURDEN_EXPOSURE_SUMMARY,
     exposure_template: str = FileNames.BURDEN_EXPOSURE_TEMPLATE,
@@ -1023,11 +1028,11 @@ def burden_exposure(
         Phenotype and covariate file of the cnfs.
     max_maf : `float`
         Sites with a higher MAF are left out.
-    id_column : `str`, optional, default: `Constants.UKB_ID_COLUMN`
+    id_column : `str`, optional, default: `Ukb.ID_COL`
         Sample ID column of the carriers files (written as is).
     prefer_studies : `list` [`str`] or `NoneType`, optional
         Preferred study accessions; default
-        `Constants.BURDEN_PREFER_STUDIES`.
+        `Burden.PREFER_STUDIES`.
     config_dir, out_dir : `Path`, optional
         Cnf directory and the parent of the marvel outdirs.
     tasks_path, summary_path : `Path`, optional
@@ -1044,11 +1049,11 @@ def burden_exposure(
     FileNotFoundError
         If no gene has a carriers file.
     """
-    studies = list(prefer_studies or Constants.BURDEN_PREFER_STUDIES)
+    studies = list(prefer_studies or Burden.PREFER_STUDIES)
     log_stage("variant sets")
     sites = read_sites(variants, genes)
     prefer = read_prefer_sites(
-        matched, studies, Constants.BURDEN_FALLBACK_OUTCOME
+        matched, studies, Burden.FALLBACK_OUTCOME
     )
     strata = subset_strata()
     check_strata(pheno, strata)
@@ -1067,8 +1072,8 @@ def burden_exposure(
         columns = carrier_columns(path, gene_sites)
         carriers = stream_carriers(
             path, list(columns["column"]), id_column,
-            Constants.MARVEL_CARRIER_THRESHOLD,
-            Constants.OLD_CARRIERS_CHUNK_ROWS,
+            Marvel.CARRIER_THR,
+            Marvel.OLD_CARRIERS_CHUNK_ROWS,
         )
         log_info(f"{gene}: {len(carriers.ids)} samples")
         carrier, missing, swapped, above_maf = site_carriers(
@@ -1080,10 +1085,10 @@ def burden_exposure(
         )
         summary.extend(rows)
         files: dict[str, Path] = {}
-        for suffix in ("", Constants.BURDEN_FALLBACK_SUFFIX):
+        for suffix in ("", Burden.FALLBACK_SUFFIX):
             names = [
                 name for name in exposures
-                if name.endswith(Constants.BURDEN_FALLBACK_SUFFIX)
+                if name.endswith(Burden.FALLBACK_SUFFIX)
                 == bool(suffix)
             ]
             if not names:
@@ -1155,13 +1160,13 @@ def _init_cmd_args() -> argparse.ArgumentParser:
     parser.add_argument(
         "--max-maf",
         type=float,
-        default=Constants.BURDEN_MAX_MAF,
+        default=Burden.MAX_MAF,
         help="leave out sites with a higher MAF (default: %(default)s)",
     )
     parser.add_argument(
         "--prefer-studies",
         nargs="+",
-        default=list(Constants.BURDEN_PREFER_STUDIES),
+        default=list(Burden.PREFER_STUDIES),
         help="preferred study accessions (default: %(default)s)",
     )
     parser.add_argument(

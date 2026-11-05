@@ -41,8 +41,8 @@ import plot_misc.forest as forest
 import figure_utils as futils
 from pathlib import Path
 from project_constants import (
+        Apoe,
         ApoeStratum,
-        Constants,
         FigureColumns as FCols,
         FigureNames as FigNames,
         FigureStyle as FStyle,
@@ -75,7 +75,7 @@ parser.add_argument('-l', '--label',
                     help = 'meta_analysis.py --label of the run')
 parser.add_argument('-o', '--out-dir',
                     type = Path,
-                    default = Paths.RESULTS_FIGURES,
+                    default = Paths.FIGURES,
                     help = 'output directory (default: %(default)s)')
 parser.add_argument('-m', '--max-or',
                     type = float,
@@ -109,7 +109,7 @@ TABLES = (
 
 burden = futils.load_burden(futils.burden_path(args.ancestry, args.label))
 strata = futils.load_burden(futils.burden_path(
-        args.ancestry, args.label, f'_{Constants.APOE_STRATA_LABEL}'))
+        args.ancestry, args.label, f'_{Apoe.STRATA_LABEL}'))
 if burden is None:
     sys.exit(f'no burden file for {args.ancestry} {args.label}')
 if strata is None:

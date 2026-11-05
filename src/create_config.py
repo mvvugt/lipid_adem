@@ -28,7 +28,13 @@
 
 import argparse
 import pandas as pd
-from project_constants import ApoeStratum, Constants, FileNames
+from project_constants import (
+    Apoe,
+    ApoeStratum,
+    FileNames,
+    Marvel,
+    Ukb,
+)
 from marvel.utils.config_tools import create_config
 from marvel.constants import CONFIG_LHS as CFLhs
 
@@ -63,7 +69,7 @@ pheno_input = {
     }
 
 # the dementia outcomes in data/raw/icd_codes.txt, one binary (0/1) column
-# each; GLM-Binom gives log-OR (Constants.MARVEL_METHOD_SCALE)
+# each; GLM-Binom gives log-OR (Marvel.METHOD_SCALE)
 outcomes = [
     'ascvd_ii',
     'all_cause_dementia_algo',
@@ -93,14 +99,14 @@ covs = {
 # names each subset by its `Stratification name`. Thomassen 2026 APOE
 # strata (ApoeStratum.GENOTYPES, e2e4 in none); with stratify_overall
 # False, marvel runs only the subsets listed here
-pop_col = Constants.UKB_POPULATION_COLUMN
-apoe_col = Constants.UKB_APOE_COLUMN
-eur = f"{pop_col}={','.join(Constants.UKB_EUR_POPULATIONS)}"
+pop_col = Ukb.POP_COL
+apoe_col = Apoe.UKB_COL
+eur = f"{pop_col}={','.join(Ukb.EUR_POPS)}"
 apoe = {
     stratum: f"{apoe_col}={','.join(genotypes)}"
     for stratum, genotypes in ApoeStratum.GENOTYPES.items()
     }
-sep = Constants.MARVEL_ANCESTRY_SEP
+sep = Marvel.ANCESTRY_SEP
 subsets = {
     # all samples, unstratified (`overall`)
     'all'         : None,

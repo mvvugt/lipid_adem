@@ -1,6 +1,6 @@
 # pyjasub config -- filters each study's summary stats (GWAS Catalog
 # harmonised/raw, or FinnGen) to every gene's flanked region (MAF filter
-# per Constants.MAF_THRESHOLD; None = all in-region rows).
+# per Gwas.MAF_THR; None = all in-region rows).
 # One job-array row = one study (all genes in one pass); each array task
 # processes `step` rows, skipping studies whose outfile already exists.
 # Do not pass -w/--whole-steps: it needs the row count to be a multiple

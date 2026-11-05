@@ -82,7 +82,7 @@ parser.add_argument('-n', '--n-cols',
                     help = 'forests per figure row (default: %(default)s)')
 parser.add_argument('-o', '--out-dir',
                     type = Path,
-                    default = Paths.RESULTS_FIGURES,
+                    default = Paths.FIGURES,
                     help = 'output directory (default: %(default)s)')
 parser.add_argument('-m', '--max-or',
                     type = float,

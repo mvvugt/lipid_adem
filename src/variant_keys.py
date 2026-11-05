@@ -16,11 +16,15 @@ from pathlib import Path
 import pandas as pd
 from log_tools.emitter import log_info
 
-from project_constants import Constants, MarvelCompareColumns
+from project_constants import (
+    Const,
+    MarvelCompareColumns,
+    Regex,
+)
 
 _C = MarvelCompareColumns
 # the variant part of a marvel exposure / carriers column name
-_VARIANT_PATTERN: str = Constants.MARVEL_VARIANT_PATTERN
+_VARIANT_PATTERN: str = Regex.MARVEL_VARIANT
 _KEY_SEP: str = ":"
 
 
@@ -176,7 +180,7 @@ def _write_table_atomic(df: pd.DataFrame, path: Path) -> None:
     """
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp_path = path.with_suffix(path.suffix + ".tmp")
-    df.to_csv(tmp_path, sep="\t", index=False, na_rep="NA",
+    df.to_csv(tmp_path, sep="\t", index=False, na_rep=Const.NA,
               compression="gzip")
     tmp_path.replace(path)
     log_info(f"wrote {len(df)} rows to {path}")

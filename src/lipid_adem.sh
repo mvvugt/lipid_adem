@@ -24,7 +24,7 @@ esac
 # runs (MARVEL_ENV=marvel_old, 10039b6) to the validated marvel version
 # TODO with that move: config/marvel_config_variant.toml (new marvel
 # per-variant run) tests no lipids; add the five lipid outcomes
-# (Constants.MARVEL_UKB_OUTCOMES, OLS) so the selected GoF variants
+# (Marvel.UKB_OUTCOMES, OLS) so the selected GoF variants
 # (data/raw/selected_variants.tsv) get every outcome there too
 
 

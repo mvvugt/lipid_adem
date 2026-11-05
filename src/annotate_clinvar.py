@@ -15,8 +15,8 @@ import pandas as pd
 from log_tools.emitter import log_info, log_warn
 from log_tools.setup import runlog_setup
 from project_constants import (
+    ClinVar,
     ClinVarColumnNames as CVCNames,
-    Constants,
     FileNames,
     Paths,
 )
@@ -184,7 +184,7 @@ if __name__ == "__main__":
         log_info(f"Read {len(variants)} rows")
         # filter for pathogenic and likely pathogenic
         pathogenic_mask = variants[CVCNames.AC_CLASSIFICATION_COL].isin(
-            Constants.PATHOGENIC_CLASSIFICATIONS
+            ClinVar.PATHOGENIC_CLASSES
         )
         no_assembly_mask = pathogenic_mask & variants[CVCNames.ASSEMBLY_COL].isna()
         log_info(
@@ -198,8 +198,8 @@ if __name__ == "__main__":
         review_status_summary = summarize_scope_reduction(
                 plp_variants,
                 group_col=CVCNames.RCV_REVIEW_STATUS_COL,
-                strictness_order=Constants.REVIEW_STATUS_STRICTNESS_ORDER,
-                core_label=Constants.REVIEW_STATUS_CORE,
+                strictness_order=ClinVar.REVIEW_STATUS_ORDER,
+                core_label=ClinVar.REVIEW_STATUS_CORE,
                 all_included_label="All review statuses (every tier included)",
                 )
         log_info(

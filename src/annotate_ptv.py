@@ -20,9 +20,10 @@ from log_tools.emitter import log_info, log_warn
 from log_tools.setup import runlog_setup
 from project_constants import (
     ColumnNames,
-    Constants,
     FileNames,
+    GeneColumns,
     Paths,
+    VariantSource,
     VepCsqColumns,
 )
 
@@ -74,12 +75,12 @@ def filter_ptv(csq: pd.DataFrame, genes: pd.DataFrame) -> pd.DataFrame:
     if multi.any():
         log_warn(f"{int(multi.sum())} rows with a multiallelic ALT dropped")
     csq = csq.loc[~multi]
-    gene_ids = dict(zip(genes[ColumnNames.ENSEMBL_ID], genes[ColumnNames.GENE]))
+    gene_ids = dict(zip(genes[GeneColumns.ENSEMBL_ID], genes[ColumnNames.GENE]))
     csq = csq.loc[csq[vc.GENE_ID].isin(gene_ids)].copy()
     csq[vc.GENE] = csq[vc.GENE_ID].map(gene_ids)
 
-    keep = (csq[vc.CANONICAL] == Constants.VEP_CANONICAL) & (
-        csq[vc.LOF] == Constants.LOFTEE_KEEP
+    keep = (csq[vc.CANONICAL] == VariantSource.VEP_CANONICAL) & (
+        csq[vc.LOF] == VariantSource.LOFTEE_KEEP
     )
     site = [vc.CHROM, vc.POS, vc.REF, vc.ALT, vc.GENE]
     ptv = csq.loc[keep, PTV_COLUMNS].drop_duplicates(subset=site)
@@ -91,8 +92,9 @@ def filter_ptv(csq: pd.DataFrame, genes: pd.DataFrame) -> pd.DataFrame:
             log_warn(f"{gene}: no VEP rows (no VCF on Snellius?)")
             continue
         log_info(
-            f"{gene}: {n_sites} sites, {n_kept} LoF={Constants.LOFTEE_KEEP} "
-            f"on the canonical transcript kept, {n_sites - n_kept} dropped"
+            f"{gene}: {n_sites} sites, {n_kept} "
+            f"LoF={VariantSource.LOFTEE_KEEP} on the canonical transcript "
+            f"kept, {n_sites - n_kept} dropped"
         )
     return ptv.reset_index(drop=True)
 
@@ -103,19 +105,15 @@ def filter_ptv(csq: pd.DataFrame, genes: pd.DataFrame) -> pd.DataFrame:
 if __name__ == "__main__":
     with runlog_setup(order=51, root=Paths.HERE):
         # read gene_list
-        if not FileNames.GENE_LIST.exists():
-            # NOTE create a bespoke function that checks existence of file and throws error which prints the following message, but where fle description ("gene list" in this case) is also flexible, so it can be used for many files
-            raise FileNotFoundError(
-                    f"gene list not found: {FileNames.GENE_LIST}"
-                    )
+        functions.require_file(FileNames.GENE_LIST, "gene list")
         genes = pd.read_csv(FileNames.GENE_LIST, sep="\t", dtype=str)
-        gene_list = genes[[ColumnNames.GENE, ColumnNames.ENSEMBL_ID]]
+        gene_list = genes[[ColumnNames.GENE, GeneColumns.ENSEMBL_ID]]
         # read vep_csq file
-        if not FileNames.VEP_CSQ.exists():
-            raise FileNotFoundError(
-                f"VEP consequence file not found: {FileNames.VEP_CSQ} "
-                f"(run vep_extract.sh on Snellius and copy it here)"
-            )
+        functions.require_file(
+            FileNames.VEP_CSQ,
+            "VEP consequence file",
+            "run vep_extract.sh on Snellius and copy it here",
+        )
         log_info(f"Reading VEP consequences from {FileNames.VEP_CSQ}")
         vep_csq = pd.read_csv(FileNames.VEP_CSQ, sep="\t", dtype=str, na_values=["."])
         log_info(f"Read {len(vep_csq)} variant x transcript rows")
