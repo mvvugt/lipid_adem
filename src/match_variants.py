@@ -23,13 +23,14 @@ from log_tools.setup import runlog_setup
 import functions
 from project_constants import (
     ColumnNames,
-    Constants,
     FileNames,
     HarmonisedColumns,
+    Marvel,
     NormStatus,
     Paths,
     RunlogOrder,
     VariantListColumns,
+    VariantSource,
 )
 
 
@@ -193,10 +194,7 @@ def load_variant_lists() -> pd.DataFrame:
         If `FileNames.LIPID_VARIANTS` does not exist.
     """
     path = FileNames.LIPID_VARIANTS
-    if not path.exists():
-        raise FileNotFoundError(
-            f"{path} not found: run combine_variants.py first"
-        )
+    functions.require_file(path, hint="run combine_variants.py first")
     variants = pd.read_csv(path, sep="\t", dtype=str)
     log_info(f"{path}: {len(variants)} rows")
     n_before = len(variants)
@@ -329,14 +327,14 @@ def load_gwas_rows(burden_out: Path | None = None) -> pd.DataFrame:
     ----------
     burden_out : `Path` or `NoneType`, optional, default: `None`
         When given, the marvel gene-burden rows (`source` ``gene-burden``,
-        `source_db` starting with `Constants.MARVEL_SOURCE_DB_PREFIX`;
+        `source_db` starting with `Marvel.SOURCE_DB_PREFIX`;
         burden_exposure.py carrier masks) are written there for
         meta_analysis.py `--ukb-burden`.
 
     Returns
     -------
     gwas : `pd.DataFrame`
-        Rows whose `source` is in `Constants.VARIANT_LEVEL_SOURCES` and
+        Rows whose `source` is in `VariantSource.VARIANT_LEVEL` and
         that have chrom, pos and a usable effect allele, with helper
         columns `_ROW_KEY` (original row order), `_CHROM_KEY`, `_POS_KEY`,
         `_EFFECT_KEY` and `_OTHER_KEY` (``""`` if missing).
@@ -346,11 +344,9 @@ def load_gwas_rows(burden_out: Path | None = None) -> pd.DataFrame:
     FileNotFoundError
         If `FileNames.MERGED_ASSOCIATIONS` does not exist (run merge first).
     """
-    if not FileNames.MERGED_ASSOCIATIONS.exists():
-        raise FileNotFoundError(
-            f"{FileNames.MERGED_ASSOCIATIONS} not found: run "
-            "merge_associations.py first"
-        )
+    functions.require_file(
+        FileNames.MERGED_ASSOCIATIONS, hint="run merge_associations.py first"
+    )
     results = pd.read_csv(
         FileNames.MERGED_ASSOCIATIONS,
         sep="\t",
@@ -362,18 +358,18 @@ def load_gwas_rows(burden_out: Path | None = None) -> pd.DataFrame:
         low_memory=False,
     )
     gwas = results[
-        results[HarmonisedColumns.SOURCE].isin(Constants.VARIANT_LEVEL_SOURCES)
+        results[HarmonisedColumns.SOURCE].isin(VariantSource.VARIANT_LEVEL)
     ].copy()
     log_info(
         f"{FileNames.MERGED_ASSOCIATIONS}: {len(results)} rows, {len(gwas)} "
-        f"variant-level ({', '.join(Constants.VARIANT_LEVEL_SOURCES)})"
+        f"variant-level ({', '.join(VariantSource.VARIANT_LEVEL)})"
     )
     if burden_out is not None:
         is_marvel_burden = (
-            results[HarmonisedColumns.SOURCE] == Constants.GENE_BURDEN_SOURCE
+            results[HarmonisedColumns.SOURCE] == VariantSource.GENE_BURDEN
         ) & results[HarmonisedColumns.SOURCE_DB].astype(
             "string"
-        ).str.startswith(Constants.MARVEL_SOURCE_DB_PREFIX, na=False)
+        ).str.startswith(Marvel.SOURCE_DB_PREFIX, na=False)
         functions.write_table_atomic(
             results.loc[is_marvel_burden].reset_index(drop=True), burden_out
         )
@@ -582,7 +578,7 @@ def match_variants() -> None:
     _check_a1_is_ref(matched)
 
     log_stage("write")
-    Paths.RESULTS_OUTPUT.mkdir(parents=True, exist_ok=True)
+    Paths.OUTPUT.mkdir(parents=True, exist_ok=True)
     functions.write_table_atomic(matched, out_path)
     log_info(f"wrote {len(matched)} rows to {out_path}")
 

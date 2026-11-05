@@ -18,7 +18,7 @@ Shared inputs (`KEEP`) and files matching no rule are never moved; the
 latter are listed as unclassified.
 
 Dry run by default: writes nothing, logs the move list. With `--apply`,
-per group under `Paths.RESULTS_ARCHIVE / <tag> / <group>/`:
+per group under `Paths.ARCHIVE / <tag> / <group>/`:
 
 1. a group with more than `TAR_MIN_FILES` files gets `output.tar.gz` and
    `figures.tar.gz` (paths relative to the project root, so extracting
@@ -26,7 +26,7 @@ per group under `Paths.RESULTS_ARCHIVE / <tag> / <group>/`:
 2. each tarball or copy is written to a `.tmp` name, verified (names and
    sizes for tarballs, md5 for copies), then renamed;
 3. `README.md` (outside the tarballs) = the hand-written text in
-   `Paths.RESULTS_README_TEXT / <group>.md` plus a generated part: dates,
+   `Paths.README_TEXT / <group>.md` plus a generated part: dates,
    commits, a table of files with status and the tarball md5s;
 4. only then are the originals removed.
 
@@ -203,7 +203,7 @@ def classify(path: Path) -> Entry | None:
     name = path.name
     if name in KEEP:
         return None
-    kind = "output" if Paths.RESULTS_OUTPUT in path.parents else "figure"
+    kind = "output" if Paths.OUTPUT in path.parents else "figure"
     mtime = datetime.fromtimestamp(path.stat().st_mtime)
     if name in SNAPSHOT_NAMES or name.endswith(".zip"):
         return Entry(path, kind, SNAPSHOT_GROUP, mtime=mtime)
@@ -456,10 +456,10 @@ def group_readme(group: str, entries: list[Entry],
     Returns
     -------
     text : `str`
-        The hand-written part (`Paths.RESULTS_README_TEXT / <group>.md`,
+        The hand-written part (`Paths.README_TEXT / <group>.md`,
         a placeholder when missing) plus the generated part.
     """
-    text_path = Paths.RESULTS_README_TEXT / f"{group}.md"
+    text_path = Paths.README_TEXT / f"{group}.md"
     if text_path.exists():
         text = text_path.read_text().rstrip() + "\n"
     else:
@@ -512,7 +512,7 @@ def index_readme(tag_dir: Path, groups: dict[str, list[Entry]]) -> str:
         "|---|---|---|---|",
     ]
     for group, entries in groups.items():
-        text_path = Paths.RESULTS_README_TEXT / f"{group}.md"
+        text_path = Paths.README_TEXT / f"{group}.md"
         summary = ""
         if text_path.exists():
             body = [ln for ln in text_path.read_text().splitlines()
@@ -557,7 +557,7 @@ def archive_group(group: str, entries: list[Entry], tag_dir: Path) -> None:
     entries : `list` [`Entry`]
         The group's files.
     tag_dir : `Path`
-        Tag directory (`Paths.RESULTS_ARCHIVE / <tag>`).
+        Tag directory (`Paths.ARCHIVE / <tag>`).
 
     Returns
     -------
@@ -590,7 +590,7 @@ def archive_results(tag: str, apply: bool, groups_only: list[str]) -> None:
     Parameters
     ----------
     tag : `str`
-        Archive batch name: the directory under `Paths.RESULTS_ARCHIVE`.
+        Archive batch name: the directory under `Paths.ARCHIVE`.
     apply : `bool`
         False (default): log the move list only, write nothing.
     groups_only : `list` [`str`]
@@ -606,7 +606,7 @@ def archive_results(tag: str, apply: bool, groups_only: list[str]) -> None:
         If the tag directory already exists (with `apply`).
     """
     log_stage("collect")
-    entries = collect((Paths.RESULTS_OUTPUT, Paths.RESULTS_FIGURES))
+    entries = collect((Paths.OUTPUT, Paths.FIGURES))
     groups: dict[str, list[Entry]] = {}
     for e in entries:
         if groups_only and e.group not in groups_only:
@@ -627,7 +627,7 @@ def archive_results(tag: str, apply: bool, groups_only: list[str]) -> None:
         log_info("dry run: nothing written (use --apply)")
         return
     log_stage("archive")
-    tag_dir = Paths.RESULTS_ARCHIVE / tag
+    tag_dir = Paths.ARCHIVE / tag
     if tag_dir.exists():
         raise FileExistsError(f"{tag_dir} exists: choose another --tag")
     tag_dir.mkdir(parents=True)

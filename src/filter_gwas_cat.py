@@ -5,8 +5,10 @@ the job-array file
 (data/temp/tasks.tsv), one row per study. For each study, remote-queries
 its summary stats (GWAS Catalog harmonised or raw, or FinnGen, per the
 row's `source`) for every gene region in data/temp/gene_regions.tsv in one
-pass, filters to MAF < Constants.MAF_THRESHOLD (no MAF filter when it is
-`None`: every in-region row is kept), and writes the row's output file.
+pass, filters to MAF < `Gwas.MAF_THR` (no MAF filter when it is
+`None`: every in-region row is kept, also rows without a frequency, since
+listed variants can be common in some ancestries; match_variants.py keeps
+only the listed variants), and writes the row's output file.
 Rows whose output file already exists are skipped.
 """
 
@@ -27,8 +29,8 @@ from log_tools.setup import runlog_setup
 import functions
 from project_constants import (
     ColumnNames,
-    Constants,
     FileNames,
+    Gwas,
     Paths,
     RunlogOrder,
 )
@@ -111,7 +113,7 @@ def _run_filter_gwas_catalog(
             tabix_source=source.url,
             regions=regions,
             maf_col=source.maf_col,
-            maf_threshold=Constants.MAF_THRESHOLD,
+            maf_threshold=Gwas.MAF_THR,
             chrom_col=source.chrom_col,
             pos_col=source.pos_col,
             transform_to_maf=True,
@@ -121,7 +123,7 @@ def _run_filter_gwas_catalog(
         url=source.url,
         regions=regions,
         maf_col=source.maf_col,
-        maf_threshold=Constants.MAF_THRESHOLD,
+        maf_threshold=Gwas.MAF_THR,
         chrom_col=source.chrom_col,
         pos_col=source.pos_col,
         transform_to_maf=True,
@@ -161,7 +163,7 @@ def _run_filter_finngen(
         tabix_source=url,
         regions=regions,
         maf_col="af_alt",
-        maf_threshold=Constants.MAF_THRESHOLD,
+        maf_threshold=Gwas.MAF_THR,
         chrom_col="chrom",
         pos_col="pos",
         transform_to_maf=True,

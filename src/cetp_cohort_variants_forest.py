@@ -14,7 +14,7 @@
 ##     FinnGen adds only single variants) next to the UKB estimate of the
 ##     same variant (per-variant rows of the `cohort_burden` runs, written
 ##     with `--stratified`). All effects oriented to the therapeutic
-##     direction (`Constants.THERAPY_DIRECTION`; CETP: lower function),
+##     direction (`TherapyDirection.GENES`; CETP: lower function),
 ##     OR with 95% CI, with side tables (OR (95% CI), p-value, UKB
 ##     carriers / cases of the burden rows); the forests in a grid
 ##     (`--n-cols`). Run locally in the `plot-misc` env on files copied
@@ -99,7 +99,7 @@ parser.add_argument('-n', '--n-cols',
                     help = 'forests per figure row (default: %(default)s)')
 parser.add_argument('-o', '--out-dir',
                     type = Path,
-                    default = Paths.RESULTS_FIGURES,
+                    default = Paths.FIGURES,
                     help = 'output directory (default: %(default)s)')
 parser.add_argument('-m', '--max-or',
                     type = float,
@@ -164,9 +164,9 @@ def meta_path(ancestry: str, label: str) -> Path:
     Returns
     -------
     path : `Path`
-        In `Paths.RESULTS_OUTPUT`.
+        In `Paths.OUTPUT`.
     """
-    return Paths.RESULTS_OUTPUT / FileNames.META_ANALYSIS_TEMPLATE.format(
+    return Paths.OUTPUT / FileNames.META_ANALYSIS_TEMPLATE.format(
         ancestry = ancestry, suffix = f'_{label}')
 
 

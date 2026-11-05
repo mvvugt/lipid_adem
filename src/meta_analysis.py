@@ -5,7 +5,7 @@ rows matched to the gene variant lists (`matched_variants.tsv.gz`).
 
 Effects are oriented towards the a2 (alt) allele, flipped to a1 for GoF
 variants (lower gene function), then flipped again for genes whose
-drugs raise gene function (`Constants.THERAPY_DIRECTION`), so every
+drugs raise gene function (`TherapyDirection.GENES`), so every
 written effect is in the therapeutic direction (`therapy_direction`
 column). Each run pools the rows of one ancestry group (`--ancestry`,
 default `MetaColumns.DEFAULT_ANCESTRY`; ``MULTI`` pools every ancestry
@@ -51,19 +51,24 @@ from log_tools.setup import runlog_setup
 import functions
 from project_constants import (
     Ancestry,
+    Apoe,
     ApoeStratum,
+    Burden,
     ClinVarDirection,
-    Constants,
+    Const,
     EffectScale,
     FileNames,
     HarmonisedColumns,
+    Meta,
     MetaColumns,
     MetaLevel,
     Orientation,
     Paths,
+    Regex,
     RunlogOrder,
     TherapyDirection,
     VariantListColumns,
+    VariantSource,
 )
 
 
@@ -81,7 +86,7 @@ _NORMAL = NormalDist()
 # vectorised stdlib function (scipy is not a project dependency)
 _ERFC = np.vectorize(math.erfc, otypes=[float])
 # marvel gene-burden `Exposure` (`<GENE>_<mask>`, burden_exposure.py)
-_GENE_MASK_RE = re.compile(Constants.MARVEL_GENE_MASK_PATTERN)
+_GENE_MASK_RE = re.compile(Regex.MARVEL_GENE_MASK)
 # merge_associations keeps the marvel `Exposure` as src_Exposure
 _EXPOSURE_COLUMN: str = "src_Exposure"
 # helper column of the UKB burden rows: the exposure's mask
@@ -146,9 +151,9 @@ def _join_study_maf(group: pd.DataFrame) -> str:
     """
     maf = pd.to_numeric(group[HarmonisedColumns.MAF], errors="coerce")
     pairs = [
-        f"{accession}={'NA' if pd.isna(value) else f'{value:.3g}'}"
+        f"{accession}={Const.NA if pd.isna(value) else f'{value:.3g}'}"
         for accession, value in zip(
-            group[HarmonisedColumns.STUDY_ACCESSION].fillna("NA"), maf
+            group[HarmonisedColumns.STUDY_ACCESSION].fillna(Const.NA), maf
         )
     ]
     return ";".join(sorted(set(pairs)))
@@ -210,16 +215,16 @@ def _rank_rows(rows: pd.DataFrame) -> pd.DataFrame:
     -------
     ranked : `pd.DataFrame`
         `rows` sorted, index kept, sources ranked by
-        `Constants.GWAS_SOURCE_PREFERENCE` and then source databases by
-        `Constants.SOURCE_DB_PREFERENCE` (others last in both).
+        `Meta.GWAS_SOURCE_PREF` and then source databases by
+        `Meta.SOURCE_DB_PREF` (others last in both).
     """
     source_rank = {
         source: i
-        for i, source in enumerate(Constants.GWAS_SOURCE_PREFERENCE)
+        for i, source in enumerate(Meta.GWAS_SOURCE_PREF)
     }
     db_rank = {
         source_db: i
-        for i, source_db in enumerate(Constants.SOURCE_DB_PREFERENCE)
+        for i, source_db in enumerate(Meta.SOURCE_DB_PREF)
     }
     ranked = rows.assign(
         **{
@@ -268,10 +273,7 @@ def load_matched(path: Path = FileNames.MATCHED_VARIANTS) -> pd.DataFrame:
         If the table has no ClinVar direction column (written by an older
         match_variants.py).
     """
-    if not path.exists():
-        raise FileNotFoundError(
-            f"{path} not found: run match_variants.py first"
-        )
+    functions.require_file(path, hint="run match_variants.py first")
     columns = pd.read_csv(path, sep="\t", nrows=0).columns
     if VariantListColumns.OUT_CLINVAR_DIRECTION not in columns:
         raise ValueError(
@@ -375,7 +377,7 @@ def check_effect_scales(
 def keep_expected_scales(matched: pd.DataFrame) -> pd.DataFrame:
     """Keep the rows on the effect scale expected for their outcome.
 
-    Lipids (`Constants.LIPID_OUTCOMES`) are expected `EffectScale.LINEAR`,
+    Lipids (`Const.LIPID_OUTCOMES`) are expected `EffectScale.LINEAR`,
     every other outcome `EffectScale.LOG_OR`; rows on another scale
     (unknown, conflict, log-HR, or linear for a binary outcome) are
     dropped, so no pool mixes scales.
@@ -392,7 +394,7 @@ def keep_expected_scales(matched: pd.DataFrame) -> pd.DataFrame:
         per study and scale.
     """
     hc = HarmonisedColumns
-    is_lipid = matched[hc.OUTCOME].isin(Constants.LIPID_OUTCOMES)
+    is_lipid = matched[hc.OUTCOME].isin(Const.LIPID_OUTCOMES)
     expected = np.where(is_lipid, EffectScale.LINEAR, EffectScale.LOG_OR)
     is_expected = matched[hc.STUDY_EFFECT_SCALE].to_numpy() == expected
     dropped = matched.loc[~is_expected]
@@ -756,21 +758,21 @@ def therapy_sign(genes: pd.Series) -> np.ndarray:
     -------
     sign : `np.ndarray`
         -1.0 for genes whose drugs raise gene function
-        (`TherapyDirection.RAISING` in `Constants.THERAPY_DIRECTION`),
+        (`TherapyDirection.RAISING` in `TherapyDirection.GENES`),
         else 1.0.
 
     Raises
     ------
     ValueError
-        If a gene has no entry in `Constants.THERAPY_DIRECTION`.
+        If a gene has no entry in `TherapyDirection.GENES`.
     """
-    missing = sorted(set(genes.dropna()) - set(Constants.THERAPY_DIRECTION))
+    missing = sorted(set(genes.dropna()) - set(TherapyDirection.GENES))
     if missing:
         raise ValueError(
             f"no therapeutic direction for {', '.join(missing)}: add to "
-            "Constants.THERAPY_DIRECTION"
+            "TherapyDirection.GENES"
         )
-    raising = genes.map(Constants.THERAPY_DIRECTION).eq(
+    raising = genes.map(TherapyDirection.GENES).eq(
         TherapyDirection.RAISING
     )
     return np.where(raising, -1.0, 1.0)
@@ -800,7 +802,7 @@ def add_therapy_direction(table: pd.DataFrame) -> pd.DataFrame:
         """The one direction of a row's ";"-joined genes."""
         if not isinstance(genes, str) or not genes:
             return None
-        found = {Constants.THERAPY_DIRECTION[gene] for gene in
+        found = {TherapyDirection.GENES[gene] for gene in
                  genes.split(";")}
         if len(found) > 1:
             raise ValueError(f"genes {genes}: conflicting therapy direction")
@@ -819,7 +821,7 @@ def orient(rows: pd.DataFrame) -> pd.DataFrame:
     """Orient every row's effect per variant.
 
     The a2 allele is used, or a1 when any of the variant's list sources
-    is `Constants.GOF_VARIANT_SOURCE` or `Constants.
+    is `VariantSource.GOF` or `Constants.
     SELECTED_GOF_VARIANT_SOURCE` (`a2_gof_flipped`) or any of its
     rows has `clinvar_direction` `raising` (`a2_clinvar_raising_flipped`;
     GoF wins when both apply). So every effect is that of lower gene
@@ -849,8 +851,8 @@ def orient(rows: pd.DataFrame) -> pd.DataFrame:
         rows.loc[
             rows[VariantListColumns.OUT_SOURCE].isin(
                 [
-                    Constants.GOF_VARIANT_SOURCE,
-                    Constants.SELECTED_GOF_VARIANT_SOURCE,
+                    VariantSource.GOF,
+                    VariantSource.SELECTED_GOF,
                 ]
             ),
             site,
@@ -1221,7 +1223,7 @@ def _ukb_base_mask(variant_sources: list[str] | None) -> str:
     Returns
     -------
     mask : `str`
-        The `Constants.BURDEN_VARIANT_SETS` key whose sources equal the
+        The `Burden.VARIANT_SETS` key whose sources equal the
         run's (e.g. `BURDEN_MASK_GOF` for GoF, `BURDEN_MASK_LOF` for PTV
         and ClinVar).
 
@@ -1232,14 +1234,14 @@ def _ukb_base_mask(variant_sources: list[str] | None) -> str:
         no carrier burden matches such a run.
     """
     sources = set(variant_sources or [])
-    for mask, mask_sources in Constants.BURDEN_VARIANT_SETS.items():
+    for mask, mask_sources in Burden.VARIANT_SETS.items():
         if sources == set(mask_sources):
             return mask
     raise ValueError(
         "--ukb-burden needs --variant-sources of one variant set: "
         + "; ".join(
             " ".join(mask_sources)
-            for mask_sources in Constants.BURDEN_VARIANT_SETS.values()
+            for mask_sources in Burden.VARIANT_SETS.values()
         )
         + f" (got {sorted(sources) or 'all'})"
     )
@@ -1283,13 +1285,13 @@ def load_ukb_burden(
     FileNotFoundError
         If `path` does not exist (rerun match_variants.py).
     """
-    if not path.exists():
-        raise FileNotFoundError(
-            f"{path} not found: rerun match_variants.py after the burden "
-            "results are in marvel_results.tsv"
-        )
+    functions.require_file(
+        path,
+        hint="rerun match_variants.py after the burden results are in "
+        "marvel_results.tsv",
+    )
     base = _ukb_base_mask(variant_sources)
-    suffix = Constants.BURDEN_FALLBACK_SUFFIX
+    suffix = Burden.FALLBACK_SUFFIX
     wanted = {base, f"{base}{suffix}"}
     table = pd.read_csv(path, sep="\t", low_memory=False)
     parsed = table[_EXPOSURE_COLUMN].astype(str).str.extract(_GENE_MASK_RE)
@@ -1297,7 +1299,7 @@ def load_ukb_burden(
     table[_MASK_KEY] = parsed["mask"]
     keep = (
         table[_MASK_KEY].isin(wanted)
-        & ~table[VariantListColumns.OUT_GENE].isin(Constants.EXCLUDED_GENES)
+        & ~table[VariantListColumns.OUT_GENE].isin(Const.EXCLUDED_GENES)
     )
     ancestry_col = HarmonisedColumns.ANCESTRY_GROUP
     if ancestry != Ancestry.MULTI:
@@ -1316,7 +1318,7 @@ def load_ukb_burden(
         log_warn(f"{int((~usable).sum())} UKB burden rows without beta/SE")
     ukb, beta, se = ukb.loc[usable], beta[usable], se[usable]
     # as `orient` flips GoF sites: every effect is that of lower function
-    sign = -1.0 if base == Constants.BURDEN_MASK_GOF else 1.0
+    sign = -1.0 if base == Burden.MASK_GOF else 1.0
     # then, as `orient`, the therapeutic direction
     ukb[MetaColumns.BETA_ORIENTED] = beta * sign * therapy_sign(
         ukb[VariantListColumns.OUT_GENE]
@@ -1409,13 +1411,13 @@ def ukb_burden_rows(
         & ukb[MetaColumns.STUDY_GROUP].isin(fallback or [])
     )
     wanted = np.where(
-        use_fallback, f"{base}{Constants.BURDEN_FALLBACK_SUFFIX}", base
+        use_fallback, f"{base}{Burden.FALLBACK_SUFFIX}", base
     )
     chosen = ukb.loc[ukb[_MASK_KEY] == wanted].copy()
     n_fallback = int((chosen[_MASK_KEY] != base).sum())
     log_info(
         f"UKB carrier burden: {len(chosen)} rows of mask {base}, "
-        f"{n_fallback} as {base}{Constants.BURDEN_FALLBACK_SUFFIX} "
+        f"{n_fallback} as {base}{Burden.FALLBACK_SUFFIX} "
         "(preferred groups have the gene and outcome)"
     )
     study_keys = [
@@ -1502,7 +1504,7 @@ def meta_analysis(
     gene_level : `bool`, optional, default: `True`
         Also write the gene burden (IVW over a gene's variants); False
         writes the per-variant tables only (variants reported one by
-        one, e.g. `Constants.SELECTED_GOF_VARIANT_SOURCE`).
+        one, e.g. `VariantSource.SELECTED_GOF`).
 
     Returns
     -------
@@ -1581,7 +1583,7 @@ def meta_analysis(
             [*keys, MetaColumns.APOE_STRATUM],
             ancestry,
             per_study,
-            f"{suffix}_{Constants.APOE_STRATA_LABEL}",
+            f"{suffix}_{Apoe.STRATA_LABEL}",
             None if ukb is None else ukb.loc[
                 ukb[MetaColumns.APOE_STRATUM] != ApoeStratum.ALL
             ].copy(),
@@ -1616,11 +1618,11 @@ def _prepare_rows(
     log_stage("load_matched")
     matched = load_matched(FileNames.MATCHED_VARIANTS)
     is_excluded = matched[VariantListColumns.OUT_GENE].isin(
-        Constants.EXCLUDED_GENES
+        Const.EXCLUDED_GENES
     )
     log_info(
         f"{int(is_excluded.sum())} rows of excluded gene(s) "
-        f"{', '.join(Constants.EXCLUDED_GENES)} dropped"
+        f"{', '.join(Const.EXCLUDED_GENES)} dropped"
     )
     matched = matched.loc[~is_excluded].copy()
     ancestry_col = HarmonisedColumns.ANCESTRY_GROUP
@@ -1956,8 +1958,8 @@ def _analyse_and_write(
         log_stage("gene_burden")
         burden = add_therapy_direction(gene_burden(rows, keys, ukb))
         log_stage("write")
-        Paths.RESULTS_OUTPUT.mkdir(parents=True, exist_ok=True)
-        path = Paths.RESULTS_OUTPUT / FileNames.BURDEN_TEMPLATE.format(
+        Paths.OUTPUT.mkdir(parents=True, exist_ok=True)
+        path = Paths.OUTPUT / FileNames.BURDEN_TEMPLATE.format(
             ancestry=ancestry, suffix=suffix
         )
         functions.write_table_atomic(burden, path)
@@ -2005,9 +2007,9 @@ def _analyse_and_write(
         log_info("no gene burden (--no-gene-burden)")
 
     log_stage("write")
-    Paths.RESULTS_OUTPUT.mkdir(parents=True, exist_ok=True)
+    Paths.OUTPUT.mkdir(parents=True, exist_ok=True)
     for template, table, file_suffix in outputs:
-        path = Paths.RESULTS_OUTPUT / template.format(
+        path = Paths.OUTPUT / template.format(
             ancestry=ancestry, suffix=file_suffix
         )
         functions.write_table_atomic(table, path)
@@ -2111,7 +2113,7 @@ def _init_cmd_args() -> argparse.ArgumentParser:
         help=(
             "write only the per-variant table, no gene burden (variants "
             f"reported one by one, e.g. "
-            f"{Constants.SELECTED_GOF_VARIANT_SOURCE})"
+            f"{VariantSource.SELECTED_GOF})"
         ),
     )
     return parser

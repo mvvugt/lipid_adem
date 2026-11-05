@@ -1388,7 +1388,6 @@ Traceback (most recent call last):
   File "/gpfs/home6/mvanvugt/projects/lipid_adem/src/functions.py", line 3410, in filter_sumstats_regions
     import pysam
 ModuleNotFoundError: No module named 'pysam'
-
 ```
 
 ## [20] filter_gwas_cat_job
@@ -1411,7 +1410,6 @@ Output:
 [info]  2026-10-27 13:37:03 step=1
 [info]  2026-10-27 13:37:03 task 116: rows 116-116
 [info]  2026-10-27 13:37:06 rows 116-116 of 125, 8 gene regions
-
 ```
 
 ## [22] burden_exposure (`src/burden_exposure.py --mask-lists --genes ANGPTL3 APOA1 APOB APOE CETP HMGCR NPC1L1 PCSK9 PPARA`)

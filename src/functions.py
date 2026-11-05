@@ -2,10 +2,11 @@
 """
 lipid_adem helper functions
 """
+# NOTE Please shorten drastically, creating separate utils/*py files where functions are clustered
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# imports
+# IMPORTS
 
 from __future__ import annotations
 
@@ -32,20 +33,31 @@ from log_tools.emitter import log_debug, log_info, log_warn
 
 from project_constants import (
     Ancestry,
+    Api,
     ApoeStratum,
     ColumnNames,
-    Constants,
+    Const,
     EffectScale,
     EnsemblAlleleCheck,
     EnsemblRsidCheck,
     FileNames,
+    GeneColumns,
+    Gwas,
     HarmonisedColumns,
     MafStatus,
+    Marvel,
     MetaColumns,
     NormStatus,
+    OutcomeColumns,
     Paths,
+    Regex,
     SourceColumnMaps,
+    StudyColumns,
 )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# CONSTANTS
 
 # integer in free text, with or without thousands commas, not part of a
 # word or decimal (e.g. not the "23" of "23andMe")
@@ -77,13 +89,13 @@ _RSID_PATTERN = re.compile(r"^rs\d+$")
 _PRIMARY_CHROM_PATTERN = re.compile(r"^(?:\d+|X|Y|MT)$")
 # source rsid cells can hold several ids, e.g. FinnGen "rs1,rs2"
 _RSID_SPLIT_PATTERN = re.compile(r"[,;\s]+")
-_CNV_TRAIT_PATTERN = re.compile(Constants.CNV_TRAIT_PATTERN, re.IGNORECASE)
+_CNV_TRAIT_PATTERN = re.compile(Regex.CNV_TRAIT, re.IGNORECASE)
 _X_CHROM_TRAIT_PATTERN = re.compile(
-    Constants.X_CHROM_TRAIT_PATTERN, re.IGNORECASE
+    Regex.X_CHROM_TRAIT, re.IGNORECASE
 )
-_COHORT_SPLIT_PATTERN = re.compile(Constants.COHORT_SPLIT_PATTERN)
+_COHORT_SPLIT_PATTERN = re.compile(Regex.COHORT_SPLIT)
 _MARVEL_VARIANT_PATTERN = re.compile(
-    Constants.MARVEL_VARIANT_PATTERN, re.IGNORECASE
+    Regex.MARVEL_VARIANT, re.IGNORECASE
 )
 _ANCESTRY_SEGMENT_PATTERN = re.compile(Ancestry.SEGMENT_PATTERN, re.VERBOSE)
 _ANCESTRY_CATEGORY_SPLIT_PATTERN = re.compile(Ancestry.CATEGORY_SPLIT_PATTERN)
@@ -91,13 +103,13 @@ _ANCESTRY_CATEGORY_SPLIT_PATTERN = re.compile(Ancestry.CATEGORY_SPLIT_PATTERN)
 _WARNED_ANCESTRY_CATEGORIES: set[str] = set()
 # server-error status in a biomed-api ReaderError message (no HTTP cause)
 _READER_HTTP_5XX_PATTERN = re.compile(r"HTTP 5\d\d")
-_BURDEN_MASK_ALLELE_PATTERN = re.compile(Constants.BURDEN_MASK_ALLELE_PATTERN)
-_BURDEN_NAME_PATTERN = re.compile(Constants.BURDEN_NAME_PATTERN)
+_BURDEN_MASK_ALLELE_PATTERN = re.compile(Regex.BURDEN_MASK_ALLELE)
+_BURDEN_NAME_PATTERN = re.compile(Regex.BURDEN_NAME)
 _T = TypeVar("_T")
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# data containers
+# DATA CONTAINERS
 
 @dataclass
 class GeneRegion:
@@ -161,6 +173,9 @@ class SumstatsSource:
     maf_col: str = "effect_allele_frequency"
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ERRORS
+
 class GeneTableError(ValueError):
     """A gene-table row cannot be resolved or its identifiers disagree."""
 
@@ -170,7 +185,7 @@ class SumstatsColumnError(ValueError):
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# network retry
+# NETWORK RETRY
 
 def _transient_reason(exc: BaseException) -> str | None:
     """Return why a failed network call is worth retrying, else `None`.
@@ -197,12 +212,12 @@ def _transient_reason(exc: BaseException) -> str | None:
 def _call_with_retry(func: Callable[[], _T], label: str) -> _T:
     """Call `func`, retrying transient failures (see `_transient_reason`).
 
-    Makes `len(Constants.HTTP_RETRY_BACKOFF) + 1` attempts, sleeping the
+    Makes `len(Api.RETRY_BACKOFF) + 1` attempts, sleeping the
     listed seconds before each retry; `label` names the call in warnings.
     The last error, or any non-transient one, is re-raised.
     """
-    n_retries = len(Constants.HTTP_RETRY_BACKOFF)
-    for attempt, wait in enumerate((*Constants.HTTP_RETRY_BACKOFF, None), 1):
+    n_retries = len(Api.RETRY_BACKOFF)
+    for attempt, wait in enumerate((*Api.RETRY_BACKOFF, None), 1):
         try:
             return func()
         except Exception as exc:
@@ -236,14 +251,12 @@ def _request_with_retry(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# helpers
+# FILE/DIRECTORY WRITING
 
 def write_table_atomic(df: pd.DataFrame, path: Path, sep: str = "\t") -> None:
     """Write a table to disk atomically (stage-then-move).
 
-    Writes to a sibling temp file first, then moves it into place, so a
-    failed/interrupted write can never leave `path` (which may be a
-    hand-maintained input file) partially written.
+    Failed/interrupted write can never leave `path` partially written.
 
     Parameters
     ----------
@@ -258,20 +271,15 @@ def write_table_atomic(df: pd.DataFrame, path: Path, sep: str = "\t") -> None:
     -------
     `None`
     """
-    tmp_path = path.with_suffix(path.suffix + ".tmp")
-    # the ".tmp" suffix stops pandas inferring compression, so set it here
-    compression = "gzip" if path.suffix == ".gz" else None
-    df.to_csv(tmp_path, sep=sep, index=False, compression=compression)
+    # tmp prefix keeps the suffix, so pandas infers compression
+    tmp_path = path.with_name(f".tmp_{path.name}")
+    df.to_csv(tmp_path, sep=sep, index=False)
     tmp_path.replace(path)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def archive_dir(path: Path) -> Path | None:
-    """Rename an existing directory aside, stamped with its mtime.
-
-    The new name is `<name>_<mtime %Y%m%d_%H%M%S>` in the same parent
-    directory, with `_1`, `_2`, ... appended if that name is taken, so
-    nothing is ever overwritten.
+    """Rename an existing directory aside, stamped with its mtime date.
 
     Parameters
     ----------
@@ -285,24 +293,58 @@ def archive_dir(path: Path) -> Path | None:
 
     Notes
     -----
-    Used to move an old pyjasub log directory out of the way: pyjasub
-    errors when the job-array file is newer than an existing log dir. The
-    mtime (not "now") is used so the name reflects the run the logs
-    belong to. A same-directory rename is atomic.
+    New name is `<name>_<mtime %Y%m%d>` in the same parent directory,
+    with `_1`, `_2`, ... appended if that name is taken. A same-directory
+    rename is atomic.
     """
     if not path.exists():
         return None
-    stamp = time.strftime(
-        "%Y%m%d_%H%M%S", time.localtime(path.stat().st_mtime)
-    )
+    # obtain mtime
+    stamp = time.strftime("%Y%m%d", time.localtime(path.stat().st_mtime))
+    # create new name parts
     archived = path.with_name(f"{path.name}_{stamp}")
     suffix = 1
+    # increment suffix if directory already exists
     while archived.exists():
         archived = path.with_name(f"{path.name}_{stamp}_{suffix}")
         suffix += 1
+    # execute and log
     path.rename(archived)
     log_info(f"archived {path} -> {archived}")
     return archived
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# FILE READING
+
+def require_file(path: Path, desc: str = "", hint: str = "") -> None:
+    """Raise if a required input file does not exist.
+
+    Parameters
+    ----------
+    path : `Path`
+        File that must exist.
+    desc : `str`, optional, default: `""`
+        What the file is, e.g. "gene list"; prefixed to the message.
+    hint : `str`, optional, default: `""`
+        How to create it, e.g. "run match_variants.py first"; appended
+        in brackets.
+
+    Returns
+    -------
+    `None`
+
+    Raises
+    ------
+    FileNotFoundError
+        If `path` does not exist, as "<desc> not found: <path> (<hint>)".
+    """
+    if path.exists():
+        return
+    message = f"{desc} not found: {path}" if desc else f"not found: {path}"
+    if hint:
+        message += f" ({hint})"
+    raise FileNotFoundError(message)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -330,10 +372,64 @@ def load_tasks(path: Path) -> pd.DataFrame:
     FileNotFoundError
         If `path` does not exist.
     """
-    if not path.exists():
-        raise FileNotFoundError(f"Tasks file not found: {path}")
+    require_file(path, "tasks file")
     tasks = pd.read_csv(path, sep="\t", dtype=str)
     return tasks.dropna(subset=[ColumnNames.OUTFILE])
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def load_gene_table(path: Path) -> pd.DataFrame:
+    """Load the gene reference table, adding any missing standard column.
+
+    Parameters
+    ----------
+    path : `Path`
+        Tab-separated file with at least one identifier column from
+        `GeneColumns.GENE_ID_COLUMNS`. Every other standard column
+        (`GeneColumns.GENE_TABLE_COLUMNS`) is optional, will be filled in.
+
+    Returns
+    -------
+    genes : `pd.DataFrame`
+        The gene table as strings, with blank cells as "" and a literal
+        "NA" kept as-is. Standard columns come first, in standard order,
+        followed by any extra columns.
+
+    Raises
+    ------
+    FileNotFoundError
+        If `path` does not exist.
+    GeneTableError
+        If the file has no identifier column, or a row has no usable
+        identifier (all blank or "NA").
+    """
+    require_file(path, "gene list")
+    # keep_default_na=False so a literal "NA" (looked up, not found) is not
+    # read back as blank and re-resolved on every run
+    df = pd.read_csv(path, sep="\t", dtype=str, keep_default_na=False)
+    # check for required columns
+    df.columns = [c.strip() for c in df.columns]
+    if not any(c in df.columns for c in GeneColumns.GENE_ID_COLUMNS):
+        raise GeneTableError(
+            f"{path} needs at least one identifier column out of "
+            f"{', '.join(GeneColumns.GENE_ID_COLUMNS)}; got "
+            f"{', '.join(df.columns)}"
+        )
+    # fill rest of columns with blank cells
+    for col in GeneColumns.GENE_TABLE_COLUMNS:
+        if col not in df.columns:
+            df[col] = ""
+    df = df.apply(lambda col: col.str.strip())
+    # order standard and extra columns
+    extra = [c for c in df.columns if c not in GeneColumns.GENE_TABLE_COLUMNS]
+    df = df[list(GeneColumns.GENE_TABLE_COLUMNS) + extra]
+    for idx in df.index:
+        if not _given_gene_ids(df.loc[idx]):
+            raise GeneTableError(
+                f"{path} row {idx + 2} has no identifier: set one of "
+                f"{', '.join(GeneColumns.GENE_ID_COLUMNS)}"
+            )
+    return df
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -356,8 +452,7 @@ def load_gene_regions(path: Path) -> dict[str, GeneRegion]:
     FileNotFoundError
         If `path` does not exist.
     """
-    if not path.exists():
-        raise FileNotFoundError(f"Gene regions file not found: {path}")
+    require_file(path, "gene regions file")
     table = pd.read_csv(path, sep="\t", dtype=str)
     return {
         row[ColumnNames.GENE]: GeneRegion(
@@ -367,61 +462,6 @@ def load_gene_regions(path: Path) -> dict[str, GeneRegion]:
         )
         for _, row in table.iterrows()
     }
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def load_gene_table(path: Path) -> pd.DataFrame:
-    """Load the gene reference table, adding any missing standard column.
-
-    Parameters
-    ----------
-    path : `Path`
-        Tab-separated file with at least one identifier column from
-        `ColumnNames.GENE_ID_COLUMNS` (`gene`, `ensemblid`, `uniprot`).
-        Every other standard column (`ColumnNames.GENE_TABLE_COLUMNS`)
-        is optional, and any cell may be blank; `resolve_gene_table`
-        fills them in.
-
-    Returns
-    -------
-    genes : `pd.DataFrame`
-        The gene table as strings, with blank cells as "" and a literal
-        "NA" kept as-is. Standard columns come first, in standard order,
-        followed by any extra columns.
-
-    Raises
-    ------
-    FileNotFoundError
-        If `path` does not exist.
-    GeneTableError
-        If the file has no identifier column, or a row has no usable
-        identifier (all blank or "NA").
-    """
-    if not path.exists():
-        raise FileNotFoundError(f"Gene list not found: {path}")
-    # keep_default_na=False so a literal "NA" (looked up, not found) is not
-    # read back as blank and re-resolved on every run
-    df = pd.read_csv(path, sep="\t", dtype=str, keep_default_na=False)
-    df.columns = [c.strip() for c in df.columns]
-    if not any(c in df.columns for c in ColumnNames.GENE_ID_COLUMNS):
-        raise GeneTableError(
-            f"{path} needs at least one identifier column out of "
-            f"{', '.join(ColumnNames.GENE_ID_COLUMNS)}; got "
-            f"{', '.join(df.columns)}"
-        )
-    for col in ColumnNames.GENE_TABLE_COLUMNS:
-        if col not in df.columns:
-            df[col] = ""
-    df = df.apply(lambda col: col.str.strip())
-    extra = [c for c in df.columns if c not in ColumnNames.GENE_TABLE_COLUMNS]
-    df = df[list(ColumnNames.GENE_TABLE_COLUMNS) + extra]
-    for idx in df.index:
-        if not _given_gene_ids(df.loc[idx]):
-            raise GeneTableError(
-                f"{path} row {idx + 2} has no identifier: set one of "
-                f"{', '.join(ColumnNames.GENE_ID_COLUMNS)}"
-            )
-    return df
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -437,12 +477,12 @@ def _given_gene_ids(row: pd.Series) -> dict[str, str]:
     -------
     given : `dict` [`str`, `str`]
         Identifier column -> value, for each of
-        `ColumnNames.GENE_ID_COLUMNS` that is neither blank nor "NA".
+        `GeneColumns.GENE_ID_COLUMNS` that is neither blank nor "NA".
     """
     return {
         col: row[col]
-        for col in ColumnNames.GENE_ID_COLUMNS
-        if row[col] not in ("", Constants.NA_STRING)
+        for col in GeneColumns.GENE_ID_COLUMNS
+        if row[col] not in ("", Const.NA)
     }
 
 
@@ -482,7 +522,7 @@ def resolve_gene_table(df: pd.DataFrame) -> pd.DataFrame:
     """
     for idx in df.index:
         row = df.loc[idx]
-        if not (row[list(ColumnNames.GENE_TABLE_COLUMNS)] == "").any():
+        if not (row[list(GeneColumns.GENE_TABLE_COLUMNS)] == "").any():
             continue
         given = _given_gene_ids(row)
         label = f"gene table row {idx + 2} {given}"
@@ -497,8 +537,8 @@ def resolve_gene_table(df: pd.DataFrame) -> pd.DataFrame:
             )
         resolved = {
             ColumnNames.GENE: record.symbol,
-            ColumnNames.ENSEMBL_ID: record.ensembl_id,
-            ColumnNames.GENE_CHR: record.region.chrom,
+            GeneColumns.ENSEMBL_ID: record.ensembl_id,
+            GeneColumns.GENE_CHR: record.region.chrom,
             ColumnNames.START: str(record.region.start),
             ColumnNames.END: str(record.region.end),
         }
@@ -524,11 +564,11 @@ def _anchor_gene_record(given: dict[str, str]) -> GeneRecord | None:
         The Ensembl record, from `ensemblid` if given, else `gene`, else
         `uniprot`. `None` if that identifier is not found.
     """
-    if ColumnNames.ENSEMBL_ID in given:
-        return ensembl_by_id(given[ColumnNames.ENSEMBL_ID])
+    if GeneColumns.ENSEMBL_ID in given:
+        return ensembl_by_id(given[GeneColumns.ENSEMBL_ID])
     if ColumnNames.GENE in given:
         return ensembl_by_symbol(given[ColumnNames.GENE])
-    symbol = symbol_by_uniprot(given[ColumnNames.UNIPROT])
+    symbol = symbol_by_uniprot(given[GeneColumns.UNIPROT])
     if symbol is None:
         return None
     return ensembl_by_symbol(symbol)
@@ -563,18 +603,18 @@ def _resolve_uniprot_cell(
         If a given `uniprot` (not used as the anchor) differs from the
         gene's single reviewed accession.
     """
-    cell = df.at[idx, ColumnNames.UNIPROT]
-    if cell == Constants.NA_STRING:
+    cell = df.at[idx, GeneColumns.UNIPROT]
+    if cell == Const.NA:
         return
-    uniprot_is_anchor = set(given) == {ColumnNames.UNIPROT}
+    uniprot_is_anchor = set(given) == {GeneColumns.UNIPROT}
     if cell != "" and uniprot_is_anchor:
         return
     accession = uniprot_by_symbol(record.symbol)
     if cell == "":
         if accession is None:
             log_warn(f"{label}: no single reviewed UniProt entry, set NA")
-            accession = Constants.NA_STRING
-        df.at[idx, ColumnNames.UNIPROT] = accession
+            accession = Const.NA
+        df.at[idx, GeneColumns.UNIPROT] = accession
     elif accession is None:
         log_warn(f"{label}: cannot check uniprot {cell!r}, no single entry")
     elif accession != cell:
@@ -601,7 +641,7 @@ def gene_row_region(row: pd.Series, flank_bp: int) -> GeneRegion:
         The flanked region.
     """
     return GeneRegion(
-        chrom=str(row[ColumnNames.GENE_CHR]),
+        chrom=str(row[GeneColumns.GENE_CHR]),
         start=max(1, int(row[ColumnNames.START]) - flank_bp),
         end=int(row[ColumnNames.END]) + flank_bp,
     )
@@ -630,15 +670,14 @@ def load_icd_table(path: Path) -> pd.DataFrame:
     FileNotFoundError
         If `path` does not exist.
     """
-    if not path.exists():
-        raise FileNotFoundError(f"ICD code list not found: {path}")
+    require_file(path, "ICD code list")
     # keep_default_na=False so a literal "NA" (looked up, not found) is not
     # read back as blank and re-resolved on every run
     df = pd.read_csv(path, sep="\t", dtype=str, keep_default_na=False)
-    if ColumnNames.EFO_ID not in df.columns:
-        df[ColumnNames.EFO_ID] = ""
-    if ColumnNames.FINNGEN_PHENOCODE not in df.columns:
-        df[ColumnNames.FINNGEN_PHENOCODE] = ""
+    if OutcomeColumns.EFO_ID not in df.columns:
+        df[OutcomeColumns.EFO_ID] = ""
+    if OutcomeColumns.FINNGEN_PHENOCODE not in df.columns:
+        df[OutcomeColumns.FINNGEN_PHENOCODE] = ""
     return df
 
 
@@ -669,11 +708,11 @@ def load_efo_ukb_mapping(path: Path) -> dict[str, str]:
     """Parse the vendored EFO-UKB master file into an ICD10->EFO dict.
 
     Keeps only rows whose code column is ICD10-shaped (matches
-    `Constants.ICD10_CODE_PATTERN`), discarding UK Biobank
+    `Regex.ICD10_CODE`), discarding UK Biobank
     self-reported field codes (numeric, or `number_number`). Within
     `MAPPED_TERM_URI`, which may list several comma-separated ontology
     term IDs (not always EFO), the first EFO-shaped candidate
-    (`Constants.EFO_ID_PATTERN`) is used; rows with no EFO-shaped
+    (`Regex.EFO_ID`) is used; rows with no EFO-shaped
     candidate are skipped. Later rows win on a duplicate normalized
     code.
 
@@ -695,13 +734,13 @@ def load_efo_ukb_mapping(path: Path) -> dict[str, str]:
     mapping: dict[str, str] = {}
     for _, row in df.iterrows():
         code = row[code_col].strip()
-        if not re.fullmatch(Constants.ICD10_CODE_PATTERN, code):
+        if not re.fullmatch(Regex.ICD10_CODE, code):
             continue
 
         efo_id = None
         for candidate in row[uri_col].split(","):
             candidate = candidate.strip().upper()
-            if re.fullmatch(Constants.EFO_ID_PATTERN, candidate):
+            if re.fullmatch(Regex.EFO_ID, candidate):
                 efo_id = candidate.replace(":", "_")
                 break
         if efo_id is None:
@@ -738,36 +777,36 @@ def resolve_efo_ids(
     df : `pd.DataFrame`
         The same table, with blank `efo_id` cells filled in.
     """
-    mask = df[ColumnNames.EFO_ID].str.strip() == ""
+    mask = df[OutcomeColumns.EFO_ID].str.strip() == ""
     if not mask.any():
         return df
 
     master_mapping = load_efo_ukb_mapping(mapping_path)
-    normalized_codes = df.loc[mask, ColumnNames.ICD_CODE].map(
+    normalized_codes = df.loc[mask, OutcomeColumns.ICD_CODE].map(
         normalize_icd10_code
     )
-    df.loc[mask, ColumnNames.EFO_ID] = normalized_codes.map(
+    df.loc[mask, OutcomeColumns.EFO_ID] = normalized_codes.map(
         master_mapping
     ).fillna("")
 
-    still_blank = df[ColumnNames.EFO_ID].str.strip() == ""
+    still_blank = df[OutcomeColumns.EFO_ID].str.strip() == ""
     if not still_blank.any():
         return df
 
     search_terms = df.loc[still_blank].apply(
-        lambda row: row[ColumnNames.DESCRIPTION].strip()
-        or row[ColumnNames.ICD_CODE].strip(),
+        lambda row: row[OutcomeColumns.DESCRIPTION].strip()
+        or row[OutcomeColumns.ICD_CODE].strip(),
         axis=1,
     )
     term_to_efo = {term: icd_to_efo(term) for term in search_terms.unique()}
-    df.loc[still_blank, ColumnNames.EFO_ID] = search_terms.map(term_to_efo)
+    df.loc[still_blank, OutcomeColumns.EFO_ID] = search_terms.map(term_to_efo)
     return df
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def apply_outcome_efo_overrides(
     df: pd.DataFrame,
-    overrides: Mapping[str, str] = Constants.OUTCOME_EFO_OVERRIDES,
+    overrides: Mapping[str, str] = Gwas.OUTCOME_EFO_OVERRIDES,
 ) -> pd.DataFrame:
     """Replace the `efo_id` of whole outcomes with a code-defined term.
 
@@ -779,8 +818,9 @@ def apply_outcome_efo_overrides(
     ----------
     df : `pd.DataFrame`
         ICD-code table (as returned by `load_icd_table`).
-    overrides : `Mapping[str, str]`, optional, default: `Constants.OUTCOME_EFO_OVERRIDES`
-        Outcome -> EFO ID to use for every row of that outcome.
+    overrides : `Mapping[str, str]`, optional
+        Outcome -> EFO ID to use for every row of that outcome, by default
+        `Gwas.OUTCOME_EFO_OVERRIDES`.
 
     Returns
     -------
@@ -792,8 +832,8 @@ def apply_outcome_efo_overrides(
         mask = df[ColumnNames.OUTCOME] == outcome
         if not mask.any():
             continue
-        previous = sorted(set(df.loc[mask, ColumnNames.EFO_ID]))
-        df.loc[mask, ColumnNames.EFO_ID] = efo_id
+        previous = sorted(set(df.loc[mask, OutcomeColumns.EFO_ID]))
+        df.loc[mask, OutcomeColumns.EFO_ID] = efo_id
         log_info(f"{outcome}: efo_id {', '.join(previous)} -> {efo_id}")
     return df
 
@@ -815,7 +855,7 @@ def icd_to_efo(term: str) -> str:
     """
     response = _request_with_retry(
         "GET",
-        Constants.EBI_OLS_SEARCH_URL,
+        Api.OLS_SEARCH,
         params={"q": term, "ontology": "efo"},
         timeout=30,
     )
@@ -823,12 +863,12 @@ def icd_to_efo(term: str) -> str:
     docs = response.json().get("response", {}).get("docs", [])
     if not docs:
         log_warn(f"No EFO term found for: {term}")
-        return Constants.NA_STRING
+        return Const.NA
 
     obo_id = docs[0].get("obo_id")
     if not obo_id:
         log_warn(f"EFO match for {term!r} has no obo_id: {docs[0]}")
-        return Constants.NA_STRING
+        return Const.NA
     log_info(f"mapped {term} -> {obo_id}")
     return obo_id.replace(":", "_")
 
@@ -855,7 +895,7 @@ def _ols_term(trait_id: str) -> dict | None:
     """
     response = _request_with_retry(
         "GET",
-        Constants.EBI_OLS_TERMS_URL,
+        Api.OLS_TERMS,
         params={"obo_id": trait_id.replace("_", ":", 1)},
         timeout=30,
     )
@@ -906,12 +946,12 @@ def current_trait_id(trait_id: str) -> str:
     -------
     current : `str`
         The last ID in the `term_replaced_by` chain (at most
-        `Constants.MAX_REPLACEMENT_HOPS` hops), or `trait_id` unchanged
+        `Gwas.MAX_REPLACEMENT_HOPS` hops), or `trait_id` unchanged
         if it is current, unknown to OLS, obsolete without replacement,
         or OLS cannot be reached (each non-current case is warned).
     """
     current = trait_id
-    for _ in range(Constants.MAX_REPLACEMENT_HOPS):
+    for _ in range(Gwas.MAX_REPLACEMENT_HOPS):
         try:
             term = _ols_term(current)
         except requests.RequestException as err:
@@ -932,7 +972,7 @@ def current_trait_id(trait_id: str) -> str:
         current = replacement
     log_warn(
         f"{trait_id}: replacement chain longer than "
-        f"{Constants.MAX_REPLACEMENT_HOPS} hops, using {current}"
+        f"{Gwas.MAX_REPLACEMENT_HOPS} hops, using {current}"
     )
     return current
 
@@ -958,8 +998,8 @@ def replace_obsolete_trait_ids(df: pd.DataFrame) -> pd.DataFrame:
     """
     trait_ids = [
         trait_id
-        for trait_id in df[ColumnNames.EFO_ID].unique()
-        if trait_id.strip() not in ("", Constants.NA_STRING)
+        for trait_id in df[OutcomeColumns.EFO_ID].unique()
+        if trait_id.strip() not in ("", Const.NA)
     ]
     replacements: dict[str, str] = {}
     for trait_id in trait_ids:
@@ -968,7 +1008,8 @@ def replace_obsolete_trait_ids(df: pd.DataFrame) -> pd.DataFrame:
             log_warn(f"obsolete trait id {trait_id} -> {current}")
             replacements[trait_id] = current
     if replacements:
-        df[ColumnNames.EFO_ID] = df[ColumnNames.EFO_ID].replace(replacements)
+        efo = OutcomeColumns.EFO_ID
+        df[efo] = df[efo].replace(replacements)
     log_info(
         f"trait ids checked: {len(trait_ids)}, obsolete replaced: "
         f"{len(replacements)}"
@@ -1151,7 +1192,7 @@ def uniprot_by_symbol(symbol: str) -> str | None:
     """
     query = (
         f"gene_exact:{symbol} AND "
-        f"organism_id:{Constants.UNIPROT_HUMAN_TAXON} AND reviewed:true"
+        f"organism_id:{Api.UNIPROT_HUMAN_TAXON} AND reviewed:true"
     )
     accessions = [e["primaryAccession"] for e in _uniprot_search(query)]
     if len(accessions) != 1:
@@ -1262,9 +1303,9 @@ def includes_child_traits(outcome: str) -> bool:
     Returns
     -------
     broad : `bool`
-        `True` if `outcome` is in `Constants.CHILD_TRAIT_OUTCOMES`.
+        `True` if `outcome` is in `Gwas.CHILD_TRAIT_OUTCOMES`.
     """
-    return outcome in Constants.CHILD_TRAIT_OUTCOMES
+    return outcome in Gwas.CHILD_TRAIT_OUTCOMES
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1299,7 +1340,7 @@ def mapped_traits(efo_traits: object) -> tuple[str, str]:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def discover_studies(
     efo_id: str,
-    cap: int = Constants.MAX_STUDIES_PER_OUTCOME,
+    cap: int = Gwas.MAX_STUDIES_PER_OUTCOME,
     include_child_traits: bool = False,
 ) -> list[str]:
     """Discover GWAS Catalog study accessions for an EFO trait.
@@ -1317,7 +1358,7 @@ def discover_studies(
     ----------
     efo_id : `str`
         EFO ID (underscore form, e.g. "EFO_0001645").
-    cap : `int`, optional, default: `Constants.MAX_STUDIES_PER_OUTCOME`
+    cap : `int`, optional, default: `Gwas.MAX_STUDIES_PER_OUTCOME`
         Maximum number of studies to keep, most recent first (per mapped
         term when `include_child_traits`).
     include_child_traits : `bool`, optional, default: `False`
@@ -1337,7 +1378,7 @@ def discover_studies(
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def discover_studies_with_reasons(
     efo_id: str,
-    cap: int = Constants.MAX_STUDIES_PER_OUTCOME,
+    cap: int = Gwas.MAX_STUDIES_PER_OUTCOME,
     include_child_traits: bool = False,
     excluded_cohorts: Collection[str] = frozenset(),
     excluded_accessions: Mapping[str, str] | None = None,
@@ -1353,14 +1394,14 @@ def discover_studies_with_reasons(
     ----------
     efo_id : `str`
         EFO ID (underscore form, e.g. "EFO_0001645").
-    cap : `int`, optional, default: `Constants.MAX_STUDIES_PER_OUTCOME`
+    cap : `int`, optional, default: `Gwas.MAX_STUDIES_PER_OUTCOME`
         Maximum number of studies to mark `"included"`, most recent
         first (per mapped term when `include_child_traits`).
     include_child_traits : `bool`, optional, default: `False`
         Also discover studies annotated with a child term of `efo_id`;
         the cap is then applied per term, so child terms cannot push
         out the studies of `efo_id` itself, with an overall ceiling of
-        `Constants.MAX_STUDIES_PER_CHILD_QUERY` included studies.
+        `Gwas.MAX_STUDIES_PER_CHILD_QUERY` included studies.
     excluded_cohorts : `Collection[str]`, optional, default: `frozenset()`
         Preferred-cohort keys excluded for the outcome; studies listing
         one are excluded before the cap (see `classify_studies`).
@@ -1390,7 +1431,7 @@ default: `None`
         cap=cap,
         per_term=include_child_traits,
         total_cap=(
-            Constants.MAX_STUDIES_PER_CHILD_QUERY
+            Gwas.MAX_STUDIES_PER_CHILD_QUERY
             if include_child_traits
             else None
         ),
@@ -1535,7 +1576,7 @@ def pubmed_summaries(pubmed_ids: list) -> dict[int, dict]:
     GWAS Catalog study records carry a `pubmed_id` but no publication
     date of their own; PubMed's `esummary` endpoint is the source of
     truth for when a study was actually published. IDs are deduplicated
-    and fetched in chunks of `Constants.PUBMED_BATCH_SIZE` (one request
+    and fetched in chunks of `Api.PUBMED_BATCH_SIZE` (one request
     per chunk), not one request per ID.
 
     Parameters
@@ -1556,11 +1597,11 @@ def pubmed_summaries(pubmed_ids: list) -> dict[int, dict]:
         {int(pid) for pid in pubmed_ids if pid and str(pid).isdigit()}
     )
     summaries: dict[int, dict] = {}
-    for start in range(0, len(unique_ids), Constants.PUBMED_BATCH_SIZE):
-        chunk = unique_ids[start : start + Constants.PUBMED_BATCH_SIZE]
+    for start in range(0, len(unique_ids), Api.PUBMED_BATCH_SIZE):
+        chunk = unique_ids[start : start + Api.PUBMED_BATCH_SIZE]
         response = _request_with_retry(
             "GET",
-            Constants.NCBI_ESUMMARY_URL,
+            Api.NCBI_ESUMMARY,
             params={
                 "db": "pubmed",
                 "id": ",".join(str(pid) for pid in chunk),
@@ -1632,7 +1673,7 @@ def study_cohorts(cohort_cell: object) -> set[str]:
     Returns
     -------
     cohorts : `set[str]`
-        Keys of `Constants.PREFERRED_COHORT_ALIASES` whose aliases match
+        Keys of `Gwas.COHORT_ALIASES` whose aliases match
         a cohort token (case-insensitive); other cohorts are ignored.
     """
     tokens = {
@@ -1642,7 +1683,7 @@ def study_cohorts(cohort_cell: object) -> set[str]:
     }
     return {
         key
-        for key, aliases in Constants.PREFERRED_COHORT_ALIASES.items()
+        for key, aliases in Gwas.COHORT_ALIASES.items()
         if tokens & aliases
     }
 
@@ -1658,19 +1699,19 @@ def cohort_overlap_reason(
     record : `dict`
         Study record with an optional `cohort` field.
     excluded_cohorts : `Collection[str]`
-        Preferred-cohort keys (`Constants.PREFERRED_COHORT_ALIASES`)
+        Preferred-cohort keys (`Gwas.COHORT_ALIASES`)
         covered by own results for the outcome being searched.
 
     Returns
     -------
     reason : `str` or `NoneType`
-        `Constants.COHORT_OVERLAP_REASON_PREFIX` + the first overlapping
+        `Gwas.COHORT_OVERLAP_REASON_PREFIX` + the first overlapping
         key in sorted order (e.g. ``"cohort_overlap_ukb"``), or `None`.
     """
     overlap = study_cohorts(record.get("cohort")) & set(excluded_cohorts)
     if not overlap:
         return None
-    return Constants.COHORT_OVERLAP_REASON_PREFIX + sorted(overlap)[0]
+    return Gwas.COHORT_OVERLAP_REASON_PREFIX + sorted(overlap)[0]
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1701,7 +1742,7 @@ def _cap_slot(record: dict) -> tuple[str, str]:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def classify_studies(
     records: list[dict],
-    cap: int = Constants.MAX_STUDIES_PER_OUTCOME,
+    cap: int = Gwas.MAX_STUDIES_PER_OUTCOME,
     per_term: bool = False,
     total_cap: int | None = None,
     excluded_cohorts: Collection[str] = frozenset(),
@@ -1730,7 +1771,7 @@ def classify_studies(
         Candidate study records, each with `accession_id`,
         `full_summary_stats_available`, and `pubmed_id` (as returned by
         the GWAS Catalog studies-list search).
-    cap : `int`, optional, default: `Constants.MAX_STUDIES_PER_OUTCOME`
+    cap : `int`, optional, default: `Gwas.MAX_STUDIES_PER_OUTCOME`
         Maximum number of eligible cap slots (`_cap_slot`) to mark
         `"included"`, most recent first.
     per_term : `bool`, optional, default: `False`
@@ -1897,7 +1938,7 @@ default: `None`
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def filter_and_cap_studies(
-    records: list[dict], cap: int = Constants.MAX_STUDIES_PER_OUTCOME
+    records: list[dict], cap: int = Gwas.MAX_STUDIES_PER_OUTCOME
 ) -> list[str]:
     """Keep studies with full summary stats, capped to the N most recent.
 
@@ -1910,7 +1951,7 @@ def filter_and_cap_studies(
         Candidate study records, each with `accession_id`,
         `full_summary_stats_available`, and `pubmed_id` (as returned by
         the GWAS Catalog studies-list search).
-    cap : `int`, optional, default: `Constants.MAX_STUDIES_PER_OUTCOME`
+    cap : `int`, optional, default: `Gwas.MAX_STUDIES_PER_OUTCOME`
         Maximum number of studies to return, most recent first.
 
     Returns
@@ -1948,8 +1989,7 @@ def load_finngen_manifest(
     FileNotFoundError
         If `path` does not exist.
     """
-    if not path.exists():
-        raise FileNotFoundError(f"FinnGen manifest not found: {path}")
+    require_file(path, "FinnGen manifest")
     return pd.read_csv(path, sep="\t", dtype=str).fillna("")
 
 
@@ -2017,15 +2057,15 @@ def load_manual_gwas_catalog_studies(
     columns = [
         "accession_id",
         "outcome",
-        ColumnNames.PUBMED_ID,
-        ColumnNames.DISEASE_TRAIT,
-        ColumnNames.PUB_DATE,
-        ColumnNames.FIRST_AUTHOR,
-        ColumnNames.JOURNAL,
-        ColumnNames.TITLE,
-        ColumnNames.SAMPLE_SIZE,
+        StudyColumns.PUBMED_ID,
+        StudyColumns.DISEASE_TRAIT,
+        StudyColumns.PUB_DATE,
+        StudyColumns.FIRST_AUTHOR,
+        StudyColumns.JOURNAL,
+        StudyColumns.TITLE,
+        StudyColumns.SAMPLE_SIZE,
         ColumnNames.ANCESTRY,
-        ColumnNames.COHORT,
+        StudyColumns.COHORT,
         ColumnNames.NOTE,
     ]
     if not path.exists():
@@ -2068,7 +2108,7 @@ def load_study_outcome_review(
     """Load the curated outcome x study exclusions.
 
     See `data/raw/study_outcome_review.SOURCE.md`. Only rows whose
-    `status` is `Constants.REVIEW_EXCLUDE_STATUS` count; every other
+    `status` is `Gwas.REVIEW_EXCLUDE_STATUS` count; every other
     status (e.g. ``keep``, ``proposed_exclude``, or the audit statuses
     copied from the discovery log) is ignored.
 
@@ -2082,7 +2122,7 @@ def load_study_outcome_review(
     -------
     exclusions : `dict[str, dict[str, str]]`
         Outcome -> {accession: reason}, the reason being
-        `Constants.REVIEW_REASON_PREFIX` + the row's `reason` (or
+        `Gwas.REVIEW_REASON_PREFIX` + the row's `reason` (or
         + ``exclude`` when blank). Empty if `path` does not exist.
 
     Raises
@@ -2105,7 +2145,7 @@ def load_study_outcome_review(
         raise ValueError(f"{path}: missing column(s) {', '.join(missing)}")
     is_excluded = (
         review_df[ColumnNames.STATUS].str.strip()
-        == Constants.REVIEW_EXCLUDE_STATUS
+        == Gwas.REVIEW_EXCLUDE_STATUS
     )
     exclusions: dict[str, dict[str, str]] = {}
     for outcome, accession, reason in zip(
@@ -2114,8 +2154,8 @@ def load_study_outcome_review(
         review_df.loc[is_excluded, ColumnNames.REASON],
     ):
         exclusions.setdefault(outcome, {})[accession] = (
-            Constants.REVIEW_REASON_PREFIX
-            + (clean_cell(reason) or Constants.REVIEW_EXCLUDE_STATUS)
+            Gwas.REVIEW_REASON_PREFIX
+            + (clean_cell(reason) or Gwas.REVIEW_EXCLUDE_STATUS)
         )
     log_info(
         f"{path}: {int(is_excluded.sum())} outcome x study exclusions for "
@@ -2133,7 +2173,7 @@ def load_marvel_table(path: Path = FileNames.MARVEL_RESULTS) -> pd.DataFrame:
     Parameters
     ----------
     path : `Path`, optional, default: `FileNames.MARVEL_RESULTS`
-        TSV with `cohort` (a `Constants.PREFERRED_COHORT_ALIASES` key,
+        TSV with `cohort` (a `Gwas.COHORT_ALIASES` key,
         e.g. ``ukb``/``aou``), `outcome` (as in `icd_codes.txt`), `path`
         (a marvel `{exposure}_results.tsv.gz`), `variable` and `model`
         (the marvel `Variable`/`Model name` to keep, e.g. ``model_1``),
@@ -2148,14 +2188,14 @@ def load_marvel_table(path: Path = FileNames.MARVEL_RESULTS) -> pd.DataFrame:
     marvel : `pd.DataFrame`
         The table, all columns as strings, `cohort` and `apoe_stratum`
         lower-cased, `ancestry` upper-cased, blank `stratification` set
-        to `Constants.MARVEL_DEFAULT_STRATIFICATION`. Empty (but
+        to `Marvel.DEFAULT_STRAT`. Empty (but
         correctly columned) if `path` does not exist.
 
     Raises
     ------
     ValueError
         If a required column is missing, a `cohort` is not a key of
-        `Constants.PREFERRED_COHORT_ALIASES`, an `ancestry` is not in
+        `Gwas.COHORT_ALIASES`, an `ancestry` is not in
         `Ancestry.CODES` or a non-blank `apoe_stratum` is not in
         `ApoeStratum.CODES`.
     """
@@ -2184,7 +2224,7 @@ def load_marvel_table(path: Path = FileNames.MARVEL_RESULTS) -> pd.DataFrame:
             marvel_df[column] = ""
     stratification = marvel_df[ColumnNames.STRATIFICATION].str.strip()
     marvel_df[ColumnNames.STRATIFICATION] = stratification.where(
-        stratification != "", Constants.MARVEL_DEFAULT_STRATIFICATION
+        stratification != "", Marvel.DEFAULT_STRAT
     )
     marvel_df[MetaColumns.APOE_STRATUM] = (
         marvel_df[MetaColumns.APOE_STRATUM].str.strip().str.lower()
@@ -2201,12 +2241,12 @@ def load_marvel_table(path: Path = FileNames.MARVEL_RESULTS) -> pd.DataFrame:
         )
     marvel_df["cohort"] = marvel_df["cohort"].str.strip().str.lower()
     unknown = sorted(
-        set(marvel_df["cohort"]) - set(Constants.PREFERRED_COHORT_ALIASES)
+        set(marvel_df["cohort"]) - set(Gwas.COHORT_ALIASES)
     )
     if unknown:
         raise ValueError(
             f"{path}: unknown cohort(s) {unknown}, expected one of "
-            f"{sorted(Constants.PREFERRED_COHORT_ALIASES)}"
+            f"{sorted(Gwas.COHORT_ALIASES)}"
         )
     marvel_df[ColumnNames.ANCESTRY] = (
         marvel_df[ColumnNames.ANCESTRY].str.strip().str.upper()
@@ -2337,7 +2377,7 @@ def _accession_bucket_location(study_accession: str) -> str | None:
         f"GCST{bucket_start:0{width}d}-GCST{bucket_end:0{width}d}"
     )
     location = (
-        f"{Constants.GWAS_CATALOG_FTP_BASE}/{bucket_name}/{study_accession}"
+        f"{Api.GWAS_CATALOG_FTP}/{bucket_name}/{study_accession}"
     )
 
     response = _request_with_retry("HEAD", f"{location}/", timeout=30)
@@ -2373,7 +2413,7 @@ def study_summary_stats_location(study_accession: str) -> str | None:
     """
     response = _request_with_retry(
         "GET",
-        f"{Constants.GWAS_CATALOG_API_V2}/studies/{study_accession}",
+        f"{Api.GWAS_CATALOG}/studies/{study_accession}",
         timeout=30,
     )
     if response.status_code == 404:
@@ -2443,16 +2483,16 @@ def effect_scale_from_meta(effect_statistic: str, software: str) -> str:
     Returns
     -------
     scale : `str`
-        `Constants.EFFECT_STATISTIC_SCALE` of `effect_statistic` if
+        `Gwas.STATISTIC_SCALE` of `effect_statistic` if
         listed, else the scale of the first
-        `Constants.SOFTWARE_EFFECT_SCALE` key found in `software`, else
+        `Gwas.SOFTWARE_SCALE` key found in `software`, else
         `EffectScale.UNKNOWN`.
     """
     statistic = effect_statistic.strip().lower()
-    if statistic in Constants.EFFECT_STATISTIC_SCALE:
-        return Constants.EFFECT_STATISTIC_SCALE[statistic]
+    if statistic in Gwas.STATISTIC_SCALE:
+        return Gwas.STATISTIC_SCALE[statistic]
     software_lower = software.lower()
-    for name, scale in Constants.SOFTWARE_EFFECT_SCALE.items():
+    for name, scale in Gwas.SOFTWARE_SCALE.items():
         if name in software_lower:
             return scale
     return EffectScale.UNKNOWN
@@ -2473,15 +2513,15 @@ def study_meta_yaml(study_accession: str) -> dict[str, str]:
     Returns
     -------
     meta : `dict[str, str]`
-        `ColumnNames.EFFECT_STATISTIC`, `ANALYSIS_SOFTWARE` and
+        `StudyColumns.EFFECT_STATISTIC`, `ANALYSIS_SOFTWARE` and
         `EFFECT_SCALE_META` (`effect_scale_from_meta`). The two fields
         are `""` (scale `EffectScale.UNKNOWN`) when the study has no
         FTP directory or no metadata file, or a request fails (warned).
     """
     meta = {
-        ColumnNames.EFFECT_STATISTIC: "",
-        ColumnNames.ANALYSIS_SOFTWARE: "",
-        ColumnNames.EFFECT_SCALE_META: EffectScale.UNKNOWN,
+        StudyColumns.EFFECT_STATISTIC: "",
+        StudyColumns.ANALYSIS_SOFTWARE: "",
+        StudyColumns.EFFECT_SCALE_META: EffectScale.UNKNOWN,
     }
     try:
         location = study_summary_stats_location(study_accession)
@@ -2506,11 +2546,11 @@ def study_meta_yaml(study_accession: str) -> dict[str, str]:
     if not text:
         log_debug(f"{study_accession}: no -meta.yaml found")
         return meta
-    statistic = _yaml_scalar(text, ColumnNames.EFFECT_STATISTIC)
-    software = _yaml_scalar(text, ColumnNames.ANALYSIS_SOFTWARE)
-    meta[ColumnNames.EFFECT_STATISTIC] = statistic
-    meta[ColumnNames.ANALYSIS_SOFTWARE] = software
-    meta[ColumnNames.EFFECT_SCALE_META] = effect_scale_from_meta(
+    statistic = _yaml_scalar(text, StudyColumns.EFFECT_STATISTIC)
+    software = _yaml_scalar(text, StudyColumns.ANALYSIS_SOFTWARE)
+    meta[StudyColumns.EFFECT_STATISTIC] = statistic
+    meta[StudyColumns.ANALYSIS_SOFTWARE] = software
+    meta[StudyColumns.EFFECT_SCALE_META] = effect_scale_from_meta(
         statistic, software
     )
     return meta
@@ -2597,16 +2637,16 @@ def infer_effect_scales(
     Three kinds of evidence are combined (`_combine_scales`):
 
     - method: `study_effect_scale` already set on the rows (marvel
-      `Model`, see `Constants.MARVEL_METHOD_SCALE`).
+      `Model`, see `Marvel.METHOD_SCALE`).
     - metadata: `effect_scale_meta` from the discovery log (GWAS-SSF
       `-meta.yaml`, FinnGen fixed).
     - inference: the median of ``r = SE * sqrt(2f(1-f)N)`` over the
       study's distinct ``summary-stats`` variants with
-      `Constants.EFFECT_SCALE_MIN_MAF` < MAF <= 0.5, SE > 0 and a known
+      `Gwas.EFFECT_SCALE_MIN_MAF` < MAF <= 0.5, SE > 0 and a known
       N. N is the row's `n`, else the sum of the counts in the discovery
       log `sample_size` (`parse_total_sample_size`). ``r >=
-      Constants.EFFECT_SCALE_CUTOFF`` is log-OR, below it linear; with
-      fewer than `Constants.EFFECT_SCALE_MIN_VARIANTS` variants it is
+      Gwas.EFFECT_SCALE_CUTOFF`` is log-OR, below it linear; with
+      fewer than `Gwas.EFFECT_SCALE_MIN_VARIANTS` variants it is
       unknown. A study with only curated rows that report an odds ratio
       is inferred log-OR.
 
@@ -2629,6 +2669,7 @@ def infer_effect_scales(
     """
     hc = HarmonisedColumns
     cn = ColumnNames
+    sc = StudyColumns
     rows = combined[combined[hc.STUDY_ACCESSION].notna()]
 
     meta_by_study: dict[str, dict[str, str]] = {}
@@ -2640,11 +2681,11 @@ def infer_effect_scales(
                     (v for v in group.get(col, pd.Series(dtype=str)) if v),
                     "",
                 )
-                for col in (cn.EFFECT_STATISTIC, cn.ANALYSIS_SOFTWARE)
+                for col in (sc.EFFECT_STATISTIC, sc.ANALYSIS_SOFTWARE)
             }
-            meta_by_study[accession][cn.EFFECT_SCALE_META] = (
+            meta_by_study[accession][sc.EFFECT_SCALE_META] = (
                 _first_known_scale(
-                    group.get(cn.EFFECT_SCALE_META, pd.Series(dtype=str))
+                    group.get(sc.EFFECT_SCALE_META, pd.Series(dtype=str))
                 )
             )
             n_total = next(
@@ -2652,7 +2693,7 @@ def infer_effect_scales(
                     n
                     for n in map(
                         parse_total_sample_size,
-                        group.get(cn.SAMPLE_SIZE, pd.Series(dtype=str)),
+                        group.get(sc.SAMPLE_SIZE, pd.Series(dtype=str)),
                     )
                     if n is not None
                 ),
@@ -2660,10 +2701,10 @@ def infer_effect_scales(
             )
             if n_total is not None:
                 sample_size[accession] = n_total
-        if cn.EFFECT_SCALE_META not in audit.columns:
+        if sc.EFFECT_SCALE_META not in audit.columns:
             log_warn(
                 f"{FileNames.STUDY_DISCOVERY_LOG} has no "
-                f"{cn.EFFECT_SCALE_META} column: metadata scale unknown "
+                f"{sc.EFFECT_SCALE_META} column: metadata scale unknown "
                 "(rerun gwas_cat_prep.py)"
             )
 
@@ -2677,7 +2718,7 @@ def infer_effect_scales(
     n = pd.to_numeric(stats[hc.N], errors="coerce")
     n = n.where(n > 0, stats[hc.STUDY_ACCESSION].map(sample_size))
     usable = (
-        (maf > Constants.EFFECT_SCALE_MIN_MAF)
+        (maf > Gwas.EFFECT_SCALE_MIN_MAF)
         & (maf <= 0.5)
         & (se > 0)
         & np.isfinite(se)
@@ -2701,14 +2742,14 @@ def infer_effect_scales(
     records: list[dict[str, object]] = []
     for accession, group in rows.groupby(hc.STUDY_ACCESSION, sort=True):
         meta = meta_by_study.get(accession, {})
-        meta_scale = meta.get(cn.EFFECT_SCALE_META, EffectScale.UNKNOWN)
+        meta_scale = meta.get(sc.EFFECT_SCALE_META, EffectScale.UNKNOWN)
         method_scale = _first_known_scale(group[hc.STUDY_EFFECT_SCALE])
         k = int(n_variants.get(accession, 0))
         median = r_median.get(accession, np.nan)
-        if k >= Constants.EFFECT_SCALE_MIN_VARIANTS:
+        if k >= Gwas.EFFECT_SCALE_MIN_VARIANTS:
             inferred = (
                 EffectScale.LOG_OR
-                if median >= Constants.EFFECT_SCALE_CUTOFF
+                if median >= Gwas.EFFECT_SCALE_CUTOFF
                 else EffectScale.LINEAR
             )
         elif k == 0 and accession in curated_or:
@@ -2721,14 +2762,14 @@ def infer_effect_scales(
                 cn.SOURCE_DB: ";".join(
                     sorted(group[hc.SOURCE_DB].dropna().astype(str).unique())
                 ),
-                cn.EFFECT_STATISTIC: meta.get(cn.EFFECT_STATISTIC, ""),
-                cn.ANALYSIS_SOFTWARE: meta.get(cn.ANALYSIS_SOFTWARE, ""),
-                cn.EFFECT_SCALE_META: meta_scale,
-                cn.EFFECT_SCALE_METHOD: method_scale,
+                sc.EFFECT_STATISTIC: meta.get(sc.EFFECT_STATISTIC, ""),
+                sc.ANALYSIS_SOFTWARE: meta.get(sc.ANALYSIS_SOFTWARE, ""),
+                sc.EFFECT_SCALE_META: meta_scale,
+                sc.EFFECT_SCALE_METHOD: method_scale,
                 MetaColumns.N_VARIANTS: k,
-                cn.R_MEDIAN: median,
-                cn.EFFECT_SCALE_INFERRED: inferred,
-                cn.STUDY_EFFECT_SCALE: _combine_scales(
+                sc.R_MEDIAN: median,
+                sc.EFFECT_SCALE_INFERRED: inferred,
+                sc.STUDY_EFFECT_SCALE: _combine_scales(
                     method_scale, meta_scale, inferred
                 ),
             }
@@ -2736,14 +2777,14 @@ def infer_effect_scales(
     columns = [
         cn.STUDY_ACCESSION,
         cn.SOURCE_DB,
-        cn.EFFECT_STATISTIC,
-        cn.ANALYSIS_SOFTWARE,
-        cn.EFFECT_SCALE_META,
-        cn.EFFECT_SCALE_METHOD,
+        sc.EFFECT_STATISTIC,
+        sc.ANALYSIS_SOFTWARE,
+        sc.EFFECT_SCALE_META,
+        sc.EFFECT_SCALE_METHOD,
         MetaColumns.N_VARIANTS,
-        cn.R_MEDIAN,
-        cn.EFFECT_SCALE_INFERRED,
-        cn.STUDY_EFFECT_SCALE,
+        sc.R_MEDIAN,
+        sc.EFFECT_SCALE_INFERRED,
+        sc.STUDY_EFFECT_SCALE,
     ]
     return pd.DataFrame(records, columns=columns)
 
@@ -2850,11 +2891,11 @@ def fetch_curated_associations(
     Notes
     -----
     Sourced via biomed-api's `GwasCatalogReader` (GWAS Catalog REST v2).
-    Pages are requested at `Constants.GWAS_CATALOG_PAGE_SIZE` records, so
+    Pages are requested at `Api.GWAS_CATALOG_PAGE_SIZE` records, so
     large traits (e.g. HDL-C, 25k records) stay under biomed-api's
     500-page cap.
     """
-    query: dict[str, object] = {"size": Constants.GWAS_CATALOG_PAGE_SIZE}
+    query: dict[str, object] = {"size": Api.GWAS_CATALOG_PAGE_SIZE}
     if include_child_traits:
         query["show_child_trait"] = True
     with warnings.catch_warnings():
@@ -3111,7 +3152,7 @@ def is_burden_mask_allele(value: object) -> bool:
     Returns
     -------
     is_mask : `bool`
-        `True` if it matches `Constants.BURDEN_MASK_ALLELE_PATTERN` (e.g.
+        `True` if it matches `Regex.BURDEN_MASK_ALLELE` (e.g.
         "M1.0001", "M3.singleton").
     """
     if value is None or pd.isna(value):
@@ -3627,7 +3668,7 @@ def _open_targets_query(query: str, variables: dict) -> dict:
     """
     response = _request_with_retry(
         "POST",
-        Constants.OPEN_TARGETS_GRAPHQL_URL,
+        Api.OPEN_TARGETS,
         json={"query": query, "variables": variables},
         timeout=60,
     )
@@ -3645,7 +3686,7 @@ def open_targets_disease_ids(
     """Map Open Targets disease IDs to the outcome trait IDs they count for.
 
     Open Targets evidence only matches exact disease IDs, so each outcome
-    `efo_id` is widened to its `Constants.OPEN_TARGETS_EXTRA_DISEASE_IDS`
+    `efo_id` is widened to its `Gwas.OT_EXTRA_DISEASE_IDS`
     and, for child-trait outcomes (`includes_child_traits`), to the
     Open Targets descendants of those IDs.
 
@@ -3664,7 +3705,7 @@ def open_targets_disease_ids(
     for _, efo_ids in outcome_efo_ids.items():
         for efo_id in efo_ids:
             query_ids[efo_id] = {efo_id} | set(
-                Constants.OPEN_TARGETS_EXTRA_DISEASE_IDS.get(efo_id, ())
+                Gwas.OT_EXTRA_DISEASE_IDS.get(efo_id, ())
             )
     all_ids = sorted(set().union(*query_ids.values())) if query_ids else []
     data = _open_targets_query(
@@ -3746,7 +3787,7 @@ def gene_burden_evidence(
             {
                 "ensemblId": ensembl_id,
                 "efoIds": sorted(disease_ids),
-                "size": Constants.OPEN_TARGETS_PAGE_SIZE,
+                "size": Api.OPEN_TARGETS_PAGE_SIZE,
                 "cursor": cursor,
             },
         )
@@ -4147,7 +4188,7 @@ class NormalisedVariant:
 def fetch_region_sequence(region: GeneRegion) -> RegionSequence:
     """Fetch the GRCh38 reference sequence of a gene region (cached).
 
-    The region is padded by `Constants.INDEL_NORM_PAD_BP` on both sides,
+    The region is padded by `Gwas.INDEL_NORM_PAD_BP` on both sides,
     so indels near its edges can still be left-aligned. Read from
     `Paths.ENSEMBL_CACHE` when cached, else fetched through biomed-api
     (Ensembl `sequence/region`) and cached.
@@ -4170,8 +4211,8 @@ def fetch_region_sequence(region: GeneRegion) -> RegionSequence:
         If the response holds no sequence of the requested length.
     """
     chrom = str(region.chrom).removeprefix("chr")
-    start = max(1, region.start - Constants.INDEL_NORM_PAD_BP)
-    end = region.end + Constants.INDEL_NORM_PAD_BP
+    start = max(1, region.start - Gwas.INDEL_NORM_PAD_BP)
+    end = region.end + Gwas.INDEL_NORM_PAD_BP
     path = Paths.ENSEMBL_CACHE / f"sequence_{chrom}_{start}_{end}.json.gz"
     if path.exists():
         data = _read_json_gz(path)
@@ -4662,7 +4703,7 @@ def fetch_ensembl_region_variants(
 ) -> tuple[list[EnsemblVariant], int]:
     """Fetch every Ensembl variant in a gene region, window by window.
 
-    The region is split into `Constants.ENSEMBL_OVERLAP_WINDOW_BP`
+    The region is split into `Api.ENSEMBL_WINDOW_BP`
     windows; each window is cached separately, so an interrupted run
     resumes where it stopped.
 
@@ -4684,7 +4725,7 @@ def fetch_ensembl_region_variants(
     ReaderError
         If an Ensembl request fails.
     """
-    window = Constants.ENSEMBL_OVERLAP_WINDOW_BP
+    window = Api.ENSEMBL_WINDOW_BP
     variants: list[EnsemblVariant] = []
     seen: set[tuple[str, int]] = set()
     n_fetched = 0
@@ -4763,7 +4804,7 @@ def _ensembl_rsid_variants(rsid: str) -> tuple[list[EnsemblVariant], bool]:
     for mapping in data["mappings"]:
         chrom = str(mapping.get("seq_region_name"))
         if (
-            mapping.get("assembly_name") != Constants.GRCH_BUILD
+            mapping.get("assembly_name") != Const.GRCH_BUILD
             or not _PRIMARY_CHROM_PATTERN.match(chrom)
         ):
             continue
@@ -4796,7 +4837,7 @@ def _clean_allele(value: object) -> str | None:
     if value is None or pd.isna(value):
         return None
     allele = str(value).strip().upper()
-    if allele in ("", "?", "NA", "NAN"):
+    if allele in ("", "?", Const.NA, "NAN"):
         return None
     return allele
 
@@ -4939,7 +4980,7 @@ def _ensembl_check(
     rsid: object,
     by_position: Mapping[tuple[str, int], list[EnsemblVariant]],
     by_rsid: Mapping[str, list[EnsemblVariant]],
-    lookup_rsid: Callable[[str], list[EnsemblVariant]],
+    fetched_rsids: set[str],
     by_norm: Mapping[
         tuple[str, int, str, str], list[tuple[EnsemblVariant, str]]
     ],
@@ -4952,8 +4993,8 @@ def _ensembl_check(
     candidates are the Ensembl variants at `chrom:pos` (plus `pos + 1`
     for VCF-anchored indels). Only when there are none, the row's rsids
     are looked up: first in the region variants, then via
-    `lookup_rsid` (Ensembl variation endpoint). The best candidate has
-    the best `_ALLELE_CHECK_RANK`, then the row's own rsid.
+    `_ensembl_rsid_variants` (Ensembl variation endpoint). The best
+    candidate has the best `_ALLELE_CHECK_RANK`, then the row's own rsid.
 
     Parameters
     ----------
@@ -4971,8 +5012,8 @@ def _ensembl_check(
         Region variants by `(chrom, start)`.
     by_rsid : `Mapping[str, list[EnsemblVariant]]`
         Region variants by rsid.
-    lookup_rsid : `Callable[[str], list[EnsemblVariant]]`
-        Fallback rsid lookup for rsids not among the region variants.
+    fetched_rsids : `set[str]`
+        Rsids requested from Ensembl (not cached); updated in place.
     by_norm : `Mapping`
         Normalised `(chrom, pos, ref, alt)` -> `(Ensembl variant, its
         alt)` pairs, from `_ensembl_normalised_keys`.
@@ -5005,7 +5046,12 @@ def _ensembl_check(
     if not candidates:
         variants = []
         for source_rsid in source_rsids:
-            variants += by_rsid.get(source_rsid) or lookup_rsid(source_rsid)
+            found = by_rsid.get(source_rsid)
+            if not found:
+                found, fetched = _ensembl_rsid_variants(source_rsid)
+                if fetched:
+                    fetched_rsids.add(source_rsid)
+            variants += found
         candidates = [(v, effect, other) for v in variants]
         if trimmed is not None:
             candidates += [(v, *trimmed) for v in variants]
@@ -5221,26 +5267,7 @@ def annotate_ensembl_variants(
             for key, alt in _ensembl_normalised_keys(variant, sequences):
                 by_norm.setdefault(key, []).append((variant, alt))
 
-    n_rsid_fetched = 0
-
-    def lookup_rsid(rsid: str) -> list[EnsemblVariant]:
-        """Look up an rsid via Ensembl, counting uncached requests.
-
-        Parameters
-        ----------
-        rsid : `str`
-            Lower-case rsid.
-
-        Returns
-        -------
-        variants : `list[EnsemblVariant]`
-            See `_ensembl_rsid_variants`.
-        """
-        nonlocal n_rsid_fetched
-        variants, fetched = _ensembl_rsid_variants(rsid)
-        n_rsid_fetched += int(fetched)
-        return variants
-
+    fetched_rsids: set[str] = set()
     has_site = df[hc.CHROM].notna() & df[hc.POS].notna()
     key_columns = [
         hc.CHROM,
@@ -5254,13 +5281,13 @@ def annotate_ensembl_variants(
     keys = list(sites.itertuples(index=False, name=None))
     results = {
         key: _ensembl_check(
-            *key, by_position, by_rsid, lookup_rsid, by_norm
+            *key, by_position, by_rsid, fetched_rsids, by_norm
         )
         for key in dict.fromkeys(keys)
     }
     log_info(
         f"Ensembl check: {len(results)} unique variant rows checked, "
-        f"{n_rsid_fetched} rsids fetched via the variation endpoint"
+        f"{len(fetched_rsids)} rsids fetched via the variation endpoint"
     )
     site_index = df.index[has_site]
     for position, column in enumerate(
@@ -5287,8 +5314,8 @@ def annotate_ensembl_variants(
     ).agg(["mean", "size"])
     for (source, study), row in per_study.iterrows():
         if (
-            row["size"] >= Constants.ENSEMBL_BAD_MIN_ROWS
-            and row["mean"] > Constants.ENSEMBL_BAD_FRACTION_WARN
+            row["size"] >= Gwas.ENSEMBL_BAD_MIN_ROWS
+            and row["mean"] > Gwas.ENSEMBL_BAD_FRAC_WARN
         ):
             log_warn(
                 f"{source} {study}: {row['mean']:.0%} of {int(row['size'])} "

@@ -1,25 +1,29 @@
 #!/usr/bin/env python3
-"""annotate_clinvar
-
+"""
 Extract ClinVar variants with an aggregate (variant-level) classification of
 Pathogenic, Likely pathogenic or Pathogenic/Likely pathogenic
 """
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# imports
+# IMPORTS
 
 from __future__ import annotations
-from pathlib import Path
 
 import pandas as pd
 
 from log_tools.emitter import log_info, log_warn
 from log_tools.setup import runlog_setup
 from project_constants import (
+    ClinVar,
     ClinVarColumnNames as CVCNames,
-    Constants,
     FileNames,
     Paths,
 )
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# CONSTANTS
 
 COLUMNS_TO_KEEP = [v for k, v in vars(CVCNames).items() if not k.startswith('_')]
 
@@ -37,78 +41,9 @@ ASSEMBLY_SPECIFIC_COLUMNS: list[str] = [
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# read
+# SUMMARIES
 
-
-def read_clinvar_variants(path: Path) -> pd.DataFrame:
-    """Read the raw ClinVar variant export.
-
-    Parameters
-    ----------
-    path : `Path`
-        Path to the ClinVar variant TSV export.
-
-    Returns
-    -------
-    data : `pd.DataFrame`
-        One row per (variant x condition x molecular consequence x RCV).
-
-    Raises
-    ------
-    FileNotFoundError
-        If `path` does not exist.
-    """
-    if not path.exists():
-        raise FileNotFoundError(f"ClinVar variant file not found: {path}")
-
-    log_info(f"Reading ClinVar variants from {path}")
-    data = pd.read_csv(path, sep="\t")
-    log_info(f"Read {len(data)} rows")
-    return data
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# filter
-
-
-def filter_plp_variants(data: pd.DataFrame) -> pd.DataFrame:
-    """Filter to variants with an aggregate P/LP classification.
-
-    Kept if the variant-level `ac_classification` is in
-    `Constants.PATHOGENIC_CLASSIFICATIONS`. Conflicting, VUS and benign
-    variants are dropped, whatever their per-condition
-    `rcv_classification`. All condition rows of a kept variant are kept,
-    so the lipid direction can still be derived per condition. Rows
-    without an `assembly` (old records without coordinates) are dropped,
-    as they cannot be matched.
-
-    Parameters
-    ----------
-    data : `pd.DataFrame`
-        Raw ClinVar variant rows, as returned by `read_clinvar_variants`.
-
-    Returns
-    -------
-    filtered : `pd.DataFrame`
-        Matching rows. No rows are deduplicated or collapsed.
-    """
-    pathogenic_mask = data[CVCNames.AC_CLASSIFICATION_COL].isin(
-        Constants.PATHOGENIC_CLASSIFICATIONS
-    )
-    no_assembly_mask = pathogenic_mask & data[CVCNames.ASSEMBLY_COL].isna()
-    log_info(
-        f"{pathogenic_mask.sum()} rows have an aggregate P/LP "
-        f"ac_classification; {no_assembly_mask.sum()} of them without an "
-        "assembly dropped"
-    )
-    return data.loc[pathogenic_mask & ~no_assembly_mask].copy()
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# scope-reduction summary
-
-
-def _summarize_scope_reduction(
+def summarize_scope_reduction(
     filtered: pd.DataFrame,
     group_col: str,
     strictness_order: tuple[str, ...],
@@ -119,15 +54,12 @@ def _summarize_scope_reduction(
 
     Successively excludes `strictness_order` groups (broadest first),
     down to `core_label` only. A variant only counts as "removed" once
-    it has no row left in any still-included group -- one with rows in
-    both `core_label` and the next-narrowest group stays counted until
-    that group is also excluded.
+    it has no row left in any still-included group.
 
     Parameters
     ----------
     filtered : `pd.DataFrame`
-        Output of `filter_plp_variants`, before column trimming (must
-        still have `group_col` and `variation_id`).
+        Clinvar variants with columns `group_col` and `variation_id`.
     group_col : `str`
         Column being narrowed (e.g. `review_status`).
     strictness_order : `tuple[str, ...]`
@@ -150,66 +82,47 @@ def _summarize_scope_reduction(
     previous_variants: set | None = None
 
     for n_excluded in range(len(strictness_order) + 1):
+        # define variants not yet excluded
         excluded_groups = set(strictness_order[:n_excluded])
         included_mask = ~filtered[group_col].isin(excluded_groups)
-        variants = set(
+        var_list = set(
             filtered.loc[included_mask, CVCNames.VARIATION_ID_COL]
         )
 
         if n_excluded == 0:
+            # all variants with broadest scope
             scope = all_included_label
-            baseline_variants = variants
+            baseline_variants = var_list
         else:
+            # define included groups
             included_groups = (core_label,) + tuple(
                 group
                 for group in reversed(strictness_order)
                 if group not in excluded_groups
             )
             scope = "Include: " + " + ".join(included_groups)
-
+        # create summary
         rows.append(
             {
                 "scope": scope,
-                "n_unique_variants": len(variants),
+                "n_unique_variants": len(var_list),
                 "n_variants_removed_cumulative": len(
-                    baseline_variants - variants
+                    baseline_variants - var_list
                 ),
                 "n_variants_removed_this_step": (
-                    len(previous_variants - variants)
+                    len(previous_variants - var_list)
                     if previous_variants is not None
                     else 0
                 ),
             }
         )
-        previous_variants = variants
+        previous_variants = var_list
 
     return pd.DataFrame(rows)
 
 
-def summarize_review_status_scope(filtered: pd.DataFrame) -> pd.DataFrame:
-    """Report unique-variant counts as `rcv_review_status` scope narrows.
-
-    Parameters
-    ----------
-    filtered : `pd.DataFrame`
-        Output of `filter_plp_variants`, before column trimming.
-
-    Returns
-    -------
-    summary : `pd.DataFrame`
-        See `_summarize_scope_reduction`.
-    """
-    return _summarize_scope_reduction(
-        filtered,
-        group_col=CVCNames.RCV_REVIEW_STATUS_COL,
-        strictness_order=Constants.REVIEW_STATUS_STRICTNESS_ORDER,
-        core_label=Constants.REVIEW_STATUS_CORE,
-        all_included_label="All review statuses (every tier included)",
-    )
-
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# column selection
+# COLUMN SELECTION
 
 
 def widen_by_assembly(deduped: pd.DataFrame) -> pd.DataFrame:
@@ -219,9 +132,8 @@ def widen_by_assembly(deduped: pd.DataFrame) -> pd.DataFrame:
     `ASSEMBLY_SPECIFIC_COLUMNS` differ, e.g. on a strand flip); this
     pivots those wide (`chr` -> `chr_grch37`/`chr_grch38`) into one row
     per pairing. Raises, rather than catching, if a
-    `(variant/condition, assembly)` combination isn't unique -- that
-    would mean conflicting coordinates for the same variant, which must
-    surface, not resolve silently.
+    `(variant/condition, assembly)` combination isn't unique, meaning same
+    variant has conflicting coordinates.
 
     Parameters
     ----------
@@ -255,23 +167,46 @@ def widen_by_assembly(deduped: pd.DataFrame) -> pd.DataFrame:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# main
+# MAIN
 
 if __name__ == "__main__":
     with runlog_setup(order=50, root=Paths.HERE):
-        variants = read_clinvar_variants(FileNames.CLINVAR_VARIANTS)
-        plp_variants = filter_plp_variants(variants)
-
+        # prepare
+        FileNames.VARIANTS_REVIEW_STATUS_SUMMARY.parent.mkdir(
+            parents=True, exist_ok=True
+        )
+        FileNames.PLP_VARIANTS.parent.mkdir(parents=True, exist_ok=True)
+        # read clinvar variants
+        if not FileNames.CLINVAR_VARIANTS.exists():
+            raise FileNotFoundError(f"ClinVar variant file not found: {FileNames.CLINVAR_VARIANTS}")
+        log_info(f"Reading ClinVar variants from {FileNames.CLINVAR_VARIANTS}")
+        variants = pd.read_csv(FileNames.CLINVAR_VARIANTS, sep="\t")
+        log_info(f"Read {len(variants)} rows")
+        # filter for pathogenic and likely pathogenic
+        pathogenic_mask = variants[CVCNames.AC_CLASSIFICATION_COL].isin(
+            ClinVar.PATHOGENIC_CLASSES
+        )
+        no_assembly_mask = pathogenic_mask & variants[CVCNames.ASSEMBLY_COL].isna()
+        log_info(
+            f"{pathogenic_mask.sum()} rows have an aggregate P/LP "
+            f"ac_classification; {no_assembly_mask.sum()} of them without an "
+            "assembly dropped"
+        )
+        plp_variants = variants.loc[pathogenic_mask & ~no_assembly_mask].copy()
         log_info(f"Kept {len(plp_variants)} rows after filtering")
-
-        review_status_summary = summarize_review_status_scope(plp_variants)
+        # summarise
+        review_status_summary = summarize_scope_reduction(
+                plp_variants,
+                group_col=CVCNames.RCV_REVIEW_STATUS_COL,
+                strictness_order=ClinVar.REVIEW_STATUS_ORDER,
+                core_label=ClinVar.REVIEW_STATUS_CORE,
+                all_included_label="All review statuses (every tier included)",
+                )
         log_info(
             "Review-status scope-reduction summary:\n"
             f"{review_status_summary.to_string(index=False)}"
         )
-        FileNames.VARIANTS_REVIEW_STATUS_SUMMARY.parent.mkdir(
-            parents=True, exist_ok=True
-        )
+        # write summary
         review_status_summary.to_csv(
             FileNames.VARIANTS_REVIEW_STATUS_SUMMARY, sep="\t", index=False
         )
@@ -279,14 +214,15 @@ if __name__ == "__main__":
             "Wrote review-status summary to "
             f"{FileNames.VARIANTS_REVIEW_STATUS_SUMMARY}"
         )
-
+        # tidy up
         plp_variants = plp_variants[COLUMNS_TO_KEEP].drop_duplicates()
         plp_variants = widen_by_assembly(plp_variants)
-
-        FileNames.PLP_VARIANTS.parent.mkdir(parents=True, exist_ok=True)
+        # log and write
         log_info(
             f"{plp_variants[CVCNames.VCV_ACCESSION_COL].nunique()} "
             "unique variants identified"
         )
-        log_info(f"Writing {len(plp_variants)} rows to {FileNames.PLP_VARIANTS}")
+        log_info(
+            f"Writing {len(plp_variants)} rows to {FileNames.PLP_VARIANTS}"
+            )
         plp_variants.to_csv(FileNames.PLP_VARIANTS, sep="\t", index=False)

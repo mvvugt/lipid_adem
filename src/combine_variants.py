@@ -23,14 +23,19 @@ import functions
 from log_tools.emitter import log_info, log_warn
 from log_tools.setup import runlog_setup
 from project_constants import (
+    ClinVar,
     ClinVarColumnNames,
     ClinVarDirection,
     ColumnNames,
     ConditionDirectionColumns,
-    Constants,
+    Const,
     FileNames,
+    GeneColumns,
+    Marvel,
+    NormStatus,
     Paths,
     VariantListColumns,
+    VariantSource,
     VepCsqColumns,
 )
 
@@ -91,12 +96,12 @@ def _collapse_direction(directions: pd.Series) -> str:
 def load_plp_variants() -> pd.DataFrame:
     """Read the ClinVar P/LP list as variant-list rows with a direction.
 
-    The GRCh38 coordinates are used (`Constants.PLP_ASSEMBLY_SUFFIX`).
+    The GRCh38 coordinates are used (`ClinVar.ASSEMBLY_SUFFIX`).
     Each row's condition gets its direction from
     `FileNames.CLINVAR_CONDITION_DIRECTION`; conditions missing there are
     `unknown` (warned). The directions are combined per variant by
     `_collapse_direction`, except that a variant with a consequence in
-    `Constants.TRUNCATING_CONSEQUENCES` is always `lowering` (less gene
+    `ClinVar.TRUNCATING_CONSEQUENCES` is always `lowering` (less gene
     product, whatever the conditions say).
 
     Returns
@@ -104,7 +109,7 @@ def load_plp_variants() -> pd.DataFrame:
     plp : `pd.DataFrame`
         One row per variant, with the `VariantListColumns` `chr`, `pos`,
         `a1` (reference), `a2` (alternate), `source`
-        (`Constants.CLINVAR_VARIANT_SOURCE`), `gene` and
+        (`VariantSource.CLINVAR`), `gene` and
         `clinvar_direction`, as strings.
 
     Raises
@@ -113,12 +118,11 @@ def load_plp_variants() -> pd.DataFrame:
         If the P/LP list or the condition-direction table does not exist.
     """
     for path in (FileNames.PLP_VARIANTS, FileNames.CLINVAR_CONDITION_DIRECTION):
-        if not path.exists():
-            raise FileNotFoundError(f"{path} not found")
+        functions.require_file(path)
     cv = ClinVarColumnNames
     cd = ConditionDirectionColumns
     vc = VariantListColumns
-    suffix = Constants.PLP_ASSEMBLY_SUFFIX
+    suffix = ClinVar.ASSEMBLY_SUFFIX
     plp = pd.read_csv(FileNames.PLP_VARIANTS, sep="\t", dtype=str)
     directions = pd.read_csv(
         FileNames.CLINVAR_CONDITION_DIRECTION, sep="\t", dtype=str
@@ -138,7 +142,7 @@ def load_plp_variants() -> pd.DataFrame:
             ).astype("Int64"),
             vc.A1: plp[f"{cv.REFERENCE_ALLELE_COL}{suffix}"],
             vc.A2: plp[f"{cv.ALTERNATE_ALLELE_COL}{suffix}"],
-            vc.SOURCE: Constants.CLINVAR_VARIANT_SOURCE,
+            vc.SOURCE: VariantSource.CLINVAR,
             vc.GENE: plp[cv.GENE_SYMBOL_COL],
             cd.CONDITION: plp[cv.RCV_CONDITION_COL],
             _CONSEQUENCE_KEY: plp[cv.RCV_MOLECULAR_CONSEQUENCE_COL],
@@ -175,7 +179,7 @@ def load_plp_variants() -> pd.DataFrame:
     )
     truncating = (
         variants[_CONSEQUENCE_KEY]
-        .isin(Constants.TRUNCATING_CONSEQUENCES)
+        .isin(ClinVar.TRUNCATING_CONSEQUENCES)
         .groupby([variants[col] for col in site], dropna=False, sort=True)
         .any()
         .to_numpy()
@@ -211,7 +215,7 @@ def load_ptv_variants(path: Path = FileNames.PTV_VARIANTS) -> pd.DataFrame:
     ptv : `pd.DataFrame`
         One row per site, with the `VariantListColumns` `chr`, `pos`, `a1`
         (reference), `a2` (alternate), `source`
-        (`Constants.PTV_VARIANT_SOURCE`) and `gene`, as strings. The AF/AC
+        (`VariantSource.PTV`) and `gene`, as strings. The AF/AC
         columns are not carried over.
 
     Raises
@@ -219,8 +223,7 @@ def load_ptv_variants(path: Path = FileNames.PTV_VARIANTS) -> pd.DataFrame:
     FileNotFoundError
         If `path` does not exist (run annotate_ptv.py first).
     """
-    if not path.exists():
-        raise FileNotFoundError(f"{path} not found: run annotate_ptv.py first")
+    functions.require_file(path, hint="run annotate_ptv.py first")
     vc = VariantListColumns
     pc = VepCsqColumns
     ptv = pd.read_csv(path, sep="\t", dtype=str)
@@ -231,7 +234,7 @@ def load_ptv_variants(path: Path = FileNames.PTV_VARIANTS) -> pd.DataFrame:
             vc.POS: ptv[pc.POS],
             vc.A1: ptv[pc.REF],
             vc.A2: ptv[pc.ALT],
-            vc.SOURCE: Constants.PTV_VARIANT_SOURCE,
+            vc.SOURCE: VariantSource.PTV,
             vc.GENE: ptv[pc.GENE],
         }
     )
@@ -250,7 +253,7 @@ def load_gof_variants(path: Path = FileNames.GOF_VARIANTS) -> pd.DataFrame:
     Returns
     -------
     gof : `pd.DataFrame`
-        The rows with `source` `Constants.GOF_VARIANT_SOURCE`, with the
+        The rows with `source` `VariantSource.GOF`, with the
         `VariantListColumns` `chr`, `pos`, `a1`, `a2`, `source` and `gene`,
         as strings.
 
@@ -261,11 +264,10 @@ def load_gof_variants(path: Path = FileNames.GOF_VARIANTS) -> pd.DataFrame:
     ValueError
         If `path` has rows of another source.
     """
-    if not path.exists():
-        raise FileNotFoundError(f"{path} not found (see its SOURCE.md)")
+    functions.require_file(path, hint="see its SOURCE.md")
     vc = VariantListColumns
     gof = pd.read_csv(path, sep="\t", dtype=str)
-    other = sorted(set(gof[vc.SOURCE]) - {Constants.GOF_VARIANT_SOURCE})
+    other = sorted(set(gof[vc.SOURCE]) - {VariantSource.GOF})
     if other:
         raise ValueError(f"{path}: sources other than GoF: {other}")
     log_info(f"{path}: {len(gof)} GoF variants")
@@ -290,7 +292,7 @@ def load_selected_variants(
     Returns
     -------
     selected : `pd.DataFrame`
-        The rows with `source` `Constants.SELECTED_GOF_VARIANT_SOURCE`,
+        The rows with `source` `VariantSource.SELECTED_GOF`,
         with the `VariantListColumns` `chr`, `pos`, `a1`, `a2`, `source`
         and `gene`, as strings.
 
@@ -301,17 +303,16 @@ def load_selected_variants(
     ValueError
         If `path` has rows of another source.
     """
-    if not path.exists():
-        raise FileNotFoundError(f"{path} not found (see its SOURCE.md)")
+    functions.require_file(path, hint="see its SOURCE.md")
     vc = VariantListColumns
     selected = pd.read_csv(path, sep="\t", dtype=str)
     other = sorted(
-        set(selected[vc.SOURCE]) - {Constants.SELECTED_GOF_VARIANT_SOURCE}
+        set(selected[vc.SOURCE]) - {VariantSource.SELECTED_GOF}
     )
     if other:
         raise ValueError(
             f"{path}: sources other than "
-            f"{Constants.SELECTED_GOF_VARIANT_SOURCE}: {other}"
+            f"{VariantSource.SELECTED_GOF}: {other}"
         )
     log_info(f"{path}: {len(selected)} selected GoF variants")
     return selected[[vc.CHROM, vc.POS, vc.A1, vc.A2, vc.SOURCE, vc.GENE]]
@@ -330,8 +331,8 @@ def load_am_variants(path: Path = FileNames.AM_VARIANTS) -> pd.DataFrame:
     Returns
     -------
     am : `pd.DataFrame`
-        The rows with `source` `Constants.AM_VARIANT_SOURCE` and a
-        `tri_class` in `Constants.AM_KEEP_CLASSES`, with the
+        The rows with `source` `VariantSource.AM` and a
+        `tri_class` in `VariantSource.AM_KEEP_CLASSES`, with the
         `VariantListColumns` `chr`, `pos`, `a1`, `a2`, `source`, `gene`,
         `am_pathogenicity` and `tri_class`, as strings. Rows per class
         are logged.
@@ -343,19 +344,18 @@ def load_am_variants(path: Path = FileNames.AM_VARIANTS) -> pd.DataFrame:
     ValueError
         If `path` has rows of another source.
     """
-    if not path.exists():
-        raise FileNotFoundError(f"{path} not found (see its SOURCE.md)")
+    functions.require_file(path, hint="see its SOURCE.md")
     vc = VariantListColumns
     am = pd.read_csv(path, sep="\t", dtype=str)
-    other = sorted(set(am[vc.SOURCE]) - {Constants.AM_VARIANT_SOURCE})
+    other = sorted(set(am[vc.SOURCE]) - {VariantSource.AM})
     if other:
         raise ValueError(f"{path}: sources other than AM: {other}")
     for tri_class, n in am[vc.TRI_CLASS].value_counts(dropna=False).items():
         log_info(f"{path}: {n} AM variants of class {tri_class}")
-    am = am.loc[am[vc.TRI_CLASS].isin(Constants.AM_KEEP_CLASSES)]
+    am = am.loc[am[vc.TRI_CLASS].isin(VariantSource.AM_KEEP_CLASSES)]
     log_info(
         f"{path}: {len(am)} AM variants kept "
-        f"({', '.join(Constants.AM_KEEP_CLASSES)})"
+        f"({', '.join(VariantSource.AM_KEEP_CLASSES)})"
     )
     return am[[
         vc.CHROM, vc.POS, vc.A1, vc.A2, vc.SOURCE, vc.GENE,
@@ -377,7 +377,7 @@ def read_gene_regions(
     Returns
     -------
     regions : `dict[str, functions.GeneRegion]`
-        Gene -> region, `Constants.GENE_COORD_FLANK_BP` added on both
+        Gene -> region, `Const.GENE_FLANK_BP` added on both
         sides; chrom without a "chr" prefix.
 
     Raises
@@ -385,10 +385,9 @@ def read_gene_regions(
     FileNotFoundError
         If `path` does not exist.
     """
-    if not path.exists():
-        raise FileNotFoundError(f"gene list not found: {path}")
+    functions.require_file(path, "gene list")
     cn = ColumnNames
-    flank = Constants.GENE_COORD_FLANK_BP
+    flank = Const.GENE_FLANK_BP
     genes = pd.read_csv(path, sep="\t", dtype=str)
     return {
         gene: functions.GeneRegion(
@@ -397,7 +396,10 @@ def read_gene_regions(
             end=int(end) + flank,
         )
         for gene, chrom, start, end in zip(
-            genes[cn.GENE], genes[cn.GENE_CHR], genes[cn.START], genes[cn.END]
+            genes[cn.GENE],
+            genes[GeneColumns.GENE_CHR],
+            genes[cn.START],
+            genes[cn.END],
         )
     }
 
@@ -476,6 +478,48 @@ def normalise_list(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def apply_mnv_proxies(
+    variants: pd.DataFrame, proxies: dict[str, str] = Marvel.MNV_PROXIES
+) -> pd.DataFrame:
+    """Replace MNVs that UKB stores as separate SNVs by a proxy SNV.
+
+    The rows keep the MNV in `pos_orig`/`a1_orig`/`a2_orig` and get
+    `norm_status` `NormStatus.MNV_PROXY`; `pos`, `a1`, `a2` and
+    `variant_id` become the proxy.
+
+    Parameters
+    ----------
+    variants : `pd.DataFrame`
+        From `normalise_list`.
+    proxies : `dict[str, str]`, optional, default: `Marvel.MNV_PROXIES`
+        Normalised MNV `variant_id` -> proxy ``chr:pos:a1:a2``.
+
+    Returns
+    -------
+    replaced : `pd.DataFrame`
+        `variants` with the proxies in place. Each replacement is logged;
+        a proxied MNV not in the list is warned.
+    """
+    vc = VariantListColumns
+    replaced = variants.copy()
+    for mnv, proxy in proxies.items():
+        rows = replaced[vc.VARIANT_ID] == mnv
+        if not rows.any():
+            log_warn(f"MNV {mnv} not in the list, no proxy applied")
+            continue
+        chrom, pos, a1, a2 = proxy.split(":")
+        if chrom != mnv.split(":")[0]:
+            raise ValueError(f"proxy {proxy} is not on the chr of {mnv}")
+        replaced.loc[rows, vc.POS] = pos
+        replaced.loc[rows, vc.A1] = a1
+        replaced.loc[rows, vc.A2] = a2
+        replaced.loc[rows, vc.VARIANT_ID] = proxy
+        replaced.loc[rows, vc.NORM_STATUS] = NormStatus.MNV_PROXY
+        log_info(f"MNV {mnv}: {int(rows.sum())} rows -> proxy {proxy}")
+    return replaced
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def combine_lists(
     ptv: pd.DataFrame,
     plp: pd.DataFrame,
@@ -490,7 +534,8 @@ def combine_lists(
     `am_pathogenicity` and `tri_class` are NA except for the AM rows. Rows
     without a GRCh38 chr, pos or both alleles are dropped (warned per gene
     and source), as they cannot be matched or extracted. The rest is normalised
-    by `normalise_list`; rows that become the same site, gene and source
+    by `normalise_list`, then MNVs get their proxy SNV
+    (`apply_mnv_proxies`); rows that become the same site, gene and source
     keep the first (warned). A site in several sources keeps one row per
     source.
 
@@ -533,6 +578,7 @@ def combine_lists(
         log_warn(f"{gene} {source}: {n} rows without GRCh38 chr/pos/alleles")
     variants = variants.loc[placed].drop_duplicates()
     variants = normalise_list(variants.reset_index(drop=True), regions)
+    variants = apply_mnv_proxies(variants)
     variants = variants[LIST_COLUMNS]
 
     site = [vc.CHROM, vc.POS, vc.A1, vc.A2, vc.GENE]
@@ -568,7 +614,8 @@ def marvel_rows(variants: pd.DataFrame) -> pd.DataFrame:
     A site in both sources is extracted once. Each site gets a row with
     its normalised form (`ID` = `variant_id`) and, when the original form
     differs, a row with that (`ID` = `variant_id` +
-    `Constants.ORIG_ID_SUFFIX`).
+    `Marvel.ORIG_ID_SUFFIX`). MNV proxy rows get no original-form
+    row: UKB has no MNV record to match.
 
     Parameters
     ----------
@@ -588,11 +635,11 @@ def marvel_rows(variants: pd.DataFrame) -> pd.DataFrame:
         (sites[vc.POS] != sites[vc.POS_ORIG])
         | (sites[vc.A1] != sites[vc.A1_ORIG])
         | (sites[vc.A2] != sites[vc.A2_ORIG])
-    )
+    ) & (sites[vc.NORM_STATUS] != NormStatus.MNV_PROXY)
     original = sites.loc[changed]
     original = original.assign(
         **{
-            vc.MARVEL_ID: original[vc.VARIANT_ID] + Constants.ORIG_ID_SUFFIX,
+            vc.MARVEL_ID: original[vc.VARIANT_ID] + Marvel.ORIG_ID_SUFFIX,
             vc.POS: original[vc.POS_ORIG],
             vc.A1: original[vc.A1_ORIG],
             vc.A2: original[vc.A2_ORIG],

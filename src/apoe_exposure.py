@@ -1,27 +1,12 @@
 #!/usr/bin/env python3
 """
-Build the marvel exposure file of APOE diplotype from the UKB phenotype file.
-
-The APOE genotype column of `FileNames.UKB_PHENO` (the column the
-stratified marvel runs stratify on) becomes one carrier column per
-diplotype in `Constants.APOE_GENOTYPES`, e3e3 included:
-
-- ``1``: the participant has that diplotype;
-- ``0``: the participant has any other diplotype.
-
-Each column is tested as its own exposure, so each estimate is that
-diplotype versus all other diplotypes (not versus e3e3), in the same
-samples, outcomes and covariate models. There are no missing values, so
-marvel's listwise deletion and missingness filter keep everyone.
-Participants without a genotype (`Constants.APOE_MISSING_VALUES`, blanks)
-are left out of the file. Writes `FileNames.APOE_EXPOSURE` (ID column plus
-the carrier columns, `Constants.APOE_DIPLOTYPE_PREFIX` + diplotype), the
-``carriers`` file of `FileNames.MARVEL_APOE_TASKS`.
+Build the binary exposure file of APOE diplotype for UKB participants with one
+column per diplotype against all other diplotypes.
 """
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# imports
+# IMPORTS
 
 from __future__ import annotations
 
@@ -33,14 +18,22 @@ from log_tools.emitter import log_info, log_stage, log_warn
 from log_tools.setup import runlog_setup
 
 import functions
-from project_constants import Constants, FileNames, Paths, RunlogOrder
+from project_constants import (
+    Apoe,
+    FileNames,
+    Paths,
+    RunlogOrder,
+    Ukb,
+)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# APOE HANDLING
+
 def apoe_indicators(
     genotypes: pd.Series,
-    diplotypes: tuple[str, ...] = Constants.APOE_GENOTYPES,
-    prefix: str = Constants.APOE_DIPLOTYPE_PREFIX,
+    diplotypes: tuple[str, ...] = Apoe.GENOTYPES,
+    prefix: str = Apoe.DIPLOTYPE_PREFIX,
 ) -> pd.DataFrame:
     """One 0/1 carrier column per diplotype.
 
@@ -48,10 +41,10 @@ def apoe_indicators(
     ----------
     genotypes : `pd.Series`
         Diplotype per participant, as strings, without missing values.
-    diplotypes : `tuple[str, ...]`, optional, default: `Constants.APOE_GENOTYPES`
+    diplotypes : `tuple[str, ...]`, default: `Apoe.GENOTYPES`
         Every diplotype `genotypes` may hold; one column each, in this
         order.
-    prefix : `str`, optional, default: `Constants.APOE_DIPLOTYPE_PREFIX`
+    prefix : `str`, default: `Apoe.DIPLOTYPE_PREFIX`
         Column name prefix, e.g. ``APOE_`` gives ``APOE_e4e4``.
 
     Returns
@@ -66,17 +59,21 @@ def apoe_indicators(
         If `genotypes` has missing values or a value not in `diplotypes`,
         or a diplotype has no carriers.
     """
+    # check for missingness
     if genotypes.isna().any():
         raise ValueError(f"{int(genotypes.isna().sum())} missing genotypes")
+    # check for unknown values
     values = genotypes.astype(str).str.strip()
     unknown = sorted(set(values) - set(diplotypes))
     if unknown:
         raise ValueError(
             f"genotype(s) {unknown} not in the diplotypes {list(diplotypes)}"
         )
+    # check for absent diplotypes
     absent = [value for value in diplotypes if not (values == value).any()]
     if absent:
         raise ValueError(f"no carriers of diplotype(s) {absent}")
+    # create binary column per diplotype
     indicators = pd.DataFrame(index=genotypes.index)
     for value in diplotypes:
         indicators[prefix + value] = (values == value).astype("int64")
@@ -85,7 +82,7 @@ def apoe_indicators(
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def apoe_exposure(
-    column: str = Constants.UKB_APOE_COLUMN,
+    column: str = Apoe.UKB_COL,
     pheno: Path = FileNames.UKB_PHENO,
     out: Path = FileNames.APOE_EXPOSURE,
 ) -> None:
@@ -93,10 +90,10 @@ def apoe_exposure(
 
     Parameters
     ----------
-    column : `str`, optional, default: `Constants.UKB_APOE_COLUMN`
+    column : `str`, optional, default: `Apoe.UKB_COL`
         APOE genotype column of `pheno`.
     pheno : `Path`, optional, default: `FileNames.UKB_PHENO`
-        UKB phenotype file with `Constants.UKB_ID_COLUMN`.
+        UKB phenotype file with `Ukb.ID_COL`.
     out : `Path`, optional, default: `FileNames.APOE_EXPOSURE`
         Exposure file to write (gzipped TSV, written atomically).
 
@@ -111,43 +108,46 @@ def apoe_exposure(
     ValueError
         If `column` is not in `pheno`, or from `apoe_indicators`.
     """
-    if not pheno.exists():
-        raise FileNotFoundError(f"{pheno} not found")
-    id_column = Constants.UKB_ID_COLUMN
+    functions.require_file(pheno)
+    # check missing columns
+    id_column = Ukb.ID_COL
     header = pd.read_csv(pheno, sep="\t", nrows=0).columns
     missing = [name for name in (id_column, column) if name not in header]
     if missing:
         raise ValueError(f"{pheno}: missing column(s) {missing}")
-
+    # read the file with required columns only
     log_stage("read")
     table = pd.read_csv(
         pheno, sep="\t", usecols=[id_column, column], dtype={column: str}
     )
+    # log diplotype counts
     counts = table[column].value_counts(dropna=False)
     log_info(
         f"{pheno}: {len(table)} participants; {column}: "
         + ", ".join(f"{value}={n}" for value, n in counts.items())
     )
-
+    # extract diplotype values and check for missingness
     log_stage("indicators")
     values = table[column].str.strip()
     no_genotype = values.isna() | values.isin(
-        ["", *Constants.APOE_MISSING_VALUES]
+        ["", *Apoe.MISSING_VALUES]
     )
     if no_genotype.any():
         log_warn(
             f"{int(no_genotype.sum())} participants without a genotype "
             "left out"
         )
+    # clean up and create binary columns per diplotype
     table = table.loc[~no_genotype]
     indicators = apoe_indicators(values.loc[~no_genotype])
+    # create new file and log
     for name in indicators.columns:
         log_info(
             f"{name}: {int(indicators[name].sum())} carriers vs "
             f"{int((indicators[name] == 0).sum())} others"
         )
     exposure = pd.concat([table[[id_column]], indicators], axis=1)
-
+    # write output file
     log_stage("write")
     out.parent.mkdir(parents=True, exist_ok=True)
     functions.write_table_atomic(exposure, out)
@@ -168,7 +168,7 @@ def _init_cmd_args() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--column",
-        default=Constants.UKB_APOE_COLUMN,
+        default=Apoe.UKB_COL,
         help=(
             f"APOE genotype column of {FileNames.UKB_PHENO.name} "
             "(default: %(default)s)"
@@ -196,7 +196,7 @@ def _parse_cmd_args(parser: argparse.ArgumentParser) -> argparse.Namespace:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Entry point
+# ENTRY POINT
 
 def main() -> None:
     """Entry point for the CLI."""

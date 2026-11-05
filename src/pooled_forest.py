@@ -12,7 +12,7 @@
 ##     Marker colour shows the outcome, marker shape significance:
 ##     circle p >= 0.05, square p < 0.05, diamond below the Bonferroni
 ##     threshold 0.05 / (genes x outcomes with a pooled estimate). When
-##     the run has lipid outcomes (`Constants.LIPID_OUTCOMES`), a second
+##     the run has lipid outcomes (`Const.LIPID_OUTCOMES`), a second
 ##     panel to the right shows their betas (95% CI, native UKB units),
 ##     each gene at the same height, with its own Bonferroni threshold
 ##     (genes x lipids). Run
@@ -45,7 +45,7 @@ import plot_misc.forest as forest
 import figure_utils as futils
 from pathlib import Path
 from project_constants import (
-        Constants,
+        Const,
         FigureColumns as FCols,
         FigureNames as FigNames,
         FigureStyle as FStyle,
@@ -77,7 +77,7 @@ parser.add_argument('-l', '--label',
                     help = 'meta_analysis.py --label of the run')
 parser.add_argument('-o', '--out-dir',
                     type = Path,
-                    default = Paths.RESULTS_FIGURES,
+                    default = Paths.FIGURES,
                     help = 'output directory (default: %(default)s)')
 parser.add_argument('-m', '--max-or',
                     type = float,
@@ -316,7 +316,7 @@ burden = futils.load_burden(futils.burden_path(args.ancestry, args.label),
                             keep_lipids = True)
 if burden is None:
     sys.exit(f'no burden file for {args.ancestry} {args.label}')
-is_lipid = burden[OUTCOME].isin(Constants.LIPID_OUTCOMES)
+is_lipid = burden[OUTCOME].isin(Const.LIPID_OUTCOMES)
 binary = burden.loc[~is_lipid]
 lipids = futils.add_beta_ci(burden.loc[is_lipid])
 

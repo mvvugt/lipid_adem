@@ -29,16 +29,22 @@ import functions
 from project_constants import (
     Ancestry,
     ColumnNames,
-    Constants,
+    Const,
     EffectScale,
     FileNames,
+    GeneColumns,
+    Gwas,
     HarmonisedColumns,
     MafStatus,
+    Marvel,
     MarvelColumns,
     MetaColumns,
+    OutcomeColumns,
     Paths,
+    Regex,
     RunlogOrder,
     SourceColumnMaps,
+    StudyColumns,
 )
 
 
@@ -49,7 +55,7 @@ _NO_CURATED_COUNT_KEY: str = "efo_no_curated"
 _MARVEL_METHOD: str = "Model"
 _MARVEL_MODEL_NAME: str = "Model name"
 _MARVEL_STRATIFICATION_NAME: str = "Stratification name"
-_MARVEL_GENE_MASK_RE = re.compile(Constants.MARVEL_GENE_MASK_PATTERN)
+_MARVEL_GENE_MASK_RE = re.compile(Regex.MARVEL_GENE_MASK)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -110,23 +116,23 @@ def load_filter_results(
         for _, task in file_tasks.iterrows():
             labelled = frame.copy()
             outcome = task[ColumnNames.OUTCOME]
-            efo_id = task[ColumnNames.EFO_ID]
+            efo_id = task[OutcomeColumns.EFO_ID]
             accession = task[ColumnNames.STUDY_ACCESSION]
             labelled[ColumnNames.SOURCE] = "summary-stats"
             # from the tasks file, not the outfile, so outfiles filtered
             # before manual studies got their own source are relabelled
             labelled[ColumnNames.SOURCE_DB] = task[ColumnNames.SOURCE]
             labelled[ColumnNames.OUTCOME] = outcome
-            labelled[ColumnNames.EFO_ID] = efo_id
+            labelled[OutcomeColumns.EFO_ID] = efo_id
             # only trait-searched studies (efo_id set) can use child traits
-            labelled[ColumnNames.CHILD_TRAITS] = (
+            labelled[OutcomeColumns.CHILD_TRAITS] = (
                 isinstance(efo_id, str)
                 and efo_id != ""
                 and functions.includes_child_traits(outcome)
             )
             trait_id, trait = study_traits.get(accession, ("", ""))
-            labelled[ColumnNames.MAPPED_TRAIT_ID] = trait_id or pd.NA
-            labelled[ColumnNames.MAPPED_TRAIT] = trait or pd.NA
+            labelled[OutcomeColumns.MAPPED_TRAIT_ID] = trait_id or pd.NA
+            labelled[OutcomeColumns.MAPPED_TRAIT] = trait or pd.NA
             labelled[HarmonisedColumns.OUTCOME_DESC] = outcome_desc.get(
                 (outcome, efo_id), pd.NA
             )
@@ -198,7 +204,7 @@ def _split_burden_rows(
     if not is_mask.any():
         return summary, summary.iloc[0:0]
     names = summary.loc[is_mask, name_column].astype("string").str.extract(
-        Constants.BURDEN_NAME_PATTERN
+        Regex.BURDEN_NAME
     )
     own_gene = names["ensembl_id"] == summary.loc[is_mask, hc.GENE].map(
         ensembl_ids
@@ -253,19 +259,19 @@ def _marvel_identity(
     ancestry = entry[ColumnNames.ANCESTRY]
     stratum = entry[MetaColumns.APOE_STRATUM]
     accession = (
-        f"{Constants.MARVEL_SOURCE_DB_PREFIX}{cohort}_{ancestry}_{outcome}"
+        f"{Marvel.SOURCE_DB_PREFIX}{cohort}_{ancestry}_{outcome}"
     )
     if stratum:
         accession = f"{accession}_{stratum}"
     labelled = frame.copy()
     labelled[ColumnNames.SOURCE] = source
     labelled[ColumnNames.SOURCE_DB] = (
-        Constants.MARVEL_SOURCE_DB_PREFIX + cohort
+        Marvel.SOURCE_DB_PREFIX + cohort
     )
     labelled[ColumnNames.STUDY_ACCESSION] = accession
     labelled[ColumnNames.OUTCOME] = outcome
-    labelled[ColumnNames.EFO_ID] = pd.NA
-    labelled[ColumnNames.CHILD_TRAITS] = False
+    labelled[OutcomeColumns.EFO_ID] = pd.NA
+    labelled[OutcomeColumns.CHILD_TRAITS] = False
     labelled[HarmonisedColumns.TRAIT_LABEL] = entry["variable"]
     labelled[HarmonisedColumns.ANCESTRY_GROUP] = ancestry
     return labelled
@@ -313,15 +319,15 @@ def load_marvel_results(
     counted) becomes a ``summary-stats`` row for every gene region
     containing it, with effect allele a2 and other allele a1. A row
     whose `Exposure` is a gene in `regions`, or a gene plus a mask
-    (e.g. ``CETP PTV``, `Constants.MARVEL_GENE_MASK_PATTERN`), becomes
+    (e.g. ``CETP PTV``, `Regex.MARVEL_GENE_MASK`), becomes
     a ``gene-burden`` row for that gene. Other rows (intercept,
     covariates) are dropped (counted). Each row's `study_effect_scale`
     is its `Model` (regression method) mapped by
-    `Constants.MARVEL_METHOD_SCALE`. Rows with fewer than
-    `Constants.MARVEL_MIN_CARRIERS` exposed (`Exposed`) are dropped
+    `Marvel.METHOD_SCALE`. Rows with fewer than
+    `Marvel.MIN_CARRIERS` exposed (`Exposed`) are dropped
     (counted), as are rows with `Standard Error` below
-    `Constants.MARVEL_MIN_SE` (degenerate fit, no carriers in the subset)
-    or above `Constants.MARVEL_MAX_SE` (separation). A file listed for
+    `Marvel.MIN_SE` (degenerate fit, no carriers in the subset)
+    or above `Marvel.MAX_SE` (separation). A file listed for
     several entries (a per-gene store) is read once.
 
     Parameters
@@ -353,11 +359,9 @@ def load_marvel_results(
     for _, entry in marvel_df.iterrows():
         path = Path(entry["path"])
         if path not in cache:
-            if not path.exists():
-                raise FileNotFoundError(
-                    f"{FileNames.MARVEL_RESULTS}: results file not found: "
-                    f"{path}"
-                )
+            functions.require_file(
+                path, f"{FileNames.MARVEL_RESULTS}: results file"
+            )
             cache[path] = pd.read_csv(path, sep="\t", dtype=str)
         results = cache[path]
         missing = [
@@ -385,31 +389,31 @@ def load_marvel_results(
             exposed = pd.to_numeric(
                 results[MarvelColumns.EXPOSED], errors="coerce"
             )
-            few = exposed < Constants.MARVEL_MIN_CARRIERS
+            few = exposed < Marvel.MIN_CARRIERS
             if few.any():
                 log_info(
                     f"marvel {entry['cohort']} {entry['outcome']}: "
                     f"{int(few.sum())} rows with < "
-                    f"{Constants.MARVEL_MIN_CARRIERS} exposed dropped "
+                    f"{Marvel.MIN_CARRIERS} exposed dropped "
                     f"({path.name})"
                 )
             results = results[~few].reset_index(drop=True)
         if MarvelColumns.SE in results.columns:
             se = pd.to_numeric(results[MarvelColumns.SE], errors="coerce")
-            degenerate = se < Constants.MARVEL_MIN_SE
-            separated = se > Constants.MARVEL_MAX_SE
+            degenerate = se < Marvel.MIN_SE
+            separated = se > Marvel.MAX_SE
             if degenerate.any():
                 log_info(
                     f"marvel {entry['cohort']} {entry['outcome']}: "
                     f"{int(degenerate.sum())} rows with SE < "
-                    f"{Constants.MARVEL_MIN_SE} (degenerate fit) dropped "
+                    f"{Marvel.MIN_SE} (degenerate fit) dropped "
                     f"({path.name})"
                 )
             if separated.any():
                 log_info(
                     f"marvel {entry['cohort']} {entry['outcome']}: "
                     f"{int(separated.sum())} rows with SE > "
-                    f"{Constants.MARVEL_MAX_SE} (separation) dropped "
+                    f"{Marvel.MAX_SE} (separation) dropped "
                     f"({path.name})"
                 )
             results = results[~(degenerate | separated)].reset_index(
@@ -424,7 +428,7 @@ def load_marvel_results(
             )
         results[hc.STUDY_EFFECT_SCALE] = (
             results[_MARVEL_METHOD]
-            .map(Constants.MARVEL_METHOD_SCALE)
+            .map(Marvel.METHOD_SCALE)
             .fillna(EffectScale.UNKNOWN)
         )
 
@@ -512,12 +516,12 @@ def _cohort_overlap_studies(audit: pd.DataFrame) -> set[tuple[str, str]]:
     -------
     excluded : `set[tuple[str, str]]`
         `(outcome, study_accession)` pairs whose `reason` starts with
-        `Constants.COHORT_OVERLAP_REASON_PREFIX`.
+        `Gwas.COHORT_OVERLAP_REASON_PREFIX`.
     """
     if audit.empty:
         return set()
     overlap = audit[ColumnNames.REASON].str.startswith(
-        Constants.COHORT_OVERLAP_REASON_PREFIX
+        Gwas.COHORT_OVERLAP_REASON_PREFIX
     )
     return set(
         zip(
@@ -571,12 +575,12 @@ def _outcome_descriptions(
     """
     descriptions: dict[tuple[str, str], str] = {}
     grouped = icd_df.groupby(
-        [ColumnNames.OUTCOME, ColumnNames.EFO_ID], sort=False
+        [ColumnNames.OUTCOME, OutcomeColumns.EFO_ID], sort=False
     )
     for key, group in grouped:
         texts = [
             text
-            for text in dict.fromkeys(group[ColumnNames.DESCRIPTION])
+            for text in dict.fromkeys(group[OutcomeColumns.DESCRIPTION])
             if isinstance(text, str) and text.strip()
         ]
         descriptions[key] = "; ".join(texts)
@@ -621,7 +625,7 @@ def _study_mapped_traits(audit: pd.DataFrame) -> dict[str, tuple[str, str]]:
         `study_accession` -> `(mapped_trait_id, mapped_trait)`. Empty if
         the log predates these columns (warned; rerun gwas_cat_prep.py).
     """
-    columns = (ColumnNames.MAPPED_TRAIT_ID, ColumnNames.MAPPED_TRAIT)
+    columns = (OutcomeColumns.MAPPED_TRAIT_ID, OutcomeColumns.MAPPED_TRAIT)
     if audit.empty:
         return {}
     if not all(col in audit.columns for col in columns):
@@ -734,7 +738,7 @@ def _set_effect_scales(
     """
     hc = HarmonisedColumns
     scales = functions.infer_effect_scales(combined, audit)
-    Paths.RESULTS_OUTPUT.mkdir(parents=True, exist_ok=True)
+    Paths.OUTPUT.mkdir(parents=True, exist_ok=True)
     functions.write_table_atomic(scales, FileNames.STUDY_EFFECT_SCALE)
     log_info(
         f"wrote {len(scales)} studies to {FileNames.STUDY_EFFECT_SCALE}"
@@ -742,27 +746,27 @@ def _set_effect_scales(
     lookup = dict(
         zip(
             scales[ColumnNames.STUDY_ACCESSION],
-            scales[ColumnNames.STUDY_EFFECT_SCALE],
+            scales[StudyColumns.STUDY_EFFECT_SCALE],
         )
     )
     labelled = combined.copy()
     labelled[hc.STUDY_EFFECT_SCALE] = (
         labelled[hc.STUDY_ACCESSION].map(lookup).fillna(EffectScale.UNKNOWN)
     )
-    counts = scales[ColumnNames.STUDY_EFFECT_SCALE].value_counts()
+    counts = scales[StudyColumns.STUDY_EFFECT_SCALE].value_counts()
     log_info(
         "study effect scale: "
         + ", ".join(f"{scale}={n}" for scale, n in sorted(counts.items()))
     )
     for _, row in scales[
-        scales[ColumnNames.STUDY_EFFECT_SCALE] == EffectScale.CONFLICT
+        scales[StudyColumns.STUDY_EFFECT_SCALE] == EffectScale.CONFLICT
     ].iterrows():
         log_warn(
             f"effect scale conflict for {row[ColumnNames.STUDY_ACCESSION]}: "
-            f"method {row[ColumnNames.EFFECT_SCALE_METHOD]}, metadata "
-            f"{row[ColumnNames.EFFECT_SCALE_META]}, inferred "
-            f"{row[ColumnNames.EFFECT_SCALE_INFERRED]} (r_median "
-            f"{row[ColumnNames.R_MEDIAN]:.2f}, "
+            f"method {row[StudyColumns.EFFECT_SCALE_METHOD]}, metadata "
+            f"{row[StudyColumns.EFFECT_SCALE_META]}, inferred "
+            f"{row[StudyColumns.EFFECT_SCALE_INFERRED]} (r_median "
+            f"{row[StudyColumns.R_MEDIAN]:.2f}, "
             f"{row[MetaColumns.N_VARIANTS]} variants)"
         )
     return labelled
@@ -789,7 +793,7 @@ def _study_trait_labels(audit: pd.DataFrame) -> dict[str, str]:
     labels: dict[str, str] = {}
     if not audit.empty:
         for accession, trait in zip(
-            audit[ColumnNames.STUDY_ACCESSION], audit[ColumnNames.TRAIT]
+            audit[ColumnNames.STUDY_ACCESSION], audit[OutcomeColumns.TRAIT]
         ):
             if trait and accession not in labels:
                 labels[accession] = trait
@@ -854,19 +858,19 @@ def _expand_burden_outcomes(
             for disease_id, matches in disease_ids.items()
             for outcome, efo_id in matches
         ],
-        columns=["disease_id", ColumnNames.OUTCOME, ColumnNames.EFO_ID],
+        columns=["disease_id", ColumnNames.OUTCOME, OutcomeColumns.EFO_ID],
     )
     expanded = evidence.merge(pairs, on="disease_id", how="inner")
     expanded = expanded.sort_values(
-        [ColumnNames.OUTCOME, ColumnNames.EFO_ID], kind="stable"
+        [ColumnNames.OUTCOME, OutcomeColumns.EFO_ID], kind="stable"
     ).reset_index(drop=True)
-    expanded[ColumnNames.CHILD_TRAITS] = expanded[ColumnNames.OUTCOME].map(
+    expanded[OutcomeColumns.CHILD_TRAITS] = expanded[ColumnNames.OUTCOME].map(
         functions.includes_child_traits
     )
     expanded[HarmonisedColumns.OUTCOME_DESC] = [
         outcome_desc.get((outcome, efo_id), pd.NA)
         for outcome, efo_id in zip(
-            expanded[ColumnNames.OUTCOME], expanded[ColumnNames.EFO_ID]
+            expanded[ColumnNames.OUTCOME], expanded[OutcomeColumns.EFO_ID]
         )
     ]
     return expanded
@@ -903,7 +907,7 @@ def merge_results() -> None:
     ensembl_ids = dict(
         zip(
             genes_df[ColumnNames.GENE],
-            genes_df[ColumnNames.ENSEMBL_ID].fillna("").astype(str).str.strip(),
+            genes_df[GeneColumns.ENSEMBL_ID].fillna("").astype(str).str.strip(),
         )
     )
 
@@ -919,29 +923,29 @@ def merge_results() -> None:
     )
     parts = [summary, catalog_burden]
 
-    excluded = icd_df[ColumnNames.EFO_ID].isin(Constants.EXCLUDED_EFO_IDS)
+    excluded = icd_df[OutcomeColumns.EFO_ID].isin(Gwas.EXCLUDED_EFO_IDS)
     for efo_id, outcome in sorted(
         set(
             zip(
-                icd_df.loc[excluded, ColumnNames.EFO_ID],
+                icd_df.loc[excluded, OutcomeColumns.EFO_ID],
                 icd_df.loc[excluded, ColumnNames.OUTCOME],
             )
         )
     ):
-        log_info(f"{efo_id} ({outcome}) in Constants.EXCLUDED_EFO_IDS, skipped")
+        log_info(f"{efo_id} ({outcome}) in Gwas.EXCLUDED_EFO_IDS, skipped")
     # excluded ids are dropped for both curated and gene-burden evidence
     outcome_efo_ids = (
         icd_df[
-            ~icd_df[ColumnNames.EFO_ID].isin(["", Constants.NA_STRING])
+            ~icd_df[OutcomeColumns.EFO_ID].isin(["", Const.NA])
             & ~excluded
         ]
-        .groupby(ColumnNames.OUTCOME)[ColumnNames.EFO_ID]
+        .groupby(ColumnNames.OUTCOME)[OutcomeColumns.EFO_ID]
         .unique()
     )
 
     regions = {
         gene_row[ColumnNames.GENE]: functions.gene_row_region(
-            gene_row, Constants.GENE_COORD_FLANK_BP
+            gene_row, Const.GENE_FLANK_BP
         )
         for _, gene_row in genes_df.iterrows()
     }
@@ -968,7 +972,7 @@ def merge_results() -> None:
         in_region: dict[str, int] = {}
         for gene, region in regions.items():
             curated = functions.filter_curated_associations(
-                records, region, Constants.MAF_THRESHOLD
+                records, region, Gwas.MAF_THR
             )
             in_region[gene] = len(curated)
             curated_by_gene_query[(gene, efo_id, child_traits)] = curated
@@ -1008,8 +1012,8 @@ def merge_results() -> None:
                 if not curated.empty:
                     curated[ColumnNames.GENE] = gene
                     curated[ColumnNames.OUTCOME] = outcome
-                    curated[ColumnNames.EFO_ID] = efo_id
-                    curated[ColumnNames.CHILD_TRAITS] = child_traits
+                    curated[OutcomeColumns.EFO_ID] = efo_id
+                    curated[OutcomeColumns.CHILD_TRAITS] = child_traits
                     curated[HarmonisedColumns.OUTCOME_DESC] = (
                         outcome_desc.get((outcome, efo_id), pd.NA)
                     )
@@ -1037,7 +1041,7 @@ def merge_results() -> None:
                     parts.append(harmonised)
 
         ensembl_id = ensembl_ids[gene]
-        if ensembl_id in ("", Constants.NA_STRING):
+        if ensembl_id in ("", Const.NA):
             log_warn(f"{gene}: no Ensembl id, gene-burden skipped")
             burden_rows[gene] = 0
             continue
@@ -1092,7 +1096,7 @@ def merge_results() -> None:
     )
 
     log_stage("write")
-    Paths.RESULTS_OUTPUT.mkdir(parents=True, exist_ok=True)
+    Paths.OUTPUT.mkdir(parents=True, exist_ok=True)
     functions.write_table_atomic(combined, FileNames.MERGED_ASSOCIATIONS)
     log_info(f"wrote {len(combined)} rows to {FileNames.MERGED_ASSOCIATIONS}")
 

@@ -44,12 +44,13 @@ import plot_misc.forest as forest
 import figure_utils as futils
 from pathlib import Path
 from project_constants import (
-        Constants,
+        Apoe,
         FigureColumns as FCols,
         FigureNames as FigNames,
         FigureStyle as FStyle,
         FileNames,
         HarmonisedColumns,
+        Marvel,
         MarvelColumns,
         MetaColumns,
         Paths,
@@ -71,7 +72,7 @@ parser = argparse.ArgumentParser(
                        'into results/.'))
 parser.add_argument('-m', '--model',
                     type = str,
-                    default = Constants.MARVEL_DEFAULT_MODEL,
+                    default = Marvel.DEFAULT_MODEL,
                     help = 'marvel model (default: %(default)s)')
 parser.add_argument('-r', '--results-dir',
                     type = Path,
@@ -80,7 +81,7 @@ parser.add_argument('-r', '--results-dir',
                             '(default: %(default)s)'))
 parser.add_argument('-o', '--out-dir',
                     type = Path,
-                    default = Paths.RESULTS_FIGURES,
+                    default = Paths.FIGURES,
                     help = 'output directory (default: %(default)s)')
 parser.add_argument('--max-or',
                     type = float,
@@ -104,7 +105,7 @@ OUTCOME_GROUP = 'outcome_name'
 MARVEL_REMARKS = 'remarks'
 # marvel variable -> outcome key (`FigNames.OUTCOMES`)
 APOE_OUTCOMES = {
-    **Constants.MARVEL_UKB_OUTCOMES,
+    **Marvel.UKB_OUTCOMES,
     'ascvd_ii': 'ascvd',
 }
 # diplotypes, each vs all other diplotypes, in plotting order: ε2 dose
@@ -135,7 +136,7 @@ SUBSET_POPULATIONS = {
 }
 # marvel exposure = carrier column of apoe_exposure.py, e.g. APOE_e4e4
 APOE_EXPOSURE_RE = re.compile(
-    rf'^{re.escape(Constants.APOE_DIPLOTYPE_PREFIX)}(?P<genotype>\S+)$')
+    rf'^{re.escape(Apoe.DIPLOTYPE_PREFIX)}(?P<genotype>\S+)$')
 REQUIRED = [
     MarvelColumns.MODEL_NAME,
     MarvelColumns.VARIABLE,
@@ -194,10 +195,10 @@ if MARVEL_REMARKS in gen_df.columns:
 gen_df[GENOTYPE] = gen_df[MarvelColumns.EXPOSURE].astype(str).str.extract(
         APOE_EXPOSURE_RE)['genotype']
 unknown = sorted(set(gen_df[GENOTYPE].dropna())
-                 - set(Constants.APOE_GENOTYPES))
+                 - set(Apoe.GENOTYPES))
 if unknown:
-    raise ValueError(f'genotype(s) {unknown} not in Constants.APOE_GENOTYPES '
-                     f'{Constants.APOE_GENOTYPES}')
+    raise ValueError(f'genotype(s) {unknown} not in Apoe.GENOTYPES '
+                     f'{Apoe.GENOTYPES}')
 
 # model, outcomes and genotypes vs the reference
 gen_df = gen_df[(gen_df[MarvelColumns.MODEL_NAME] == args.model) &

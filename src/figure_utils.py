@@ -49,7 +49,8 @@ from pathlib import Path
 from matplotlib.lines import Line2D
 from matplotlib.ticker import MaxNLocator
 from project_constants import (
-        Constants,
+        Burden,
+        Const,
         FigureColumns as FCols,
         FigureNames as FigNames,
         FigureStyle as FStyle,
@@ -265,9 +266,9 @@ def burden_path(ancestry: str, label: str, extra: str = '') -> Path:
     Returns
     -------
     path : `Path`
-        In `Paths.RESULTS_OUTPUT`.
+        In `Paths.OUTPUT`.
     """
-    return Paths.RESULTS_OUTPUT / FileNames.BURDEN_TEMPLATE.format(
+    return Paths.OUTPUT / FileNames.BURDEN_TEMPLATE.format(
         ancestry = ancestry, suffix = f'_{label}{extra}'
     )
 
@@ -327,14 +328,14 @@ def load_burden(path: Path, keep_lipids: bool = False
     path : `Path`
         A `meta_analysis.py` burden file.
     keep_lipids : `bool`, optional, default: `False`
-        Keep the `Constants.LIPID_OUTCOMES` rows (linear effects, their
+        Keep the `Const.LIPID_OUTCOMES` rows (linear effects, their
         `add_or` columns are meaningless); by default they are dropped
         (logged), so the result holds binary outcomes only.
 
     Returns
     -------
     burden : `pd.DataFrame` or `None`
-        Rows of genes not in `Constants.EXCLUDED_GENES` with a finite beta
+        Rows of genes not in `Const.EXCLUDED_GENES` with a finite beta
         and SE (in the therapeutic direction, as `meta_analysis.py`
         writes them), plus the `add_or` columns; `None` (logged) when the
         file does not exist.
@@ -355,15 +356,15 @@ def load_burden(path: Path, keep_lipids: bool = False
             'effects are in the old lower-function direction; re-run '
             'meta_analysis.py')
     is_excluded = burden[VariantListColumns.OUT_GENE].isin(
-        Constants.EXCLUDED_GENES)
+        Const.EXCLUDED_GENES)
     if is_excluded.any():
         LOGGER.info(
             f'{path.name}: {int(is_excluded.sum())} rows of excluded '
-            f'gene(s) {", ".join(Constants.EXCLUDED_GENES)} dropped'
+            f'gene(s) {", ".join(Const.EXCLUDED_GENES)} dropped'
         )
         burden = burden.loc[~is_excluded]
     is_lipid = burden[HarmonisedColumns.OUTCOME].isin(
-        Constants.LIPID_OUTCOMES)
+        Const.LIPID_OUTCOMES)
     if is_lipid.any() and not keep_lipids:
         LOGGER.info(f'{path.name}: {int(is_lipid.sum())} lipid rows '
                     'dropped (not on the OR scale)')
@@ -592,7 +593,7 @@ def burden_exposure(gene: str, variant_set: str, variants: object) -> str:
     gene : `str`
         Variant-list gene.
     variant_set : `str`
-        Variant set (`Constants.BURDEN_VARIANT_SETS` key, the mask).
+        Variant set (`Burden.VARIANT_SETS` key, the mask).
     variants : `object`
         The row's `MetaColumns.VARIANTS` (sites joined by ``;``), may be
         NA.
@@ -605,7 +606,7 @@ def burden_exposure(gene: str, variant_set: str, variants: object) -> str:
         picked it), else ``<gene>_<set>``.
     """
     base = f'{gene}_{variant_set}'
-    fallback = f'{base}{Constants.BURDEN_FALLBACK_SUFFIX}'
+    fallback = f'{base}{Burden.FALLBACK_SUFFIX}'
     sites = _exposure_sites()
     if (isinstance(variants, str) and sites.get(fallback) == variants
             and sites.get(base) != variants):
@@ -651,7 +652,7 @@ def add_carrier_text(data: pd.DataFrame, study_col: str,
             texts.append('')
             continue
         exposed, cases, samples = counts[key]
-        total = samples if outcome in Constants.LIPID_OUTCOMES else cases
+        total = samples if outcome in Const.LIPID_OUTCOMES else cases
         if np.isfinite(exposed) and np.isfinite(total):
             texts.append(f'{exposed:,.0f} / {total:,.0f}')
         else:
