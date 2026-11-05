@@ -109,15 +109,6 @@ class Gwas:
             "vascular_dementia",
         }
     )
-<<<<<<< HEAD
-    ICD10_CODE_PATTERN: str = r"^[A-Z]\d{2}$"
-    EFO_ID_PATTERN: str = r"^EFO[:_]\d+$"
-    GWAS_CATALOG_API_V2: str = "https://www.ebi.ac.uk/gwas/rest/api/v2"
-    # the default (20) hits biomed-api's 500-page cap (10k records) for
-    # large traits; 500 (the REST v2 maximum) can exceed biomed-api's 60s
-    # read timeout per page, 200 takes ~20s (cap 100k records)
-    GWAS_CATALOG_PAGE_SIZE: int = 200
-=======
     # extra Open Targets disease IDs queried alongside an outcome ID
     OT_EXTRA_DISEASE_IDS: dict[str, tuple[str, ...]] = {}
     # outcome -> efo_id applied in memory when the resolved term is wrong
@@ -165,7 +156,6 @@ class Gwas:
 
 class Api:
     """External API endpoints and request settings."""
->>>>>>> 4d55180a50d0b4b87e17209ed7c66e1f0af56433
     # seconds slept before each retry of a failed (5xx/timeout) REST call
     RETRY_BACKOFF: tuple[int, ...] = (30, 60, 120)
     NCBI_ESUMMARY: str = (
@@ -862,86 +852,6 @@ class Ancestry:
     CATEGORY_SPLIT_PATTERN: str = r",\s*(?![^()]*\))"
 
 
-<<<<<<< HEAD
-class VariantListColumns:
-    """Columns of the per-gene `*_variants.tsv` lists and the columns
-    `match_variants.py` adds to the matched GWAS rows.
-
-    `A1` is taken to be the GRCh38 reference allele and `A2` the
-    alternate allele.
-    """
-    CHROM: str = "chr"
-    POS: str = "pos"
-    A1: str = "a1"
-    A2: str = "a2"
-    SOURCE: str = "source"
-    GENE: str = "gene"
-    AM_PATHOGENICITY: str = "am_pathogenicity"
-    TRI_CLASS: str = "tri_class"
-    # pos/a1/a2 before normalisation, and its `NormStatus`
-    POS_ORIG: str = "pos_orig"
-    A1_ORIG: str = "a1_orig"
-    A2_ORIG: str = "a2_orig"
-    NORM_STATUS: str = "norm_status"
-    # normalised ``chr:pos:a1:a2`` (combine_variants.py); the marvel
-    # exposure name of the variant
-    VARIANT_ID: str = "variant_id"
-    MASK: str = "mask"
-    # variant label column of the per-gene marvel extraction lists
-    MARVEL_ID: str = "ID"
-    # ClinVar P/LP rows only: a `ClinVarDirection` value (NA otherwise)
-    CLINVAR_DIRECTION: str = "clinvar_direction"
-    # `FileNames.SELECTED_VARIANTS` only: figure label (rsID / protein
-    # change); not carried into the combined list
-    NAME: str = "name"
-    # added to the matched output, after the merged-associations columns
-    OUT_SOURCE: str = "variant_list_source"
-    OUT_GENE: str = "variant_list_gene"
-    OUT_A1: str = "variant_list_a1"
-    OUT_A2: str = "variant_list_a2"
-    OUT_TRI_CLASS: str = "variant_list_tri_class"
-    OUT_POS_ORIG: str = "variant_list_pos_orig"
-    OUT_A1_ORIG: str = "variant_list_a1_orig"
-    OUT_A2_ORIG: str = "variant_list_a2_orig"
-    OUT_NORM_STATUS: str = "variant_list_norm_status"
-    OUT_CLINVAR_DIRECTION: str = "variant_list_clinvar_direction"
-    # "a2" or "a1": which list allele is the GWAS effect allele
-    EFFECT_ALLELE_IS: str = "effect_allele_is"
-    # "both" (effect + other allele) or "effect_only" (curated rows)
-    MATCH_ALLELES: str = "match_alleles"
-
-
-class VepCsqColumns:
-    """Columns of `FileNames.VEP_CSQ` (header written by vep_extract.sh;
-    the CSQ ones are the VEP/LOFTEE field names) and the extra columns of
-    `FileNames.PTV_VARIANTS`.
-    """
-    CHROM: str = "chr"
-    POS: str = "pos"
-    REF: str = "ref"
-    ALT: str = "alt"
-    AF: str = "AF"
-    AC: str = "AC"
-    ALLELE: str = "Allele"
-    CONSEQUENCE: str = "Consequence"
-    IMPACT: str = "IMPACT"
-    SYMBOL: str = "SYMBOL"
-    GENE_ID: str = "Gene"
-    FEATURE: str = "Feature"
-    BIOTYPE: str = "BIOTYPE"
-    CANONICAL: str = "CANONICAL"
-    HGVSC: str = "HGVSc"
-    HGVSP: str = "HGVSp"
-    LOF: str = "LoF"
-    LOF_FILTER: str = "LoF_filter"
-    LOF_FLAGS: str = "LoF_flags"
-    LOF_INFO: str = "LoF_info"
-    # PTV_VARIANTS: the gene_list.txt symbol of the variant
-    GENE: str = "gene"
-
-
-=======
->>>>>>> 4d55180a50d0b4b87e17209ed7c66e1f0af56433
 class MetaColumns:
     """Columns derived and written by `meta_analysis.py`, and the columns
     it pools by.
@@ -1069,59 +979,11 @@ class MarvelColumns:
         P_VALUE,
     )
 
-<<<<<<< HEAD
-
-class MarvelRun:
-    """File suffixes and columns of a MARVELous (TOML) run directory
-    (`Paths.MARVEL_RUN`): extract writes ``<chunk>.<suffix>`` per
-    genotype file, aggregate/associate ``<prefix>.<suffix>``.
-    """
-    CARRIERS_SUFFIX: str = ".carriers.tsv.gz"
-    VARIANTS_SUFFIX: str = ".variants.tsv.gz"
-    SAMPLES_SUFFIX: str = ".samples.tsv.gz"
-    SENTINEL_SUFFIX: str = ".SUCCESS"
-    RESULTS_SUFFIX: str = ".results.tsv.gz"
-    # chunk carriers (long, sparse) and samples
-    ID: str = "id"
-    VARIANT: str = "variant"
-    DOSAGE: str = "dosage"
-    # chunk variant summary
-    CHROM: str = "chrom"
-    POS: str = "pos"
-    REF: str = "ref"
-    ALT: str = "alt"
-    N_CARRIERS: str = "n_carriers"
-    N_MISSING: str = "n_missing"
-    STATUS: str = "status"
-    # statuses whose genotypes were read
-    READ_STATUS: tuple[str, ...] = ("found", "swapped")
-    # association results
-    EXPOSURE: str = "exposure"
-    STRATUM: str = "stratum"
-    COVARIATE_MODEL: str = "covariate_model"
-    OUTCOME: str = "outcome"
-    TEST: str = "test"
-    TERM: str = "term"
-    N_CASES: str = "n_cases"
-    N_SAMPLES: str = "n_samples"
-    N_EXPOSED: str = "n_exposed"
-    ESTIMATE: str = "estimate"
-    SE: str = "se"
-    P_VALUE: str = "p_value"
-    FORMATTED: str = "formatted"
-    REMARKS: str = "remarks"
-    OVERALL: str = "overall"
-    # `FORMATTED` of the strata_ref reference row (term
-    # ``<exposure>: <strata_ref>``, NA estimate, n_exposed = non-carriers)
-    REFERENCE: str = "reference"
-
-=======
 class ConditionDirectionColumns:
     """Columns of `FileNames.CLINVAR_CONDITION_DIRECTION`."""
     GENE: str = "gene"
     CONDITION: str = "rcv_condition"
     DIRECTION: str = "direction"
->>>>>>> 4d55180a50d0b4b87e17209ed7c66e1f0af56433
 
 class MarvelCompareColumns:
     """Columns of the compare_marvel_runs.py outputs. A variant key is
@@ -1428,9 +1290,6 @@ class FileNames:
     BURDEN_MASK_VARIANTS_TEMPLATE: str = str(
         Paths.DATA_PROC / "lipid_mask_variants{suffix}.tsv.gz"
     )
-    BURDEN_MASK_VARIANTS_TEMPLATE: str = str(
-                Paths.DATA_PROC / "lipid_mask_variants{suffix}.tsv.gz"
-                )
     MARVEL_BURDEN_TASKS: Path = Paths.DATA_RAW / "marvel_burden_tasks.tsv"
     # marvel run of APOE diplotype -> outcomes: its own job array, so its
     # results never enter marvel_results.tsv as variants
