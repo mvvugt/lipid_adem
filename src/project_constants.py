@@ -5,60 +5,57 @@ lipid_adem constants
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# imports
+# IMPORTS
 
 from __future__ import annotations
-
 from pathlib import Path
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Paths
+# PATHS
 
 class Paths:
     """Project paths, anchored to this file's location in the repo."""
+    ## main repo paths
     HERE: Path = Path(__file__).resolve().parent.parent
     DATA_RAW: Path = HERE / "data" / "raw"
     DATA_TEMP: Path = HERE / "data" / "temp"
     DATA_PROC: Path = HERE / "data" / "processed"
-    GWAS_FILTERED: Path = DATA_TEMP / "gwas_filtered"
-    # gzipped JSON per Ensembl overlap window / rsid lookup; delete a file
-    # to refetch it
-    ENSEMBL_CACHE: Path = DATA_TEMP / "ensembl_cache"
+    LOGS: Path = HERE / "logs"
+    # NOTE modify to remove RESULTS_ here and throughout repo
     RESULTS_OUTPUT: Path = HERE / "results" / "output"
-    # per-gene marvel result stores (`marvel_results_table.py`)
+    RESULTS_FIGURES: Path = HERE / "results" / "figures"
+    # subdir of figure `--out-dir` for figures not in `FigureNames.MAIN_FIGURES`
+    FIGURES_SENSITIVITY: str = "sensitivity"
+    # per-gene marvel result stores
     MARVEL_STORE: Path = HERE / "results" / "marvel"
-    # carrier-burden runs (burden_exposure.py): cnfs and per-task outdirs
+    ## gwas pipeline paths
+    GWAS_FILTERED: Path = DATA_TEMP / "gwas_filtered"
+    # gzipped JSON per Ensembl overlap window / rsid lookup
+    ENSEMBL_CACHE: Path = DATA_TEMP / "ensembl_cache"
+    # must match `log_dir` in config/filter_task.cnf
+    FILTER_TASK_LOGS: Path = HERE / "src" / "logs" / "filter_task_logs"
+    ## burden directories
+    # NOTE remove MARVEL_
     MARVEL_BURDEN_CONFIG: Path = HERE / "config" / "marvel_burden"
     MARVEL_BURDEN_OUT: Path = HERE / "results" / "marvel_burden"
-    # MARVELous two-source run (submit_two_source.sh, Snellius): extract
-    # chunks plus the burden and per-variant aggregate/associate outputs
+    # MARVELous chunks, burden, per-variant extract/associate outputs
     MARVEL_RUN: Path = DATA_TEMP / "marvel"
+    # NOTE remove once validation is completed
     # old vs new marvel run comparison (compare_marvel_runs.py): counts
     # only here, the individual-level output in MARVEL_COMPARISON_TEMP
     MARVEL_COMPARISON: Path = HERE / "results" / "marvel_comparison"
     MARVEL_COMPARISON_TEMP: Path = DATA_TEMP / "marvel_comparison"
-    RESULTS_FIGURES: Path = HERE / "results" / "figures"
-    # archived result batches (archive_results.py): <tag>/<group>/; the
-    # hand-written README text per group lives in RESULTS_README_TEXT
-    # (not "archive": .gitignore ignores *archive*/)
+    ## archived result directories
     RESULTS_ARCHIVE: Path = HERE / "results" / "archive"
     RESULTS_README_TEXT: Path = HERE / "config" / "results_readmes"
-    # subfolder of a figure `--out-dir` for figures not in
-    # `FigureNames.MAIN_FIGURES`
-    FIGURES_SENSITIVITY: str = "sensitivity"
-    LOGS: Path = HERE / "logs"
-    # must match `log_dir` in config/filter_task.cnf
-    FILTER_TASK_LOGS: Path = HERE / "src" / "logs" / "filter_task_logs"
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Effect scales
+# EFFECT SCALES
 
 class EffectScale:
-    """Values of `effect_scale_meta` and `study_effect_scale`: the scale
-    of a study's betas for a binary outcome.
-    """
+    """Scale of a study's betas for a binary outcome."""
     # logistic regression (SAIGE, REGENIE with Firth, PLINK, GLM-Binom)
     LOG_OR: str = "log_or"
     # linear model on a 0/1 outcome (BOLT-LMM, linear REGENIE, OLS)
@@ -74,33 +71,36 @@ class EffectScale:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Constants
+# CONSTANTS
 
+# NOTE please shorten constant names, e.g. population=pop, column=col, reference=ref, etc
+# NOTE WAY TO LONG! Please subdivide in categories, I have proposed some.
+# NOTE shorten comments to max one sentence, with actual explanation in files where they are used or other documentation (and refer to those if necessary)
 class Constants:
     """Pipeline thresholds and external API endpoints (gwas_cat.md)."""
-    # MAF cutoff of the filter step and the curated associations; `None`
-    # keeps every in-region row whatever its frequency (also rows without
-    # one), since listed variants can be common in some ancestries.
-    # match_variants.py keeps only the listed variants.
+    ### general constants
+    GRCH_BUILD: str = "GRCh38"
+    # NOTE NA_STRING can be used much more widely right? move explanation and generalise if possible
+    # written to a gene-table cell that was looked up but not found;
+    # treated as resolved on reruns (clear the cell by hand to retry)
+    NA_STRING: str = "NA"
+    # identifier column of `FileNames.UKB_PHENO`
+    UKB_ID_COLUMN: str = "f.eid"
+    # genetic ancestry column and its values that make up the UKB EUR subset
+    UKB_POPULATION_COLUMN: str = "population"
+    UKB_EUR_POPULATIONS: tuple[str, ...] = ("eur_related", "eur_unrelated")
+    ### gwas pipeline settings
+    # MAF cutoff of the filter step and the curated associations
+    # NOTE move this to documentation/script where used: `None` keeps every in-region row whatever its frequency (also rows witho one), since listed variants can be common in some ancestries. match_variants.py keeps only the listed variants.
+    ## constants
     MAF_THRESHOLD: float | None = None
     GENE_COORD_FLANK_BP: int = 10_000
     MAX_STUDIES_PER_OUTCOME: int = 10
     # overall ceiling per child-trait search, on top of the per-term cap
     MAX_STUDIES_PER_CHILD_QUERY: int = 30
-    # trait IDs never searched: MONDO_0011057 (I67.3, Binswanger disease)
-    # expands via child traits to general cerebrovascular disease (stroke,
-    # TIA, aneurysm) rather than dementia
+    # trait IDs never searched
+    # NOTE move explanation somewhere else: MONDO_0011057 (I67.3, Binswanger disease) expands via child traits to general cerebrovascular disease (stroke, TIA, aneurysm) rather than dementia
     EXCLUDED_EFO_IDS: frozenset[str] = frozenset({"MONDO_0011057"})
-    NCBI_ESUMMARY_URL: str = (
-        "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
-    )
-    PUBMED_BATCH_SIZE: int = 200
-    GRCH_BUILD: str = "GRCh38"
-    EBI_OLS_SEARCH_URL: str = "https://www.ebi.ac.uk/ols/api/search"
-    # term lookup by obo_id; also serves MONDO terms imported into EFO
-    EBI_OLS_TERMS_URL: str = (
-        "https://www.ebi.ac.uk/ols4/api/ontologies/efo/terms"
-    )
     # obsolete term -> replacement chain length followed before giving up
     MAX_REPLACEMENT_HOPS: int = 5
     # outcomes whose trait IDs also match GWAS Catalog child traits (broad);
@@ -115,137 +115,103 @@ class Constants:
             "vascular_dementia",
         }
     )
-    ICD10_CODE_PATTERN: str = r"^[A-Z]\d{2}$"
-    EFO_ID_PATTERN: str = r"^EFO[:_]\d+$"
-    GWAS_CATALOG_API_V2: str = "https://www.ebi.ac.uk/gwas/rest/api/v2"
-    # the default (20) hits biomed-api's 500-page cap (10k records) for
-    # large traits; 500 (the REST v2 maximum) can exceed biomed-api's 60s
-    # read timeout per page, 200 takes ~20s (cap 100k records)
-    GWAS_CATALOG_PAGE_SIZE: int = 200
+    # extra Open Targets disease IDs queried alongside an outcome ID
+    OPEN_TARGETS_EXTRA_DISEASE_IDS: dict[str, tuple[str, ...]] = {}
+    # NOTE reduce explanation
+    # outcome -> efo_id applied in memory over icd_codes.txt (never written
+    # back, so the raw file stays as-is), for outcomes whose resolved
+    # efo_id is the wrong term; none needed currently
+    OUTCOME_EFO_OVERRIDES: dict[str, str] = {}
+    UNIPROT_HUMAN_TAXON: int = 9606
+    # gene regions are fetched from Ensembl overlap/region in windows of
+    # this size: ~1.3 variant records per bp, so ~6.5k records per call
+    ENSEMBL_OVERLAP_WINDOW_BP: int = 5_000
+    # warn about study if fraction/min rows not_found/mismatch against Ensembl
+    ENSEMBL_BAD_FRACTION_WARN: float = 0.5
+    ENSEMBL_BAD_MIN_ROWS: int = 20
+    ### API settings
     # seconds slept before each retry of a failed (5xx/timeout) REST call
     HTTP_RETRY_BACKOFF: tuple[int, ...] = (30, 60, 120)
+    ## API urls
+    NCBI_ESUMMARY_URL: str = (
+        "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
+    )
+    EBI_OLS_SEARCH_URL: str = "https://www.ebi.ac.uk/ols/api/search"
+    # term lookup by obo_id; also serves MONDO terms imported into EFO
+    EBI_OLS_TERMS_URL: str = (
+        "https://www.ebi.ac.uk/ols4/api/ontologies/efo/terms"
+    )
+    GWAS_CATALOG_API_V2: str = "https://www.ebi.ac.uk/gwas/rest/api/v2"
     GWAS_CATALOG_FTP_BASE: str = (
         "https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics"
     )
     OPEN_TARGETS_GRAPHQL_URL: str = (
         "https://api.platform.opentargets.org/api/v4/graphql"
     )
+    ## automatic search batch sizes
+    PUBMED_BATCH_SIZE: int = 200
+    # NOTE reduce comment to recommendation and why, such as recommended 200-500 to avoid biomed-api page and timeout caps
+    # the default (20) hits biomed-api's 500-page cap (10k records) for
+    # large traits; 500 (the REST v2 maximum) can exceed biomed-api's 60s
+    # read timeout per page, 200 takes ~20s (cap 100k records)
+    GWAS_CATALOG_PAGE_SIZE: int = 200
+    ### regex patterns
+    ICD10_CODE_PATTERN: str = r"^[A-Z]\d{2}$"
+    EFO_ID_PATTERN: str = r"^EFO[:_]\d+$"
     OPEN_TARGETS_PAGE_SIZE: int = 1000
-    # extra Open Targets disease IDs queried alongside an outcome ID; none
-    # needed currently
-    OPEN_TARGETS_EXTRA_DISEASE_IDS: dict[str, tuple[str, ...]] = {}
-    # outcome -> efo_id applied in memory over icd_codes.txt (never written
-    # back, so the raw file stays as-is), for outcomes whose resolved
-    # efo_id is the wrong term; none needed currently
-    OUTCOME_EFO_OVERRIDES: dict[str, str] = {}
-    # GWAS Catalog studies whose disease_trait matches this (case-
-    # insensitive) are copy-number-variant association models, not SNP
-    # GWAS; the REST API has no CNV flag, unlike gxe/gxg
+    # match cnv-studies to exclude from gwas catalog results
     CNV_TRAIT_PATTERN: str = r"\bCNV\b|copy[- ]number"
-    # disease_trait of X-chromosome-only analyses (e.g. "(r-XCI
-    # inactivation)"); no gene in gene_list.txt is on X, so they can
-    # never return rows
+    # match x-specific studies to exclude from gwas catalog results
     X_CHROM_TRAIT_PATTERN: str = r"\bXCI\b|X[- ]chromosom|\bXWAS\b"
-    # written to a gene-table cell that was looked up but not found;
-    # treated as resolved on reruns (clear the cell by hand to retry)
-    NA_STRING: str = "NA"
-    UNIPROT_HUMAN_TAXON: int = 9606
-    # gene regions are fetched from Ensembl overlap/region in windows of
-    # this size: ~1.3 variant records per bp, so ~6.5k records per call
-    ENSEMBL_OVERLAP_WINDOW_BP: int = 5_000
-    # a study is warned about when more than this fraction of its rows is
-    # not_found/mismatch against Ensembl (e.g. a GRCh37 file)
-    ENSEMBL_BAD_FRACTION_WARN: float = 0.5
-    # ... but only when it has at least this many variant rows
-    ENSEMBL_BAD_MIN_ROWS: int = 20
-    # GWAS result sources with single variants (gene-burden has none)
+    ### variant sources
+    ## source files
+    # GWAS result sources with single variants
     VARIANT_LEVEL_SOURCES: tuple[str, ...] = ("summary-stats", "curated")
-    # `source` of gene-level rows (Open Targets, marvel carrier masks)
+    # Open Targets gene-burden
     GENE_BURDEN_SOURCE: str = "gene-burden"
-    # variant-list source flipped in the meta-analysis so the a1 allele's
-    # effect is reported
+    # variants flipped in meta-analysis so the a1 allele's effect is reported
     GOF_VARIANT_SOURCE: str = "GoF"
-    # variant-list source of single GoF variants reported one by one
-    # (`FileNames.SELECTED_VARIANTS`): flipped as GoF, in no burden mask
+    # single GoF variants reported one by one (`FileNames.SELECTED_VARIANTS`)
     SELECTED_GOF_VARIANT_SOURCE: str = "SelectedGoF"
-    # variant-list source of the ClinVar P/LP entries
-    # (`FileNames.PLP_VARIANTS`, combine_variants.py)
+    # ClinVar P/LP entries (`FileNames.PLP_VARIANTS`, combine_variants.py)
     CLINVAR_VARIANT_SOURCE: str = "ClinVar"
-    # variant-list source of the VEP/LOFTEE PTVs (`FileNames.PTV_VARIANTS`,
-    # annotate_ptv.py): LoF = `LOFTEE_KEEP` on the transcript where
-    # CANONICAL = `VEP_CANONICAL`, of the gene_list.txt Ensembl gene
+    # VEP/LOFTEE PTVs (`FileNames.PTV_VARIANTS`, annotate_ptv.py)
     PTV_VARIANT_SOURCE: str = "PTV"
+    # AlphaMissense missense (`FileNames.AM_VARIANTS`)
+    AM_VARIANT_SOURCE: str = "AM"
+    ## annotation constants
     LOFTEE_KEEP: str = "HC"
     VEP_CANONICAL: str = "YES"
-    # variant-list source of the AlphaMissense missense variants of the old
-    # per-gene lists (`FileNames.AM_VARIANTS`); only `AM_KEEP_CLASSES`
-    # (`tri_class`) are listed, as lower gene function (not flipped)
-    AM_VARIANT_SOURCE: str = "AM"
     AM_KEEP_CLASSES: tuple[str, ...] = ("Pathogenic/Likely pathogenic",)
-    # marvel extraction lists (combine_variants.py): the `ID` of a
-    # variant's form before normalisation is its `variant_id` + this
-    # suffix, so both forms are extracted and collapsed afterwards
+    ## marvel settings
+    # variant `ID` before normalisation is `variant_id` + `ORIG_ID_SUFFIX`
     # (docs/rap_carrier_extraction.md)
     ORIG_ID_SUFFIX: str = "_orig"
+    # MNVs that UKB stores as separate SNVs: normalised list `variant_id`
+    # -> proxy SNV (``chr:pos:a1:a2``), whose carriers are exactly the MNV
+    # carriers. chr1:62597616:CC:GA: 616 C>G and 617 C>A always together
+    # (50/50 plink, 43/43 VEP carriers, checked 2026-11-05); recheck when
+    # the full 500K VEP data are used (docs/variant_matching.md).
+    MNV_PROXIES: dict[str, str] = {
+        "chr1:62597616:CC:GA": "chr1:62597616:C:G",
+    }
     # assembly suffix of the P/LP coordinate columns used for matching
     PLP_ASSEMBLY_SUFFIX: str = "_grch38"
-    # variant-list genes left out of meta_analysis.py and the figures
-    # (figure_utils.load_burden).
-    # APOE is out of gene_list.txt (2026-10-08); this drops it from the
-    # matched tables and burden files built before that, until the
-    # upstream steps are rerun. APOE genotype itself is analysed as an
-    # exposure (`FileNames.MARVEL_APOE_TASKS`)
-    EXCLUDED_GENES: tuple[str, ...] = ("APOE",)
-    # gene -> how its drugs change gene function (`TherapyDirection`).
+    # how its drugs change gene function (`TherapyDirection`).
+    # NOTE rest of explanation somewhere else please
     # meta_analysis.py orients every effect to lower function and then
     # flips the `RAISING` genes, so every written effect is that of
     # mimicking therapy (`MetaColumns.THERAPY_DIRECTION` in its output)
     THERAPY_DIRECTION: dict[str, str] = {
-        "CETP": "lowering",    # CETP inhibitors (anacetrapib, obicetrapib)
-        "HMGCR": "lowering",   # statins
-        "NPC1L1": "lowering",  # ezetimibe
-        "PCSK9": "lowering",   # PCSK9 mAbs, inclisiran
-        "ANGPTL3": "lowering", # evinacumab
-        "APOB": "lowering",    # mipomersen
-        "PPARA": "raising",    # fibrates (PPARα agonists)
-        "APOA1": "raising",    # ApoA-I infusion (CSL112)
+        "CETP": "lowering",     # CETP inhibitors (anacetrapib, obicetrapib)
+        "HMGCR": "lowering",    # statins
+        "NPC1L1": "lowering",   # ezetimibe
+        "PCSK9": "lowering",    # PCSK9 mAbs, inclisiran
+        "ANGPTL3": "lowering",  # evinacumab
+        "APOB": "lowering",     # mipomersen
+        "PPARA": "raising",     # fibrates (PPARα agonists)
+        "APOA1": "raising",     # ApoA-I infusion (CSL112)
     }
-    # identifier column of `FileNames.UKB_PHENO`
-    UKB_ID_COLUMN: str = "f.eid"
-    # genetic ancestry/relatedness column of `FileNames.UKB_PHENO` and
-    # its values that make up the UKB EUR subset (related + unrelated)
-    UKB_POPULATION_COLUMN: str = "population"
-    UKB_EUR_POPULATIONS: tuple[str, ...] = ("eur_related", "eur_unrelated")
-    # APOE genotype column of `FileNames.UKB_PHENO` (values e2e2 ... e4e4,
-    # see `ApoeStratum.GENOTYPES`) and the reference genotype of the APOE
-    # strata. The marvel APOE diplotype run does not test this column
-    # itself: apoe_exposure.py turns it into one 0/1 carrier column per
-    # diplotype (1 = that diplotype, 0 = every other genotype)
-    UKB_APOE_COLUMN: str = "genotype"
-    UKB_APOE_REFERENCE: str = "e3e3"
-    # `gene` of the APOE diplotype run in `FileNames.MARVEL_APOE_TASKS`
-    # (marvel ExpInput label, outdir and config name)
-    APOE_EXPOSURE_NAME: str = "APOE_diplotype"
-    # prefix of the carrier columns of `FileNames.APOE_EXPOSURE`
-    # (`APOE_e4e4` etc.); marvel names each test's `Exposure` after it
-    APOE_DIPLOTYPE_PREFIX: str = "APOE_"
-    # `UKB_APOE_COLUMN` values meaning "no genotype"; apoe_exposure.py
-    # leaves these participants out of the exposure file
-    APOE_MISSING_VALUES: tuple[str, ...] = ("Unknown",)
-    # every real genotype `UKB_APOE_COLUMN` may hold
-    APOE_GENOTYPES: tuple[str, ...] = (
-        "e2e2",
-        "e2e3",
-        "e2e4",
-        "e3e3",
-        "e3e4",
-        "e4e4",
-    )
-    # separator between the ancestry and the APOE stratum in a marvel
-    # `Stratification name`, e.g. ``EUR_e44`` (create_config.py)
-    MARVEL_ANCESTRY_SEP: str = "_"
-    # file label of the meta-analysis pooled per APOE stratum
-    APOE_STRATA_LABEL: str = "apoe_strata"
     # ClinVar `rcv_molecular_consequence` values that make a P/LP variant
     # `lowering` whatever its conditions
     TRUNCATING_CONSEQUENCES: frozenset[str] = frozenset(
@@ -256,6 +222,38 @@ class Constants:
             "splice donor variant",
         }
     )
+    ### apoe settings
+    # NOTE can be removed?
+    # variant-list genes left out of meta_analysis.py and the figures
+    # (figure_utils.load_burden).
+    # APOE is out of gene_list.txt (2026-10-08); this drops it from the
+    # matched tables and burden files built before that, until the
+    # upstream steps are rerun. APOE genotype itself is analysed as an
+    # exposure (`FileNames.MARVEL_APOE_TASKS`)
+    EXCLUDED_GENES: tuple[str, ...] = ("APOE",)
+    # APOE genotype column (`FileNames.UKB_PHENO`) and reference diplotype
+    UKB_APOE_COLUMN: str = "genotype"
+    UKB_APOE_REFERENCE: str = "e3e3"
+    # `gene` of the APOE diplotype run in `FileNames.MARVEL_APOE_TASKS`
+    APOE_EXPOSURE_NAME: str = "APOE_diplotype"
+    # prefix of the carrier columns of `FileNames.APOE_EXPOSURE`
+    APOE_DIPLOTYPE_PREFIX: str = "APOE_"
+    # `UKB_APOE_COLUMN` values meaning "no genotype", excluded
+    APOE_MISSING_VALUES: tuple[str, ...] = ("Unknown",)
+    # every real genotype `UKB_APOE_COLUMN` may hold
+    APOE_GENOTYPES: tuple[str, ...] = (
+        "e2e2",
+        "e2e3",
+        "e2e4",
+        "e3e3",
+        "e3e4",
+        "e4e4",
+    )
+    # ancestry-APOE stratum separator `Stratification name`, e.g. ``EUR_e44``
+    MARVEL_ANCESTRY_SEP: str = "_"
+    # file label of the meta-analysis pooled per APOE stratum
+    APOE_STRATA_LABEL: str = "apoe_strata"
+    # NOTE arrived cleaning up constants class here, please continue
     # meta-analysis dedupe: per study/outcome/variant the first source here
     # is kept (rows from other sources go last)
     GWAS_SOURCE_PREFERENCE: tuple[str, ...] = ("summary-stats", "curated")
@@ -483,6 +481,10 @@ class RunlogOrder:
     ARCHIVE_RESULTS: int = 90
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# COLUMN NAMES
+
+# NOTE split this class into different classes, e.g. one general one (ColumnNames), one for GWAS-extraction, etc (like already done for ClinVar separately)
 class ColumnNames:
     """Column names for the pyjasub job-array file and final output table."""
     ROWIDX: str = "rowidx"
@@ -765,91 +767,6 @@ class SourceColumnMaps:
         HarmonisedColumns.GENE_BURDEN_SCORE: "score",
     }
 
-
-class MafStatus:
-    """Values of the `maf_status` column."""
-    NUMERIC: str = "numeric"
-    NOT_REPORTED: str = "not_reported"
-
-
-class NormStatus:
-    """Values of the `norm_status` column (variant-list `norm_status` too).
-
-    Variants are left-aligned and trimmed against the GRCh38 reference
-    (`functions.normalise_variant`); NA for rows without a site (gene
-    burden).
-    """
-    # pos and/or alleles changed to the left-aligned, trimmed form
-    NORMALISED: str = "normalised"
-    # already in normalised form (all SNVs, most indels)
-    UNCHANGED: str = "unchanged"
-    # neither allele matches the reference at pos, left as-is
-    REF_MISMATCH: str = "ref_mismatch"
-    # only one allele known (curated), left as-is
-    EFFECT_ONLY: str = "effect_only"
-    # no reference sequence covers the site (outside every gene region)
-    NO_SEQUENCE: str = "no_sequence"
-
-
-class Ancestry:
-    """Harmonised (gnomAD-style) ancestry codes, see
-    `functions.harmonise_ancestry`.
-    """
-    EUR: str = "EUR"
-    AFR: str = "AFR"
-    AMR: str = "AMR"
-    EAS: str = "EAS"
-    # South and Central Asian
-    CSA: str = "CSA"
-    MID: str = "MID"
-    OTH: str = "OTH"
-    # more than one code, none with >= DOMINANT_FRACTION of the samples
-    MULTI: str = "MULTI"
-    # not reported
-    NR: str = "NR"
-    CODES: frozenset[str] = frozenset(
-        {EUR, AFR, AMR, EAS, CSA, MID, OTH, MULTI, NR}
-    )
-    # share of a study's N one code needs to label a multi-ancestry study
-    DOMINANT_FRACTION: float = 0.9
-    # FinnGen is a Finnish (European) cohort
-    FINNGEN: str = EUR
-    # GWAS Catalog ancestral category (lower case) -> code; categories
-    # not listed map to OTH (warned)
-    CATEGORY_MAP: dict[str, str] = {
-        "european": EUR,
-        "african american or afro-caribbean": AFR,
-        "sub-saharan african": AFR,
-        "african unspecified": AFR,
-        "hispanic or latin american": AMR,
-        "native american": AMR,
-        "east asian": EAS,
-        "south east asian": EAS,
-        "south asian": CSA,
-        "central asian": CSA,
-        "greater middle eastern (middle eastern, north african or persian)": (
-            MID
-        ),
-        "greater middle eastern": MID,
-        "asian unspecified": OTH,
-        "oceanian": OTH,
-        "other": OTH,
-        "other admixed ancestry": OTH,
-        "nr": NR,
-    }
-    # one `discovery_ancestry` segment: "<n> <categories> (<countries>)",
-    # n and countries optional; countries may hold one nested "(...)"
-    SEGMENT_PATTERN: str = r"""
-        ^\s*
-        (?:(?P<n>\d+|NA)\s+)?
-        (?P<categories>.+?)
-        (?:\s+\((?P<countries>(?:[^()]|\([^()]*\))*)\))?
-        \s*$
-    """
-    # comma between categories, not inside "(...)"
-    CATEGORY_SPLIT_PATTERN: str = r",\s*(?![^()]*\))"
-
-
 class VariantListColumns:
     """Columns of the per-gene `*_variants.tsv` lists and the columns
     `match_variants.py` adds to the matched GWAS rows.
@@ -873,6 +790,9 @@ class VariantListColumns:
     # normalised ``chr:pos:a1:a2`` (combine_variants.py); the marvel
     # exposure name of the variant
     VARIANT_ID: str = "variant_id"
+    # burden mask lists (burden_exposure.py --mask-lists): exposure name
+    # ``<GENE>_<mask>[_fb]``, the new-marvel `category_column`
+    MASK: str = "mask"
     # variant label column of the per-gene marvel extraction lists
     MARVEL_ID: str = "ID"
     # ClinVar P/LP rows only: a `ClinVarDirection` value (NA otherwise)
@@ -924,7 +844,6 @@ class VepCsqColumns:
     LOF_INFO: str = "LoF_info"
     # PTV_VARIANTS: the gene_list.txt symbol of the variant
     GENE: str = "gene"
-
 
 class MetaColumns:
     """Columns derived and written by `meta_analysis.py`, and the columns
@@ -1053,47 +972,11 @@ class MarvelColumns:
         P_VALUE,
     )
 
-
-class MarvelRun:
-    """File suffixes and columns of a MARVELous (TOML) run directory
-    (`Paths.MARVEL_RUN`): extract writes ``<chunk>.<suffix>`` per
-    genotype file, aggregate/associate ``<prefix>.<suffix>``.
-    """
-    CARRIERS_SUFFIX: str = ".carriers.tsv.gz"
-    VARIANTS_SUFFIX: str = ".variants.tsv.gz"
-    SAMPLES_SUFFIX: str = ".samples.tsv.gz"
-    SENTINEL_SUFFIX: str = ".SUCCESS"
-    RESULTS_SUFFIX: str = ".results.tsv.gz"
-    # chunk carriers (long, sparse) and samples
-    ID: str = "id"
-    VARIANT: str = "variant"
-    DOSAGE: str = "dosage"
-    # chunk variant summary
-    CHROM: str = "chrom"
-    POS: str = "pos"
-    REF: str = "ref"
-    ALT: str = "alt"
-    N_CARRIERS: str = "n_carriers"
-    N_MISSING: str = "n_missing"
-    STATUS: str = "status"
-    # statuses whose genotypes were read
-    READ_STATUS: tuple[str, ...] = ("found", "swapped")
-    # association results
-    EXPOSURE: str = "exposure"
-    STRATUM: str = "stratum"
-    COVARIATE_MODEL: str = "covariate_model"
-    OUTCOME: str = "outcome"
-    TEST: str = "test"
-    TERM: str = "term"
-    N_CASES: str = "n_cases"
-    N_SAMPLES: str = "n_samples"
-    N_EXPOSED: str = "n_exposed"
-    ESTIMATE: str = "estimate"
-    SE: str = "se"
-    P_VALUE: str = "p_value"
-    REMARKS: str = "remarks"
-    OVERALL: str = "overall"
-
+class ConditionDirectionColumns:
+    """Columns of `FileNames.CLINVAR_CONDITION_DIRECTION`."""
+    GENE: str = "gene"
+    CONDITION: str = "rcv_condition"
+    DIRECTION: str = "direction"
 
 class MarvelCompareColumns:
     """Columns of the compare_marvel_runs.py outputs. A variant key is
@@ -1167,6 +1050,166 @@ class MarvelCompareColumns:
     NEW_REMARKS: str = "new_remarks"
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# VARIANT HANDLING
+
+class MafStatus:
+    """Values of the `maf_status` column."""
+    NUMERIC: str = "numeric"
+    NOT_REPORTED: str = "not_reported"
+
+class NormStatus:
+    """Values of the `norm_status` column (variant-list `norm_status` too)."""
+    # pos and/or alleles changed to the left-aligned, trimmed form
+    NORMALISED: str = "normalised"
+    # already in normalised form (all SNVs, most indels)
+    UNCHANGED: str = "unchanged"
+    # neither allele matches the reference at pos, left as-is
+    REF_MISMATCH: str = "ref_mismatch"
+    # only one allele known (curated), left as-is
+    EFFECT_ONLY: str = "effect_only"
+    # no reference sequence covers the site (outside every gene region)
+    NO_SEQUENCE: str = "no_sequence"
+    # MNV replaced by its proxy SNV (`Constants.MNV_PROXIES`); the MNV
+    # stays in `pos_orig`/`a1_orig`/`a2_orig` (variant list only)
+    MNV_PROXY: str = "mnv_proxy"
+
+class Orientation:
+    """Values of the `orientation` column."""
+    # effect of the a2 (alt) allele
+    A2: str = "a2"
+    # GoF-listed (or selected GoF) variant: effect of the a1 allele
+    A2_GOF_FLIPPED: str = "a2_gof_flipped"
+    # ClinVar variant with a raising condition: effect of the a1 allele
+    A2_CLINVAR_RAISING_FLIPPED: str = "a2_clinvar_raising_flipped"
+
+class ClinVarDirection:
+    """Values of `direction` in `FileNames.CLINVAR_CONDITION_DIRECTION`
+    and of the per-variant `clinvar_direction` column.
+    """
+    # less gene product or function, LoF (e.g. FHBL, CETP deficiency, any
+    # truncating variant)
+    LOWERING: str = "lowering"
+    # more gene function, GoF (PCSK9 familial hypercholesterolaemia)
+    RAISING: str = "raising"
+    # qualitatively changed protein, neither less nor more of it (e.g.
+    # APOB p.Arg3527Gln, APOE type III, APOA1 amyloidosis)
+    ALTERED: str = "altered"
+    # per variant only: more than one of lowering/raising/altered
+    CONFLICTING: str = "conflicting"
+    # no lipid direction (e.g. 'not provided')
+    UNKNOWN: str = "unknown"
+
+class Ancestry:
+    """Harmonised (gnomAD-style) ancestry codes, see
+    `functions.harmonise_ancestry`.
+    """
+    EUR: str = "EUR"
+    AFR: str = "AFR"
+    AMR: str = "AMR"
+    EAS: str = "EAS"
+    # South and Central Asian
+    CSA: str = "CSA"
+    MID: str = "MID"
+    OTH: str = "OTH"
+    # more than one code, none with >= DOMINANT_FRACTION of the samples
+    MULTI: str = "MULTI"
+    # not reported
+    NR: str = "NR"
+    CODES: frozenset[str] = frozenset(
+        {EUR, AFR, AMR, EAS, CSA, MID, OTH, MULTI, NR}
+    )
+    # share of a study's N one code needs to label a multi-ancestry study
+    DOMINANT_FRACTION: float = 0.9
+    # FinnGen is a Finnish (European) cohort
+    FINNGEN: str = EUR
+    # GWAS Catalog ancestral category (lower case) -> code; categories
+    # not listed map to OTH (warned)
+    CATEGORY_MAP: dict[str, str] = {
+        "european": EUR,
+        "african american or afro-caribbean": AFR,
+        "sub-saharan african": AFR,
+        "african unspecified": AFR,
+        "hispanic or latin american": AMR,
+        "native american": AMR,
+        "east asian": EAS,
+        "south east asian": EAS,
+        "south asian": CSA,
+        "central asian": CSA,
+        "greater middle eastern (middle eastern, north african or persian)": (
+            MID
+        ),
+        "greater middle eastern": MID,
+        "asian unspecified": OTH,
+        "oceanian": OTH,
+        "other": OTH,
+        "other admixed ancestry": OTH,
+        "nr": NR,
+    }
+    # one `discovery_ancestry` segment: "<n> <categories> (<countries>)",
+    # n and countries optional; countries may hold one nested "(...)"
+    SEGMENT_PATTERN: str = r"""
+        ^\s*
+        (?:(?P<n>\d+|NA)\s+)?
+        (?P<categories>.+?)
+        (?:\s+\((?P<countries>(?:[^()]|\([^()]*\))*)\))?
+        \s*$
+    """
+    # comma between categories, not inside "(...)"
+    CATEGORY_SPLIT_PATTERN: str = r",\s*(?![^()]*\))"
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# MARVEL
+
+class MarvelRun:
+    """File suffixes and columns of a MARVELous (TOML) run directory
+    (`Paths.MARVEL_RUN`): extract writes ``<chunk>.<suffix>`` per
+    genotype file, aggregate/associate ``<prefix>.<suffix>``.
+    """
+    CARRIERS_SUFFIX: str = ".carriers.tsv.gz"
+    VARIANTS_SUFFIX: str = ".variants.tsv.gz"
+    SAMPLES_SUFFIX: str = ".samples.tsv.gz"
+    SENTINEL_SUFFIX: str = ".SUCCESS"
+    RESULTS_SUFFIX: str = ".results.tsv.gz"
+    # chunk carriers (long, sparse) and samples
+    ID: str = "id"
+    VARIANT: str = "variant"
+    DOSAGE: str = "dosage"
+    # chunk variant summary
+    CHROM: str = "chrom"
+    POS: str = "pos"
+    REF: str = "ref"
+    ALT: str = "alt"
+    N_CARRIERS: str = "n_carriers"
+    N_MISSING: str = "n_missing"
+    STATUS: str = "status"
+    # statuses whose genotypes were read
+    READ_STATUS: tuple[str, ...] = ("found", "swapped")
+    # association results
+    EXPOSURE: str = "exposure"
+    STRATUM: str = "stratum"
+    COVARIATE_MODEL: str = "covariate_model"
+    OUTCOME: str = "outcome"
+    TEST: str = "test"
+    TERM: str = "term"
+    N_CASES: str = "n_cases"
+    N_SAMPLES: str = "n_samples"
+    N_EXPOSED: str = "n_exposed"
+    ESTIMATE: str = "estimate"
+    SE: str = "se"
+    P_VALUE: str = "p_value"
+    FORMATTED: str = "formatted"
+    REMARKS: str = "remarks"
+    OVERALL: str = "overall"
+    # `FORMATTED` of the strata_ref reference row (term
+    # ``<exposure>: <strata_ref>``, NA estimate, n_exposed = non-carriers)
+    REFERENCE: str = "reference"
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# META-ANALYSIS
+
 class MetaLevel:
     """Values of the `level` column of the meta-analysis outputs."""
     # pooled over all studies of the run
@@ -1175,6 +1218,10 @@ class MetaLevel:
     STRATUM: str = "stratum"
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# OHTERS
+
+# NOTE move to more appropriate section
 class ApoeStratum:
     """Values of `apoe_stratum` (`FileNames.APOE_STRATA`, marvel table).
 
@@ -1196,17 +1243,7 @@ class ApoeStratum:
         E22_E32: ("e2e2", "e2e3"),
     }
 
-
-class Orientation:
-    """Values of the `orientation` column."""
-    # effect of the a2 (alt) allele
-    A2: str = "a2"
-    # GoF-listed (or selected GoF) variant: effect of the a1 allele
-    A2_GOF_FLIPPED: str = "a2_gof_flipped"
-    # ClinVar variant with a raising condition: effect of the a1 allele
-    A2_CLINVAR_RAISING_FLIPPED: str = "a2_clinvar_raising_flipped"
-
-
+# NOTE why do we need this here AND in constants? If needed, move to more appropriate section
 class TherapyDirection:
     """Values of `Constants.THERAPY_DIRECTION`."""
     # drugs lower gene function (inhibitors): effects kept as oriented
@@ -1214,31 +1251,6 @@ class TherapyDirection:
     # drugs raise gene function (agonists, protein infusion): effects
     # flipped by meta_analysis.py (`orient`, `load_ukb_burden`)
     RAISING: str = "raising"
-
-
-class ClinVarDirection:
-    """Values of `direction` in `FileNames.CLINVAR_CONDITION_DIRECTION`
-    and of the per-variant `clinvar_direction` column.
-    """
-    # less gene product or function, LoF (e.g. FHBL, CETP deficiency, any
-    # truncating variant)
-    LOWERING: str = "lowering"
-    # more gene function, GoF (PCSK9 familial hypercholesterolaemia)
-    RAISING: str = "raising"
-    # qualitatively changed protein, neither less nor more of it (e.g.
-    # APOB p.Arg3527Gln, APOE type III, APOA1 amyloidosis)
-    ALTERED: str = "altered"
-    # per variant only: more than one of lowering/raising/altered
-    CONFLICTING: str = "conflicting"
-    # no lipid direction (e.g. 'not provided')
-    UNKNOWN: str = "unknown"
-
-
-class ConditionDirectionColumns:
-    """Columns of `FileNames.CLINVAR_CONDITION_DIRECTION`."""
-    GENE: str = "gene"
-    CONDITION: str = "rcv_condition"
-    DIRECTION: str = "direction"
 
 
 class EnsemblAlleleCheck:
@@ -1273,6 +1285,9 @@ class EnsemblRsidCheck:
     # nothing at chrom:pos; matched via the row's rsid at another position
     RSID_ONLY: str = "rsid_only"
 
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# FILE NAMES
 
 class FileNames:
     """File paths, built from `Paths` so they move together."""
@@ -1332,6 +1347,12 @@ class FileNames:
     )
     BURDEN_EXPOSURE_SUMMARY: Path = (
         Paths.RESULTS_OUTPUT / "burden_exposure_summary.tsv.gz"
+    )
+    # the same masks as a long variant list for new marvel (one row per
+    # site and mask, category `VariantListColumns.MASK`; `{suffix}` as
+    # `BURDEN_EXPOSURE_TEMPLATE`; sites only, committed)
+    BURDEN_MASK_VARIANTS_TEMPLATE: str = str(
+        Paths.DATA_PROC / "lipid_mask_variants{suffix}.tsv.gz"
     )
     MARVEL_BURDEN_TASKS: Path = Paths.DATA_RAW / "marvel_burden_tasks.tsv"
     # marvel run of APOE diplotype -> outcomes: its own job array, so its
@@ -1393,7 +1414,7 @@ class FileNames:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Figures
+# FIGURES
 
 class FigureColumns:
     """Columns the figure scripts add to the result rows."""
@@ -1514,7 +1535,6 @@ class FigureNames:
         # selected_variants_forest.py, one figure per selected GoF variant
         "forest_selected_gof_eur_",
     )
-
 
 class FigureStyle:
     """Sizes, colours, markers and forest layout of the figure scripts.

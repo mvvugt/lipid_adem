@@ -2,10 +2,11 @@
 """
 lipid_adem helper functions
 """
+# NOTE Please shorten drastically, creating separate utils/*py files where functions are clustered
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# imports
+# IMPORTS
 
 from __future__ import annotations
 
@@ -47,6 +48,11 @@ from project_constants import (
     SourceColumnMaps,
 )
 
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# CONSTANTS
+
+# NOTE centralise these in project_constants?
 # integer in free text, with or without thousands commas, not part of a
 # word or decimal (e.g. not the "23" of "23andMe")
 _SAMPLE_SIZE_NUMBER_PATTERN = re.compile(
@@ -97,7 +103,7 @@ _T = TypeVar("_T")
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# data containers
+# DATA CONTAINERS
 
 @dataclass
 class GeneRegion:
@@ -161,6 +167,9 @@ class SumstatsSource:
     maf_col: str = "effect_allele_frequency"
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ERRORS
+
 class GeneTableError(ValueError):
     """A gene-table row cannot be resolved or its identifiers disagree."""
 
@@ -170,7 +179,7 @@ class SumstatsColumnError(ValueError):
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# network retry
+# NETWORK RETRY
 
 def _transient_reason(exc: BaseException) -> str | None:
     """Return why a failed network call is worth retrying, else `None`.
@@ -236,14 +245,12 @@ def _request_with_retry(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# helpers
+# FILE/DIRECTORY WRITING
 
 def write_table_atomic(df: pd.DataFrame, path: Path, sep: str = "\t") -> None:
     """Write a table to disk atomically (stage-then-move).
 
-    Writes to a sibling temp file first, then moves it into place, so a
-    failed/interrupted write can never leave `path` (which may be a
-    hand-maintained input file) partially written.
+    Failed/interrupted write can never leave `path` partially written.
 
     Parameters
     ----------
@@ -258,20 +265,20 @@ def write_table_atomic(df: pd.DataFrame, path: Path, sep: str = "\t") -> None:
     -------
     `None`
     """
+    # NOTE is it not smarter to make a tmp prefix, so pandas CAN infer compression?
+    # create temporary path based on actual path
     tmp_path = path.with_suffix(path.suffix + ".tmp")
     # the ".tmp" suffix stops pandas inferring compression, so set it here
     compression = "gzip" if path.suffix == ".gz" else None
+    # write and move
     df.to_csv(tmp_path, sep=sep, index=False, compression=compression)
     tmp_path.replace(path)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# NOTE we can remove the time right, just do date?
 def archive_dir(path: Path) -> Path | None:
     """Rename an existing directory aside, stamped with its mtime.
-
-    The new name is `<name>_<mtime %Y%m%d_%H%M%S>` in the same parent
-    directory, with `_1`, `_2`, ... appended if that name is taken, so
-    nothing is ever overwritten.
 
     Parameters
     ----------
@@ -285,27 +292,33 @@ def archive_dir(path: Path) -> Path | None:
 
     Notes
     -----
-    Used to move an old pyjasub log directory out of the way: pyjasub
-    errors when the job-array file is newer than an existing log dir. The
-    mtime (not "now") is used so the name reflects the run the logs
-    belong to. A same-directory rename is atomic.
+    New name is `<name>_<mtime %Y%m%d_%H%M%S>` in the same parent directory,
+    with `_1`, `_2`, ... appended if that name is taken. A same-directory
+    rename is atomic.
     """
     if not path.exists():
         return None
+    # obtain mtime
     stamp = time.strftime(
         "%Y%m%d_%H%M%S", time.localtime(path.stat().st_mtime)
     )
+    # create new name parts
     archived = path.with_name(f"{path.name}_{stamp}")
     suffix = 1
+    # increment suffix if directory already exists
     while archived.exists():
         archived = path.with_name(f"{path.name}_{stamp}_{suffix}")
         suffix += 1
+    # execute and log
     path.rename(archived)
     log_info(f"archived {path} -> {archived}")
     return archived
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# FILE READING
+
+# NOTE does this require a separate function?
 def load_tasks(path: Path) -> pd.DataFrame:
     """Load a task table with an `outfile` column.
 
@@ -334,6 +347,62 @@ def load_tasks(path: Path) -> pd.DataFrame:
         raise FileNotFoundError(f"Tasks file not found: {path}")
     tasks = pd.read_csv(path, sep="\t", dtype=str)
     return tasks.dropna(subset=[ColumnNames.OUTFILE])
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def load_gene_table(path: Path) -> pd.DataFrame:
+    """Load the gene reference table, adding any missing standard column.
+
+    Parameters
+    ----------
+    path : `Path`
+        Tab-separated file with at least one identifier column from
+        `ColumnNames.GENE_ID_COLUMNS`. Every other standard column
+        (`ColumnNames.GENE_TABLE_COLUMNS`) is optional, will be filled in.
+
+    Returns
+    -------
+    genes : `pd.DataFrame`
+        The gene table as strings, with blank cells as "" and a literal
+        "NA" kept as-is. Standard columns come first, in standard order,
+        followed by any extra columns.
+
+    Raises
+    ------
+    FileNotFoundError
+        If `path` does not exist.
+    GeneTableError
+        If the file has no identifier column, or a row has no usable
+        identifier (all blank or "NA").
+    """
+    if not path.exists():
+        raise FileNotFoundError(f"Gene list not found: {path}")
+    # keep_default_na=False so a literal "NA" (looked up, not found) is not
+    # read back as blank and re-resolved on every run
+    df = pd.read_csv(path, sep="\t", dtype=str, keep_default_na=False)
+    # check for required columns
+    df.columns = [c.strip() for c in df.columns]
+    if not any(c in df.columns for c in ColumnNames.GENE_ID_COLUMNS):
+        raise GeneTableError(
+            f"{path} needs at least one identifier column out of "
+            f"{', '.join(ColumnNames.GENE_ID_COLUMNS)}; got "
+            f"{', '.join(df.columns)}"
+        )
+    # fill rest of columns with blank cells
+    for col in ColumnNames.GENE_TABLE_COLUMNS:
+        if col not in df.columns:
+            df[col] = ""
+    df = df.apply(lambda col: col.str.strip())
+    # order standard and extra columns
+    extra = [c for c in df.columns if c not in ColumnNames.GENE_TABLE_COLUMNS]
+    df = df[list(ColumnNames.GENE_TABLE_COLUMNS) + extra]
+    for idx in df.index:
+        if not _given_gene_ids(df.loc[idx]):
+            raise GeneTableError(
+                f"{path} row {idx + 2} has no identifier: set one of "
+                f"{', '.join(ColumnNames.GENE_ID_COLUMNS)}"
+            )
+    return df
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -367,61 +436,6 @@ def load_gene_regions(path: Path) -> dict[str, GeneRegion]:
         )
         for _, row in table.iterrows()
     }
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def load_gene_table(path: Path) -> pd.DataFrame:
-    """Load the gene reference table, adding any missing standard column.
-
-    Parameters
-    ----------
-    path : `Path`
-        Tab-separated file with at least one identifier column from
-        `ColumnNames.GENE_ID_COLUMNS` (`gene`, `ensemblid`, `uniprot`).
-        Every other standard column (`ColumnNames.GENE_TABLE_COLUMNS`)
-        is optional, and any cell may be blank; `resolve_gene_table`
-        fills them in.
-
-    Returns
-    -------
-    genes : `pd.DataFrame`
-        The gene table as strings, with blank cells as "" and a literal
-        "NA" kept as-is. Standard columns come first, in standard order,
-        followed by any extra columns.
-
-    Raises
-    ------
-    FileNotFoundError
-        If `path` does not exist.
-    GeneTableError
-        If the file has no identifier column, or a row has no usable
-        identifier (all blank or "NA").
-    """
-    if not path.exists():
-        raise FileNotFoundError(f"Gene list not found: {path}")
-    # keep_default_na=False so a literal "NA" (looked up, not found) is not
-    # read back as blank and re-resolved on every run
-    df = pd.read_csv(path, sep="\t", dtype=str, keep_default_na=False)
-    df.columns = [c.strip() for c in df.columns]
-    if not any(c in df.columns for c in ColumnNames.GENE_ID_COLUMNS):
-        raise GeneTableError(
-            f"{path} needs at least one identifier column out of "
-            f"{', '.join(ColumnNames.GENE_ID_COLUMNS)}; got "
-            f"{', '.join(df.columns)}"
-        )
-    for col in ColumnNames.GENE_TABLE_COLUMNS:
-        if col not in df.columns:
-            df[col] = ""
-    df = df.apply(lambda col: col.str.strip())
-    extra = [c for c in df.columns if c not in ColumnNames.GENE_TABLE_COLUMNS]
-    df = df[list(ColumnNames.GENE_TABLE_COLUMNS) + extra]
-    for idx in df.index:
-        if not _given_gene_ids(df.loc[idx]):
-            raise GeneTableError(
-                f"{path} row {idx + 2} has no identifier: set one of "
-                f"{', '.join(ColumnNames.GENE_ID_COLUMNS)}"
-            )
-    return df
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -5223,6 +5237,7 @@ def annotate_ensembl_variants(
 
     n_rsid_fetched = 0
 
+    # NOTE please do refrain as much as possible from nesting def in functions
     def lookup_rsid(rsid: str) -> list[EnsemblVariant]:
         """Look up an rsid via Ensembl, counting uncached requests.
 

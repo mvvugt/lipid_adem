@@ -29,6 +29,7 @@ from project_constants import (
     ConditionDirectionColumns,
     Constants,
     FileNames,
+    NormStatus,
     Paths,
     VariantListColumns,
     VepCsqColumns,
@@ -476,6 +477,48 @@ def normalise_list(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def apply_mnv_proxies(
+    variants: pd.DataFrame, proxies: dict[str, str] = Constants.MNV_PROXIES
+) -> pd.DataFrame:
+    """Replace MNVs that UKB stores as separate SNVs by a proxy SNV.
+
+    The rows keep the MNV in `pos_orig`/`a1_orig`/`a2_orig` and get
+    `norm_status` `NormStatus.MNV_PROXY`; `pos`, `a1`, `a2` and
+    `variant_id` become the proxy.
+
+    Parameters
+    ----------
+    variants : `pd.DataFrame`
+        From `normalise_list`.
+    proxies : `dict[str, str]`, optional, default: `Constants.MNV_PROXIES`
+        Normalised MNV `variant_id` -> proxy ``chr:pos:a1:a2``.
+
+    Returns
+    -------
+    replaced : `pd.DataFrame`
+        `variants` with the proxies in place. Each replacement is logged;
+        a proxied MNV not in the list is warned.
+    """
+    vc = VariantListColumns
+    replaced = variants.copy()
+    for mnv, proxy in proxies.items():
+        rows = replaced[vc.VARIANT_ID] == mnv
+        if not rows.any():
+            log_warn(f"MNV {mnv} not in the list, no proxy applied")
+            continue
+        chrom, pos, a1, a2 = proxy.split(":")
+        if chrom != mnv.split(":")[0]:
+            raise ValueError(f"proxy {proxy} is not on the chr of {mnv}")
+        replaced.loc[rows, vc.POS] = pos
+        replaced.loc[rows, vc.A1] = a1
+        replaced.loc[rows, vc.A2] = a2
+        replaced.loc[rows, vc.VARIANT_ID] = proxy
+        replaced.loc[rows, vc.NORM_STATUS] = NormStatus.MNV_PROXY
+        log_info(f"MNV {mnv}: {int(rows.sum())} rows -> proxy {proxy}")
+    return replaced
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def combine_lists(
     ptv: pd.DataFrame,
     plp: pd.DataFrame,
@@ -490,7 +533,8 @@ def combine_lists(
     `am_pathogenicity` and `tri_class` are NA except for the AM rows. Rows
     without a GRCh38 chr, pos or both alleles are dropped (warned per gene
     and source), as they cannot be matched or extracted. The rest is normalised
-    by `normalise_list`; rows that become the same site, gene and source
+    by `normalise_list`, then MNVs get their proxy SNV
+    (`apply_mnv_proxies`); rows that become the same site, gene and source
     keep the first (warned). A site in several sources keeps one row per
     source.
 
@@ -533,6 +577,7 @@ def combine_lists(
         log_warn(f"{gene} {source}: {n} rows without GRCh38 chr/pos/alleles")
     variants = variants.loc[placed].drop_duplicates()
     variants = normalise_list(variants.reset_index(drop=True), regions)
+    variants = apply_mnv_proxies(variants)
     variants = variants[LIST_COLUMNS]
 
     site = [vc.CHROM, vc.POS, vc.A1, vc.A2, vc.GENE]
@@ -568,7 +613,8 @@ def marvel_rows(variants: pd.DataFrame) -> pd.DataFrame:
     A site in both sources is extracted once. Each site gets a row with
     its normalised form (`ID` = `variant_id`) and, when the original form
     differs, a row with that (`ID` = `variant_id` +
-    `Constants.ORIG_ID_SUFFIX`).
+    `Constants.ORIG_ID_SUFFIX`). MNV proxy rows get no original-form
+    row: UKB has no MNV record to match.
 
     Parameters
     ----------
@@ -588,7 +634,7 @@ def marvel_rows(variants: pd.DataFrame) -> pd.DataFrame:
         (sites[vc.POS] != sites[vc.POS_ORIG])
         | (sites[vc.A1] != sites[vc.A1_ORIG])
         | (sites[vc.A2] != sites[vc.A2_ORIG])
-    )
+    ) & (sites[vc.NORM_STATUS] != NormStatus.MNV_PROXY)
     original = sites.loc[changed]
     original = original.assign(
         **{

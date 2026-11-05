@@ -19,19 +19,13 @@ esac
 
 # shellcheck source=/dev/null
 . "${ROOT}"/src/functions.sh
-# Every cluster step runs on Snellius (ROOT = ~/projects/lipid_adem); only
-# the ClinVar query and the figures run locally
+
 # TODO after the validation (validation/HANDOFF.md) passes: move the marvel
 # runs (MARVEL_ENV=marvel_old, 10039b6) to the validated marvel version
 # TODO with that move: config/marvel_config_variant.toml (new marvel
 # per-variant run) tests no lipids; add the five lipid outcomes
 # (Constants.MARVEL_UKB_OUTCOMES, OLS) so the selected GoF variants
 # (data/raw/selected_variants.tsv) get every outcome there too
-# TODO after the next full per-variant run (NON-AGGREGATED ANALYSES, or
-# the new marvel): remove the TEMPORARY selected-variant run there, the
-# --replace of marvel_results_table.py (UKB CARRIER BURDEN) and
-# data/raw/marvel_selected_tasks.tsv; the selected variants are then
-# tested with the rest, since they are in lipid_variants.tsv
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -60,7 +54,7 @@ sed -i "s#/myriadfs/home/rmgpmva/projects/lipid_adem#${ROOT}#g" \
 # PHENOTYPES
 # TODO not in this repo yet: add the commands that build the phenotype
 # files here. Every analysis below reads them.
-#
+
 # Files read (2026-10-26):
 # - data/processed/lipids_full_pheno.tsv.gz: FileNames.UKB_PHENO
 #   (create_config.py, apoe_exposure.py, burden_exposure.py),
@@ -71,7 +65,7 @@ sed -i "s#/myriadfs/home/rmgpmva/projects/lipid_adem#${ROOT}#g" \
 #   469587 IDs (the IDs with genotypes). Burden and per-variant runs share
 #   a run directory; kept as is, since marvel keeps only IDs in the
 #   exposure file
-#
+
 # CHECK EVERY TIME a phenotype file is rebuilt or copied, or before a
 # marvel run (gz md5 differs on gzip metadata alone, so compare the
 # uncompressed content):
@@ -86,7 +80,7 @@ sed -i "s#/myriadfs/home/rmgpmva/projects/lipid_adem#${ROOT}#g" \
 #   those diff the uncompressed files
 # - cetp_marvel/data/processed/pheno_cov.tsv.gz: validation step 2
 #   (old_pheno_cov.tsv.gz there = the 2026-02-06 version, A's input)
-#
+
 # Issues found with validation/check_pheno.py in cetp_marvel's
 # pheno_cov.tsv.gz (2026-10-26); fix in the outcome build, then rebuild:
 # - <outcome>_incident for the dementias: prevalent cases coded 0
@@ -109,25 +103,27 @@ sed -i "s#/myriadfs/home/rmgpmva/projects/lipid_adem#${ROOT}#g" \
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # APOE DIPLOTYPE
-# Needs only the phenotype file, so it runs first. Each diplotype (e3e3
-# included) vs all other diplotypes.
+# Needs only the phenotype file, so it runs first. Each diplotype vs all others.
 
-# [snellius] exposure file: one 0/1 carrier column per diplotype
+# [snellius] exposure file with binary carrier column per diplotype
 run_mamba biomed-api "${ROOT}"/src/apoe_exposure.py
-# [snellius] associate the diplotypes with outcomes (all samples and EUR),
-# one job-array row per subset
+
+# [snellius] associate the diplotypes with outcomes (all samples and EUR)
 run_mamba marvel_old "${ROOT}"/src/create_config.py -a \
     -t "${ROOT}"/data/raw/marvel_apoe_tasks.tsv
+
 TASKS="${ROOT}"/data/raw/marvel_apoe_tasks.tsv
 N_TASKS=$(( $(wc -l < "${TASKS}") - 1 ))
 TASK_LOGS="${ROOT}"/src/logs/marvel_apoe_task_logs
 mkdir -p "${TASK_LOGS}"
+
 sbatch --array=1-"${N_TASKS}" --partition=rome --cpus-per-task=1 --mem=16G \
     --time=12:00:00 --job-name=marvel_apoe                                     \
     --output="${TASK_LOGS}"/%x_%A_%a.log                                       \
     --wrap "MARVEL_ENV=marvel_old ${ROOT}/src/marvel_assoc.sh ${TASKS} \
         \${TMPDIR} 1 \${SLURM_ARRAY_TASK_ID}"
-# [local] rsync results/APOE_diplotype{,_eur} from Snellius first
+
+# [local] figure on results/APOE_diplotype{,_eur}
 run_mamba plot-misc "${ROOT}"/src/apoe_genotype_forest.py
 
 
@@ -144,8 +140,7 @@ sbatch "${ROOT}"/src/vep_extract.sh -r "${ROOT}" -o "${ROOT}"/data/temp        \
 # [snellius] LOFTEE HC PTVs on the canonical transcript
 run_mamba biomed-api "${ROOT}"/src/annotate_ptv.py
 
-# [local] query ClinVar for all variants in the curated genes (the ClinVar
-# databases are local); copy data/raw/clinvar_variants.tsv to Snellius
+# [local] query ClinVar for all variants in the curated genes
 mapfile -t genes < <(cut -f1 "${ROOT}/data/raw/gene_list.txt")
 runlog run --id clinvar_filter --order 40 --root "${ROOT}" --                  \
     mamba run --no-capture-output -n clinvar-build                             \
@@ -156,38 +151,28 @@ runlog run --id clinvar_filter --order 40 --root "${ROOT}" --                  \
     -o "${ROOT}/data/raw/clinvar_variants.tsv"                                 \
     -vvv
 
-# [snellius]
+# [snellius] annotate clinvar variants
 run_mamba marvel_old "${ROOT}"/src/annotate_clinvar.py
 
-# [snellius] combine PTV + ClinVar + GoF normalised against GRCh38; GoF is the
-# snapshot data/raw/gof_variants.tsv of the old per-gene lists (see its
-# SOURCE.md), which this step overwrites; the three selected CETP GoF
-# variants (data/raw/selected_variants.tsv, source SelectedGoF) are forced
-# in, so they are extracted, tested and matched, but in no burden mask
+# [snellius] combine PTV + ClinVar + GoF normalised against GRCh38
 run_mamba biomed-api "${ROOT}"/src/combine_variants.py
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # CARRIER EXTRACTION
 
-# TODO not implemented: plan in docs/rap_carrier_extraction.md
-# [rap] MARVELous Docker on Swiss Army Knife; extract both forms of each
-# variant from the RAP PLINK files (WGS or WES)
-# Manual copies:
-# - git -> rap: dx upload data/temp/<GENE>_variants.tsv, the extraction
-#   cnfs, src/rap_extract.sh and the Docker image tarball (once)
-# - rap -> snellius: dx download the <GENE>_carriers.tsv.gz files into
-#   data/raw/carriers/; individual-level data: check the UKB approval
-#   allows the download, never commit, delete when no longer needed
-# [snellius] collapse the two forms per variant (no merge on conflict) into
-# data/temp/<GENE>_variant_extraction.tsv.gz (read by marvel_tasks.tsv)
-# TODO if individual data/temp/<GENE>_variants.tsv doe not exist, but data/processed/lipid_variants does, create the individual files anytime the individual ones are needed (not in marvel itself of course, but before marvel submission e.g.)
+# TODO RAP extraction not implemented: plan in docs/rap_carrier_extraction.md
+
 # list full-sample vcf-files for some genes; exclude one of the chr1 genes
 realpath "${ROOT}"/../cetp_marvel/data/temp/*plink*vcf.gz |
     grep -v PCSK9 > "${ROOT}"/data/raw/plink_gene_vcfs.txt
 DATA_DIR="/gpfs/work2/0/aus20644/data"
 REF_DIR="${DATA_DIR}/resources/human_genome/b38"
 LOF_DIR="${DATA_DIR}/ukbiobank/genetics/b38/lof"
+
+# [snellius] collapse the two forms per variant (no merge on conflict) into
+# data/temp/<GENE>_variant_extraction.tsv.gz (read by marvel_tasks.tsv)
+# TODO if individual data/temp/<GENE>_variants.tsv doe not exist, but data/processed/lipid_variants does, create the individual files anytime the individual ones are needed (not in marvel itself of course, but before marvel submission e.g.)
 "${ROOT}"/src/submit_two_source.sh                                             \
     -c "${ROOT}"/config/marvel_config.toml                                     \
     -p "${ROOT}"/data/raw/plink_gene_vcfs.txt                                  \
@@ -198,9 +183,8 @@ LOF_DIR="${DATA_DIR}/ukbiobank/genetics/b38/lof"
     -m '2023 BCFtools/1.18-GCC-12.3.0'
 
 # [snellius] per-variant aggregate + associate on the same extract chunks
-# (one exposure per variant, prefix lipid_vep_plink_marvel_variant); ~100x
-# the tests of the burden run, hence 8 cores and 8 h (estimate). NOTE: its
-# toml has no lipid tests yet (see the TODO under SETUP)
+# (one exposure per variant, prefix lipid_vep_plink_marvel_variant)
+# NOTE: its toml has no lipid tests yet (see the TODO under SETUP)
 RUN_DIR="${ROOT}/data/temp/marvel"
 sbatch --partition=rome --cpus-per-task=8 --mem=16G --time=08:00:00         \
     --job-name=mv_final_variant                                                \
@@ -213,18 +197,16 @@ sbatch --partition=rome --cpus-per-task=8 --mem=16G --time=08:00:00         \
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # GWAS LOOKUPS
 
-# [snellius] resolve gene/outcome lookups, discover studies, write job-array
-# file (ascvd: FinnGen I9_CVD_HARD only, efo_id NA in icd_codes.txt)
+# [snellius] discover GWAS lookup studies, write job-array file
 run_mamba biomed-api "${ROOT}"/src/gwas_cat_prep.py
 
-# [snellius] filter GWAS catalog results to the gene regions (downloads the
-# sumstats); each array task does STEP studies and skips those whose outfile
-# exists, so a rerun only adds the missing ones
+# [snellius] download sumstats of GWAS catalog for the gene regions
 TASKS="${ROOT}"/data/temp/tasks.tsv
 STEP=10
 N_TASKS=$(( ($(wc -l < "${TASKS}") - 1 + STEP - 1) / STEP ))
 TASK_LOGS="${ROOT}"/src/logs/filter_task_logs
 mkdir -p "${TASK_LOGS}"
+
 sbatch --array=1-"${N_TASKS}"%20 --partition=rome --cpus-per-task=1        \
     --mem=8G --time=04:00:00 --job-name=filter_gwas_cat                        \
     --output="${TASK_LOGS}"/%x_%A_%a.log                                       \
@@ -236,41 +218,16 @@ sbatch --array=1-"${N_TASKS}"%20 --partition=rome --cpus-per-task=1        \
 # NON-AGGREGATED ANALYSES
 # TODO AoU
 
-# [snellius] marvel per-variant association, one job-array row per gene x
-# subset; on Myriad this took up to 48G / 68 h: rerun rows that run out of
-# memory or time with more (e.g. --partition=fat_rome --mem=48G
-# --time=68:00:00); the stores are built under UKB CARRIER BURDEN
+# [snellius] marvel per-variant association
 run_mamba marvel_old "${ROOT}"/src/create_config.py -a
+
 TASKS="${ROOT}"/data/raw/marvel_tasks.tsv
 N_TASKS=$(( $(wc -l < "${TASKS}") - 1 ))
 TASK_LOGS="${ROOT}"/src/logs/marvel_task_logs
 mkdir -p "${TASK_LOGS}"
+
 sbatch --array=1-"${N_TASKS}" --partition=rome --cpus-per-task=1 --mem=16G \
     --time=24:00:00 --job-name=marvel_assoc                                    \
-    --output="${TASK_LOGS}"/%x_%A_%a.log                                       \
-    --wrap "MARVEL_ENV=marvel_old ${ROOT}/src/marvel_assoc.sh ${TASKS} \
-        \${TMPDIR} 1 \${SLURM_ARRAY_TASK_ID}"
-
-# [snellius] TEMPORARY, until the next full per-variant run: the selected
-# CETP GoF variants (data/raw/selected_variants.tsv) only, on every outcome
-# (the CETP store's rows have no lipids, the old phenotype file and -2
-# no-calls as dosage). Their columns of the old carriers file, no-calls as
-# NA; then one row per subset (all, all_apoe, eur); 3 variants, so 2 h is
-# ample. Their results replace the store's under UKB CARRIER BURDEN
-# (--replace)
-run_mamba biomed-api "${ROOT}"/validation/subset_carriers.py \
-    --carriers "${ROOT}"/data/temp/CETP_variant_extraction.tsv.gz \
-    --output "${ROOT}"/data/temp/CETP_selected_variant_extraction.tsv.gz \
-    --variants chr16:56981179:G:C chr16:56982180:G:A chr16:56983407:G:A \
-    --negative-to-na
-TASKS="${ROOT}"/data/raw/marvel_selected_tasks.tsv
-mkdir -p "${ROOT}"/config/marvel_selected
-run_mamba marvel_old "${ROOT}"/src/create_config.py -a -t "${TASKS}"
-N_TASKS=$(( $(wc -l < "${TASKS}") - 1 ))
-TASK_LOGS="${ROOT}"/src/logs/marvel_selected_logs
-mkdir -p "${TASK_LOGS}"
-sbatch --array=1-"${N_TASKS}" --partition=rome --cpus-per-task=1 --mem=16G \
-    --time=02:00:00 --job-name=marvel_selected                                 \
     --output="${TASK_LOGS}"/%x_%A_%a.log                                       \
     --wrap "MARVEL_ENV=marvel_old ${ROOT}/src/marvel_assoc.sh ${TASKS} \
         \${TMPDIR} 1 \${SLURM_ARRAY_TASK_ID}"
@@ -279,9 +236,7 @@ sbatch --array=1-"${N_TASKS}" --partition=rome --cpus-per-task=1 --mem=16G \
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # MERGE
 
-# [snellius] adds GWAS Catalog associations + Open Targets gene-burden
-# evidence and the marvel results listed in marvel_results.tsv with ≥ 5
-# carriers (resources in the script's #SBATCH lines)
+# [snellius] merge GWAS Catalog, Open Targets gene-burden, and marvel_results.tsv
 sbatch "${ROOT}"/src/merge_associations.sh -r "${ROOT}"
 
 
@@ -295,19 +250,18 @@ run_mamba biomed-api "${ROOT}"/src/match_variants.py
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # UKB CARRIER BURDEN
 
-# [snellius] 0/1 carrier exposure per gene and mask (<GENE>_lof,
-# <GENE>_lof_directed, <GENE>_gof; _fb: without the Thomassen AD sites of
-# matched_variants.tsv.gz), the old marvel (10039b6) cnfs and the job array
-# data/raw/marvel_burden_tasks.tsv. Needs data/temp/<GENE>_variant_extraction
-# .tsv.gz, matched_variants.tsv.gz and lipids_full_pheno.tsv.gz; exposure
-# files are individual-level, never commit them.
-# <SNELLIUS_ENV>: needs pandas and log_tools (not biomed_api)
+# [snellius] create binary exposure per gene and variant set
+# _fb: without the Thomassen AD sites of matched_variants.tsv.gz
+# the old marvel (10039b6) cnfs and the job array
+# data/raw/marvel_burden_tasks.tsv.
+# Needs data/temp/<GENE>_variant_extraction.tsv.gz, matched_variants.tsv.gz and
+# lipids_full_pheno.tsv.gz
 sbatch --partition=rome --cpus-per-task=1 --mem=8G --time=04:00:00          \
     --job-name=burden_exposure --output="${ROOT}"/src/logs/%x_%j.log           \
     --wrap "mamba run --no-capture-output -n prot_misc \
         python ${ROOT}/src/burden_exposure.py"
+
 # [snellius] old marvel per job-array row (gene x subset x main/_fb file);
-# 16G fits the 1/8-node billing unit of rome
 TASKS="${ROOT}"/data/raw/marvel_burden_tasks.tsv
 N_TASKS=$(( $(wc -l < "${TASKS}") - 1 ))
 TASK_LOGS="${ROOT}"/src/logs/marvel_burden_logs
@@ -317,29 +271,29 @@ sbatch --array=1-"${N_TASKS}" --partition=rome --cpus-per-task=1 --mem=16G \
     --output="${TASK_LOGS}"/%x_%A_%a.log                                       \
     --wrap "MARVEL_ENV=marvel_old ${ROOT}/src/marvel_assoc.sh ${TASKS} \
         \${TMPDIR} 1 \${SLURM_ARRAY_TASK_ID}"
+
 # [snellius] per-gene stores of the per-variant (NON-AGGREGATED ANALYSES)
 # and burden results, listed in marvel_results.tsv; then rerun MERGE and
 # INTERMEDIATE MATCH, so matched_variants.tsv.gz and matched_burden.tsv.gz
 # hold both. A store is built from the loose files of the listed task files:
 # always list both. Add --refresh on the first Snellius run (Myriad-built
 # stores are then kept aside with a time stamp), and only while no loose
-# files were archived (--archive). --replace: the selected-variant run's
-# rows replace the CETP store's rows of the same result files (old store
-# kept with a time stamp); drop it after the next full per-variant run
+# files were archived (--archive).
 run_mamba biomed-api "${ROOT}"/src/marvel_results_table.py --ancestry MULTI \
     --tasks "${ROOT}"/data/raw/marvel_tasks.tsv \
     "${ROOT}"/data/raw/marvel_burden_tasks.tsv \
-    --replace "${ROOT}"/data/raw/marvel_selected_tasks.tsv
+# TODO script should be completely linear, here we go back (rerun merge and 
+# intermediate match), so please update
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # META-ANALYSIS
 
-# [snellius] study accessions; the UKB ones are written by
-# marvel_results_table.py: marvel_ukb_<MULTI|EUR>_<outcome>, + _<stratum>
-# for the APOE strata
+# [snellius] create variables for meta-analysis
 THOMASSEN_STUDIES=(GCST90861026 GCST90861027 GCST90861029 GCST90861030)
 FINNGEN_STUDIES=(F5_DEMENTIA_INCLAVO G6_ALZHEIMER F5_VASCDEM FTD I9_CVD_HARD)
+
+# create names for UKB and AoU analyses
 OUTCOMES=(
     {all_cause,alzheimers,vascular,frontotemporal}_dementia
     ascvd apoa apob hdl_c ldl_c tg
@@ -360,9 +314,7 @@ done
 AOU_EUR_STUDIES=()
 AOU_STUDIES=()
 
-# one set of runs per variant set (Constants.BURDEN_VARIANT_SETS);
-# --ukb-burden: each cohort's gene estimate is its carrier-burden estimate
-# (UKB CARRIER BURDEN, matched_burden.tsv.gz), pooled by IVW over cohorts
+# run per variant set
 VARIANT_SETS=(lof gof am ptv clinvar ptv_am am_clinvar ptv_clinvar_am)
 for variant_set in "${VARIANT_SETS[@]}"; do
     case "${variant_set}" in
@@ -375,19 +327,18 @@ for variant_set in "${VARIANT_SETS[@]}"; do
         am_clinvar)     VARIANT_SOURCES=(AM ClinVar) ;;
         ptv_clinvar_am) VARIANT_SOURCES=(PTV ClinVar AM) ;;
     esac
-    # [snellius] main: carrier burden per cohort (UKB EUR; AoU later)
+    # [snellius] main: carrier burden per cohort
     run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
         --studies "${UKB_EUR_STUDIES[@]}" "${AOU_EUR_STUDIES[@]}" \
         --variant-sources "${VARIANT_SOURCES[@]}" --stratified \
         --label "cohort_burden_eur_${variant_set}" --ukb-burden
-    # [snellius] main, all ancestries
+    # [snellius] main, combine ancestries
     run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry MULTI \
         --studies "${UKB_STUDIES[@]}" "${AOU_STUDIES[@]}" \
         --variant-sources "${VARIANT_SOURCES[@]}" --stratified \
         --label "cohort_burden_multi_${variant_set}" --ukb-burden
-    # [snellius] sensitivity: + Thomassen and FinnGen per-variant estimates;
-    # UKB and FinnGen add only the variants Thomassen lacks (UKB as the _fb
-    # mask)
+    # [snellius] meta-analyse with Thomassen and FinnGen per-variant estimates;
+    # variant priority (high to low): Thomassen -> FinnGen -> UKB (_fb mask)
     run_mamba biomed-api "${ROOT}"/src/meta_analysis.py --ancestry EUR \
         --studies "${THOMASSEN_STUDIES[@]}" "${UKB_EUR_STUDIES[@]}" \
         "${FINNGEN_STUDIES[@]}" \
@@ -397,12 +348,7 @@ for variant_set in "${VARIANT_SETS[@]}"; do
         --label "pooled_eur_${variant_set}" --ukb-burden
 done
 
-# [snellius] separate from the burden analyses: the selected CETP GoF
-# variants (data/raw/selected_variants.tsv) one by one, every study and
-# outcome they have (UKB, FinnGen, GWAS Catalog), each study's estimate
-# (--stratified) and their IVW per variant and outcome; flipped as GoF
-# (lower function); no gene burden; only rows on their outcome's scale
-# (linear lipids, log-OR otherwise)
+# [snellius] CETP GoF variants one by one; flipped as GoF (lower function)
 for ancestry in EUR MULTI; do
     run_mamba biomed-api "${ROOT}"/src/meta_analysis.py \
         --ancestry "${ancestry}" --variant-sources SelectedGoF --stratified \
@@ -414,45 +360,42 @@ done
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # FIGURES
 
-# [local] copy results/output/{burden,meta}_*_{cohort_burden,pooled}_*.tsv.gz
-# and meta_*_selected_gof_*.tsv.gz from Snellius first; only
-# FigureNames.MAIN_FIGURES are written to results/figures, the rest to
-# results/figures/sensitivity
-# [local] main: positive controls (lipids + ASCVD) and dementia, per gene one
-# row per variant set (default PTV, AM, PTV + AM)
+# [local] figures of results/output/meta* and burden*. Figures in
+# FigureNames.MAIN_FIGURES go to results/figures, the rest to sensitivity
+
+# Only UKB: figure per controls/dementia; estimator per variant set
 for panel in controls dementia; do
-    run_mamba plot-misc "${ROOT}"/src/cohort_burden_forest.py --ancestry EUR \
+    run_mamba plot-misc "${ROOT}"/src/cohort_burden_forest.py --ancestry EUR   \
         --label cohort_burden_eur --panel "${panel}"
-    run_mamba plot-misc "${ROOT}"/src/cohort_burden_forest.py \
+    run_mamba plot-misc "${ROOT}"/src/cohort_burden_forest.py                  \
         --ancestry MULTI --label cohort_burden_multi --panel "${panel}"
 done
-# [local] main: per gene the binary outcomes (left) and lipids (right),
-# one row per variant set (all sets)
-run_mamba plot-misc "${ROOT}"/src/variant_sets_forest.py --ancestry EUR \
+
+# Only UKB: figure per gene; estimator per variant set; binary and lipids
+run_mamba plot-misc "${ROOT}"/src/variant_sets_forest.py --ancestry EUR        \
     --label cohort_burden_eur
-# [local] main: CETP UKB burden vs the FinnGen variants (why the pooled
-# sensitivity differs)
+
+# CETP UKB burden vs the FinnGen variants
 run_mamba plot-misc "${ROOT}"/src/cetp_cohort_variants_forest.py
-# [local] sensitivity: per variant set and outcome each source (UKB,
-# FinnGen, Thomassen) next to the pooled estimate (why pooling removes
-# the UKB dementia signal)
-run_mamba plot-misc "${ROOT}"/src/sources_forest.py --ancestry EUR \
+
+# Meta: figure per variant set; estimator per source; all binary outcomes
+run_mamba plot-misc "${ROOT}"/src/sources_forest.py --ancestry EUR             \
     --label pooled_eur
-# [local] main (EUR; MULTI as sensitivity): the selected CETP GoF variants
-# one by one: per variant each study and the IVW, binary outcomes (OR) and
-# lipids (beta)
+
+# CETP GoF: figure per variant; estimator per source; binary and lipids
 for ancestry in EUR MULTI; do
-    run_mamba plot-misc "${ROOT}"/src/selected_variants_forest.py \
+    run_mamba plot-misc "${ROOT}"/src/selected_variants_forest.py              \
         --ancestry "${ancestry}" --label "selected_gof_${ancestry,,}"
 done
+
 for variant_set in "${VARIANT_SETS[@]}"; do
-    # [local] main: ASCVD vs dementia odds ratio per gene
-    run_mamba plot-misc "${ROOT}"/src/ascvd_dementia_scatter.py \
+    # scatter per variant set
+    run_mamba plot-misc "${ROOT}"/src/ascvd_dementia_scatter.py                \
         --ancestry EUR --label "cohort_burden_eur_${variant_set}"
-    # [local] sensitivity: APOE strata of the main analysis, and the pooled
-    # UKB + Thomassen + FinnGen analysis (with the lipid panel)
-    run_mamba plot-misc "${ROOT}"/src/burden_apoe_forest.py --ancestry EUR \
+    # Only UKB: figure per outcome+variant set; estimator per apoe stratum
+    run_mamba plot-misc "${ROOT}"/src/burden_apoe_forest.py --ancestry EUR     \
         --label "cohort_burden_eur_${variant_set}"
-    run_mamba plot-misc "${ROOT}"/src/pooled_forest.py --ancestry EUR \
+    # Meta: figure per variant set; estimator per outcome
+    run_mamba plot-misc "${ROOT}"/src/pooled_forest.py --ancestry EUR          \
         --label "pooled_eur_${variant_set}"
 done
