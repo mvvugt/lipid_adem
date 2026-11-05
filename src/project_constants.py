@@ -118,9 +118,10 @@ class Constants:
     ICD10_CODE_PATTERN: str = r"^[A-Z]\d{2}$"
     EFO_ID_PATTERN: str = r"^EFO[:_]\d+$"
     GWAS_CATALOG_API_V2: str = "https://www.ebi.ac.uk/gwas/rest/api/v2"
-    # REST v2 page-size maximum; the default (20) hits biomed-api's
-    # 500-page cap (10k records) for large traits
-    GWAS_CATALOG_PAGE_SIZE: int = 500
+    # the default (20) hits biomed-api's 500-page cap (10k records) for
+    # large traits; 500 (the REST v2 maximum) can exceed biomed-api's 60s
+    # read timeout per page, 200 takes ~20s (cap 100k records)
+    GWAS_CATALOG_PAGE_SIZE: int = 200
     # seconds slept before each retry of a failed (5xx/timeout) REST call
     HTTP_RETRY_BACKOFF: tuple[int, ...] = (30, 60, 120)
     GWAS_CATALOG_FTP_BASE: str = (
@@ -872,6 +873,7 @@ class VariantListColumns:
     # normalised ``chr:pos:a1:a2`` (combine_variants.py); the marvel
     # exposure name of the variant
     VARIANT_ID: str = "variant_id"
+    MASK: str = "mask"
     # variant label column of the per-gene marvel extraction lists
     MARVEL_ID: str = "ID"
     # ClinVar P/LP rows only: a `ClinVarDirection` value (NA otherwise)
@@ -1090,8 +1092,12 @@ class MarvelRun:
     ESTIMATE: str = "estimate"
     SE: str = "se"
     P_VALUE: str = "p_value"
+    FORMATTED: str = "formatted"
     REMARKS: str = "remarks"
     OVERALL: str = "overall"
+    # `FORMATTED` of the strata_ref reference row (term
+    # ``<exposure>: <strata_ref>``, NA estimate, n_exposed = non-carriers)
+    REFERENCE: str = "reference"
 
 
 class MarvelCompareColumns:
@@ -1332,6 +1338,9 @@ class FileNames:
     BURDEN_EXPOSURE_SUMMARY: Path = (
         Paths.RESULTS_OUTPUT / "burden_exposure_summary.tsv.gz"
     )
+    BURDEN_MASK_VARIANTS_TEMPLATE: str = str(
+                Paths.DATA_PROC / "lipid_mask_variants{suffix}.tsv.gz"
+                )
     MARVEL_BURDEN_TASKS: Path = Paths.DATA_RAW / "marvel_burden_tasks.tsv"
     # marvel run of APOE diplotype -> outcomes: its own job array, so its
     # results never enter marvel_results.tsv as variants
@@ -1560,6 +1569,11 @@ class FigureStyle:
         "am_clinvar": "#E69F00",
         "ptv_clinvar_am": "#882255",
     }
+    # selected-variants forest, all variants in one figure: marker colour
+    # per selected GoF variant, in variant-site order (Okabe-Ito)
+    SELECTED_VARIANT_COLOURS: tuple[str, ...] = (
+        "#0072B2", "#D55E00", "#009E73", "#CC79A7", "#E69F00", "#56B4E9",
+    )
     STUDY_COLOUR: str = "#bdbdbd"
     POOLED_SIZE: float = 14
     STUDY_SIZE: float = 9

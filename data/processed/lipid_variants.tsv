@@ -1429,6 +1429,7 @@ chr16:56978249:T:A	chr16	56978249	T	A	AM	CETP	0.7863	Pathogenic/Likely pathogeni
 chr16:56978249:T:G	chr16	56978249	T	G	AM	CETP	0.7863	Pathogenic/Likely pathogenic		56978249	T	G	unchanged
 chr16:56981167:A:C	chr16	56981167	A	C	AM	CETP	0.6075	Pathogenic/Likely pathogenic		56981167	A	C	unchanged
 chr16:56981174:T:A	chr16	56981174	T	A	AM	CETP	0.8421	Pathogenic/Likely pathogenic		56981174	T	A	unchanged
+chr16:56981179:G:C	chr16	56981179	G	C	SelectedGoF	CETP				56981179	G	C	unchanged
 chr16:56981180:C:A	chr16	56981180	C	A	AM	CETP	0.741	Pathogenic/Likely pathogenic		56981180	C	A	unchanged
 chr16:56981182:T:C	chr16	56981182	T	C	AM	CETP	0.7851	Pathogenic/Likely pathogenic		56981182	T	C	unchanged
 chr16:56981185:T:A	chr16	56981185	T	A	AM	CETP	0.7449	Pathogenic/Likely pathogenic		56981185	T	A	unchanged
@@ -1450,6 +1451,7 @@ chr16:56981646:G:GT	chr16	56981646	G	GT	PTV	CETP				56981645	AG	AGT	normalised
 chr16:56981648:ATTAC:A	chr16	56981648	ATTAC	A	PTV	CETP				56981648	ATTAC	A	unchanged
 chr16:56981657:A:AAGACT	chr16	56981657	A	AAGACT	PTV	CETP				56981655	CAA	CAAAGACT	normalised
 chr16:56981660:AC:A	chr16	56981660	AC	A	PTV	CETP				56981660	AC	A	unchanged
+chr16:56982180:G:A	chr16	56982180	G	A	SelectedGoF	CETP				56982180	G	A	unchanged
 chr16:56982181:TC:T	chr16	56982181	TC	T	PTV	CETP				56982181	TC	T	unchanged
 chr16:56982189:T:C	chr16	56982189	T	C	AM	CETP	0.6095	Pathogenic/Likely pathogenic		56982189	T	C	unchanged
 chr16:56982191:C:A	chr16	56982191	C	A	AM	CETP	0.6095	Pathogenic/Likely pathogenic		56982191	C	A	unchanged
@@ -1488,6 +1490,7 @@ chr16:56983398:T:C	chr16	56983398	T	C	AM	CETP	0.8052	Pathogenic/Likely pathogeni
 chr16:56983398:T:G	chr16	56983398	T	G	AM	CETP	0.7782	Pathogenic/Likely pathogenic		56983398	T	G	unchanged
 chr16:56983406:C:T	chr16	56983406	C	T	PTV	CETP				56983406	C	T	unchanged
 chr16:56983407:G:A	chr16	56983407	G	A	GoF	CETP				56983407	G	A	unchanged
+chr16:56983407:G:A	chr16	56983407	G	A	SelectedGoF	CETP				56983407	G	A	unchanged
 chr16:56983595:T:C	chr16	56983595	T	C	AM	CETP	0.8287	Pathogenic/Likely pathogenic		56983595	T	C	unchanged
 chr16:56983597:C:A	chr16	56983597	C	A	AM	CETP	0.8287	Pathogenic/Likely pathogenic		56983597	C	A	unchanged
 chr16:56983597:C:G	chr16	56983597	C	G	AM	CETP	0.8287	Pathogenic/Likely pathogenic		56983597	C	G	unchanged

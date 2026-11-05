@@ -96,6 +96,9 @@ _LOF_SOURCES: tuple[str, ...] = (
     Constants.AM_VARIANT_SOURCE,
 )
 _SWAPPED_MATCHES = frozenset({_C.MATCH_SWAPPED, _C.MATCH_SWAPPED_ORIG})
+# variant ID column of the --exclude-sites file (as marvel's
+# `<prefix>.variants.tsv.gz`)
+_EXCLUDE_COLUMN = "variant"
 # summary columns
 _S_GENE = "gene"
 _S_EXPOSURE = "exposure"
@@ -307,6 +310,179 @@ def read_prefer_sites(
     for gene, keys_of_gene in sorted(sites.items()):
         log_info(f"{gene}: {len(keys_of_gene)} sites in preferred studies")
     return sites
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def mask_list(
+    path: Path,
+    sites: pd.DataFrame,
+    prefer: dict[str, set[str]],
+    fallback: bool,
+) -> pd.DataFrame:
+    """Build the burden masks as a long variant list for new marvel.
+
+    Parameters
+    ----------
+    path : `Path`
+        `lipid_variants.tsv`, for the site spelling of the list (new
+        marvel's variant IDs must match the extraction chunks).
+    sites : `pd.DataFrame`
+        `read_sites` output.
+    prefer : `dict` [`str`, `set` [`str`]]
+        `read_prefer_sites` output.
+    fallback : `bool`
+        `True`: the `_fb` masks (`listed - prefer`, as `collapse_masks`);
+        `False`: the main masks.
+
+    Returns
+    -------
+    masks : `pd.DataFrame`
+        One row per site and mask: `chr`, `pos`, `a1`, `a2` (first
+        spelling in `path`), `gene`, `VariantListColumns.MASK`
+        (``<GENE>_<mask>[_fb]``), in gene, mask and list order.
+
+    Notes
+    -----
+    Unlike `site_carriers`, there is no carrier-fraction swap
+    (`Constants.BURDEN_SWAP_FRACTION`) and no MAF filter: those need the
+    carriers. Missing calls follow marvel's `max_gene_missing`, not the
+    non-carrier rule of `collapse_masks`.
+    """
+    detail = [_VL.CHROM, _VL.POS, _VL.A1, _VL.A2]
+    table = pd.read_csv(
+        path, sep="\t", dtype=str, keep_default_na=False,
+        usecols=[*detail, _VL.GENE],
+    )
+    table[_C.NEW_KEY] = variant_key(
+        table[_VL.CHROM], table[_VL.POS], table[_VL.A1], table[_VL.A2]
+    )
+    spelling = table.dropna(subset=[_C.NEW_KEY]).drop_duplicates(
+        subset=[_VL.GENE, _C.NEW_KEY]
+    )
+    suffix = Constants.BURDEN_FALLBACK_SUFFIX if fallback else ""
+    parts: list[pd.DataFrame] = []
+    for gene, gene_sites in sites.groupby(_S_GENE, sort=False):
+        gene_spelling = spelling[spelling[_VL.GENE] == gene]
+        left_out = prefer.get(gene, set()) if fallback else set()
+        for mask in _MASKS:
+            keys = set(gene_sites.loc[gene_sites[mask], _C.NEW_KEY])
+            keys -= left_out
+            rows = gene_spelling[gene_spelling[_C.NEW_KEY].isin(keys)]
+            if len(rows) != len(keys):
+                raise ValueError(
+                    f"{gene}_{mask}: {len(keys)} sites but {len(rows)} "
+                    f"spellings in {path}"
+                )
+            if rows.empty:
+                log_warn(f"{gene}_{mask}{suffix}: no sites, not listed")
+                continue
+            rows = rows[[*detail, _VL.GENE]].copy()
+            rows[_VL.MASK] = f"{gene}_{mask}{suffix}"
+            parts.append(rows)
+            log_info(f"{gene}_{mask}{suffix}: {len(rows)} sites")
+    if not parts:
+        raise ValueError("no mask has a site")
+    return pd.concat(parts, ignore_index=True)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def read_exclude_sites(path: Path) -> set[str]:
+    """Read the sites to leave out of the mask lists.
+
+    Parameters
+    ----------
+    path : `Path`
+        Tab-separated, with a `_EXCLUDE_COLUMN` column of marvel variant
+        IDs (``chr:pos:a1:a2``, e.g. rows of a marvel
+        ``<prefix>.variants.tsv.gz``); other columns are ignored.
+
+    Returns
+    -------
+    keys : `set` [`str`]
+        Variant keys (`variant_key` form).
+
+    Raises
+    ------
+    FileNotFoundError
+        If `path` does not exist.
+    ValueError
+        If `path` has no `_EXCLUDE_COLUMN` column, or an ID is not a
+        variant.
+    """
+    if not path.exists():
+        raise FileNotFoundError(f"exclude-sites file not found: {path}")
+    table = pd.read_csv(path, sep="\t", dtype=str, keep_default_na=False)
+    if _EXCLUDE_COLUMN not in table.columns:
+        raise ValueError(
+            f"{path}: no {_EXCLUDE_COLUMN!r} column; found "
+            f"{list(table.columns)}"
+        )
+    keys = key_from_id(table[_EXCLUDE_COLUMN])
+    if keys.isna().any():
+        bad = table.loc[keys.isna(), _EXCLUDE_COLUMN]
+        raise ValueError(f"{path}: not a variant ID: {_join_unique(bad)}")
+    log_info(f"{path.name}: {keys.nunique()} site(s) to exclude")
+    return set(keys)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def write_mask_lists(
+    genes: list[str],
+    variants: Path,
+    matched: Path,
+    prefer_studies: list[str] | None = None,
+    exclude: Path | None = None,
+    template: str = FileNames.BURDEN_MASK_VARIANTS_TEMPLATE,
+) -> None:
+    """Write the main and `_fb` mask lists for new marvel.
+
+    Parameters
+    ----------
+    genes : `list` [`str`]
+        Genes.
+    variants : `Path`
+        `lipid_variants.tsv`.
+    matched : `Path`
+        `matched_variants.tsv.gz`, for the preferred studies' sites.
+    prefer_studies : `list` [`str`] or `NoneType`, optional
+        Preferred study accessions; default
+        `Constants.BURDEN_PREFER_STUDIES`.
+    exclude : `Path` or `NoneType`, optional
+        `read_exclude_sites` file: sites left out of every mask (e.g.
+        indels that marvel matches as swapped to a different indel).
+    template : `str`, optional
+        Output path with ``{suffix}`` (`FileNames.
+        BURDEN_MASK_VARIANTS_TEMPLATE`).
+
+    Returns
+    -------
+    `None`
+    """
+    studies = list(prefer_studies or Constants.BURDEN_PREFER_STUDIES)
+    log_stage("variant sets")
+    sites = read_sites(variants, genes)
+    if exclude is not None:
+        keys = read_exclude_sites(exclude)
+        drop = sites[_C.NEW_KEY].isin(keys)
+        unlisted = keys - set(sites[_C.NEW_KEY])
+        if unlisted:
+            log_warn(
+                f"{len(unlisted)} excluded site(s) not listed for these "
+                f"genes: {', '.join(sorted(unlisted))}"
+            )
+        log_info(
+            f"excluded {int(drop.sum())} listed site(s): "
+            + ", ".join(sites.loc[drop, _C.NEW_KEY])
+        )
+        sites = sites[~drop]
+    prefer = read_prefer_sites(
+        matched, studies, Constants.BURDEN_FALLBACK_OUTCOME
+    )
+    for fallback in (False, True):
+        log_stage("fallback mask list" if fallback else "mask list")
+        suffix = Constants.BURDEN_FALLBACK_SUFFIX if fallback else ""
+        masks = mask_list(variants, sites, prefer, fallback)
+        _write_table_atomic(masks, Path(template.format(suffix=suffix)))
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -988,6 +1164,19 @@ def _init_cmd_args() -> argparse.ArgumentParser:
         default=list(Constants.BURDEN_PREFER_STUDIES),
         help="preferred study accessions (default: %(default)s)",
     )
+    parser.add_argument(
+        "--mask-lists",
+        action="store_true",
+        help="only write the mask lists for new marvel "
+        f"({FileNames.BURDEN_MASK_VARIANTS_TEMPLATE}, main and fallback; "
+        "no carriers needed) and stop",
+    )
+    parser.add_argument(
+        "--exclude-sites",
+        type=Path,
+        help="with --mask-lists: TSV with a 'variant' column (marvel IDs) "
+        "of sites left out of every mask",
+    )
     return parser
 
 
@@ -999,6 +1188,8 @@ def _parse_cmd_args(parser: argparse.ArgumentParser) -> argparse.Namespace:
         parser.error("--carriers must contain {gene}")
     if not 0 < args.max_maf <= 0.5:
         parser.error("--max-maf must be in (0, 0.5]")
+    if args.exclude_sites is not None and not args.mask_lists:
+        parser.error("--exclude-sites needs --mask-lists")
     if args.genes is None:
         tasks = pd.read_csv(FileNames.MARVEL_TASKS, sep="\t", dtype=str)
         args.genes = list(dict.fromkeys(tasks[ColumnNames.GENE]))
@@ -1014,6 +1205,15 @@ def main() -> None:
     args = _parse_cmd_args(parser)
 
     with runlog_setup(root=Paths.HERE, order=RunlogOrder.BURDEN_EXPOSURE):
+        if args.mask_lists:
+            write_mask_lists(
+                args.genes,
+                args.variants,
+                args.matched,
+                prefer_studies=args.prefer_studies,
+                exclude=args.exclude_sites,
+            )
+            return
         burden_exposure(
             args.genes,
             args.variants,

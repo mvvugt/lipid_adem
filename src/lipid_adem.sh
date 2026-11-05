@@ -19,14 +19,9 @@ esac
 
 # shellcheck source=/dev/null
 . "${ROOT}"/src/functions.sh
-# Every cluster step runs on Snellius (ROOT = ~/projects/lipid_adem); only
-# the ClinVar query and the figures run locally
-# TODO after the validation (validation/HANDOFF.md) passes: move the marvel
-# runs (MARVEL_ENV=marvel_old, 10039b6) to the validated marvel version
-# TODO with that move: config/marvel_config_variant.toml (new marvel
-# per-variant run) tests no lipids; add the five lipid outcomes
-# (Constants.MARVEL_UKB_OUTCOMES, OLS) so the selected GoF variants
-# (data/raw/selected_variants.tsv) get every outcome there too
+
+# TODO Once validation/HANDOFF.md finished: update to new marvel version
+# TODO At update, add lipid outcomes to config/marvel_config_variant.toml
 # TODO after the next full per-variant run (NON-AGGREGATED ANALYSES, or
 # the new marvel): remove the TEMPORARY selected-variant run there, the
 # --replace of marvel_results_table.py (UKB CARRIER BURDEN) and
@@ -35,32 +30,9 @@ esac
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# INPUTS
-# Not in git (data/ is ignored); copy to the same paths on Snellius:
-# - [local -> snellius] data/raw/: gene_list.txt, icd_codes.txt,
-#   efo_ukb_master_mapping.tsv, finngen_r13_manifest.tsv,
-#   gwas_catalog_manual_studies.tsv, study_outcome_review.tsv,
-#   clinvar_variants.tsv (ClinVar query below), clinvar_condition_direction
-#   .tsv, gof_variants.tsv, am_variants.tsv, selected_variants.tsv,
-#   apoe_strata.tsv, marvel_tasks.tsv, marvel_apoe_tasks.tsv and
-#   marvel_selected_tasks.tsv (Snellius paths), each with its SOURCE.md
-# - [snellius, present] data/processed/lipids_full_pheno.tsv.gz and
-#   pheno_cov.tsv.gz (PHENOTYPES), data/temp/<GENE>_variant_extraction
-#   .tsv.gz (CARRIER EXTRACTION), the VEP VCFs (VARIANT ANNOTATION)
-# Rebuilt on Snellius, not copied: data/temp/{tasks,study_outcomes,
-# gene_regions}.tsv (gwas_cat_prep.py), the filtered sumstats, the marvel
-# outdirs and stores (results/<GENE>, results/marvel_burden, results/marvel),
-# data/raw/marvel_results.tsv and everything in results/output
-# [snellius] the curated task files hold Myriad paths: point them at ROOT
-sed -i "s#/myriadfs/home/rmgpmva/projects/lipid_adem#${ROOT}#g" \
-    "${ROOT}"/data/raw/marvel_tasks.tsv "${ROOT}"/data/raw/marvel_apoe_tasks.tsv
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # PHENOTYPES
-# TODO not in this repo yet: add the commands that build the phenotype
-# files here. Every analysis below reads them.
-#
+# TODO add the commands that build the phenotype files here
+
 # Files read (2026-10-26):
 # - data/processed/lipids_full_pheno.tsv.gz: FileNames.UKB_PHENO
 #   (create_config.py, apoe_exposure.py, burden_exposure.py),
@@ -71,7 +43,7 @@ sed -i "s#/myriadfs/home/rmgpmva/projects/lipid_adem#${ROOT}#g" \
 #   469587 IDs (the IDs with genotypes). Burden and per-variant runs share
 #   a run directory; kept as is, since marvel keeps only IDs in the
 #   exposure file
-#
+
 # CHECK EVERY TIME a phenotype file is rebuilt or copied, or before a
 # marvel run (gz md5 differs on gzip metadata alone, so compare the
 # uncompressed content):
@@ -86,12 +58,11 @@ sed -i "s#/myriadfs/home/rmgpmva/projects/lipid_adem#${ROOT}#g" \
 #   those diff the uncompressed files
 # - cetp_marvel/data/processed/pheno_cov.tsv.gz: validation step 2
 #   (old_pheno_cov.tsv.gz there = the 2026-02-06 version, A's input)
-#
+
 # Issues found with validation/check_pheno.py in cetp_marvel's
 # pheno_cov.tsv.gz (2026-10-26); fix in the outcome build, then rebuild:
 # - <outcome>_incident for the dementias: prevalent cases coded 0
-#   (counted as controls); should be NA, as in the 02-06 file and in
-#   ascvd_ii_incident
+#   (counted as controls); should be NA
 # - ascvd_ii_incident misses ~11k cases: incident + prevalent = 63253, but
 #   ascvd_ii = 74254 (02-06 file: 50644 + 21239 = 71883, consistent).
 #   Likely the 2026-02-10 outcome update reached ascvd_ii but not the
