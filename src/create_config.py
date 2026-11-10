@@ -94,6 +94,10 @@ class Analysis:
         ``extract.category_column`` (one exposure per category).
     strata_ref : `int` or `NoneType`
         ``stratification.strata_ref``.
+    overall_subsets : `tuple` [`str`, ...]
+        Subsets that also get the overall run (``stratify_overall =
+        true``) whatever `subset_strata` says: the old burden cnfs ran
+        overall next to the APOE strata, the per-variant ones did not.
     """
     name: str
     subsets: tuple[str, ...]
@@ -104,6 +108,7 @@ class Analysis:
     variant_mode: str = "binary"
     category_column: str | None = None
     strata_ref: int | None = None
+    overall_subsets: tuple[str, ...] = ()
 
     @property
     def stage(self) -> str:
@@ -176,6 +181,7 @@ def analyses() -> tuple[Analysis, ...]:
             variants=Path(mask_list.format(suffix="")),
             category_column=VariantListColumns.MASK,
             strata_ref=0,
+            overall_subsets=("all_apoe",),
         ),
         Analysis(
             name=f"burden{Burden.FALLBACK_SUFFIX}",
@@ -185,6 +191,7 @@ def analyses() -> tuple[Analysis, ...]:
             variants=Path(mask_list.format(suffix=Burden.FALLBACK_SUFFIX)),
             category_column=VariantListColumns.MASK,
             strata_ref=0,
+            overall_subsets=("all_apoe",),
         ),
         Analysis(
             name="apoe",
@@ -344,6 +351,7 @@ def toml_text(analysis: Analysis, subset: str, pheno: Path) -> str:
         The TOML file content.
     """
     overall, strata = subset_strata()[subset]
+    overall = overall or subset in analysis.overall_subsets
     lines = [
         "# Written by src/create_config.py; do not edit by hand.",
         f"# analysis {analysis.name}, subset {subset}",

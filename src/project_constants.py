@@ -1350,10 +1350,12 @@ class FileNames:
     OLD_CARRIERS_TEMPLATE: str = str(
         Paths.DATA_TEMP / "{gene}_variant_extraction.tsv.gz"
     )
-    # `output.prefix` of the burden and per-variant runs in
-    # `Paths.MARVEL_RUN` (config/marvel_config{,_variant}.toml)
+    # `output.prefix` of the 0.5.1 test run in `Paths.MARVEL_RUN`
+    # (config/marvel_config.toml; unused since the migration)
     MARVEL_BURDEN_PREFIX: str = "lipid_vep_plink_marvel_test"
-    MARVEL_VARIANT_PREFIX: str = "lipid_vep_plink_marvel_variant"
+    # per-variant all-samples run of `MARVEL_RUNS` (create_config.py), the
+    # one compare_marvel_runs.py checks against the old per-gene stores
+    MARVEL_VARIANT_PREFIX: str = "lipid_variant_all"
     # curated study accession -> study group and APOE stratum
     APOE_STRATA: Path = Paths.DATA_RAW / "apoe_strata.tsv"
     # curated outcome x study exclusions, applied before the recency cap
