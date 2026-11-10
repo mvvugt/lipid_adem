@@ -39,6 +39,8 @@ class Paths:
     BURDEN_OUT: Path = HERE / "results" / "marvel_burden"
     # MARVELous chunks, burden, per-variant extract/associate outputs
     MARVEL_RUN: Path = DATA_TEMP / "marvel"
+    # new marvel TOMLs, one per analysis x subset (create_config.py)
+    MARVEL_CONFIG: Path = HERE / "config" / "marvel"
     ## archived result directories
     ARCHIVE: Path = HERE / "results" / "archive"
     README_TEXT: Path = HERE / "config" / "results_readmes"
@@ -411,6 +413,7 @@ class RunlogOrder:
     give every step 10. The Bash job wrappers hard-code the same values
     in `RUNLOG_ORDER` and must be kept in sync.
     """
+    CREATE_CONFIG: int = 3
     APOE_EXPOSURE: int = 5
     GWAS_CAT_PREP: int = 10
     FILTER_GWAS_CAT: int = 20
@@ -1271,6 +1274,11 @@ class FileNames:
     # pyjasub job array for the per-gene marvel runs (one cnf per gene,
     # written by src/create_config.py)
     MARVEL_TASKS: Path = Paths.DATA_RAW / "marvel_tasks.tsv"
+    # new marvel runs, one row per TOML (create_config.py)
+    MARVEL_RUNS: Path = Paths.DATA_RAW / "marvel_runs.tsv"
+    # `LIPID_VARIANTS` minus `Const.EXCLUDED_GENES`: the per-variant
+    # list of new marvel (create_config.py; sites only)
+    MARVEL_VARIANTS: Path = Paths.DATA_TEMP / "lipid_variants_marvel.tsv.gz"
     # per-variant marvel run of the `SELECTED_VARIANTS` only (until the
     # next full per-variant run); its rows replace the store's
     # (`marvel_results_table.py --replace`)
