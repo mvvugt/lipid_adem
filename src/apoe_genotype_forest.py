@@ -8,20 +8,22 @@
 ##
 ## Purpose of script: Forest plot per population of the UK Biobank marvel
 ##     association of each APOE diplotype (carriers vs all other
-##     diplotypes, `config/marvel_apoe_task.cnf`): per outcome one row per
+##     diplotypes, `config/marvel/apoe_<subset>.toml`): per outcome one row per
 ##     diplotype, odds ratio with 95% CI, side tables (diplotype (n),
 ##     OR (95% CI), p-value). The reference mixes ε2 and ε4 carriers, so
 ##     these ORs are not vs ε3/ε3. No title or legend; circles coloured by
 ##     diplotype (blue ε2, grey ε3/ε3, red ε4, purple ε2/ε4); x axis from
-##     0.5. Reads the loose marvel
-##     files of the `FileNames.MARVEL_APOE_TASKS` outdirs copied into
-##     `results/`. Run locally in the `plot-misc` env. Writes
+##     0.5. Reads `<prefix>.results.tsv.gz` of the `Marvel.APOE_ANALYSIS`
+##     runs of `FileNames.MARVEL_RUNS` (marvelous associate), copied into
+##     `Paths.MARVEL_APOE_RUN`; new marvel columns are renamed to the old
+##     names (`Marvel.RESULT_COLUMNS`) and the strata_ref reference rows
+##     dropped. Run locally in the `plot-misc` env. Writes
 ##     `results/figures/forest_apoe_genotype_<population>.pdf` (EUR) or
 ##     `results/figures/sensitivity/` (others).
 ##
 ## Author: M. van Vugt
 ## Date created: 09/10/2026
-## Last updated: 12/10/2026
+## Last updated: 10/11/2026
 ##
 ## Copyright (c) M. van Vugt, 2026
 ## Email: m.vanvugt1@amsterdamumc.nl
@@ -52,6 +54,7 @@ from project_constants import (
         HarmonisedColumns,
         Marvel,
         MarvelColumns,
+        MarvelRun,
         MetaColumns,
         Paths,
         )
@@ -67,17 +70,18 @@ logger = logging.getLogger('apoe_genotype_forest')
 
 parser = argparse.ArgumentParser(
         description = ('Forest plot of the marvel APOE diplotype (vs all '
-                       'other diplotypes) runs, '
-                       'read from the outdirs of marvel_apoe_tasks.tsv copied '
-                       'into results/.'))
+                       'other diplotypes) runs of marvel_runs.tsv, read '
+                       'from local copies of their results files.'))
 parser.add_argument('-m', '--model',
                     type = str,
                     default = Marvel.DEFAULT_MODEL,
-                    help = 'marvel model (default: %(default)s)')
+                    help = ('marvel covariate_model '
+                            '(default: %(default)s)'))
 parser.add_argument('-r', '--results-dir',
                     type = Path,
-                    default = Paths.HERE / 'results',
-                    help = ('local directory holding copies of the outdirs '
+                    default = Paths.MARVEL_APOE_RUN,
+                    help = ('local directory holding copies of the '
+                            '<prefix>.results.tsv.gz files '
                             '(default: %(default)s)'))
 parser.add_argument('-o', '--out-dir',
                     type = Path,
@@ -102,7 +106,7 @@ GENOTYPE = 'genotype'
 POPULATION = 'population'
 OUTCOME_GROUP = 'outcome_name'
 # marvel results column with the error of a skipped test
-MARVEL_REMARKS = 'remarks'
+MARVEL_REMARKS = MarvelRun.REMARKS
 # marvel variable -> outcome key (`FigNames.OUTCOMES`)
 APOE_OUTCOMES = {
     **Marvel.UKB_OUTCOMES,
@@ -129,7 +133,7 @@ GENOTYPE_COLOURS = {
     'e4e4': '#b2182b',
 }
 MIN_OR = .5
-# marvel `subset` (`FileNames.MARVEL_APOE_TASKS`) -> population label
+# marvel `subset` (`FileNames.MARVEL_RUNS`) -> population label
 SUBSET_POPULATIONS = {
     'all': 'all',
     'eur_overall': 'EUR',
@@ -158,29 +162,33 @@ TABLES = (
 ## Load data
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# job-array file: `outdir` (cluster path) and `subset` per run
-tasks = pd.read_csv(FileNames.MARVEL_APOE_TASKS, sep = '\t', dtype = str)
-unknown = sorted(set(tasks['subset']) - set(SUBSET_POPULATIONS))
+# runs table (create_config.py): `subset` and `prefix` of the APOE runs
+runs = pd.read_csv(FileNames.MARVEL_RUNS, sep = '\t', dtype = str)
+runs = runs[runs[MarvelRun.RUNS_ANALYSIS] == Marvel.APOE_ANALYSIS]
+unknown = sorted(set(runs[MarvelRun.RUNS_SUBSET]) - set(SUBSET_POPULATIONS))
 if unknown:
-    raise ValueError(f'{FileNames.MARVEL_APOE_TASKS}: subset(s) {unknown} '
+    raise ValueError(f'{FileNames.MARVEL_RUNS}: subset(s) {unknown} '
                      'not in SUBSET_POPULATIONS')
 
-# loose marvel result files per outdir
+# one results file per run; new marvel columns -> old names
 frames = []
-for task in tasks.itertuples(index = False):
-    outdir = args.results_dir / Path(task.outdir).name
-    files = sorted(outdir.glob(FileNames.MARVEL_LOOSE_GLOB))
-    if not files:
-        logger.info(f'{outdir}: no marvel result files, skipped')
+for subset, prefix in zip(runs[MarvelRun.RUNS_SUBSET],
+                          runs[MarvelRun.RUNS_PREFIX]):
+    path = args.results_dir / f'{prefix}{MarvelRun.RESULTS_SUFFIX}'
+    if not path.exists():
+        logger.info(f'{path}: not found, skipped')
         continue
-    for path in files:
-        tmp = pd.read_csv(path, sep = '\t', low_memory = False)
-        missing = [col for col in REQUIRED if col not in tmp.columns]
-        if missing:
-            raise ValueError(f'{path}: missing marvel column(s) {missing}')
-        tmp[POPULATION] = SUBSET_POPULATIONS[task.subset]
-        frames.append(tmp)
-    logger.info(f'{outdir}: {len(files)} marvel result files')
+    tmp = pd.read_csv(path, sep = '\t', low_memory = False)
+    reference = (tmp[MarvelRun.FORMATTED].astype(str).str.strip()
+                 == MarvelRun.REFERENCE)
+    tmp = tmp.loc[~reference].rename(columns = Marvel.RESULT_COLUMNS)
+    missing = [col for col in REQUIRED if col not in tmp.columns]
+    if missing:
+        raise ValueError(f'{path}: missing marvel column(s) {missing}')
+    tmp[POPULATION] = SUBSET_POPULATIONS[subset]
+    frames.append(tmp)
+    logger.info(f'{path.name}: {len(tmp)} rows ({int(reference.sum())} '
+                'strata_ref reference rows dropped)')
 if not frames:
     sys.exit('APOE genotype: no marvel result files found')
 gen_df = pd.concat(frames, ignore_index = True)

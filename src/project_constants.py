@@ -26,7 +26,7 @@ class Paths:
     FIGURES: Path = HERE / "results" / "figures"
     # subdir of figure `--out-dir` for figures not in `FigureNames.MAIN_FIGURES`
     FIGURES_SENSITIVITY: str = "sensitivity"
-    # per-gene marvel result stores
+    # marvel result stores: old per-gene, new per run
     MARVEL_STORE: Path = HERE / "results" / "marvel"
     ## gwas pipeline paths
     GWAS_FILTERED: Path = DATA_TEMP / "gwas_filtered"
@@ -39,6 +39,8 @@ class Paths:
     BURDEN_OUT: Path = HERE / "results" / "marvel_burden"
     # MARVELous chunks, burden, per-variant extract/associate outputs
     MARVEL_RUN: Path = DATA_TEMP / "marvel"
+    # APOE diplotype associate outputs (`marvel_runs.tsv` stage associate)
+    MARVEL_APOE_RUN: Path = DATA_TEMP / "marvel_apoe"
     # new marvel TOMLs, one per analysis x subset (create_config.py)
     MARVEL_CONFIG: Path = HERE / "config" / "marvel"
     ## archived result directories
@@ -288,12 +290,35 @@ class Marvel:
         "LDL direct_i0": "ldl_c",
         "Triglycerides_i0": "tg",
     }
-    # `Model name` of the main analysis
-    DEFAULT_MODEL: str = "model_3"
+    # `covariate_model` of the main analysis (new marvel TOML name)
+    DEFAULT_MODEL: str = "adjusted"
     # old (cnf) `Model name` -> new (TOML) `covariate_model`
     MODEL_MAP: dict[str, str] = {
         "model_1": "unadjusted",
         "model_3": "adjusted",
+    }
+    # `marvel_runs.tsv` analysis of the APOE diplotype runs: not listed in
+    # marvel_results.tsv (apoe_genotype_forest.py reads them)
+    APOE_ANALYSIS: str = "apoe"
+    # new results column (`MarvelRun`) -> old `MarvelColumns` name, so
+    # the src_* columns of the merged tables keep their old names
+    RESULT_COLUMNS: dict[str, str] = {
+        "term": "Exposure",
+        "test": "Model",
+        "covariate_model": "Model name",
+        "stratum": "Stratification name",
+        "outcome": "Variable",
+        "n_cases": "Cases",
+        "n_samples": "Samples",
+        "n_exposed": "Exposed",
+        "n_non_exposed": "Non-exposed",
+        "estimate": "Point Estimates",
+        "se": "Standard Error",
+        "statistic": "Test statistic",
+        "p_value": "P-values",
+        "formatted": "Formatted",
+        "formatted_exp": "Formatted (exp)",
+        "exposure": "marvel_exposure",
     }
     # dosage above this is a carrier (config/marvel_config.toml)
     CARRIER_THR: float = 0.5
@@ -1139,6 +1164,13 @@ class MarvelRun:
     STATUS: str = "status"
     # statuses whose genotypes were read
     READ_STATUS: tuple[str, ...] = ("found", "swapped")
+    # `FileNames.MARVEL_RUNS` columns and stage values
+    RUNS_ANALYSIS: str = "analysis"
+    RUNS_SUBSET: str = "subset"
+    RUNS_STAGE: str = "stage"
+    RUNS_PREFIX: str = "prefix"
+    STAGE_FINAL: str = "final"
+    STAGE_ASSOCIATE: str = "associate"
     # association results
     EXPOSURE: str = "exposure"
     STRATUM: str = "stratum"
@@ -1307,6 +1339,8 @@ class FileNames:
     APOE_EXPOSURE: Path = Paths.DATA_PROC / "apoe_diplotype.tsv.gz"
     # per-gene store of all marvel results (in `Paths.MARVEL_STORE`)
     MARVEL_STORE_TEMPLATE: str = "{gene}_results.tsv.gz"
+    # new marvel: copy of one run's results (`marvel_runs.tsv` prefix)
+    MARVEL_RUN_STORE_TEMPLATE: str = "{prefix}_results.tsv.gz"
     # loose per-variant marvel result files in a gene's outdir
     MARVEL_LOOSE_GLOB: str = "*_results.tsv.gz"
     # tar of an outdir's loose files (`marvel_results_table.py --archive`)

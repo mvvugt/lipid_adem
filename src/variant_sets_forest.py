@@ -20,11 +20,13 @@
 ##     into `results/output/`. Writes
 ##     `results/figures/forest_variant_sets_<label>_<gene>.pdf` (main
 ##     analysis, `FigureNames.MAIN_FIGURES`) or
-##     `results/figures/sensitivity/`.
+##     `results/figures/sensitivity/`. `--lipids-left` swaps the panels;
+##     `--combined` writes one multi-page PDF instead, one gene per page:
+##     `forest_variant_sets_<label>_<sets>_by_gene.pdf`.
 ##
 ## Author: M. van Vugt
 ## Date created: 09/10/2026
-## Last updated: 27/10/2026
+## Last updated: 10/11/2026
 ##
 ## Copyright (c) M. van Vugt, 2026
 ## Email: m.vanvugt1@amsterdamumc.nl
@@ -34,11 +36,14 @@
 ## Imports
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+import os
 import sys
 import logging
 import argparse
 import pandas as pd
+import matplotlib.pyplot as plt
 import figure_utils as futils
+from matplotlib.backends.backend_pdf import PdfPages
 from pathlib import Path
 from project_constants import (
         Const,
@@ -91,6 +96,15 @@ parser.add_argument('-m', '--max-or',
                     type = float,
                     default = FStyle.MAX_OR,
                     help = 'odds-ratio axis limit (default: %(default)s)')
+parser.add_argument('--lipids-left',
+                    action = 'store_true',
+                    help = 'put the lipid panel left of the binary outcomes '
+                    '(default: binary outcomes left)')
+parser.add_argument('--combined',
+                    action = 'store_true',
+                    help = 'write all genes into one multi-page PDF, one '
+                    'gene per page: forest_variant_sets_<label>_<sets>_'
+                    'by_gene.pdf (default: one PDF per gene)')
 
 args = parser.parse_args()
 if args.max_or <= 1:
@@ -258,7 +272,7 @@ def gene_panels(pooled: pd.DataFrame, gene: str) -> list[tuple]:
     if binary.empty:
         logger.info(f'{gene}: no binary-outcome rows, no OR panel')
     else:
-        title = f'{gene} carrier burden per variant set'
+        title = f'{gene}'
         bin_df, strict, n_tests = panel_rows(binary, FigNames.OUTCOME_RANK,
                                              FigNames.OUTCOMES)
         bin_df = futils.limit_or(bin_df, 1 / args.max_or, args.max_or,
@@ -274,9 +288,37 @@ def gene_panels(pooled: pd.DataFrame, gene: str) -> list[tuple]:
         lipid_df, strict, n_tests = panel_rows(
                 lipids, FigNames.LIPID_RANK, FigNames.LIPIDS)
         panels.append((lipid_df, LIPID_TABLES,
-                       f'{gene} lipids per variant set', False, strict,
+                       f'{gene}', False, strict,
                        n_tests))
+    if args.lipids_left:
+        panels.reverse()
     return panels
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def combined_stem(out_dir: Path, label: str, sets: list[str]) -> Path:
+    """Output path (no suffix) of the one multi-page PDF of `--combined`.
+
+    Parameters
+    ----------
+    out_dir : `Path`
+        Figure `--out-dir`.
+    label : `str`
+        Run label without the variant-set suffix.
+    sets : `list[str]`
+        Variant sets plotted.
+
+    Returns
+    -------
+    stem : `Path`
+        ``forest_variant_sets_<label>_<sets>_by_gene``, in `out_dir` for
+        a main-analysis figure (`figure_utils.is_main_figure`), else in
+        its `Paths.FIGURES_SENSITIVITY` subfolder, as `figure_utils.save`.
+    """
+    stem = out_dir / f'forest_variant_sets_{label}_{"_".join(sets)}_by_gene'
+    if not futils.is_main_figure(stem.name):
+        stem = stem.parent / Paths.FIGURES_SENSITIVITY / stem.name
+    return stem
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -300,7 +342,16 @@ genes = args.genes or sorted(pooled[GENE].unique())
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # per gene one figure: the panels side by side, y limits shared so rows
-# are equally spaced; two legend rows (variant sets, significance)
+# are equally spaced; two legend rows (variant sets, significance).
+# `--combined`: every figure a page of one PDF, written to a temporary
+# file and moved into place once all pages are in (as `figure_utils.save`)
+pdf = None
+if args.combined:
+    combined_path = combined_stem(args.out_dir, args.label, args.sets
+                                  ).with_suffix('.pdf')
+    combined_path.parent.mkdir(parents = True, exist_ok = True)
+    combined_tmp = combined_path.with_name(f'{combined_path.name}.tmp')
+    pdf = PdfPages(combined_tmp)
 for gene in genes:
     panels = gene_panels(pooled, gene)
     if not panels:
@@ -326,4 +377,18 @@ for gene in genes:
         futils.add_legend(fig, ax,
                           futils.significance_legend(strict, n_tests),
                           FigNames.SIGNIFICANCE_TITLE)
-    futils.save(fig, args.out_dir / f'forest_variant_sets_{args.label}_{gene}')
+    if pdf is None:
+        futils.save(fig,
+                    args.out_dir / f'forest_variant_sets_{args.label}_{gene}')
+    else:
+        pdf.savefig(fig, dpi = futils.DPI, bbox_inches = 'tight')
+        plt.close(fig)
+        logger.info(f'{gene}: page added')
+if pdf is not None:
+    n_pages = pdf.get_pagecount()
+    pdf.close()
+    if n_pages == 0:
+        os.remove(combined_tmp)
+        sys.exit('nothing plotted, no combined PDF written')
+    os.replace(combined_tmp, combined_path)
+    logger.info(f'wrote {combined_path} ({n_pages} pages)')

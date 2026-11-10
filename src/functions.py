@@ -46,6 +46,7 @@ from project_constants import (
     HarmonisedColumns,
     MafStatus,
     Marvel,
+    MarvelRun,
     MetaColumns,
     NormStatus,
     OutcomeColumns,
@@ -2260,6 +2261,43 @@ def load_marvel_table(path: Path = FileNames.MARVEL_RESULTS) -> pd.DataFrame:
             f"one of {sorted(Ancestry.CODES)}"
         )
     return marvel_df[columns]
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def read_marvel_results(path: Path) -> pd.DataFrame:
+    """Read a new marvel results file under the old marvel column names.
+
+    New marvel (``<prefix>.results.tsv.gz``, `MarvelRun` columns) is
+    renamed by `Marvel.RESULT_COLUMNS` (``term`` -> ``Exposure``,
+    ``covariate_model`` -> ``Model name``, ...) and its `strata_ref`
+    reference rows (`MarvelRun.FORMATTED` = `MarvelRun.REFERENCE`, no
+    estimate) are dropped. A file without a ``term`` column (old
+    marvel) is returned as read.
+
+    Parameters
+    ----------
+    path : `Path`
+        A marvel results file.
+
+    Returns
+    -------
+    results : `pd.DataFrame`
+        All columns as strings, old `MarvelColumns` names.
+    """
+    results = pd.read_csv(path, sep="\t", dtype=str)
+    if MarvelRun.TERM not in results.columns:
+        return results
+    if MarvelRun.FORMATTED in results.columns:
+        reference = (
+            results[MarvelRun.FORMATTED].str.strip() == MarvelRun.REFERENCE
+        )
+        if reference.any():
+            log_info(
+                f"{path.name}: {int(reference.sum())} strata_ref "
+                "reference row(s) dropped"
+            )
+        results = results[~reference].reset_index(drop=True)
+    return results.rename(columns=Marvel.RESULT_COLUMNS)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -238,8 +238,7 @@ run_mamba biomed-api "${ROOT}"/src/apoe_exposure.py
 # [snellius] marvelous associate per subset (input.exposures)
 submit_marvel_runs apoe 4 16G 04:00:00
 
-# [local] figure on results/APOE_diplotype{,_eur}
-# TODO plan step 5: read the new output in data/temp/marvel_apoe
+# [local] figure on the copies of MARVEL_APOE_RUN/lipid_apoe_*.results.tsv.gz
 run_mamba plot-misc "${ROOT}"/src/apoe_genotype_forest.py
 
 
@@ -303,19 +302,11 @@ sbatch --partition=rome --cpus-per-task=1 --mem=8G --time=04:00:00          \
 submit_marvel_runs burden 8 16G 04:00:00
 submit_marvel_runs burden_fb 8 16G 04:00:00
 
-# TODO plan step 5 (docs/marvel_migration_handoff.md): marvel_results_table.py
-# still reads the old marvel task tables and output; adapt it to the new
-# runs in MARVEL_RUNS, then drop --tasks and data/raw/marvel_*tasks.tsv
-# [snellius] per-gene stores of the per-variant (NON-AGGREGATED ANALYSES)
-# and burden results, listed in marvel_results.tsv; then rerun MERGE and
-# INTERMEDIATE MATCH, so matched_variants.tsv.gz and matched_burden.tsv.gz
-# hold both. A store is built from the loose files of the listed task files:
-# always list both. Add --refresh on the first Snellius run (Myriad-built
-# stores are then kept aside with a time stamp), and only while no loose
-# files were archived (--archive).
-run_mamba biomed-api "${ROOT}"/src/marvel_results_table.py --ancestry MULTI \
-    --tasks "${ROOT}"/data/raw/marvel_tasks.tsv \
-    "${ROOT}"/data/raw/marvel_burden_tasks.tsv \
+# [snellius] after all final runs of MARVEL_RUNS (per variant + burden):
+# copy each <prefix>.results.tsv.gz to results/marvel/<prefix>_results.tsv.gz
+# and list them in marvel_results.tsv; then rerun MERGE and INTERMEDIATE
+# MATCH, so matched_variants.tsv.gz and matched_burden.tsv.gz hold both
+run_mamba biomed-api "${ROOT}"/src/marvel_results_table.py --ancestry MULTI
 # TODO script should be completely linear, here we go back (rerun merge and 
 # intermediate match), so please update
 

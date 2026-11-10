@@ -315,7 +315,9 @@ def load_marvel_results(
     Each entry of `marvel_df` names one marvel results file and the
     `Variable`, `Model name` (entry `model`) and `Stratification name`
     (entry `stratification`, if the file has that column) to keep from
-    it. A row whose `Exposure` is a variant (``chr:pos:a1:a2``, a2
+    it. New marvel files are read under the old column names
+    (`functions.read_marvel_results`), so the `src_*` columns are the
+    same for both. A row whose `Exposure` is a variant (``chr:pos:a1:a2``, a2
     counted) becomes a ``summary-stats`` row for every gene region
     containing it, with effect allele a2 and other allele a1. A row
     whose `Exposure` is a gene in `regions`, or a gene plus a mask
@@ -362,7 +364,7 @@ def load_marvel_results(
             functions.require_file(
                 path, f"{FileNames.MARVEL_RESULTS}: results file"
             )
-            cache[path] = pd.read_csv(path, sep="\t", dtype=str)
+            cache[path] = functions.read_marvel_results(path)
         results = cache[path]
         missing = [
             col
