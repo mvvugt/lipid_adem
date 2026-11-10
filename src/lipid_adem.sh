@@ -20,13 +20,101 @@ esac
 # shellcheck source=/dev/null
 . "${ROOT}"/src/functions.sh
 
-# TODO Once validation/HANDOFF.md finished: update to new marvel version
-# TODO At update, add lipid outcomes to config/marvel_config_variant.toml
-# TODO after the next full per-variant run (NON-AGGREGATED ANALYSES, or
-# the new marvel): remove the TEMPORARY selected-variant run there, the
-# --replace of marvel_results_table.py (UKB CARRIER BURDEN) and
-# data/raw/marvel_selected_tasks.tsv; the selected variants are then
-# tested with the rest, since they are in lipid_variants.tsv
+# marvel 0.5.1 (aftermath b2a948d): worktree + env as in
+# docs/marvel_migration_handoff.md, "Snellius to-do" step 1
+readonly MARVEL_HASH="b2a948d"
+readonly MARVEL_ENV="marvel_${MARVEL_HASH}"
+readonly MARVEL_SRC="${HOME}/software/marvel_${MARVEL_HASH}"
+readonly SLURM_ARRAY="${MARVEL_SRC}/resources/workflows/slurm_array.sh"
+# extract chunks + the final (aggregate + associate) runs on them
+readonly MARVEL_RUN="${ROOT}/data/temp/marvel"
+# APOE diplotype runs (associate only, no chunks)
+readonly MARVEL_APOE_RUN="${ROOT}/data/temp/marvel_apoe"
+# one row per run, written by create_config.py:
+# analysis, subset, stage (final|associate), prefix, config
+readonly MARVEL_RUNS="${ROOT}/data/raw/marvel_runs.tsv"
+
+
+# -----------------------------------------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Submit the marvel runs of one analysis in MARVEL_RUNS.
+#
+# stage final: slurm_array.sh -s final on the extract chunks in
+# MARVEL_RUN. stage associate: marvelous associate into MARVEL_APOE_RUN.
+# Jobs of one stage share a job name and run one at a time
+# (--dependency=singleton): they share an output dir, its
+# aggregate/associate logs and the RUN_LOG.md script ID of slurm_array.sh
+# (log_tools race, docs/log_tools_runlog_race_handoff.md).
+#
+# Parameters
+# ----------
+#   $1 - analysis : analysis column value (variant, burden, burden_fb,
+#                   apoe).
+#   $2 - cpus     : cores per job, also marvelous --n-jobs.
+#   $3 - mem      : sbatch --mem, e.g. 16G.
+#   $4 - walltime : sbatch --time, e.g. 04:00:00.
+#
+# Returns
+# -------
+#   0 on success, 1 on an unknown stage or no run of the analysis.
+#
+# Outputs
+# -------
+#   One SLURM job per run; logs in MARVEL_RUN/two_source/logs or
+#   MARVEL_APOE_RUN/logs (mv_<stage>_<prefix>_<jobid>.log).
+#
+# Example
+# -------
+#   submit_marvel_runs burden 8 16G 04:00:00
+# -----------------------------------------------------------------------
+submit_marvel_runs() {
+    local analysis="${1:?Error: analysis required}"
+    local cpus="${2:?Error: cpus required}"
+    local mem="${3:?Error: mem required}"
+    local walltime="${4:?Error: walltime required}"
+    local run_analysis subset stage prefix config log_dir
+    local n_runs=0
+    while IFS=$'\t' read -r run_analysis subset stage prefix config; do
+        if [[ "${run_analysis}" != "${analysis}" ]]; then
+            continue
+        fi
+        n_runs=$(( n_runs + 1 ))
+        echo "[info] ${analysis} ${subset}: ${stage} ${config}"
+        case "${stage}" in
+            final)
+                log_dir="${MARVEL_RUN}/two_source/logs"
+                mkdir -p "${log_dir}"
+                sbatch --partition=rome --cpus-per-task="${cpus}"          \
+                    --mem="${mem}" --time="${walltime}"                    \
+                    --job-name=mv_final --dependency=singleton             \
+                    --output="${log_dir}/mv_final_${prefix}_%j.log"        \
+                    --wrap "mamba run --no-capture-output -n ${MARVEL_ENV} \
+                        ${SLURM_ARRAY} -c ${config} -o ${MARVEL_RUN} \
+                        -g ${MARVEL_RUN}/two_source/geno_all.txt \
+                        -s final -n ${cpus} -r ${ROOT}"
+                ;;
+            associate)
+                log_dir="${MARVEL_APOE_RUN}/logs"
+                mkdir -p "${log_dir}"
+                sbatch --partition=rome --cpus-per-task="${cpus}"          \
+                    --mem="${mem}" --time="${walltime}"                    \
+                    --job-name=mv_associate --dependency=singleton         \
+                    --output="${log_dir}/mv_associate_${prefix}_%j.log"    \
+                    --wrap "mamba run --no-capture-output -n ${MARVEL_ENV} \
+                        marvelous associate ${config} \
+                        --outdir ${MARVEL_APOE_RUN} --n-jobs ${cpus}"
+                ;;
+            *)
+                echo "[error] ${MARVEL_RUNS}: unknown stage ${stage}" >&2
+                return 1
+                ;;
+        esac
+    done < <(tail -n +2 "${MARVEL_RUNS}")
+    if (( n_runs == 0 )); then
+        echo "[error] ${MARVEL_RUNS}: no run of ${analysis}" >&2
+        return 1
+    fi
+}
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -79,32 +167,6 @@ esac
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# APOE DIPLOTYPE
-# Needs only the phenotype file, so it runs first. Each diplotype vs all others.
-
-# [snellius] exposure file with binary carrier column per diplotype
-run_mamba biomed-api "${ROOT}"/src/apoe_exposure.py
-
-# [snellius] associate the diplotypes with outcomes (all samples and EUR)
-run_mamba marvel_old "${ROOT}"/src/create_config.py -a \
-    -t "${ROOT}"/data/raw/marvel_apoe_tasks.tsv
-
-TASKS="${ROOT}"/data/raw/marvel_apoe_tasks.tsv
-N_TASKS=$(( $(wc -l < "${TASKS}") - 1 ))
-TASK_LOGS="${ROOT}"/src/logs/marvel_apoe_task_logs
-mkdir -p "${TASK_LOGS}"
-
-sbatch --array=1-"${N_TASKS}" --partition=rome --cpus-per-task=1 --mem=16G \
-    --time=12:00:00 --job-name=marvel_apoe                                     \
-    --output="${TASK_LOGS}"/%x_%A_%a.log                                       \
-    --wrap "MARVEL_ENV=marvel_old ${ROOT}/src/marvel_assoc.sh ${TASKS} \
-        \${TMPDIR} 1 \${SLURM_ARRAY_TASK_ID}"
-
-# [local] figure on results/APOE_diplotype{,_eur}
-run_mamba plot-misc "${ROOT}"/src/apoe_genotype_forest.py
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # VARIANT ANNOTATION
 
 # [snellius] VEP/LOFTEE consequences per gene, region read from the
@@ -129,7 +191,7 @@ runlog run --id clinvar_filter --order 40 --root "${ROOT}" --                  \
     -vvv
 
 # [snellius] annotate clinvar variants
-run_mamba marvel_old "${ROOT}"/src/annotate_clinvar.py
+run_mamba biomed-api "${ROOT}"/src/annotate_clinvar.py
 
 # [snellius] combine PTV + ClinVar + GoF normalised against GRCh38
 run_mamba biomed-api "${ROOT}"/src/combine_variants.py
@@ -156,19 +218,29 @@ LOF_DIR="${DATA_DIR}/ukbiobank/genetics/b38/lof"
     -P "${LOF_DIR}"'/chr{chrom}_merged_vep.vcf.gz'                             \
     -R "${REF_DIR}/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz"             \
     -o "${ROOT}"/data/temp/marvel                                              \
-    -a "${HOME}"/software/marvel/resources/workflows/slurm_array.sh            \
+    -o "${MARVEL_RUN}" -a "${SLURM_ARRAY}" -e "${MARVEL_ENV}"                 \
     -m '2023 BCFtools/1.18-GCC-12.3.0'
 
-# [snellius] per-variant aggregate + associate on the same extract chunks
-# (one exposure per variant, prefix lipid_vep_plink_marvel_variant)
-# NOTE: its toml has no lipid tests yet (see the TODO under SETUP)
-RUN_DIR="${ROOT}/data/temp/marvel"
-sbatch --partition=rome --cpus-per-task=8 --mem=16G --time=08:00:00         \
-    --job-name=mv_final_variant                                                \
-    --output="${RUN_DIR}/two_source/logs/%x_%j.log"                            \
-    "${HOME}"/software/marvel/resources/workflows/slurm_array.sh               \
-    -c "${ROOT}"/config/marvel_config_variant.toml -o "${RUN_DIR}"             \
-    -g "${RUN_DIR}/two_source/geno_all.txt" -s final -n 8
+# [snellius] new marvel TOMLs (config/marvel/<analysis>_<subset>.toml),
+# MARVEL_RUNS and the per-variant list (lipid_variants.tsv minus APOE);
+# checks the stratum values in the phenotype file. The burden TOMLs read
+# the mask lists of burden_exposure.py --mask-lists (UKB CARRIER BURDEN)
+run_mamba biomed-api "${ROOT}"/src/create_config.py
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# APOE DIPLOTYPE
+# Each diplotype vs all others; all samples and EUR (overall).
+
+# [snellius] exposure file with binary carrier column per diplotype
+run_mamba biomed-api "${ROOT}"/src/apoe_exposure.py
+
+# [snellius] marvelous associate per subset (input.exposures)
+submit_marvel_runs apoe 4 16G 04:00:00
+
+# [local] figure on results/APOE_diplotype{,_eur}
+# TODO plan step 5: read the new output in data/temp/marvel_apoe
+run_mamba plot-misc "${ROOT}"/src/apoe_genotype_forest.py
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -195,19 +267,9 @@ sbatch --array=1-"${N_TASKS}"%20 --partition=rome --cpus-per-task=1        \
 # NON-AGGREGATED ANALYSES
 # TODO AoU
 
-# [snellius] marvel per-variant association
-run_mamba marvel_old "${ROOT}"/src/create_config.py -a
-
-TASKS="${ROOT}"/data/raw/marvel_tasks.tsv
-N_TASKS=$(( $(wc -l < "${TASKS}") - 1 ))
-TASK_LOGS="${ROOT}"/src/logs/marvel_task_logs
-mkdir -p "${TASK_LOGS}"
-
-sbatch --array=1-"${N_TASKS}" --partition=rome --cpus-per-task=1 --mem=16G \
-    --time=24:00:00 --job-name=marvel_assoc                                    \
-    --output="${TASK_LOGS}"/%x_%A_%a.log                                       \
-    --wrap "MARVEL_ENV=marvel_old ${ROOT}/src/marvel_assoc.sh ${TASKS} \
-        \${TMPDIR} 1 \${SLURM_ARRAY_TASK_ID}"
+# [snellius] marvel per-variant association (additive dosage) on the
+# extract chunks; subsets all, all_apoe, eur
+submit_marvel_runs variant 32 64G 12:00:00
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -227,28 +289,23 @@ run_mamba biomed-api "${ROOT}"/src/match_variants.py
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # UKB CARRIER BURDEN
 
-# [snellius] create binary exposure per gene and variant set
-# _fb: without the Thomassen AD sites of matched_variants.tsv.gz
-# the old marvel (10039b6) cnfs and the job array
-# data/raw/marvel_burden_tasks.tsv.
-# Needs data/temp/<GENE>_variant_extraction.tsv.gz, matched_variants.tsv.gz and
-# lipids_full_pheno.tsv.gz
+# [snellius] long mask lists (mask = gene x variant set) for the burden
+# TOMLs; genes: lipid_variants.tsv minus APOE. _fb: without the Thomassen
+# AD sites of matched_variants.tsv.gz. Needs lipid_variants.tsv and
+# matched_variants.tsv.gz
 sbatch --partition=rome --cpus-per-task=1 --mem=8G --time=04:00:00          \
     --job-name=burden_exposure --output="${ROOT}"/src/logs/%x_%j.log           \
     --wrap "mamba run --no-capture-output -n prot_misc \
-        python ${ROOT}/src/burden_exposure.py"
+        python ${ROOT}/src/burden_exposure.py --mask-lists"
 
-# [snellius] old marvel per job-array row (gene x subset x main/_fb file);
-TASKS="${ROOT}"/data/raw/marvel_burden_tasks.tsv
-N_TASKS=$(( $(wc -l < "${TASKS}") - 1 ))
-TASK_LOGS="${ROOT}"/src/logs/marvel_burden_logs
-mkdir -p "${TASK_LOGS}"
-sbatch --array=1-"${N_TASKS}" --partition=rome --cpus-per-task=1 --mem=16G \
-    --time=04:00:00 --job-name=marvel_burden                                   \
-    --output="${TASK_LOGS}"/%x_%A_%a.log                                       \
-    --wrap "MARVEL_ENV=marvel_old ${ROOT}/src/marvel_assoc.sh ${TASKS} \
-        \${TMPDIR} 1 \${SLURM_ARRAY_TASK_ID}"
+# [snellius] marvel burden (carrier of any site per mask) on the extract
+# chunks; subsets all_apoe, eur; main and _fb
+submit_marvel_runs burden 8 16G 04:00:00
+submit_marvel_runs burden_fb 8 16G 04:00:00
 
+# TODO plan step 5 (docs/marvel_migration_handoff.md): marvel_results_table.py
+# still reads the old marvel task tables and output; adapt it to the new
+# runs in MARVEL_RUNS, then drop --tasks and data/raw/marvel_*tasks.tsv
 # [snellius] per-gene stores of the per-variant (NON-AGGREGATED ANALYSES)
 # and burden results, listed in marvel_results.tsv; then rerun MERGE and
 # INTERMEDIATE MATCH, so matched_variants.tsv.gz and matched_burden.tsv.gz

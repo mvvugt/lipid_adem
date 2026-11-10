@@ -1131,7 +1131,10 @@ def _init_cmd_args() -> argparse.ArgumentParser:
     parser.add_argument(
         "--genes",
         nargs="+",
-        help=f"genes (default: the genes of {FileNames.MARVEL_TASKS.name})",
+        help=(
+            "genes (default: the genes of --variants minus "
+            f"{', '.join(Const.EXCLUDED_GENES)})"
+        ),
     )
     parser.add_argument(
         "--variants",
@@ -1186,6 +1189,41 @@ def _init_cmd_args() -> argparse.ArgumentParser:
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def default_genes(variants: Path) -> list[str]:
+    """Return the genes of the variant list minus `Const.EXCLUDED_GENES`.
+
+    The same gene rule as the per-variant list of create_config.py.
+
+    Parameters
+    ----------
+    variants : `Path`
+        Variant list with a `ColumnNames.GENE` column
+        (`FileNames.LIPID_VARIANTS`).
+
+    Returns
+    -------
+    genes : `list` of `str`
+        Genes in order of first appearance.
+
+    Raises
+    ------
+    ValueError
+        If an excluded gene is not in `variants` (misspelled constant).
+    """
+    genes = pd.read_csv(
+        variants, sep="\t", dtype=str, usecols=[ColumnNames.GENE],
+        keep_default_na=False,
+    )[ColumnNames.GENE]
+    excluded = set(Const.EXCLUDED_GENES)
+    unknown = sorted(excluded - set(genes))
+    if unknown:
+        raise ValueError(
+            f"{variants}: no variants of excluded gene(s) {unknown}"
+        )
+    return [g for g in dict.fromkeys(genes) if g not in excluded]
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def _parse_cmd_args(parser: argparse.ArgumentParser) -> argparse.Namespace:
     """Parse and validate command-line arguments."""
     args = parser.parse_args()
@@ -1196,8 +1234,7 @@ def _parse_cmd_args(parser: argparse.ArgumentParser) -> argparse.Namespace:
     if args.exclude_sites is not None and not args.mask_lists:
         parser.error("--exclude-sites needs --mask-lists")
     if args.genes is None:
-        tasks = pd.read_csv(FileNames.MARVEL_TASKS, sep="\t", dtype=str)
-        args.genes = list(dict.fromkeys(tasks[ColumnNames.GENE]))
+        args.genes = default_genes(args.variants)
     return args
 
 
