@@ -1393,6 +1393,106 @@ Output:
 
 ```
 
+## [10] var-annot (`/home/mvanvugt/mambaforge/envs/var_annot/bin/var-annot run --config /home/mvanvugt/projects/lipid_adem/config/var_annot.toml --force`)
+- first run: 2026-11-11 14:21:25
+- last run: 2026-11-11 16:25:08
+- commit: `e141a61` (dirty)
+
+Δ vs previous run (was `e141a61` (dirty)):
+- error resolved
+```diff
+@@ -1,2 +1,44 @@
+ [info]  2026-11-11 16:25:01 config: /home/mvanvugt/projects/lipid_adem/config/var_annot.toml
+-[error] 2026-11-11 16:24:54 output exists (use --force to overwrite): /home/mvanvugt/projects/lipid_adem/data/processed/lipid_annotated_variants.tsv.gz, /home/mvanvugt/projects/lipid_adem/data/processed/lipid_annotated_variants.sites.tsv.gz, /home/mvanvugt/projects/lipid_adem/data/processed/lipid_annotated_variants.summary.tsv.gz, /home/mvanvugt/projects/lipid_adem/data/processed/lipid_annotated_variants.scope_review_status.tsv.gz
++[info]  2026-11-11 16:25:01 Reading ClinVar export /home/mvanvugt/projects/lipid_adem/data/raw/clinvar_variants.tsv
++[info]  2026-11-11 16:25:03 ClinVar: 313818 rows read, 9922 kept after classification and condition filters
++[info]  2026-11-11 16:25:03 ClinVar APOB: 3 rows dropped (blank_assembly)
++[warn]  2026-11-11 16:25:03 ClinVar review status '' is not known: 315 rows counted as 0 stars
++[info]  2026-11-11 16:25:03 ClinVar ANGPTL3: 23 rows dropped (no_vcf_coordinates)
++[info]  2026-11-11 16:25:03 ClinVar APOA1: 24 rows dropped (no_vcf_coordinates)
++[info]  2026-11-11 16:25:03 ClinVar APOB: 22 rows dropped (no_vcf_coordinates)
++[info]  2026-11-11 16:25:03 ClinVar APOE: 5 rows dropped (no_vcf_coordinates)
++[info]  2026-11-11 16:25:03 ClinVar CETP: 21 rows dropped (no_vcf_coordinates)
++[info]  2026-11-11 16:25:03 ClinVar HMGCR: 6 rows dropped (no_vcf_coordinates)
++[info]  2026-11-11 16:25:03 ClinVar NPC1L1: 24 rows dropped (no_vcf_coordinates)
++[info]  2026-11-11 16:25:03 ClinVar PCSK9: 13 rows dropped (no_vcf_coordinates)
++[info]  2026-11-11 16:25:03 ClinVar PPARA: 82 rows dropped (no_vcf_coordinates)
++[info]  2026-11-11 16:25:03 ClinVar: 1680 rows, 336 unique variants
++[info]  2026-11-11 16:25:03 Reading VEP TSV /home/mvanvugt/projects/lipid_adem/data/temp/vep_lipid_gene_csq.tsv.gz
++[info]  2026-11-11 16:25:03 VEP: 79163 variant x transcript rows read
++[info]  2026-11-11 16:25:04 VEP: 16068 rows pass transcript rule canonical
++[info]  2026-11-11 16:25:04 VEP set PTV: 527 rows
++[info]  2026-11-11 16:25:04 Reading AlphaMissense /projects/0/aus20644/data/resources/annotations/AlphaMissense_hg38.sorted.tsv.bgz
++[info]  2026-11-11 16:25:04 AM CETP: 439 sites kept (UniProt P11597)
++[info]  2026-11-11 16:25:04 AM HMGCR: 2623 sites kept (UniProt P04035)
++[info]  2026-11-11 16:25:04 AM NPC1L1: 2507 sites kept (UniProt Q9UHC9)
++[info]  2026-11-11 16:25:04 AM PCSK9: 737 sites kept (UniProt Q8NBP7)
++[info]  2026-11-11 16:25:04 AM ANGPTL3: 493 sites kept (UniProt Q9Y5C1)
++[info]  2026-11-11 16:25:04 AM PPARA: 1543 sites kept (UniProt Q07869)
++[info]  2026-11-11 16:25:04 AM APOA1: 536 sites kept (UniProt P02647)
++[info]  2026-11-11 16:25:04 AM APOB: 2952 sites kept (UniProt P04114)
++[info]  2026-11-11 16:25:04 AM: 11830 rows (likely_pathogenic)
++[info]  2026-11-11 16:25:04 Reading GoFcards /projects/0/aus20644/data/resources/annotations/gofcards_hg38.tsv.bgz
++[info]  2026-11-11 16:25:04 GoF CETP: 1 reports
++[info]  2026-11-11 16:25:04 GoF HMGCR: 0 reports
++[info]  2026-11-11 16:25:04 GoF NPC1L1: 0 reports
++[info]  2026-11-11 16:25:04 GoF PCSK9: 46 reports
++[info]  2026-11-11 16:25:04 GoF ANGPTL3: 0 reports
++[info]  2026-11-11 16:25:04 GoF PPARA: 0 reports
++[info]  2026-11-11 16:25:04 GoF APOA1: 1 reports
++[info]  2026-11-11 16:25:04 GoF APOB: 0 reports
+... 6 more line(s) omitted
+```
+
+Output:
+```text
+[info]  2026-11-11 16:25:01 config: /home/mvanvugt/projects/lipid_adem/config/var_annot.toml
+[info]  2026-11-11 16:25:01 Reading ClinVar export /home/mvanvugt/projects/lipid_adem/data/raw/clinvar_variants.tsv
+[info]  2026-11-11 16:25:03 ClinVar: 313818 rows read, 9922 kept after classification and condition filters
+[info]  2026-11-11 16:25:03 ClinVar APOB: 3 rows dropped (blank_assembly)
+[warn]  2026-11-11 16:25:03 ClinVar review status '' is not known: 315 rows counted as 0 stars
+[info]  2026-11-11 16:25:03 ClinVar ANGPTL3: 23 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 16:25:03 ClinVar APOA1: 24 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 16:25:03 ClinVar APOB: 22 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 16:25:03 ClinVar APOE: 5 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 16:25:03 ClinVar CETP: 21 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 16:25:03 ClinVar HMGCR: 6 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 16:25:03 ClinVar NPC1L1: 24 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 16:25:03 ClinVar PCSK9: 13 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 16:25:03 ClinVar PPARA: 82 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 16:25:03 ClinVar: 1680 rows, 336 unique variants
+[info]  2026-11-11 16:25:03 Reading VEP TSV /home/mvanvugt/projects/lipid_adem/data/temp/vep_lipid_gene_csq.tsv.gz
+[info]  2026-11-11 16:25:03 VEP: 79163 variant x transcript rows read
+[info]  2026-11-11 16:25:04 VEP: 16068 rows pass transcript rule canonical
+[info]  2026-11-11 16:25:04 VEP set PTV: 527 rows
+[info]  2026-11-11 16:25:04 Reading AlphaMissense /projects/0/aus20644/data/resources/annotations/AlphaMissense_hg38.sorted.tsv.bgz
+[info]  2026-11-11 16:25:04 AM CETP: 439 sites kept (UniProt P11597)
+[info]  2026-11-11 16:25:04 AM HMGCR: 2623 sites kept (UniProt P04035)
+[info]  2026-11-11 16:25:04 AM NPC1L1: 2507 sites kept (UniProt Q9UHC9)
+[info]  2026-11-11 16:25:04 AM PCSK9: 737 sites kept (UniProt Q8NBP7)
+[info]  2026-11-11 16:25:04 AM ANGPTL3: 493 sites kept (UniProt Q9Y5C1)
+[info]  2026-11-11 16:25:04 AM PPARA: 1543 sites kept (UniProt Q07869)
+[info]  2026-11-11 16:25:04 AM APOA1: 536 sites kept (UniProt P02647)
+[info]  2026-11-11 16:25:04 AM APOB: 2952 sites kept (UniProt P04114)
+[info]  2026-11-11 16:25:04 AM: 11830 rows (likely_pathogenic)
+[info]  2026-11-11 16:25:04 Reading GoFcards /projects/0/aus20644/data/resources/annotations/gofcards_hg38.tsv.bgz
+[info]  2026-11-11 16:25:04 GoF CETP: 1 reports
+[info]  2026-11-11 16:25:04 GoF HMGCR: 0 reports
+[info]  2026-11-11 16:25:04 GoF NPC1L1: 0 reports
+[info]  2026-11-11 16:25:04 GoF PCSK9: 46 reports
+[info]  2026-11-11 16:25:04 GoF ANGPTL3: 0 reports
+[info]  2026-11-11 16:25:04 GoF PPARA: 0 reports
+[info]  2026-11-11 16:25:04 GoF APOA1: 1 reports
+[info]  2026-11-11 16:25:04 GoF APOB: 0 reports
+[info]  2026-11-11 16:25:04 GoF: 48 rows
+[info]  2026-11-11 16:25:05 normalisation: unchanged=1680
+[info]  2026-11-11 16:25:05 normalisation: normalised=18 unchanged=509
+[info]  2026-11-11 16:25:06 normalisation: unchanged=11830
+[info]  2026-11-11 16:25:06 normalisation: unchanged=48
+[info]  2026-11-11 16:25:08 Wrote 14085 rows to /home/mvanvugt/projects/lipid_adem/data/processed/lipid_annotated_variants.tsv.gz
+
+```
+
 ## [20] filter_gwas_cat (`/home/mvanvugt/projects/lipid_adem/src/filter_gwas_cat.py --tasks-file /home/mvanvugt/projects/lipid_adem/data/temp/tasks.tsv --task-id 116 --step 1`)
 - first run: 2026-09-21 22:58:26
 - last run: 2026-10-27 13:37:06

@@ -2,7 +2,7 @@ variant_id	chr	pos	a1	a2	source	gene	am_pathogenicity	tri_class	clinvar_directio
 chr1:62597598:T:A	chr1	62597598	T	A	AM	ANGPTL3	0.5915	Pathogenic/Likely pathogenic		62597598	T	A	unchanged
 chr1:62597601:C:G	chr1	62597601	C	G	AM	ANGPTL3	0.5864	Pathogenic/Likely pathogenic		62597601	C	G	unchanged
 chr1:62597608:T:TA	chr1	62597608	T	TA	PTV	ANGPTL3				62597608	T	TA	unchanged
-chr1:62597616:CC:GA	chr1	62597616	CC	GA	ClinVar	ANGPTL3			lowering	62597616	CC	GA	unchanged
+chr1:62597616:C:G	chr1	62597616	C	G	ClinVar	ANGPTL3			lowering	62597616	CC	GA	mnv_proxy
 chr1:62597619:GA:G	chr1	62597619	GA	G	ClinVar	ANGPTL3			lowering	62597619	GA	G	unchanged
 chr1:62597633:A:AG	chr1	62597633	A	AG	PTV	ANGPTL3				62597633	A	AG	unchanged
 chr1:62597634:A:AT	chr1	62597634	A	AT	PTV	ANGPTL3				62597634	A	AT	unchanged
