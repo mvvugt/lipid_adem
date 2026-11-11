@@ -1,0 +1,92 @@
+# MARVELous run config for submit_two_source.sh (Snellius).
+#
+# Relative paths are relative to this file.
+
+[input]
+# Variant list, tab-separated, normalised, and biallelic.
+# Columns: chr, pos, a1 (REF), a2 (ALT), gene. chr may be "1" or "chr1".
+variants = "/gpfs/home6/mvanvugt/projects/lipid_adem/data/processed/lipid_variants.tsv"
+# Set by submit_two_source.sh (--geno per job); leave empty.
+geno = []
+# Tab-separated; the ID column must hold the VCF sample IDs (PLINK IIDs,
+# as written by --recode vcf-iid; the VEP VCFs use the same IDs).
+phenotypes = "/gpfs/home6/mvanvugt/projects/lipid_adem/data/processed/lipids_full_pheno.tsv.gz"
+covariates = "/gpfs/home6/mvanvugt/projects/lipid_adem/data/processed/lipids_full_pheno.tsv.gz"
+id_column = "f.eid"
+chrom_column = "chr"
+pos_column = "pos"
+ref_column = "a1"
+alt_column = "a2"
+
+[extract]
+# Hard calls (GT) in both sources: dosage 0/1/2, carrier = dosage > 0.5.
+carrier_threshold = 0.5
+min_dosage = 0.0
+variant_mode = "binary"
+# Gene-level burden: 1 if a sample carries any listed variant of the gene.
+category_mode = "any"
+category_column = "gene"
+# Carriership of individuals is missing for variants only present in VEP. If
+# fraction of the burden exposure is > max_gene_missing, exposure is set to NA.
+# (see the vep_prep logs: "<n> plink, <m> vep fallback (mixed sources)").
+max_gene_missing = 0.25
+
+# One entry per outcome and type. Types: continuous, categorical, binary,
+# survival. Tests: OLS, KW (continuous); GLM-Binom, FISHER (binary);
+# Cox-PH (survival, needs time_column).
+[[tests]]
+outcome = "all_cause_dementia_algo"
+type = "binary"
+tests = ["GLM-Binom", ]
+[[tests]]
+outcome = "all_cause_dementia_combined"
+type = "binary"
+tests = ["GLM-Binom", ]
+[[tests]]
+outcome = "alzheimers_disease_combined"
+type = "binary"
+tests = ["GLM-Binom", ]
+[[tests]]
+outcome = "alzheimers_disease_algo"
+type = "binary"
+tests = ["GLM-Binom", ]
+[[tests]]
+outcome = "vascular_dementia_algo"
+type = "binary"
+tests = ["GLM-Binom", ]
+[[tests]]
+outcome = "frontotemporal_dementia_algo"
+type = "binary"
+tests = ["GLM-Binom", ]
+[[tests]]
+outcome = "ascvd_ii"
+type = "binary"
+tests = ["GLM-Binom", ]
+
+# [[tests]]
+# outcome = "<CONTINUOUS_OUTCOME>"
+# type = "continuous"
+# tests = ["OLS"]
+
+# The unadjusted model always runs as well.
+[covariates.adjusted]
+columns = ["Sex", "PC1", "PC2", "PC3", "PC4", "PC5", "PC6", ]
+
+[stratification]
+stratify_overall = true
+# Exposure 0/1: dummy-code against non-carriers.
+strata_ref = 0
+
+[options]
+min_group_size = 1
+max_missingness = 0.5
+# A failed fit (e.g. no carriers in a stratum) gives an NA row with a
+# remark instead of stopping the run.
+raise_on_error = false
+cov_miss_error = true
+file_sep = "\t"
+var_sep = ":"
+
+[output]
+# Set by submit_two_source.sh (-o, passed as --outdir).
+prefix = "lipid_vep_plink_marvel_test"
