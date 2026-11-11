@@ -251,8 +251,11 @@ def read_prefer_sites(
             f"{path.name}: no {outcome} rows of {', '.join(studies)}: "
             "fallback exposures equal the main ones"
         )
+    # the matched table writes pos as float (``56983407.0``): back to an
+    # integer, or the keys never equal the variant-list keys
+    pos = pd.to_numeric(matched[_HC.POS], errors="coerce").astype("Int64")
     keys = variant_key(
-        matched[_HC.CHROM], matched[_HC.POS], matched[_VL.OUT_A1],
+        matched[_HC.CHROM], pos.astype("string"), matched[_VL.OUT_A1],
         matched[_VL.OUT_A2],
     )
     sites: dict[str, set[str]] = {}
