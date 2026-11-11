@@ -1799,6 +1799,98 @@ Output:
 - last run: 2026-11-11 09:55:27
 - commit: `e141a61` (dirty)
 
+Δ vs previous run (was `23ebede` (dirty)):
+stage `variant lists`:
+```diff
+@@ -2,22 +2,22 @@
+ [info]  2026-11-11 09:53:57 CETP: 508 rows in old list /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/CETP_variants.tsv
+ [warn]  2026-11-11 09:53:57 HMGCR: no 'source' column in /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/HMGCR_variants.tsv; NA
+ [info]  2026-11-11 09:53:57 HMGCR: 2668 rows in old list /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/HMGCR_variants.tsv
++[warn]  2026-11-11 09:53:57 NPC1L1: no 'source' column in /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/NPC1L1_variants.tsv; NA
++[info]  2026-11-11 09:53:57 NPC1L1: 2606 rows in old list /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/NPC1L1_variants.tsv
++[warn]  2026-11-11 09:53:57 PCSK9: no 'source' column in /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PCSK9_variants.tsv; NA
++[info]  2026-11-11 09:53:57 PCSK9: 831 rows in old list /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PCSK9_variants.tsv
+ [warn]  2026-11-11 09:53:57 ANGPTL3: no 'source' column in /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/ANGPTL3_variants.tsv; NA
+ [info]  2026-11-11 09:53:57 ANGPTL3: 556 rows in old list /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/ANGPTL3_variants.tsv
+ [warn]  2026-11-11 09:53:57 PPARA: no 'source' column in /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PPARA_variants.tsv; NA
+ [info]  2026-11-11 09:53:57 PPARA: 1567 rows in old list /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PPARA_variants.tsv
+-[warn]  2026-11-02 15:36:13 PCSK9: no 'source' column in /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PCSK9_variants.tsv; NA
+-[info]  2026-11-02 15:36:13 PCSK9: 831 rows in old list /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PCSK9_variants.tsv
+-[warn]  2026-11-02 15:36:13 NPC1L1: no 'source' column in /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/NPC1L1_variants.tsv; NA
+-[info]  2026-11-02 15:36:13 NPC1L1: 2606 rows in old list /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/NPC1L1_variants.tsv
+ [info]  2026-11-11 09:54:04 9158 variants in new list /gpfs/home6/mvanvugt/projects/lipid_adem/data/processed/lipid_variants.tsv
+-[info]  2026-11-02 15:36:19 CETP: 5664 overall variant rows in CETP_results.tsv.gz
+-[info]  2026-11-02 15:36:23 HMGCR: 5184 overall variant rows in HMGCR_results.tsv.gz
+-[info]  2026-11-02 15:36:24 ANGPTL3: 3840 overall variant rows in ANGPTL3_results.tsv.gz
+-[info]  2026-11-02 15:36:26 PPARA: 3600 overall variant rows in PPARA_results.tsv.gz
+-[info]  2026-11-02 15:36:31 PCSK9: 8708 overall variant rows in PCSK9_results.tsv.gz
+-[info]  2026-11-02 15:36:37 NPC1L1: 14350 overall variant rows in NPC1L1_results.tsv.gz
+-[info]  2026-11-02 15:36:37 chunk ukb_ANGPTL3_chr1_plink: 223 variant(s) read, 469835 samples
++[info]  2026-11-11 09:54:09 CETP: 11328 overall variant rows in CETP_results.tsv.gz
++[info]  2026-11-11 09:54:14 HMGCR: 10368 overall variant rows in HMGCR_results.tsv.gz
++[info]  2026-11-11 09:54:21 NPC1L1: 24600 overall variant rows in NPC1L1_results.tsv.gz
++[info]  2026-11-11 09:54:27 PCSK9: 14928 overall variant rows in PCSK9_results.tsv.gz
++[info]  2026-11-11 09:54:29 ANGPTL3: 7680 overall variant rows in ANGPTL3_results.tsv.gz
++[info]  2026-11-11 09:54:31 PPARA: 7200 overall variant rows in PPARA_results.tsv.gz
++[info]  2026-11-11 09:54:31 chunk ukb_ANGPTL3_chr1_plink: 224 variant(s) read, 469835 samples
+ [info]  2026-11-11 09:54:33 chunk ukb_CETP_chr16_plink: 95 variant(s) read, 469835 samples
+ [info]  2026-11-11 09:54:34 chunk ukb_HMGCR_chr5_plink: 170 variant(s) read, 469835 samples
+ [info]  2026-11-11 09:54:34 chunk ukb_NPC1L1_chr7_plink: 270 variant(s) read, 469835 samples
+@@ -26,10 +26,10 @@
+ [info]  2026-11-11 09:54:35 chunk vep_chr11: 18 variant(s) read, 377567 samples
+ [info]  2026-11-11 09:54:35 chunk vep_chr16: 0 variant(s) read, 377567 samples
+ [info]  2026-11-11 09:54:35 chunk vep_chr19: 8 variant(s) read, 377567 samples
+-[info]  2026-11-02 15:36:41 chunk vep_chr2: 179 variant(s) read, 377567 samples
++[info]  2026-11-11 09:54:36 chunk vep_chr2: 178 variant(s) read, 377567 samples
+... 8 more line(s) omitted
+```
+stage `carriers`:
+```diff
+@@ -2,19 +2,19 @@
+ [info]  2026-11-11 09:54:42 CETP: 469835 old samples, 469835 of them in the largest new chunk (469835 samples)
+ [info]  2026-11-11 09:54:42 HMGCR: 432 variant column(s) in HMGCR_variant_extraction.tsv.gz, 170 in the new list
+ [info]  2026-11-11 09:54:48 HMGCR: 469835 old samples, 469835 of them in the largest new chunk (469835 samples)
+-[info]  2026-11-02 15:36:56 ANGPTL3: 320 variant column(s) in ANGPTL3_variant_extraction.tsv.gz, 90 in the new list
++[info]  2026-11-11 09:54:48 NPC1L1: 1025 variant column(s) in NPC1L1_variant_extraction.tsv.gz, 267 in the new list
++[info]  2026-11-11 09:55:03 NPC1L1: 469835 old samples, 469835 of them in the largest new chunk (469835 samples)
++[info]  2026-11-11 09:55:03 PCSK9: 622 variant column(s) in PCSK9_variant_extraction.tsv.gz, 131 in the new list
++[info]  2026-11-11 09:55:12 PCSK9: 469835 old samples, 469835 of them in the largest new chunk (469835 samples)
++[info]  2026-11-11 09:55:12 ANGPTL3: 320 variant column(s) in ANGPTL3_variant_extraction.tsv.gz, 91 in the new list
+ [info]  2026-11-11 09:55:16 ANGPTL3: 469835 old samples, 469835 of them in the largest new chunk (469835 samples)
+ [info]  2026-11-11 09:55:16 PPARA: 300 variant column(s) in PPARA_variant_extraction.tsv.gz, 124 in the new list
+ [info]  2026-11-11 09:55:20 PPARA: 469835 old samples, 469835 of them in the largest new chunk (469835 samples)
+-[info]  2026-11-02 15:37:03 PCSK9: 622 variant column(s) in PCSK9_variant_extraction.tsv.gz, 131 in the new list
+-[info]  2026-11-02 15:37:12 PCSK9: 469835 old samples, 469835 of them in the largest new chunk (469835 samples)
+-[info]  2026-11-02 15:37:12 NPC1L1: 1025 variant column(s) in NPC1L1_variant_extraction.tsv.gz, 267 in the new list
+-[info]  2026-11-02 15:37:25 NPC1L1: 469835 old samples, 469835 of them in the largest new chunk (469835 samples)
+ [info]  2026-11-11 09:55:20 CETP: 95 variant(s), 0 with lost carriers; totals {'n_old_carriers': 504011, 'n_both': 504011, 'n_lost': 0, 'n_lost_non_carrier': 0, 'n_lost_missing': 0, 'n_lost_not_sampled': 0, 'n_lost_not_read': 0}
+ [info]  2026-11-11 09:55:20 HMGCR: 170 variant(s), 0 with lost carriers; totals {'n_old_carriers': 406, 'n_both': 406, 'n_lost': 0, 'n_lost_non_carrier': 0, 'n_lost_missing': 0, 'n_lost_not_sampled': 0, 'n_lost_not_read': 0}
+-[info]  2026-11-02 15:37:25 ANGPTL3: 90 variant(s), 0 with lost carriers; totals {'n_old_carriers': 1622, 'n_both': 1622, 'n_lost': 0, 'n_lost_non_carrier': 0, 'n_lost_missing': 0, 'n_lost_not_sampled': 0, 'n_lost_not_read': 0}
++[info]  2026-11-11 09:55:20 NPC1L1: 267 variant(s), 0 with lost carriers; totals {'n_old_carriers': 2423, 'n_both': 2423, 'n_lost': 0, 'n_lost_non_carrier': 0, 'n_lost_missing': 0, 'n_lost_not_sampled': 0, 'n_lost_not_read': 0}
++[info]  2026-11-11 09:55:20 PCSK9: 131 variant(s), 0 with lost carriers; totals {'n_old_carriers': 2491, 'n_both': 2491, 'n_lost': 0, 'n_lost_non_carrier': 0, 'n_lost_missing': 0, 'n_lost_not_sampled': 0, 'n_lost_not_read': 0}
++[info]  2026-11-11 09:55:20 ANGPTL3: 91 variant(s), 0 with lost carriers; totals {'n_old_carriers': 1672, 'n_both': 1672, 'n_lost': 0, 'n_lost_non_carrier': 0, 'n_lost_missing': 0, 'n_lost_not_sampled': 0, 'n_lost_not_read': 0}
+ [info]  2026-11-11 09:55:20 PPARA: 124 variant(s), 0 with lost carriers; totals {'n_old_carriers': 1208, 'n_both': 1208, 'n_lost': 0, 'n_lost_non_carrier': 0, 'n_lost_missing': 0, 'n_lost_not_sampled': 0, 'n_lost_not_read': 0}
+-[info]  2026-11-02 15:37:25 PCSK9: 131 variant(s), 0 with lost carriers; totals {'n_old_carriers': 2491, 'n_both': 2491, 'n_lost': 0, 'n_lost_non_carrier': 0, 'n_lost_missing': 0, 'n_lost_not_sampled': 0, 'n_lost_not_read': 0}
+-[info]  2026-11-02 15:37:25 NPC1L1: 267 variant(s), 0 with lost carriers; totals {'n_old_carriers': 2423, 'n_both': 2423, 'n_lost': 0, 'n_lost_non_carrier': 0, 'n_lost_missing': 0, 'n_lost_not_sampled': 0, 'n_lost_not_read': 0}
+-[info]  2026-11-02 15:37:25 wrote 877 rows to validation/results/step10_vs_b/carriers.tsv.gz
+-[info]  2026-11-02 15:37:25 wrote 0 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/validation/step10/lost_carriers.tsv.gz
++[info]  2026-11-11 09:55:20 wrote 878 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/marvel_comparison/carriers.tsv.gz
++[info]  2026-11-11 09:55:20 wrote 0 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/marvel_comparison/lost_carriers.tsv.gz
+```
+stage `results`:
+```diff
+@@ -1,5 +1,5 @@
+ [info]  2026-11-11 09:55:20 0 strata_ref reference row(s) dropped
+-[info]  2026-11-02 15:37:27 128212 new overall variant rows in step10_variant_dos.results.tsv.gz
+-[info]  2026-11-02 15:37:27 results adjusted: 5653 joined rows, 3598 same sign, 10 with |z_diff| > 2; 7 old only, 58446 new only
+-[info]  2026-11-02 15:37:27 results unadjusted: 5660 joined rows, 3554 same sign, 10 with |z_diff| > 2; 0 old only, 58446 new only
+-[info]  2026-11-02 15:37:29 wrote 128212 rows to validation/results/step10_vs_b/results.tsv.gz
++[info]  2026-11-11 09:55:23 219312 new overall variant rows in lipid_variant_all.results.tsv.gz
++[info]  2026-11-11 09:55:23 results adjusted: 10203 joined rows, 7117 same sign, 111 with |z_diff| > 2; 118 old only, 99120 new only
++[info]  2026-11-11 09:55:23 results unadjusted: 10213 joined rows, 6842 same sign, 105 with |z_diff| > 2; 108 old only, 99120 new only
++[info]  2026-11-11 09:55:26 wrote 219312 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/marvel_comparison/results.tsv.gz
+```
+
 Output:
 ```text
 [stage] 2026-11-11 09:53:57 variant lists
