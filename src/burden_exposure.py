@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
 """
-Build the UKB carrier-burden exposures and the old marvel (10039b6) run
-files for them (Snellius).
+Build the UKB carrier-burden mask lists for new marvel and, after the
+marvel burden runs, the burden summary (Snellius).
 
-Per gene, the listed variants (`lipid_variants.tsv`) are collapsed into
-0/1 carrier columns `<GENE>_<mask>` (`Burden.VARIANT_SETS`): a sample
-is 1 when it carries any of the mask's sites, else 0 (a missing call
-counts as non-carrier and is counted in the summary). Carriers come from
-the old wide carriers files (`FileNames.OLD_CARRIERS_TEMPLATE`, `f.eid`
-plus one dosage column per variant), read in chunks and only for the
-listed variants.
+Per gene, the listed variants (`lipid_variants.tsv`) are assigned to the
+masks `<GENE>_<mask>` (`Burden.VARIANT_SETS`); marvel makes each a 0/1
+exposure: a sample is 1 when it carries any of the mask's sites.
 
 - gof: GoF + ClinVar raising sites (the sites `meta_analysis.orient`
   flips); every other mask: the sites of its sources (PTV, ClinVar, AM;
@@ -19,23 +15,16 @@ listed variants.
   direction. `SelectedGoF` sites (`VariantSource.SELECTED_GOF`)
   are in no mask.
 - `<GENE>_<mask>_fb` (`Burden.FALLBACK_SUFFIX`): the same masks
-  without the sites the preferred studies (`Constants.
-  BURDEN_PREFER_STUDIES`, Thomassen) have for `Constants.
-  BURDEN_FALLBACK_OUTCOME` in `matched_variants.tsv.gz`; written to their
-  own file and tested against that outcome only.
-- A column whose carrier fraction is above `Constants.
-  BURDEN_SWAP_FRACTION` (or that matches the list with a1/a2 swapped)
-  counts the other allele: carriers are then the samples with dosage
-  below 2 - threshold.
-- Sites with a MAF above `--max-maf` are left out (default `Constants.
-  BURDEN_MAX_MAF` = 0.5: none).
+  without the sites the preferred studies (`Burden.PREFER_STUDIES`,
+  Thomassen) have for `Burden.FALLBACK_OUTCOME` in
+  `matched_variants.tsv.gz`; written to their own list and tested
+  against that outcome only.
 
-Writes per gene `FileNames.BURDEN_EXPOSURE_TEMPLATE` (main and fallback),
-one cnf per gene x subset x file (`Paths.BURDEN_CONFIG`, format of
-marvel 10039b6 as in validation/configs/A), the job-array file
-`FileNames.MARVEL_BURDEN_TASKS` (columns as `marvel_tasks.tsv`, run with
-src/marvel_burden.sh) and the summary `FileNames.BURDEN_EXPOSURE_SUMMARY`.
-The exposure files are individual-level: never commit them.
+`--mask-lists` writes `FileNames.BURDEN_MASK_VARIANTS_TEMPLATE` (main and
+fallback; sites only, committed). `--summary` writes
+`FileNames.BURDEN_EXPOSURE_SUMMARY`: per mask the listed and the read
+sites, carriers and missing calls of the `Burden.SUMMARY_SUBSET` burden
+runs (`Paths.MARVEL_RUN`; read by meta_analysis.py and figure_utils.py).
 
 Requires log_tools installed (pip install log_tools) for RUN_LOG.md
 logging. Does not import `functions` (biomed_api is not needed here).
@@ -47,11 +36,8 @@ from __future__ import annotations
 # imports
 
 import argparse
-import re
-from dataclasses import dataclass, field
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 from log_tools.emitter import log_info, log_stage, log_warn
 from log_tools.setup import runlog_setup
@@ -60,23 +46,19 @@ from variant_keys import (
     _join_unique,
     _write_table_atomic,
     key_from_id,
-    match_to_new,
     variant_key,
 )
 from project_constants import (
-    Apoe,
-    ApoeStratum,
     Burden,
     ClinVarDirection,
     ColumnNames,
     Const,
     FileNames,
     HarmonisedColumns,
-    Marvel,
     MarvelCompareColumns,
+    MarvelRun,
     Paths,
     RunlogOrder,
-    Ukb,
     VariantListColumns,
     VariantSource,
 )
@@ -84,8 +66,6 @@ from project_constants import (
 _C = MarvelCompareColumns
 _VL = VariantListColumns
 _HC = HarmonisedColumns
-# pandas renames repeated header names to `<name>.<n>`
-_DUPLICATE_SUFFIX = re.compile(r"\.\d+$")
 # every variant set (`Burden.VARIANT_SETS`), each followed by
 # its directed form when it has one
 _MASKS: tuple[str, ...] = tuple(
@@ -100,55 +80,22 @@ _LOF_SOURCES: tuple[str, ...] = (
     VariantSource.CLINVAR,
     VariantSource.AM,
 )
-_SWAPPED_MATCHES = frozenset({_C.MATCH_SWAPPED, _C.MATCH_SWAPPED_ORIG})
 # variant ID column of the --exclude-sites file (as marvel's
 # `<prefix>.variants.tsv.gz`)
 _EXCLUDE_COLUMN = "variant"
-# summary columns
+# summary columns (`write_summary`)
 _S_GENE = "gene"
 _S_EXPOSURE = "exposure"
 _S_LISTED = "n_sites_listed"
-_S_FOUND = "n_sites_in_carriers"
-_S_KEPT = "n_sites_kept"
-_S_SWAPPED = "n_sites_swapped"
-_S_MAF = "n_sites_above_max_maf"
+_S_READ = "n_sites_read"
 _S_CARRIERS = "n_carriers"
-_S_MISSING = "n_noncarriers_with_missing_call"
+_S_MISSING = "n_missing"
 _S_SAMPLES = "n_samples"
 _S_SITES = "sites"
-# job-array columns (as marvel_tasks.tsv; src/marvel_assoc.sh)
-_TASK_COLUMNS: tuple[str, ...] = (
-    ColumnNames.ROWIDX, ColumnNames.GENE, "carriers", "outdir", "config",
-    "subset",
+_SUMMARY_COLUMNS: tuple[str, ...] = (
+    _S_GENE, _S_EXPOSURE, _S_LISTED, _S_READ, _S_CARRIERS, _S_MISSING,
+    _S_SAMPLES, _S_SITES,
 )
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# data containers
-
-@dataclass
-class Carriers:
-    """Per-column carriers of one wide carriers file.
-
-    Attributes
-    ----------
-    ids : `np.ndarray`
-        Sample IDs in file order.
-    alt : `dict` [`str`, `np.ndarray`]
-        Column -> bool, dosage above the carrier threshold.
-    ref : `dict` [`str`, `np.ndarray`]
-        Column -> bool, dosage below 2 - threshold (carrier of the other
-        allele).
-    missing : `dict` [`str`, `np.ndarray`]
-        Column -> bool, missing call.
-    dosage_sum : `dict` [`str`, `float`]
-        Column -> sum of the called dosages.
-    """
-    ids: np.ndarray
-    alt: dict[str, np.ndarray] = field(default_factory=dict)
-    ref: dict[str, np.ndarray] = field(default_factory=dict)
-    missing: dict[str, np.ndarray] = field(default_factory=dict)
-    dosage_sum: dict[str, float] = field(default_factory=dict)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -336,7 +283,7 @@ def mask_list(
     prefer : `dict` [`str`, `set` [`str`]]
         `read_prefer_sites` output.
     fallback : `bool`
-        `True`: the `_fb` masks (`listed - prefer`, as `collapse_masks`);
+        `True`: the `_fb` masks (`listed - prefer`);
         `False`: the main masks.
 
     Returns
@@ -348,10 +295,8 @@ def mask_list(
 
     Notes
     -----
-    Unlike `site_carriers`, there is no carrier-fraction swap
-    (`Burden.SWAP_FRAC`) and no MAF filter: those need the
-    carriers. Missing calls follow marvel's `max_gene_missing`, not the
-    non-carrier rule of `collapse_masks`.
+    No carrier-fraction swap and no MAF filter (the old carrier path
+    had both). Missing calls follow marvel's `max_gene_missing`.
     """
     detail = [_VL.CHROM, _VL.POS, _VL.A1, _VL.A2]
     table = pd.read_csv(
@@ -491,554 +436,248 @@ def write_mask_lists(
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# carriers
+# summary of the marvel burden runs
 
-def carrier_columns(path: Path, sites: pd.DataFrame) -> pd.DataFrame:
-    """Find the columns of a carriers file that hold listed sites.
-
-    Parameters
-    ----------
-    path : `Path`
-        Wide carriers file.
-    sites : `pd.DataFrame`
-        `read_sites` rows of one gene.
-
-    Returns
-    -------
-    columns : `pd.DataFrame`
-        `column` (header name), `_C.NEW_KEY`, `_C.MATCH`; repeated names
-        (``<name>.<n>``) and columns that are not a variant are logged.
-    """
-    header = pd.Series(
-        pd.read_csv(path, sep="\t", nrows=0).columns, dtype="string"
-    )
-    base = header.str.replace(_DUPLICATE_SUFFIX, "", regex=True)
-    repeated = (base != header) & base.isin(header)
-    names = header.where(~repeated, base)
-    cols = pd.DataFrame({"column": header, "_key": key_from_id(names)})
-    n_unparsed = int(cols["_key"].isna().sum())
-    cols = cols.dropna(subset=["_key"])
-    found = match_to_new(cols["_key"], sites)
-    found = found.rename(columns={_C.OLD_KEY: "_key"})
-    cols = cols.merge(found, on="_key", how="left").drop(columns="_key")
-    cols = cols[cols[_C.NEW_KEY].notna()].reset_index(drop=True)
-    log_info(
-        f"{path.name}: {len(header)} columns, {n_unparsed} not a variant "
-        f"(ID, merged names), {int(repeated.sum())} repeated, "
-        f"{len(cols)} hold a listed site "
-        f"({cols[_C.NEW_KEY].nunique()} sites)"
-    )
-    return cols
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def stream_carriers(
-    path: Path,
-    columns: list[str],
-    id_column: str,
-    threshold: float,
-    chunk_rows: int,
-) -> Carriers:
-    """Read some columns of a wide carriers file in chunks.
+def summary_prefixes(
+    runs: Path, subset: str = Burden.SUMMARY_SUBSET
+) -> dict[str, str]:
+    """Return the run prefix of the main and the `_fb` burden analysis.
 
     Parameters
     ----------
-    path : `Path`
-        Wide carriers file: `id_column` plus one dosage column per variant.
-    columns : `list` [`str`]
-        Variant columns to read.
-    id_column : `str`
-        Sample ID column.
-    threshold : `float`
-        A dosage above it is a carrier (below 2 - it, of the other allele).
-    chunk_rows : `int`
-        Rows read at a time.
+    runs : `Path`
+        `FileNames.MARVEL_RUNS` (create_config.py).
+    subset : `str`, optional, default: `Burden.SUMMARY_SUBSET`
+        UKB subset whose runs are summarised.
 
     Returns
     -------
-    carriers : `Carriers`
-        Sample IDs and per column the alt/ref carrier and missing flags.
+    prefixes : `dict` [`str`, `str`]
+        Mask-list suffix (``""`` or `Burden.FALLBACK_SUFFIX`) -> run
+        prefix.
 
     Raises
     ------
+    FileNotFoundError
+        If `runs` does not exist.
     ValueError
-        If `id_column` is not in the file.
+        If an analysis has not exactly one run for `subset`.
     """
-    header = pd.read_csv(path, sep="\t", nrows=0).columns
-    if id_column not in header:
-        raise ValueError(f"{path}: no ID column {id_column!r}")
-    dtypes = {col: "float32" for col in columns}
-    dtypes[id_column] = str
-    reader = pd.read_csv(
-        path, sep="\t", usecols=[id_column, *columns], dtype=dtypes,
-        chunksize=chunk_rows,
-    )
-    ids: list[np.ndarray] = []
-    parts: dict[str, list[np.ndarray]] = {col: [] for col in columns}
-    sums = dict.fromkeys(columns, 0.0)
-    for part in reader:
-        ids.append(part[id_column].str.strip().to_numpy())
-        for col in columns:
-            values = part[col].to_numpy()
-            parts[col].append(values)
-            sums[col] += float(np.nansum(values))
-    carriers = Carriers(
-        ids=np.concatenate(ids) if ids else np.array([], dtype=object),
-        dosage_sum=sums,
-    )
-    for col in columns:
-        values = (
-            np.concatenate(parts[col]) if parts[col]
-            else np.array([], dtype="float32")
-        )
-        carriers.alt[col] = values > threshold
-        carriers.ref[col] = values < 2 - threshold
-        carriers.missing[col] = np.isnan(values)
-        parts[col] = []
-    return carriers
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def site_carriers(
-    gene: str,
-    columns: pd.DataFrame,
-    carriers: Carriers,
-    max_maf: float,
-) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray], set[str],
-           set[str]]:
-    """Orient each column and collapse it per listed site.
-
-    Parameters
-    ----------
-    gene : `str`
-        Gene (log lines).
-    columns : `pd.DataFrame`
-        `carrier_columns` output.
-    carriers : `Carriers`
-        `stream_carriers` output for those columns.
-    max_maf : `float`
-        Sites with a higher MAF are left out.
-
-    Returns
-    -------
-    carrier : `dict` [`str`, `np.ndarray`]
-        Site key -> bool, carrier of the listed a2 in any of its columns.
-    missing : `dict` [`str`, `np.ndarray`]
-        Site key -> bool, missing call in any of its columns.
-    swapped : `set` [`str`]
-        Sites with a column read as the other allele.
-    above_maf : `set` [`str`]
-        Sites left out for their MAF.
-    """
-    n_samples = len(carriers.ids)
-    carrier: dict[str, np.ndarray] = {}
-    missing: dict[str, np.ndarray] = {}
-    swapped: set[str] = set()
-    above_maf: set[str] = set()
-    for row in columns.itertuples(index=False):
-        col = row.column
-        key = getattr(row, _C.NEW_KEY)
-        called = int((~carriers.missing[col]).sum())
-        alt_freq = carriers.dosage_sum[col] / (2 * called) if called else 0.0
-        if min(alt_freq, 1 - alt_freq) > max_maf:
-            above_maf.add(key)
-            continue
-        is_swapped = getattr(row, _C.MATCH) in _SWAPPED_MATCHES
-        flags = carriers.ref[col] if is_swapped else carriers.alt[col]
-        fraction = flags.sum() / n_samples if n_samples else 0.0
-        if fraction > Burden.SWAP_FRAC:
-            is_swapped = not is_swapped
-            flags = carriers.ref[col] if is_swapped else carriers.alt[col]
-            log_warn(
-                f"{gene}: {col} has {fraction:.1%} carriers, read as the "
-                "other allele"
-            )
-        if is_swapped:
-            swapped.add(key)
-        carrier[key] = carrier.get(key, np.zeros(n_samples, bool)) | flags
-        missing[key] = (
-            missing.get(key, np.zeros(n_samples, bool))
-            | carriers.missing[col]
-        )
-    for key in above_maf:
-        carrier.pop(key, None)
-        missing.pop(key, None)
-    if above_maf:
-        log_warn(
-            f"{gene}: {len(above_maf)} site(s) with MAF > {max_maf} left "
-            f"out: {', '.join(sorted(above_maf))}"
-        )
-    return carrier, missing, swapped, above_maf
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def collapse_masks(
-    gene: str,
-    sites: pd.DataFrame,
-    carrier: dict[str, np.ndarray],
-    missing: dict[str, np.ndarray],
-    swapped: set[str],
-    above_maf: set[str],
-    prefer: set[str],
-    n_samples: int,
-) -> tuple[dict[str, np.ndarray], list[dict]]:
-    """Collapse the sites of each mask into one 0/1 exposure.
-
-    Parameters
-    ----------
-    gene : `str`
-        Gene of the masks.
-    sites : `pd.DataFrame`
-        `read_sites` rows of the gene.
-    carrier, missing, swapped, above_maf
-        `site_carriers` output.
-    prefer : `set` [`str`]
-        Sites of the preferred studies (`read_prefer_sites`), left out of
-        the fallback exposures.
-    n_samples : `int`
-        Samples in the carriers file.
-
-    Returns
-    -------
-    exposures : `dict` [`str`, `np.ndarray`]
-        Exposure name (`<GENE>_<mask>[_fb]`) -> int8 0/1; masks without a
-        carrier are left out (warned).
-    summary : `list` [`dict`]
-        One summary row per exposure, also the left-out ones.
-    """
-    exposures: dict[str, np.ndarray] = {}
-    summary: list[dict] = []
-    for mask in _MASKS:
-        listed = set(sites.loc[sites[mask], _C.NEW_KEY])
-        for suffix, keys in (
-            ("", listed),
-            (Burden.FALLBACK_SUFFIX, listed - prefer),
-        ):
-            name = f"{gene}_{mask}{suffix}"
-            found = keys & (set(carrier) | above_maf)
-            kept = sorted(keys & set(carrier))
-            any_carrier = np.zeros(n_samples, bool)
-            any_missing = np.zeros(n_samples, bool)
-            for key in kept:
-                any_carrier |= carrier[key]
-                any_missing |= missing[key]
-            n_carriers = int(any_carrier.sum())
-            summary.append({
-                _S_GENE: gene,
-                _S_EXPOSURE: name,
-                _S_LISTED: len(keys),
-                _S_FOUND: len(found),
-                _S_KEPT: len(kept),
-                _S_SWAPPED: len(set(kept) & swapped),
-                _S_MAF: len(keys & above_maf),
-                _S_CARRIERS: n_carriers,
-                _S_MISSING: int((any_missing & ~any_carrier).sum()),
-                _S_SAMPLES: n_samples,
-                _S_SITES: ";".join(kept),
-            })
-            if n_carriers == 0:
-                log_warn(f"{name}: no carriers ({len(keys)} sites), not "
-                         "written")
-                continue
-            exposures[name] = any_carrier.astype("int8")
-            log_info(
-                f"{name}: {len(kept)} of {len(keys)} sites, {n_carriers} "
-                "carriers"
-            )
-    return exposures, summary
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# marvel 10039b6 run files
-
-def subset_strata() -> dict[str, dict[str, str]]:
-    """Return the stratification of each burden subset.
-
-    Returns
-    -------
-    strata : `dict` [`str`, `dict` [`str`, `str`]]
-        `Burden.SUBSETS` value -> stratification name ->
-        criterion (``column=value,value``; ``;`` joins two), as in
-        create_config.py.
-    """
-    pop = (
-        f"{Ukb.POP_COL}="
-        + ",".join(Ukb.EUR_POPS)
-    )
-    apoe = {
-        stratum: f"{Apoe.UKB_COL}={','.join(genotypes)}"
-        for stratum, genotypes in ApoeStratum.GENOTYPES.items()
-    }
-    sep = Marvel.ANCESTRY_SEP
-    strata = {
-        "all_apoe": dict(apoe),
-        "eur": {"EUR": pop} | {
-            f"EUR{sep}{stratum}": f"{pop};{criterion}"
-            for stratum, criterion in apoe.items()
-        },
-    }
-    unknown = sorted(set(Burden.SUBSETS) - set(strata))
-    if unknown:
-        raise ValueError(f"no stratification for subset(s) {unknown}")
-    return {subset: strata[subset] for subset in Burden.SUBSETS}
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def check_strata(pheno: Path, strata: dict[str, dict[str, str]]) -> None:
-    """Check that every listed stratification value occurs.
-
-    marvel keeps the rows whose value is listed and does not complain
-    about a value that never occurs, so a misspelled value would silently
-    shrink a stratum (as create_config.py).
-
-    Parameters
-    ----------
-    pheno : `Path`
-        Phenotype file of the cnfs.
-    strata : `dict` [`str`, `dict` [`str`, `str`]]
-        `subset_strata` output.
-
-    Returns
-    -------
-    `None`
-
-    Raises
-    ------
-    ValueError
-        If a column or value is missing from `pheno`.
-    """
-    wanted: dict[str, set[str]] = {}
-    for criteria in strata.values():
-        for criterion in criteria.values():
-            for part in criterion.split(";"):
-                column, values = part.split("=", 1)
-                wanted.setdefault(column, set()).update(values.split(","))
-    header = pd.read_csv(pheno, sep="\t", nrows=0).columns
-    absent_columns = sorted(set(wanted) - set(header))
-    if absent_columns:
-        raise ValueError(f"{pheno}: no column(s) {absent_columns}")
-    table = pd.read_csv(pheno, sep="\t", usecols=sorted(wanted), dtype=str)
-    for column, values in sorted(wanted.items()):
-        present = set(table[column].dropna())
-        absent = sorted(values - present)
-        if absent:
+    if not runs.exists():
+        raise FileNotFoundError(f"{runs} not found: run create_config.py")
+    table = pd.read_csv(runs, sep="\t", dtype=str, keep_default_na=False)
+    prefixes: dict[str, str] = {}
+    for suffix in ("", Burden.FALLBACK_SUFFIX):
+        analysis = f"{Burden.ANALYSIS}{suffix}"
+        rows = table[
+            (table[MarvelRun.RUNS_ANALYSIS] == analysis)
+            & (table[MarvelRun.RUNS_SUBSET] == subset)
+        ]
+        if len(rows) != 1:
             raise ValueError(
-                f"{pheno}: {column} has no {absent} "
-                f"(values: {sorted(present)})"
+                f"{runs}: {len(rows)} runs of {analysis} {subset}, "
+                "expected 1"
             )
-        log_info(f"{column}: " + ", ".join(
-            f"{value}={n}"
-            for value, n in table[column].value_counts(dropna=False).items()
-        ))
+        prefixes[suffix] = rows[MarvelRun.RUNS_PREFIX].iloc[0]
+    return prefixes
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def outcome_tests(fallback: bool) -> tuple[list[str], list[str]]:
-    """Return the marvel outcome variables of a burden cnf.
+def read_run_sites(path: Path) -> set[str]:
+    """Return the keys of the sites a marvel run read.
 
     Parameters
     ----------
-    fallback : `bool`
-        True for the fallback exposures: `Constants.
-        BURDEN_FALLBACK_OUTCOME` only.
-
-    Returns
-    -------
-    continuous, binary : `list` [`str`]
-        `Marvel.UKB_OUTCOMES` variables tested with OLS (lipids)
-        and with GLM-Binom.
-    """
-    continuous: list[str] = []
-    binary: list[str] = []
-    for variable, outcome in Marvel.UKB_OUTCOMES.items():
-        if fallback and outcome != Burden.FALLBACK_OUTCOME:
-            continue
-        if outcome in Const.LIPID_OUTCOMES:
-            continuous.append(variable)
-        else:
-            binary.append(variable)
-    return continuous, binary
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def cnf_text(
-    gene: str,
-    exposure_file: Path,
-    pheno: Path,
-    strata: dict[str, str],
-    fallback: bool,
-) -> str:
-    """Write the text of one marvel 10039b6 association cnf.
-
-    Laid out as validation/configs/A/CETP_step2.cnf. No `exposures`
-    option, so every column of `exposure_file` is tested; listwise
-    deletion is off (`missingness_strategy False`, as the February runs).
-
-    Parameters
-    ----------
-    gene : `str`
-        `[ExpInput]` label.
-    exposure_file : `Path`
-        The 0/1 exposure file.
-    pheno : `Path`
-        Phenotype and covariate file.
-    strata : `dict` [`str`, `str`]
-        Stratification name -> criterion; marvel adds `overall`.
-    fallback : `bool`
-        Tests of the fallback exposures (`outcome_tests`).
-
-    Returns
-    -------
-    text : `str`
-        The cnf, tab-separated, ending with a newline.
-    """
-    continuous, binary = outcome_tests(fallback)
-    lines = [
-        "[ExpInput]",
-        f"{gene}\t{exposure_file}",
-        "[PhenoInput]",
-        f"phenotypes\t{pheno}",
-        f"covariates\t{pheno}",
-        "[ConTests]",
-        *(f"{variable}\tOLS" for variable in continuous),
-        "[CatTests]",
-        "[BinTests]",
-        *(f"{variable}\tGLM-Binom" for variable in binary),
-        "[Covs]",
-        *(
-            f"{model}\t{';'.join(covs) if covs else 'None'}"
-            for model, covs in Burden.MODELS.items()
-        ),
-        "[Stratification]",
-        *(f"{name}\t{criterion}" for name, criterion in strata.items()),
-        "[Options]",
-        f"id_column\t{Ukb.ID_COL}",
-        "raise_on_error\tFalse",
-        "missingness_strategy\tFalse",
-        "extract_variants\tFalse",
-        "association_analysis\tTrue",
-    ]
-    return "\n".join(lines) + "\n"
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def _write_text_atomic(text: str, path: Path) -> None:
-    """Write a text file atomically (stage-then-move).
-
-    Parameters
-    ----------
-    text : `str`
-        File content.
     path : `Path`
-        Destination; its directory is created if needed.
+        ``<prefix>.variants.tsv.gz`` (marvel aggregate): one row per
+        variant-list ID with its `MarvelRun.STATUS`.
 
     Returns
     -------
-    `None`
+    keys : `set` [`str`]
+        ``chrom:pos:a1:a2`` keys (`variant_key`) of the sites with a
+        status in `MarvelRun.READ_STATUS`.
+
+    Raises
+    ------
+    FileNotFoundError
+        If `path` does not exist.
     """
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp_path = path.with_suffix(path.suffix + ".tmp")
-    tmp_path.write_text(text)
-    tmp_path.replace(path)
+    if not path.exists():
+        raise FileNotFoundError(f"{path} not found: run the burden runs")
+    columns = [
+        MarvelRun.CHROM, MarvelRun.POS, MarvelRun.REF, MarvelRun.ALT,
+        MarvelRun.STATUS,
+    ]
+    table = pd.read_csv(
+        path, sep="\t", dtype=str, usecols=columns, keep_default_na=False
+    )
+    read = table[table[MarvelRun.STATUS].isin(MarvelRun.READ_STATUS)]
+    keys = variant_key(
+        read[MarvelRun.CHROM], read[MarvelRun.POS], read[MarvelRun.REF],
+        read[MarvelRun.ALT],
+    )
+    log_info(
+        f"{path.name}: {len(read)} of {len(table)} sites read "
+        f"({', '.join(MarvelRun.READ_STATUS)})"
+    )
+    return set(keys.dropna())
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def write_run_files(
-    gene: str,
-    files: dict[str, Path],
-    pheno: Path,
-    strata: dict[str, dict[str, str]],
-    config_dir: Path,
-    out_dir: Path,
-) -> list[dict]:
-    """Write the cnfs of one gene and return its job-array rows.
+def count_carriers(
+    path: Path, chunksize: int = Burden.SUMMARY_CHUNK_ROWS
+) -> pd.DataFrame:
+    """Count the carriers and missing calls per exposure of a marvel run.
+
+    Reads the long exposure table in chunks of `chunksize` rows, only
+    its category and exposure columns.
 
     Parameters
     ----------
-    gene : `str`
-        Gene.
-    files : `dict` [`str`, `Path`]
-        Exposure-file suffix ("" or the fallback suffix) -> written file.
-    pheno : `Path`
-        Phenotype and covariate file.
-    strata : `dict` [`str`, `dict` [`str`, `str`]]
-        `subset_strata` output.
-    config_dir, out_dir : `Path`
-        Where the cnfs go, and the parent of the marvel outdirs.
+    path : `Path`
+        ``<prefix>.exposures.tsv.gz`` (marvel aggregate, long: ``id,
+        category, exposure``; dense or sparse).
+    chunksize : `int`, optional, default: `Burden.SUMMARY_CHUNK_ROWS`
+        Rows per chunk.
 
     Returns
     -------
-    rows : `list` [`dict`]
-        One job-array row per subset and file (`_TASK_COLUMNS` without
-        the row index).
+    counts : `pd.DataFrame`
+        Index category (``<GENE>_<mask>[_fb]``); columns `_S_CARRIERS`
+        (exposure above 0) and `_S_MISSING` (exposure NA).
+
+    Raises
+    ------
+    FileNotFoundError
+        If `path` does not exist.
     """
-    rows: list[dict] = []
-    for suffix, exposure_file in files.items():
-        fallback = suffix == Burden.FALLBACK_SUFFIX
-        for subset, subset_strata_ in strata.items():
-            name = f"{gene}_{subset}{suffix}"
-            config = config_dir / f"{name}.cnf"
-            _write_text_atomic(
-                cnf_text(gene, exposure_file, pheno, subset_strata_,
-                         fallback),
-                config,
+    if not path.exists():
+        raise FileNotFoundError(f"{path} not found: run the burden runs")
+    columns = [MarvelRun.AGG_CATEGORY, MarvelRun.AGG_EXPOSURE]
+    carriers = pd.Series(dtype="int64")
+    missing = pd.Series(dtype="int64")
+    reader = pd.read_csv(
+        path, sep="\t", usecols=columns, chunksize=chunksize,
+        dtype={MarvelRun.AGG_CATEGORY: "category"},
+        na_values=[Const.NA],
+    )
+    with reader:
+        for chunk in reader:
+            value = pd.to_numeric(chunk[MarvelRun.AGG_EXPOSURE])
+            group = chunk[MarvelRun.AGG_CATEGORY].astype(str)
+            carriers = carriers.add(
+                (value > 0).groupby(group).sum(), fill_value=0
             )
-            rows.append({
-                ColumnNames.GENE: gene,
-                "carriers": str(exposure_file),
-                "outdir": str(out_dir / name),
-                "config": str(config),
-                "subset": subset,
-            })
-            log_info(f"{name}: {config}")
-    return rows
+            missing = missing.add(
+                value.isna().groupby(group).sum(), fill_value=0
+            )
+    counts = pd.DataFrame({_S_CARRIERS: carriers, _S_MISSING: missing})
+    return counts.fillna(0).astype("int64")
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# main
-
-def burden_exposure(
-    genes: list[str],
-    variants: Path,
-    matched: Path,
-    carriers_template: str,
-    pheno: Path,
-    max_maf: float,
-    id_column: str = Ukb.ID_COL,
-    prefer_studies: list[str] | None = None,
-    config_dir: Path = Paths.BURDEN_CONFIG,
-    out_dir: Path = Paths.BURDEN_OUT,
-    tasks_path: Path = FileNames.MARVEL_BURDEN_TASKS,
-    summary_path: Path = FileNames.BURDEN_EXPOSURE_SUMMARY,
-    exposure_template: str = FileNames.BURDEN_EXPOSURE_TEMPLATE,
-) -> None:
-    """Write the burden exposures, cnfs, job array and summary.
+def count_samples(path: Path) -> int:
+    """Return the number of samples of a marvel run.
 
     Parameters
     ----------
-    genes : `list` [`str`]
-        Genes; a gene without a carriers file is skipped (warned).
-    variants : `Path`
-        `lipid_variants.tsv`.
-    matched : `Path`
-        `matched_variants.tsv.gz`, for the preferred studies' sites.
-    carriers_template : `str`
-        Wide carriers file per gene, with ``{gene}``.
-    pheno : `Path`
-        Phenotype and covariate file of the cnfs.
-    max_maf : `float`
-        Sites with a higher MAF are left out.
-    id_column : `str`, optional, default: `Ukb.ID_COL`
-        Sample ID column of the carriers files (written as is).
-    prefer_studies : `list` [`str`] or `NoneType`, optional
-        Preferred study accessions; default
-        `Burden.PREFER_STUDIES`.
-    config_dir, out_dir : `Path`, optional
-        Cnf directory and the parent of the marvel outdirs.
-    tasks_path, summary_path : `Path`, optional
-        Job-array file and summary.
-    exposure_template : `str`, optional
-        Exposure file per gene, with ``{gene}`` and ``{suffix}``.
+    path : `Path`
+        ``<prefix>.samples.tsv.gz`` (marvel aggregate, one ``id`` per
+        row).
+
+    Returns
+    -------
+    n_samples : `int`
+
+    Raises
+    ------
+    FileNotFoundError
+        If `path` does not exist.
+    """
+    if not path.exists():
+        raise FileNotFoundError(f"{path} not found: run the burden runs")
+    return len(pd.read_csv(path, sep="\t", usecols=[MarvelRun.ID],
+                           dtype=str))
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def mask_summary(
+    masks: pd.DataFrame,
+    read: set[str],
+    counts: pd.DataFrame,
+    n_samples: int,
+) -> pd.DataFrame:
+    """Summarise one mask list against what its marvel run read.
+
+    Parameters
+    ----------
+    masks : `pd.DataFrame`
+        Mask list (`mask_list` output): `chr`, `pos`, `a1`, `a2`, `gene`,
+        `VariantListColumns.MASK`.
+    read : `set` [`str`]
+        `read_run_sites` output.
+    counts : `pd.DataFrame`
+        `count_carriers` output.
+    n_samples : `int`
+        `count_samples` output.
+
+    Returns
+    -------
+    summary : `pd.DataFrame`
+        One row per mask, in list order: `_S_GENE`, `_S_EXPOSURE`,
+        `_S_LISTED`, `_S_READ`, `_S_CARRIERS`, `_S_MISSING`,
+        `_S_SAMPLES`, `_S_SITES` (the read sites joined by ``;``, in
+        list order). A mask absent from `counts` has 0 carriers.
+    """
+    keys = variant_key(
+        masks[_VL.CHROM], masks[_VL.POS], masks[_VL.A1], masks[_VL.A2]
+    )
+    is_read = keys.isin(read)
+    rows: list[dict] = []
+    for mask, idx in masks.groupby(_VL.MASK, sort=False).groups.items():
+        mask_keys = keys.loc[idx]
+        kept = mask_keys[is_read.loc[idx]]
+        rows.append({
+            _S_GENE: masks.loc[idx[0], _VL.GENE],
+            _S_EXPOSURE: mask,
+            _S_LISTED: len(mask_keys),
+            _S_READ: len(kept),
+            _S_CARRIERS: int(counts[_S_CARRIERS].get(mask, 0)),
+            _S_MISSING: int(counts[_S_MISSING].get(mask, 0)),
+            _S_SAMPLES: n_samples,
+            _S_SITES: ";".join(kept),
+        })
+    return pd.DataFrame(rows, columns=list(_SUMMARY_COLUMNS))
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def write_summary(
+    runs: Path = FileNames.MARVEL_RUNS,
+    run_dir: Path = Paths.MARVEL_RUN,
+    template: str = FileNames.BURDEN_MASK_VARIANTS_TEMPLATE,
+    summary_path: Path = FileNames.BURDEN_EXPOSURE_SUMMARY,
+    chunksize: int = Burden.SUMMARY_CHUNK_ROWS,
+) -> None:
+    """Write the burden summary from the main and `_fb` marvel runs.
+
+    Per mask: the listed sites, the sites marvel read, the carriers and
+    missing calls, from the `Burden.SUMMARY_SUBSET` runs (which sites are
+    read does not depend on the subset).
+
+    Parameters
+    ----------
+    runs : `Path`, optional, default: `FileNames.MARVEL_RUNS`
+        Run table, for the two prefixes (`summary_prefixes`).
+    run_dir : `Path`, optional, default: `Paths.MARVEL_RUN`
+        Directory with the ``<prefix>.<suffix>`` aggregate outputs.
+    template : `str`, optional
+        Mask lists with ``{suffix}`` (`FileNames.
+        BURDEN_MASK_VARIANTS_TEMPLATE`).
+    summary_path : `Path`, optional
+        Output (`FileNames.BURDEN_EXPOSURE_SUMMARY`).
+    chunksize : `int`, optional, default: `Burden.SUMMARY_CHUNK_ROWS`
+        Rows per chunk of the exposure tables.
 
     Returns
     -------
@@ -1047,74 +686,35 @@ def burden_exposure(
     Raises
     ------
     FileNotFoundError
-        If no gene has a carriers file.
+        If a mask list or run output does not exist.
     """
-    studies = list(prefer_studies or Burden.PREFER_STUDIES)
-    log_stage("variant sets")
-    sites = read_sites(variants, genes)
-    prefer = read_prefer_sites(
-        matched, studies, Burden.FALLBACK_OUTCOME
-    )
-    strata = subset_strata()
-    check_strata(pheno, strata)
-    summary: list[dict] = []
-    task_rows: list[dict] = []
-    for gene in genes:
-        log_stage(gene)
-        path = Path(carriers_template.format(gene=gene))
-        if not path.exists():
-            log_warn(f"{gene}: no carriers file {path}, skipped")
-            continue
-        gene_sites = sites[sites[_S_GENE] == gene]
-        if gene_sites.empty:
-            log_warn(f"{gene}: no listed sites, skipped")
-            continue
-        columns = carrier_columns(path, gene_sites)
-        carriers = stream_carriers(
-            path, list(columns["column"]), id_column,
-            Marvel.CARRIER_THR,
-            Marvel.OLD_CARRIERS_CHUNK_ROWS,
+    parts: list[pd.DataFrame] = []
+    for suffix, prefix in summary_prefixes(runs).items():
+        log_stage(f"summary {prefix}")
+        masks_path = Path(template.format(suffix=suffix))
+        if not masks_path.exists():
+            raise FileNotFoundError(
+                f"{masks_path} not found: run --mask-lists"
+            )
+        masks = pd.read_csv(
+            masks_path, sep="\t", dtype=str, keep_default_na=False
         )
-        log_info(f"{gene}: {len(carriers.ids)} samples")
-        carrier, missing, swapped, above_maf = site_carriers(
-            gene, columns, carriers, max_maf
+        part = mask_summary(
+            masks,
+            read_run_sites(run_dir / f"{prefix}{MarvelRun.VARIANTS_SUFFIX}"),
+            count_carriers(
+                run_dir / f"{prefix}{MarvelRun.EXPOSURES_SUFFIX}", chunksize
+            ),
+            count_samples(run_dir / f"{prefix}{MarvelRun.SAMPLES_SUFFIX}"),
         )
-        exposures, rows = collapse_masks(
-            gene, gene_sites, carrier, missing, swapped, above_maf,
-            prefer.get(gene, set()), len(carriers.ids),
-        )
-        summary.extend(rows)
-        files: dict[str, Path] = {}
-        for suffix in ("", Burden.FALLBACK_SUFFIX):
-            names = [
-                name for name in exposures
-                if name.endswith(Burden.FALLBACK_SUFFIX)
-                == bool(suffix)
-            ]
-            if not names:
-                log_warn(f"{gene}: no exposures for file suffix "
-                         f"{suffix!r}, not written")
-                continue
-            table = pd.DataFrame({id_column: carriers.ids})
-            for name in names:
-                table[name] = exposures[name]
-            out = Path(exposure_template.format(gene=gene, suffix=suffix))
-            _write_table_atomic(table, out)
-            files[suffix] = out
-        task_rows.extend(
-            write_run_files(gene, files, pheno, strata, config_dir, out_dir)
-        )
-    if not task_rows:
-        raise FileNotFoundError("no gene had a carriers file with carriers")
-    tasks = pd.DataFrame(task_rows)
-    tasks.insert(0, ColumnNames.ROWIDX, range(1, len(tasks) + 1))
-    tasks = tasks[list(_TASK_COLUMNS)]
-    tasks_path.parent.mkdir(parents=True, exist_ok=True)
-    tmp_tasks = tasks_path.with_suffix(tasks_path.suffix + ".tmp")
-    tasks.to_csv(tmp_tasks, sep="\t", index=False)
-    tmp_tasks.replace(tasks_path)
-    log_info(f"wrote {len(tasks)} job-array rows to {tasks_path}")
-    _write_table_atomic(pd.DataFrame(summary), summary_path)
+        none_read = part[part[_S_READ] == 0]
+        if not none_read.empty:
+            log_warn(
+                f"{prefix}: no site read for "
+                + ", ".join(none_read[_S_EXPOSURE])
+            )
+        parts.append(part)
+    _write_table_atomic(pd.concat(parts, ignore_index=True), summary_path)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1124,66 +724,63 @@ def _init_cmd_args() -> argparse.ArgumentParser:
     """Create and configure the argument parser."""
     parser = argparse.ArgumentParser(
         description=(
-            "Collapse the UKB carriers per gene and variant set into 0/1 "
-            "burden exposures and write the old marvel run files."
+            "Write the burden mask lists for new marvel (--mask-lists) or, "
+            "after the marvel burden runs, the burden summary (--summary)."
         )
+    )
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument(
+        "--mask-lists",
+        action="store_true",
+        help="write the mask lists "
+        f"({FileNames.BURDEN_MASK_VARIANTS_TEMPLATE}, main and fallback)",
+    )
+    mode.add_argument(
+        "--summary",
+        action="store_true",
+        help="write the summary of the burden runs "
+        f"({FileNames.BURDEN_EXPOSURE_SUMMARY})",
     )
     parser.add_argument(
         "--genes",
         nargs="+",
         help=(
-            "genes (default: the genes of --variants minus "
-            f"{', '.join(Const.EXCLUDED_GENES)})"
+            "with --mask-lists: genes (default: the genes of --variants "
+            f"minus {', '.join(Const.EXCLUDED_GENES)})"
         ),
     )
     parser.add_argument(
         "--variants",
         type=Path,
         default=FileNames.LIPID_VARIANTS,
-        help="variant list (default: %(default)s)",
+        help="with --mask-lists: variant list (default: %(default)s)",
     )
     parser.add_argument(
         "--matched",
         type=Path,
         default=FileNames.MATCHED_VARIANTS,
-        help="matched variants, for the preferred studies' sites "
-        "(default: %(default)s)",
-    )
-    parser.add_argument(
-        "--carriers",
-        default=FileNames.OLD_CARRIERS_TEMPLATE,
-        help="wide carriers files, with {gene} (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--pheno",
-        type=Path,
-        default=FileNames.UKB_PHENO,
-        help="phenotype + covariate file of the cnfs (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--max-maf",
-        type=float,
-        default=Burden.MAX_MAF,
-        help="leave out sites with a higher MAF (default: %(default)s)",
+        help="with --mask-lists: matched variants, for the preferred "
+        "studies' sites (default: %(default)s)",
     )
     parser.add_argument(
         "--prefer-studies",
         nargs="+",
         default=list(Burden.PREFER_STUDIES),
-        help="preferred study accessions (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--mask-lists",
-        action="store_true",
-        help="only write the mask lists for new marvel "
-        f"({FileNames.BURDEN_MASK_VARIANTS_TEMPLATE}, main and fallback; "
-        "no carriers needed) and stop",
+        help="with --mask-lists: preferred study accessions "
+        "(default: %(default)s)",
     )
     parser.add_argument(
         "--exclude-sites",
         type=Path,
         help="with --mask-lists: TSV with a 'variant' column (marvel IDs) "
         "of sites left out of every mask",
+    )
+    parser.add_argument(
+        "--run-dir",
+        type=Path,
+        default=Paths.MARVEL_RUN,
+        help="with --summary: directory of the marvel run outputs "
+        "(default: %(default)s)",
     )
     return parser
 
@@ -1227,13 +824,9 @@ def default_genes(variants: Path) -> list[str]:
 def _parse_cmd_args(parser: argparse.ArgumentParser) -> argparse.Namespace:
     """Parse and validate command-line arguments."""
     args = parser.parse_args()
-    if "{gene}" not in args.carriers:
-        parser.error("--carriers must contain {gene}")
-    if not 0 < args.max_maf <= 0.5:
-        parser.error("--max-maf must be in (0, 0.5]")
     if args.exclude_sites is not None and not args.mask_lists:
         parser.error("--exclude-sites needs --mask-lists")
-    if args.genes is None:
+    if args.mask_lists and args.genes is None:
         args.genes = default_genes(args.variants)
     return args
 
@@ -1247,23 +840,15 @@ def main() -> None:
     args = _parse_cmd_args(parser)
 
     with runlog_setup(root=Paths.HERE, order=RunlogOrder.BURDEN_EXPOSURE):
-        if args.mask_lists:
-            write_mask_lists(
-                args.genes,
-                args.variants,
-                args.matched,
-                prefer_studies=args.prefer_studies,
-                exclude=args.exclude_sites,
-            )
+        if args.summary:
+            write_summary(run_dir=args.run_dir)
             return
-        burden_exposure(
+        write_mask_lists(
             args.genes,
             args.variants,
             args.matched,
-            args.carriers,
-            args.pheno,
-            args.max_maf,
             prefer_studies=args.prefer_studies,
+            exclude=args.exclude_sites,
         )
 
 

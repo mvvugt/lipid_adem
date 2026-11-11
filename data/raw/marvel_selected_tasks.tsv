@@ -1,4 +1,0 @@
-rowidx	gene	carriers	outdir	config	subset
-1	CETP	/gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/CETP_selected_variant_extraction.tsv.gz	/gpfs/home6/mvanvugt/projects/lipid_adem/results/CETP_selected	/gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_selected/CETP	all
-2	CETP	/gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/CETP_selected_variant_extraction.tsv.gz	/gpfs/home6/mvanvugt/projects/lipid_adem/results/CETP_selected_all_apoe	/gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_selected/CETP_all_apoe	all_apoe
-3	CETP	/gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/CETP_selected_variant_extraction.tsv.gz	/gpfs/home6/mvanvugt/projects/lipid_adem/results/CETP_selected_eur	/gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel_selected/CETP_eur	eur

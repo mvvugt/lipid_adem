@@ -124,7 +124,7 @@ submit_marvel_runs() {
 # Files read (2026-10-26):
 # - data/processed/lipids_full_pheno.tsv.gz: FileNames.UKB_PHENO
 #   (create_config.py, apoe_exposure.py, burden_exposure.py),
-#   config/marvel_config.toml and all config/marvel{,_burden} cnfs
+#   config/marvel_config.toml and the config/marvel TOMLs
 # - data/processed/pheno_cov.tsv.gz: config/marvel_config_variant.toml
 #   only. Same IDs (502166) and counts as cetp_marvel's pheno_cov.tsv.gz
 #   (checked 2026-10-26); lipids_full_pheno.tsv.gz is it restricted to
@@ -210,7 +210,7 @@ REF_DIR="${DATA_DIR}/resources/human_genome/b38"
 LOF_DIR="${DATA_DIR}/ukbiobank/genetics/b38/lof"
 
 # [snellius] collapse the two forms per variant (no merge on conflict) into
-# data/temp/<GENE>_variant_extraction.tsv.gz (read by marvel_tasks.tsv)
+# data/temp/<GENE>_variant_extraction.tsv.gz
 # TODO if individual data/temp/<GENE>_variants.tsv doe not exist, but data/processed/lipid_variants does, create the individual files anytime the individual ones are needed (not in marvel itself of course, but before marvel submission e.g.)
 "${ROOT}"/src/submit_two_source.sh                                             \
     -c "${ROOT}"/config/marvel_config.toml                                     \
@@ -301,6 +301,15 @@ sbatch --partition=rome --cpus-per-task=1 --mem=8G --time=04:00:00          \
 # chunks; subsets all_apoe, eur; main and _fb
 submit_marvel_runs burden 8 16G 04:00:00
 submit_marvel_runs burden_fb 8 16G 04:00:00
+
+# [snellius] after the all_apoe burden runs: per mask the listed and read
+# sites, carriers and missing calls (results/output/
+# burden_exposure_summary.tsv.gz, read by meta_analysis.py and
+# figure_utils.py); streams <prefix>.exposures.tsv.gz in chunks
+sbatch --partition=rome --cpus-per-task=1 --mem=8G --time=01:00:00          \
+    --job-name=burden_summary --output="${ROOT}"/src/logs/%x_%j.log            \
+    --wrap "mamba run --no-capture-output -n prot_misc \
+        python ${ROOT}/src/burden_exposure.py --summary"
 
 # [snellius] after all final runs of MARVEL_RUNS (per variant + burden):
 # copy each <prefix>.results.tsv.gz to results/marvel/<prefix>_results.tsv.gz
