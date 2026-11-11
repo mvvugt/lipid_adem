@@ -162,17 +162,17 @@ Output:
 
 ## [10] slurm_array_final_task1
 - first run: 2026-11-10 16:01:03
-- last run: 2026-11-11 00:35:48
-- commit: `e141a61` (dirty)
+- last run: 2026-11-11 19:20:30
+- commit: `25d4593` (dirty)
 
 Output:
 ```text
-[info]  2026-11-11 00:27:18 config: /gpfs/home6/mvanvugt/projects/lipid_adem/config/marvel/burden_fb_all_apoe.toml
-[info]  2026-11-11 00:27:18 stage: final
-[info]  2026-11-11 00:27:18 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
-[info]  2026-11-11 00:27:18 node: tcn8.local.snellius.surf.nl, job id: 29095378, task: 1
-[info]  2026-11-11 00:31:18 aggregate: finished
-[info]  2026-11-11 00:35:48 associate: finished
+[info]  2026-11-11 19:12:37 config: /home/mvanvugt/projects/lipid_adem/config/marvel/burden_fb_eur.toml
+[info]  2026-11-11 19:12:37 stage: final
+[info]  2026-11-11 19:12:37 output directory: /home/mvanvugt/projects/lipid_adem/data/temp/marvel
+[info]  2026-11-11 19:12:37 node: tcn10.local.snellius.surf.nl, job id: 29134223, task: 1
+[info]  2026-11-11 19:16:36 aggregate: finished
+[info]  2026-11-11 19:20:29 associate: finished
 
 ```
 
@@ -1393,103 +1393,31 @@ Output:
 
 ```
 
-## [10] var-annot (`/home/mvanvugt/mambaforge/envs/var_annot/bin/var-annot run --config /home/mvanvugt/projects/lipid_adem/config/var_annot.toml --force`)
+## [10] var-annot (`/home/mvanvugt/mambaforge/envs/var_annot/bin/var-annot run --config /home/mvanvugt/software/var_annot/fn5_reruns/configs/lip_ac_rescue.toml`)
 - first run: 2026-11-11 14:21:25
-- last run: 2026-11-11 16:25:08
-- commit: `e141a61` (dirty)
-
-Δ vs previous run (was `e141a61` (dirty)):
-- error resolved
-```diff
-@@ -1,2 +1,44 @@
- [info]  2026-11-11 16:25:01 config: /home/mvanvugt/projects/lipid_adem/config/var_annot.toml
--[error] 2026-11-11 16:24:54 output exists (use --force to overwrite): /home/mvanvugt/projects/lipid_adem/data/processed/lipid_annotated_variants.tsv.gz, /home/mvanvugt/projects/lipid_adem/data/processed/lipid_annotated_variants.sites.tsv.gz, /home/mvanvugt/projects/lipid_adem/data/processed/lipid_annotated_variants.summary.tsv.gz, /home/mvanvugt/projects/lipid_adem/data/processed/lipid_annotated_variants.scope_review_status.tsv.gz
-+[info]  2026-11-11 16:25:01 Reading ClinVar export /home/mvanvugt/projects/lipid_adem/data/raw/clinvar_variants.tsv
-+[info]  2026-11-11 16:25:03 ClinVar: 313818 rows read, 9922 kept after classification and condition filters
-+[info]  2026-11-11 16:25:03 ClinVar APOB: 3 rows dropped (blank_assembly)
-+[warn]  2026-11-11 16:25:03 ClinVar review status '' is not known: 315 rows counted as 0 stars
-+[info]  2026-11-11 16:25:03 ClinVar ANGPTL3: 23 rows dropped (no_vcf_coordinates)
-+[info]  2026-11-11 16:25:03 ClinVar APOA1: 24 rows dropped (no_vcf_coordinates)
-+[info]  2026-11-11 16:25:03 ClinVar APOB: 22 rows dropped (no_vcf_coordinates)
-+[info]  2026-11-11 16:25:03 ClinVar APOE: 5 rows dropped (no_vcf_coordinates)
-+[info]  2026-11-11 16:25:03 ClinVar CETP: 21 rows dropped (no_vcf_coordinates)
-+[info]  2026-11-11 16:25:03 ClinVar HMGCR: 6 rows dropped (no_vcf_coordinates)
-+[info]  2026-11-11 16:25:03 ClinVar NPC1L1: 24 rows dropped (no_vcf_coordinates)
-+[info]  2026-11-11 16:25:03 ClinVar PCSK9: 13 rows dropped (no_vcf_coordinates)
-+[info]  2026-11-11 16:25:03 ClinVar PPARA: 82 rows dropped (no_vcf_coordinates)
-+[info]  2026-11-11 16:25:03 ClinVar: 1680 rows, 336 unique variants
-+[info]  2026-11-11 16:25:03 Reading VEP TSV /home/mvanvugt/projects/lipid_adem/data/temp/vep_lipid_gene_csq.tsv.gz
-+[info]  2026-11-11 16:25:03 VEP: 79163 variant x transcript rows read
-+[info]  2026-11-11 16:25:04 VEP: 16068 rows pass transcript rule canonical
-+[info]  2026-11-11 16:25:04 VEP set PTV: 527 rows
-+[info]  2026-11-11 16:25:04 Reading AlphaMissense /projects/0/aus20644/data/resources/annotations/AlphaMissense_hg38.sorted.tsv.bgz
-+[info]  2026-11-11 16:25:04 AM CETP: 439 sites kept (UniProt P11597)
-+[info]  2026-11-11 16:25:04 AM HMGCR: 2623 sites kept (UniProt P04035)
-+[info]  2026-11-11 16:25:04 AM NPC1L1: 2507 sites kept (UniProt Q9UHC9)
-+[info]  2026-11-11 16:25:04 AM PCSK9: 737 sites kept (UniProt Q8NBP7)
-+[info]  2026-11-11 16:25:04 AM ANGPTL3: 493 sites kept (UniProt Q9Y5C1)
-+[info]  2026-11-11 16:25:04 AM PPARA: 1543 sites kept (UniProt Q07869)
-+[info]  2026-11-11 16:25:04 AM APOA1: 536 sites kept (UniProt P02647)
-+[info]  2026-11-11 16:25:04 AM APOB: 2952 sites kept (UniProt P04114)
-+[info]  2026-11-11 16:25:04 AM: 11830 rows (likely_pathogenic)
-+[info]  2026-11-11 16:25:04 Reading GoFcards /projects/0/aus20644/data/resources/annotations/gofcards_hg38.tsv.bgz
-+[info]  2026-11-11 16:25:04 GoF CETP: 1 reports
-+[info]  2026-11-11 16:25:04 GoF HMGCR: 0 reports
-+[info]  2026-11-11 16:25:04 GoF NPC1L1: 0 reports
-+[info]  2026-11-11 16:25:04 GoF PCSK9: 46 reports
-+[info]  2026-11-11 16:25:04 GoF ANGPTL3: 0 reports
-+[info]  2026-11-11 16:25:04 GoF PPARA: 0 reports
-+[info]  2026-11-11 16:25:04 GoF APOA1: 1 reports
-+[info]  2026-11-11 16:25:04 GoF APOB: 0 reports
-... 6 more line(s) omitted
-```
+- last run: 2026-11-11 22:14:20
+- commit: `25d4593` (dirty)
 
 Output:
 ```text
-[info]  2026-11-11 16:25:01 config: /home/mvanvugt/projects/lipid_adem/config/var_annot.toml
-[info]  2026-11-11 16:25:01 Reading ClinVar export /home/mvanvugt/projects/lipid_adem/data/raw/clinvar_variants.tsv
-[info]  2026-11-11 16:25:03 ClinVar: 313818 rows read, 9922 kept after classification and condition filters
-[info]  2026-11-11 16:25:03 ClinVar APOB: 3 rows dropped (blank_assembly)
-[warn]  2026-11-11 16:25:03 ClinVar review status '' is not known: 315 rows counted as 0 stars
-[info]  2026-11-11 16:25:03 ClinVar ANGPTL3: 23 rows dropped (no_vcf_coordinates)
-[info]  2026-11-11 16:25:03 ClinVar APOA1: 24 rows dropped (no_vcf_coordinates)
-[info]  2026-11-11 16:25:03 ClinVar APOB: 22 rows dropped (no_vcf_coordinates)
-[info]  2026-11-11 16:25:03 ClinVar APOE: 5 rows dropped (no_vcf_coordinates)
-[info]  2026-11-11 16:25:03 ClinVar CETP: 21 rows dropped (no_vcf_coordinates)
-[info]  2026-11-11 16:25:03 ClinVar HMGCR: 6 rows dropped (no_vcf_coordinates)
-[info]  2026-11-11 16:25:03 ClinVar NPC1L1: 24 rows dropped (no_vcf_coordinates)
-[info]  2026-11-11 16:25:03 ClinVar PCSK9: 13 rows dropped (no_vcf_coordinates)
-[info]  2026-11-11 16:25:03 ClinVar PPARA: 82 rows dropped (no_vcf_coordinates)
-[info]  2026-11-11 16:25:03 ClinVar: 1680 rows, 336 unique variants
-[info]  2026-11-11 16:25:03 Reading VEP TSV /home/mvanvugt/projects/lipid_adem/data/temp/vep_lipid_gene_csq.tsv.gz
-[info]  2026-11-11 16:25:03 VEP: 79163 variant x transcript rows read
-[info]  2026-11-11 16:25:04 VEP: 16068 rows pass transcript rule canonical
-[info]  2026-11-11 16:25:04 VEP set PTV: 527 rows
-[info]  2026-11-11 16:25:04 Reading AlphaMissense /projects/0/aus20644/data/resources/annotations/AlphaMissense_hg38.sorted.tsv.bgz
-[info]  2026-11-11 16:25:04 AM CETP: 439 sites kept (UniProt P11597)
-[info]  2026-11-11 16:25:04 AM HMGCR: 2623 sites kept (UniProt P04035)
-[info]  2026-11-11 16:25:04 AM NPC1L1: 2507 sites kept (UniProt Q9UHC9)
-[info]  2026-11-11 16:25:04 AM PCSK9: 737 sites kept (UniProt Q8NBP7)
-[info]  2026-11-11 16:25:04 AM ANGPTL3: 493 sites kept (UniProt Q9Y5C1)
-[info]  2026-11-11 16:25:04 AM PPARA: 1543 sites kept (UniProt Q07869)
-[info]  2026-11-11 16:25:04 AM APOA1: 536 sites kept (UniProt P02647)
-[info]  2026-11-11 16:25:04 AM APOB: 2952 sites kept (UniProt P04114)
-[info]  2026-11-11 16:25:04 AM: 11830 rows (likely_pathogenic)
-[info]  2026-11-11 16:25:04 Reading GoFcards /projects/0/aus20644/data/resources/annotations/gofcards_hg38.tsv.bgz
-[info]  2026-11-11 16:25:04 GoF CETP: 1 reports
-[info]  2026-11-11 16:25:04 GoF HMGCR: 0 reports
-[info]  2026-11-11 16:25:04 GoF NPC1L1: 0 reports
-[info]  2026-11-11 16:25:04 GoF PCSK9: 46 reports
-[info]  2026-11-11 16:25:04 GoF ANGPTL3: 0 reports
-[info]  2026-11-11 16:25:04 GoF PPARA: 0 reports
-[info]  2026-11-11 16:25:04 GoF APOA1: 1 reports
-[info]  2026-11-11 16:25:04 GoF APOB: 0 reports
-[info]  2026-11-11 16:25:04 GoF: 48 rows
-[info]  2026-11-11 16:25:05 normalisation: unchanged=1680
-[info]  2026-11-11 16:25:05 normalisation: normalised=18 unchanged=509
-[info]  2026-11-11 16:25:06 normalisation: unchanged=11830
-[info]  2026-11-11 16:25:06 normalisation: unchanged=48
-[info]  2026-11-11 16:25:08 Wrote 14085 rows to /home/mvanvugt/projects/lipid_adem/data/processed/lipid_annotated_variants.tsv.gz
+[info]  2026-11-11 22:14:18 config: /home/mvanvugt/software/var_annot/fn5_reruns/configs/lip_ac_rescue.toml
+[info]  2026-11-11 22:14:18 Reading ClinVar export /home/mvanvugt/projects/lipid_adem/data/raw/clinvar_variants.tsv
+[info]  2026-11-11 22:14:20 ClinVar: 313818 rows read, 14606 kept after classification and condition filters
+[info]  2026-11-11 22:14:20 ClinVar APOB: 3 rows dropped (blank_assembly)
+[info]  2026-11-11 22:14:20 ClinVar: review stars from ac_review_status
+[info]  2026-11-11 22:14:20 ClinVar ANGPTL3: 23 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 22:14:20 ClinVar APOA1: 24 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 22:14:20 ClinVar APOB: 22 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 22:14:20 ClinVar APOE: 5 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 22:14:20 ClinVar CETP: 21 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 22:14:20 ClinVar HMGCR: 6 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 22:14:20 ClinVar NPC1L1: 24 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 22:14:20 ClinVar PCSK9: 13 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 22:14:20 ClinVar PPARA: 82 rows dropped (no_vcf_coordinates)
+[warn]  2026-11-11 22:14:20 ClinVar: 80 kept rows are 'Conflicting classifications of pathogenicity' overall with a 0-star condition record (rcv_review_status); min_review_stars uses ac_review_status in ac mode (1 star for Conflicting), so use classification_column = "rcv_classification" with min_review_stars = 1 to drop them
+[info]  2026-11-11 22:14:20 ClinVar: 2136 rows, 391 unique variants
+[info]  2026-11-11 22:14:20 normalisation: unchanged=2136
+[info]  2026-11-11 22:14:20 Wrote 2136 rows to /home/mvanvugt/projects/lipid_adem/data/processed/fn5_reruns/lip_ac_rescue.tsv.gz
 
 ```
 
@@ -1551,246 +1479,47 @@ Output:
 [info]  2026-10-27 13:37:06 rows 116-116 of 125, 8 gene regions
 ```
 
-## [22] burden_exposure (`/home/mvanvugt/projects/lipid_adem/src/burden_exposure.py --mask-lists`)
+## [22] burden_exposure (`/home/mvanvugt/projects/lipid_adem/src/burden_exposure.py --summary`)
 - first run: 2026-10-26 11:05:30
-- last run: 2026-11-10 15:41:44
-- commit: `283dc37` (dirty)
+- last run: 2026-11-11 19:21:47
+- commit: `25d4593` (dirty)
 
 Output:
 ```text
-[stage] 2026-11-10 15:41:42 variant sets
-[info]  2026-11-10 15:41:42 3 SelectedGoF rows in no mask
-[warn]  2026-11-10 15:41:42 5 site(s) both LoF-listed and GoF/raising, in the gof mask only: 1:55044016:T:A, 1:55044016:T:G, 1:55052400:T:C, 1:55057395:A:T, 1:55059525:T:C
-[info]  2026-11-10 15:41:42 ANGPTL3: 554 listed sites; gof 0, am 493, ptv 56, clinvar 12, clinvar_directed 12, lof 62, lof_directed 62, ptv_am 549, am_clinvar 504, am_clinvar_directed 504, ptv_clinvar_am 554, ptv_clinvar_am_directed 554
-[info]  2026-11-10 15:41:42 APOA1: 45 listed sites; gof 0, am 0, ptv 15, clinvar 33, clinvar_directed 16, lof 45, lof_directed 28, ptv_am 15, am_clinvar 33, am_clinvar_directed 16, ptv_clinvar_am 45, ptv_clinvar_am_directed 28
-[info]  2026-11-10 15:41:42 APOB: 367 listed sites; gof 0, am 0, ptv 172, clinvar 236, clinvar_directed 224, lof 367, lof_directed 355, ptv_am 172, am_clinvar 236, am_clinvar_directed 224, ptv_clinvar_am 367, ptv_clinvar_am_directed 355
-[info]  2026-11-10 15:41:42 CETP: 504 listed sites; gof 1, am 439, ptv 58, clinvar 10, clinvar_directed 10, lof 62, lof_directed 62, ptv_am 497, am_clinvar 449, am_clinvar_directed 449, ptv_clinvar_am 501, ptv_clinvar_am_directed 501
-[info]  2026-11-10 15:41:42 HMGCR: 2668 listed sites; gof 0, am 2623, ptv 39, clinvar 7, clinvar_directed 6, lof 45, lof_directed 44, ptv_am 2662, am_clinvar 2630, am_clinvar_directed 2629, ptv_clinvar_am 2668, ptv_clinvar_am_directed 2667
-[info]  2026-11-10 15:41:42 NPC1L1: 2603 listed sites; gof 0, am 2507, ptv 96, clinvar 0, clinvar_directed 0, lof 96, lof_directed 96, ptv_am 2603, am_clinvar 2507, am_clinvar_directed 2507, ptv_clinvar_am 2603, ptv_clinvar_am_directed 2603
-[info]  2026-11-10 15:41:42 PCSK9: 831 listed sites; gof 29, am 732, ptv 68, clinvar 2, clinvar_directed 2, lof 70, lof_directed 70, ptv_am 800, am_clinvar 734, am_clinvar_directed 734, ptv_clinvar_am 802, ptv_clinvar_am_directed 802
-[info]  2026-11-10 15:41:42 PPARA: 1566 listed sites; gof 0, am 1543, ptv 23, clinvar 0, clinvar_directed 0, lof 23, lof_directed 23, ptv_am 1566, am_clinvar 1543, am_clinvar_directed 1543, ptv_clinvar_am 1566, ptv_clinvar_am_directed 1566
-[info]  2026-11-10 15:41:43 CETP: 3 sites in preferred studies
-[stage] 2026-11-10 15:41:43 mask list
-[warn]  2026-11-10 15:41:43 ANGPTL3_gof: no sites, not listed
-[info]  2026-11-10 15:41:43 ANGPTL3_am: 493 sites
-[info]  2026-11-10 15:41:43 ANGPTL3_ptv: 56 sites
-[info]  2026-11-10 15:41:43 ANGPTL3_clinvar: 12 sites
-[info]  2026-11-10 15:41:43 ANGPTL3_clinvar_directed: 12 sites
-[info]  2026-11-10 15:41:43 ANGPTL3_lof: 62 sites
-[info]  2026-11-10 15:41:43 ANGPTL3_lof_directed: 62 sites
-[info]  2026-11-10 15:41:43 ANGPTL3_ptv_am: 549 sites
-[info]  2026-11-10 15:41:43 ANGPTL3_am_clinvar: 504 sites
-[info]  2026-11-10 15:41:43 ANGPTL3_am_clinvar_directed: 504 sites
-[info]  2026-11-10 15:41:43 ANGPTL3_ptv_clinvar_am: 554 sites
-[info]  2026-11-10 15:41:43 ANGPTL3_ptv_clinvar_am_directed: 554 sites
-[warn]  2026-11-10 15:41:43 APOA1_gof: no sites, not listed
-[warn]  2026-11-10 15:41:43 APOA1_am: no sites, not listed
-[info]  2026-11-10 15:41:43 APOA1_ptv: 15 sites
-[info]  2026-11-10 15:41:43 APOA1_clinvar: 33 sites
-[info]  2026-11-10 15:41:43 APOA1_clinvar_directed: 16 sites
-[info]  2026-11-10 15:41:43 APOA1_lof: 45 sites
-[info]  2026-11-10 15:41:43 APOA1_lof_directed: 28 sites
-[info]  2026-11-10 15:41:43 APOA1_ptv_am: 15 sites
-[info]  2026-11-10 15:41:43 APOA1_am_clinvar: 33 sites
-[info]  2026-11-10 15:41:43 APOA1_am_clinvar_directed: 16 sites
-[info]  2026-11-10 15:41:43 APOA1_ptv_clinvar_am: 45 sites
-[info]  2026-11-10 15:41:43 APOA1_ptv_clinvar_am_directed: 28 sites
-[warn]  2026-11-10 15:41:43 APOB_gof: no sites, not listed
-[warn]  2026-11-10 15:41:43 APOB_am: no sites, not listed
-[info]  2026-11-10 15:41:43 APOB_ptv: 172 sites
-[info]  2026-11-10 15:41:43 APOB_clinvar: 236 sites
-[info]  2026-11-10 15:41:43 APOB_clinvar_directed: 224 sites
-[info]  2026-11-10 15:41:43 APOB_lof: 367 sites
-[info]  2026-11-10 15:41:43 APOB_lof_directed: 355 sites
-[info]  2026-11-10 15:41:43 APOB_ptv_am: 172 sites
-[info]  2026-11-10 15:41:43 APOB_am_clinvar: 236 sites
-[info]  2026-11-10 15:41:43 APOB_am_clinvar_directed: 224 sites
-[info]  2026-11-10 15:41:43 APOB_ptv_clinvar_am: 367 sites
-[info]  2026-11-10 15:41:43 APOB_ptv_clinvar_am_directed: 355 sites
-[info]  2026-11-10 15:41:43 CETP_gof: 1 sites
-[info]  2026-11-10 15:41:43 CETP_am: 439 sites
-[info]  2026-11-10 15:41:43 CETP_ptv: 58 sites
-[info]  2026-11-10 15:41:43 CETP_clinvar: 10 sites
-[info]  2026-11-10 15:41:43 CETP_clinvar_directed: 10 sites
-[info]  2026-11-10 15:41:43 CETP_lof: 62 sites
-[info]  2026-11-10 15:41:43 CETP_lof_directed: 62 sites
-[info]  2026-11-10 15:41:43 CETP_ptv_am: 497 sites
-[info]  2026-11-10 15:41:43 CETP_am_clinvar: 449 sites
-[info]  2026-11-10 15:41:43 CETP_am_clinvar_directed: 449 sites
-[info]  2026-11-10 15:41:43 CETP_ptv_clinvar_am: 501 sites
-[info]  2026-11-10 15:41:43 CETP_ptv_clinvar_am_directed: 501 sites
-[warn]  2026-11-10 15:41:43 HMGCR_gof: no sites, not listed
-[info]  2026-11-10 15:41:43 HMGCR_am: 2623 sites
-[info]  2026-11-10 15:41:43 HMGCR_ptv: 39 sites
-[info]  2026-11-10 15:41:43 HMGCR_clinvar: 7 sites
-[info]  2026-11-10 15:41:43 HMGCR_clinvar_directed: 6 sites
-[info]  2026-11-10 15:41:43 HMGCR_lof: 45 sites
-[info]  2026-11-10 15:41:43 HMGCR_lof_directed: 44 sites
-[info]  2026-11-10 15:41:43 HMGCR_ptv_am: 2662 sites
-[info]  2026-11-10 15:41:43 HMGCR_am_clinvar: 2630 sites
-[info]  2026-11-10 15:41:43 HMGCR_am_clinvar_directed: 2629 sites
-[info]  2026-11-10 15:41:43 HMGCR_ptv_clinvar_am: 2668 sites
-[info]  2026-11-10 15:41:43 HMGCR_ptv_clinvar_am_directed: 2667 sites
-[warn]  2026-11-10 15:41:43 NPC1L1_gof: no sites, not listed
-[info]  2026-11-10 15:41:43 NPC1L1_am: 2507 sites
-[info]  2026-11-10 15:41:43 NPC1L1_ptv: 96 sites
-[warn]  2026-11-10 15:41:43 NPC1L1_clinvar: no sites, not listed
-[warn]  2026-11-10 15:41:43 NPC1L1_clinvar_directed: no sites, not listed
-[info]  2026-11-10 15:41:43 NPC1L1_lof: 96 sites
-[info]  2026-11-10 15:41:43 NPC1L1_lof_directed: 96 sites
-[info]  2026-11-10 15:41:43 NPC1L1_ptv_am: 2603 sites
-[info]  2026-11-10 15:41:43 NPC1L1_am_clinvar: 2507 sites
-[info]  2026-11-10 15:41:43 NPC1L1_am_clinvar_directed: 2507 sites
-[info]  2026-11-10 15:41:43 NPC1L1_ptv_clinvar_am: 2603 sites
-[info]  2026-11-10 15:41:43 NPC1L1_ptv_clinvar_am_directed: 2603 sites
-[info]  2026-11-10 15:41:43 PCSK9_gof: 29 sites
-[info]  2026-11-10 15:41:43 PCSK9_am: 732 sites
-[info]  2026-11-10 15:41:43 PCSK9_ptv: 68 sites
-[info]  2026-11-10 15:41:43 PCSK9_clinvar: 2 sites
-[info]  2026-11-10 15:41:43 PCSK9_clinvar_directed: 2 sites
-[info]  2026-11-10 15:41:43 PCSK9_lof: 70 sites
-[info]  2026-11-10 15:41:43 PCSK9_lof_directed: 70 sites
-[info]  2026-11-10 15:41:43 PCSK9_ptv_am: 800 sites
-[info]  2026-11-10 15:41:43 PCSK9_am_clinvar: 734 sites
-[info]  2026-11-10 15:41:43 PCSK9_am_clinvar_directed: 734 sites
-[info]  2026-11-10 15:41:43 PCSK9_ptv_clinvar_am: 802 sites
-[info]  2026-11-10 15:41:43 PCSK9_ptv_clinvar_am_directed: 802 sites
-[warn]  2026-11-10 15:41:43 PPARA_gof: no sites, not listed
-[info]  2026-11-10 15:41:43 PPARA_am: 1543 sites
-[info]  2026-11-10 15:41:43 PPARA_ptv: 23 sites
-[warn]  2026-11-10 15:41:43 PPARA_clinvar: no sites, not listed
-[warn]  2026-11-10 15:41:43 PPARA_clinvar_directed: no sites, not listed
-[info]  2026-11-10 15:41:43 PPARA_lof: 23 sites
-[info]  2026-11-10 15:41:43 PPARA_lof_directed: 23 sites
-[info]  2026-11-10 15:41:43 PPARA_ptv_am: 1566 sites
-[info]  2026-11-10 15:41:43 PPARA_am_clinvar: 1543 sites
-[info]  2026-11-10 15:41:43 PPARA_am_clinvar_directed: 1543 sites
-[info]  2026-11-10 15:41:43 PPARA_ptv_clinvar_am: 1566 sites
-[info]  2026-11-10 15:41:43 PPARA_ptv_clinvar_am_directed: 1566 sites
-[info]  2026-11-10 15:41:43 wrote 55262 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/processed/lipid_mask_variants.tsv.gz
-[stage] 2026-11-10 15:41:43 fallback mask list
-[warn]  2026-11-10 15:41:43 ANGPTL3_gof_fb: no sites, not listed
-[info]  2026-11-10 15:41:43 ANGPTL3_am_fb: 493 sites
-[info]  2026-11-10 15:41:43 ANGPTL3_ptv_fb: 56 sites
-[info]  2026-11-10 15:41:43 ANGPTL3_clinvar_fb: 12 sites
-[info]  2026-11-10 15:41:43 ANGPTL3_clinvar_directed_fb: 12 sites
-[info]  2026-11-10 15:41:43 ANGPTL3_lof_fb: 62 sites
-[info]  2026-11-10 15:41:43 ANGPTL3_lof_directed_fb: 62 sites
-[info]  2026-11-10 15:41:43 ANGPTL3_ptv_am_fb: 549 sites
-[info]  2026-11-10 15:41:43 ANGPTL3_am_clinvar_fb: 504 sites
-[info]  2026-11-10 15:41:43 ANGPTL3_am_clinvar_directed_fb: 504 sites
-[info]  2026-11-10 15:41:43 ANGPTL3_ptv_clinvar_am_fb: 554 sites
-[info]  2026-11-10 15:41:43 ANGPTL3_ptv_clinvar_am_directed_fb: 554 sites
-[warn]  2026-11-10 15:41:43 APOA1_gof_fb: no sites, not listed
-[warn]  2026-11-10 15:41:43 APOA1_am_fb: no sites, not listed
-[info]  2026-11-10 15:41:43 APOA1_ptv_fb: 15 sites
-[info]  2026-11-10 15:41:43 APOA1_clinvar_fb: 33 sites
-[info]  2026-11-10 15:41:43 APOA1_clinvar_directed_fb: 16 sites
-[info]  2026-11-10 15:41:43 APOA1_lof_fb: 45 sites
-[info]  2026-11-10 15:41:43 APOA1_lof_directed_fb: 28 sites
-[info]  2026-11-10 15:41:43 APOA1_ptv_am_fb: 15 sites
-[info]  2026-11-10 15:41:43 APOA1_am_clinvar_fb: 33 sites
-[info]  2026-11-10 15:41:43 APOA1_am_clinvar_directed_fb: 16 sites
-[info]  2026-11-10 15:41:43 APOA1_ptv_clinvar_am_fb: 45 sites
-[info]  2026-11-10 15:41:43 APOA1_ptv_clinvar_am_directed_fb: 28 sites
-[warn]  2026-11-10 15:41:43 APOB_gof_fb: no sites, not listed
-[warn]  2026-11-10 15:41:43 APOB_am_fb: no sites, not listed
-[info]  2026-11-10 15:41:43 APOB_ptv_fb: 172 sites
-[info]  2026-11-10 15:41:43 APOB_clinvar_fb: 236 sites
-[info]  2026-11-10 15:41:43 APOB_clinvar_directed_fb: 224 sites
-[info]  2026-11-10 15:41:43 APOB_lof_fb: 367 sites
-[info]  2026-11-10 15:41:43 APOB_lof_directed_fb: 355 sites
-[info]  2026-11-10 15:41:43 APOB_ptv_am_fb: 172 sites
-[info]  2026-11-10 15:41:43 APOB_am_clinvar_fb: 236 sites
-[info]  2026-11-10 15:41:43 APOB_am_clinvar_directed_fb: 224 sites
-[info]  2026-11-10 15:41:43 APOB_ptv_clinvar_am_fb: 367 sites
-[info]  2026-11-10 15:41:43 APOB_ptv_clinvar_am_directed_fb: 355 sites
-[info]  2026-11-10 15:41:43 CETP_gof_fb: 1 sites
-[info]  2026-11-10 15:41:43 CETP_am_fb: 439 sites
-[info]  2026-11-10 15:41:43 CETP_ptv_fb: 58 sites
-[info]  2026-11-10 15:41:44 CETP_clinvar_fb: 10 sites
-[info]  2026-11-10 15:41:44 CETP_clinvar_directed_fb: 10 sites
-[info]  2026-11-10 15:41:44 CETP_lof_fb: 62 sites
-[info]  2026-11-10 15:41:44 CETP_lof_directed_fb: 62 sites
-[info]  2026-11-10 15:41:44 CETP_ptv_am_fb: 497 sites
-[info]  2026-11-10 15:41:44 CETP_am_clinvar_fb: 449 sites
-[info]  2026-11-10 15:41:44 CETP_am_clinvar_directed_fb: 449 sites
-[info]  2026-11-10 15:41:44 CETP_ptv_clinvar_am_fb: 501 sites
-[info]  2026-11-10 15:41:44 CETP_ptv_clinvar_am_directed_fb: 501 sites
-[warn]  2026-11-10 15:41:44 HMGCR_gof_fb: no sites, not listed
-[info]  2026-11-10 15:41:44 HMGCR_am_fb: 2623 sites
-[info]  2026-11-10 15:41:44 HMGCR_ptv_fb: 39 sites
-[info]  2026-11-10 15:41:44 HMGCR_clinvar_fb: 7 sites
-[info]  2026-11-10 15:41:44 HMGCR_clinvar_directed_fb: 6 sites
-[info]  2026-11-10 15:41:44 HMGCR_lof_fb: 45 sites
-[info]  2026-11-10 15:41:44 HMGCR_lof_directed_fb: 44 sites
-[info]  2026-11-10 15:41:44 HMGCR_ptv_am_fb: 2662 sites
-[info]  2026-11-10 15:41:44 HMGCR_am_clinvar_fb: 2630 sites
-[info]  2026-11-10 15:41:44 HMGCR_am_clinvar_directed_fb: 2629 sites
-[info]  2026-11-10 15:41:44 HMGCR_ptv_clinvar_am_fb: 2668 sites
-[info]  2026-11-10 15:41:44 HMGCR_ptv_clinvar_am_directed_fb: 2667 sites
-[warn]  2026-11-10 15:41:44 NPC1L1_gof_fb: no sites, not listed
-[info]  2026-11-10 15:41:44 NPC1L1_am_fb: 2507 sites
-[info]  2026-11-10 15:41:44 NPC1L1_ptv_fb: 96 sites
-[warn]  2026-11-10 15:41:44 NPC1L1_clinvar_fb: no sites, not listed
-[warn]  2026-11-10 15:41:44 NPC1L1_clinvar_directed_fb: no sites, not listed
-[info]  2026-11-10 15:41:44 NPC1L1_lof_fb: 96 sites
-[info]  2026-11-10 15:41:44 NPC1L1_lof_directed_fb: 96 sites
-[info]  2026-11-10 15:41:44 NPC1L1_ptv_am_fb: 2603 sites
-[info]  2026-11-10 15:41:44 NPC1L1_am_clinvar_fb: 2507 sites
-[info]  2026-11-10 15:41:44 NPC1L1_am_clinvar_directed_fb: 2507 sites
-[info]  2026-11-10 15:41:44 NPC1L1_ptv_clinvar_am_fb: 2603 sites
-[info]  2026-11-10 15:41:44 NPC1L1_ptv_clinvar_am_directed_fb: 2603 sites
-[info]  2026-11-10 15:41:44 PCSK9_gof_fb: 29 sites
-[info]  2026-11-10 15:41:44 PCSK9_am_fb: 732 sites
-[info]  2026-11-10 15:41:44 PCSK9_ptv_fb: 68 sites
-[info]  2026-11-10 15:41:44 PCSK9_clinvar_fb: 2 sites
-[info]  2026-11-10 15:41:44 PCSK9_clinvar_directed_fb: 2 sites
-[info]  2026-11-10 15:41:44 PCSK9_lof_fb: 70 sites
-[info]  2026-11-10 15:41:44 PCSK9_lof_directed_fb: 70 sites
-[info]  2026-11-10 15:41:44 PCSK9_ptv_am_fb: 800 sites
-[info]  2026-11-10 15:41:44 PCSK9_am_clinvar_fb: 734 sites
-[info]  2026-11-10 15:41:44 PCSK9_am_clinvar_directed_fb: 734 sites
-[info]  2026-11-10 15:41:44 PCSK9_ptv_clinvar_am_fb: 802 sites
-[info]  2026-11-10 15:41:44 PCSK9_ptv_clinvar_am_directed_fb: 802 sites
-[warn]  2026-11-10 15:41:44 PPARA_gof_fb: no sites, not listed
-[info]  2026-11-10 15:41:44 PPARA_am_fb: 1543 sites
-[info]  2026-11-10 15:41:44 PPARA_ptv_fb: 23 sites
-[warn]  2026-11-10 15:41:44 PPARA_clinvar_fb: no sites, not listed
-[warn]  2026-11-10 15:41:44 PPARA_clinvar_directed_fb: no sites, not listed
-[info]  2026-11-10 15:41:44 PPARA_lof_fb: 23 sites
-[info]  2026-11-10 15:41:44 PPARA_lof_directed_fb: 23 sites
-[info]  2026-11-10 15:41:44 PPARA_ptv_am_fb: 1566 sites
-[info]  2026-11-10 15:41:44 PPARA_am_clinvar_fb: 1543 sites
-[info]  2026-11-10 15:41:44 PPARA_am_clinvar_directed_fb: 1543 sites
-[info]  2026-11-10 15:41:44 PPARA_ptv_clinvar_am_fb: 1566 sites
-[info]  2026-11-10 15:41:44 PPARA_ptv_clinvar_am_directed_fb: 1566 sites
-[info]  2026-11-10 15:41:44 wrote 55262 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/processed/lipid_mask_variants_fb.tsv.gz
+[stage] 2026-11-11 19:20:58 summary lipid_burden_all_apoe
+[info]  2026-11-11 19:20:58 lipid_burden_all_apoe.variants.tsv.gz: 1078 of 9136 sites read (found, swapped)
+[warn]  2026-11-11 19:21:22 lipid_burden_all_apoe: no site read for PCSK9_clinvar, PCSK9_clinvar_directed
+[stage] 2026-11-11 19:21:22 summary lipid_burden_fb_all_apoe
+[info]  2026-11-11 19:21:22 lipid_burden_fb_all_apoe.variants.tsv.gz: 1077 of 9135 sites read (found, swapped)
+[warn]  2026-11-11 19:21:47 lipid_burden_fb_all_apoe: no site read for PCSK9_clinvar_fb, PCSK9_clinvar_directed_fb
+[info]  2026-11-11 19:21:47 wrote 167 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/burden_exposure_summary.tsv.gz
 
 ```
 
-## [25] marvel_results_table (`/home/mvanvugt/projects/lipid_adem/src/marvel_results_table.py --ancestry MULTI`)
+## [25] marvel_results_table (`src/marvel_results_table.py --ancestry MULTI`)
 - first run: 2026-10-08 09:54:25
-- last run: 2026-11-11 09:38:03
-- commit: `e141a61` (dirty)
+- last run: 2026-11-11 19:25:54
+- commit: `25d4593` (dirty)
 
 Output:
 ```text
-[stage] 2026-11-11 09:37:59 store_runs
-[info]  2026-11-11 09:37:59 /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/marvel_runs.tsv: 7 runs to store
-[info]  2026-11-11 09:37:59 lipid_variant_all_results.tsv.gz: written from /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/marvel/lipid_variant_all.results.tsv.gz
-[info]  2026-11-11 09:37:59 lipid_variant_all_apoe_results.tsv.gz: written from /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/marvel/lipid_variant_all_apoe.results.tsv.gz
-[info]  2026-11-11 09:38:00 lipid_variant_eur_results.tsv.gz: written from /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/marvel/lipid_variant_eur.results.tsv.gz
-[info]  2026-11-11 09:38:00 lipid_burden_all_apoe_results.tsv.gz: written from /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/marvel/lipid_burden_all_apoe.results.tsv.gz
-[info]  2026-11-11 09:38:00 lipid_burden_eur_results.tsv.gz: written from /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/marvel/lipid_burden_eur.results.tsv.gz
-[info]  2026-11-11 09:38:00 lipid_burden_fb_all_apoe_results.tsv.gz: written from /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/marvel/lipid_burden_fb_all_apoe.results.tsv.gz
-[info]  2026-11-11 09:38:00 lipid_burden_fb_eur_results.tsv.gz: written from /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/marvel/lipid_burden_fb_eur.results.tsv.gz
-[stage] 2026-11-11 09:38:00 marvel_table
-[info]  2026-11-11 09:38:00 lipid_variant_all: outcomes not in Marvel.UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo
-[info]  2026-11-11 09:38:02 lipid_variant_all_apoe: outcomes not in Marvel.UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo
-[info]  2026-11-11 09:38:03 lipid_variant_eur: outcomes not in Marvel.UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo
-[info]  2026-11-11 09:38:03 wrote 210 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/marvel_results.tsv
-[info]  2026-11-11 09:38:03 /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/apoe_strata.tsv: all marvel strata already listed
+[stage] 2026-11-11 19:25:46 store_runs
+[info]  2026-11-11 19:25:47 /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/marvel_runs.tsv: 7 runs to store
+[info]  2026-11-11 19:25:47 lipid_variant_all_results.tsv.gz: unchanged
+[info]  2026-11-11 19:25:48 lipid_variant_all_apoe_results.tsv.gz: unchanged
+[info]  2026-11-11 19:25:49 lipid_variant_eur_results.tsv.gz: unchanged
+[info]  2026-11-11 19:25:49 lipid_burden_all_apoe_results.tsv.gz: unchanged
+[info]  2026-11-11 19:25:49 lipid_burden_eur_results.tsv.gz: unchanged
+[warn]  2026-11-11 19:25:49 lipid_burden_fb_all_apoe_results.tsv.gz: other results; old store kept as lipid_burden_fb_all_apoe_results.20261111_192546.tsv.gz
+[info]  2026-11-11 19:25:49 lipid_burden_fb_all_apoe_results.tsv.gz: written from /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/marvel/lipid_burden_fb_all_apoe.results.tsv.gz
+[warn]  2026-11-11 19:25:49 lipid_burden_fb_eur_results.tsv.gz: other results; old store kept as lipid_burden_fb_eur_results.20261111_192546.tsv.gz
+[info]  2026-11-11 19:25:49 lipid_burden_fb_eur_results.tsv.gz: written from /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/marvel/lipid_burden_fb_eur.results.tsv.gz
+[stage] 2026-11-11 19:25:49 marvel_table
+[info]  2026-11-11 19:25:50 lipid_variant_all: outcomes not in Marvel.UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo
+[info]  2026-11-11 19:25:51 lipid_variant_all_apoe: outcomes not in Marvel.UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo
+[info]  2026-11-11 19:25:53 lipid_variant_eur: outcomes not in Marvel.UKB_OUTCOMES, left out: all_cause_dementia_algo, alzheimers_disease_algo
+[info]  2026-11-11 19:25:53 wrote 210 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/marvel_results.tsv
+[info]  2026-11-11 19:25:53 /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/apoe_strata.tsv: all marvel strata already listed
 
 ```
 
@@ -1798,98 +1527,6 @@ Output:
 - first run: 2026-11-02 14:56:55
 - last run: 2026-11-11 09:55:27
 - commit: `e141a61` (dirty)
-
-Δ vs previous run (was `23ebede` (dirty)):
-stage `variant lists`:
-```diff
-@@ -2,22 +2,22 @@
- [info]  2026-11-11 09:53:57 CETP: 508 rows in old list /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/CETP_variants.tsv
- [warn]  2026-11-11 09:53:57 HMGCR: no 'source' column in /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/HMGCR_variants.tsv; NA
- [info]  2026-11-11 09:53:57 HMGCR: 2668 rows in old list /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/HMGCR_variants.tsv
-+[warn]  2026-11-11 09:53:57 NPC1L1: no 'source' column in /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/NPC1L1_variants.tsv; NA
-+[info]  2026-11-11 09:53:57 NPC1L1: 2606 rows in old list /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/NPC1L1_variants.tsv
-+[warn]  2026-11-11 09:53:57 PCSK9: no 'source' column in /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PCSK9_variants.tsv; NA
-+[info]  2026-11-11 09:53:57 PCSK9: 831 rows in old list /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PCSK9_variants.tsv
- [warn]  2026-11-11 09:53:57 ANGPTL3: no 'source' column in /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/ANGPTL3_variants.tsv; NA
- [info]  2026-11-11 09:53:57 ANGPTL3: 556 rows in old list /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/ANGPTL3_variants.tsv
- [warn]  2026-11-11 09:53:57 PPARA: no 'source' column in /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PPARA_variants.tsv; NA
- [info]  2026-11-11 09:53:57 PPARA: 1567 rows in old list /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PPARA_variants.tsv
--[warn]  2026-11-02 15:36:13 PCSK9: no 'source' column in /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PCSK9_variants.tsv; NA
--[info]  2026-11-02 15:36:13 PCSK9: 831 rows in old list /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/PCSK9_variants.tsv
--[warn]  2026-11-02 15:36:13 NPC1L1: no 'source' column in /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/NPC1L1_variants.tsv; NA
--[info]  2026-11-02 15:36:13 NPC1L1: 2606 rows in old list /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/NPC1L1_variants.tsv
- [info]  2026-11-11 09:54:04 9158 variants in new list /gpfs/home6/mvanvugt/projects/lipid_adem/data/processed/lipid_variants.tsv
--[info]  2026-11-02 15:36:19 CETP: 5664 overall variant rows in CETP_results.tsv.gz
--[info]  2026-11-02 15:36:23 HMGCR: 5184 overall variant rows in HMGCR_results.tsv.gz
--[info]  2026-11-02 15:36:24 ANGPTL3: 3840 overall variant rows in ANGPTL3_results.tsv.gz
--[info]  2026-11-02 15:36:26 PPARA: 3600 overall variant rows in PPARA_results.tsv.gz
--[info]  2026-11-02 15:36:31 PCSK9: 8708 overall variant rows in PCSK9_results.tsv.gz
--[info]  2026-11-02 15:36:37 NPC1L1: 14350 overall variant rows in NPC1L1_results.tsv.gz
--[info]  2026-11-02 15:36:37 chunk ukb_ANGPTL3_chr1_plink: 223 variant(s) read, 469835 samples
-+[info]  2026-11-11 09:54:09 CETP: 11328 overall variant rows in CETP_results.tsv.gz
-+[info]  2026-11-11 09:54:14 HMGCR: 10368 overall variant rows in HMGCR_results.tsv.gz
-+[info]  2026-11-11 09:54:21 NPC1L1: 24600 overall variant rows in NPC1L1_results.tsv.gz
-+[info]  2026-11-11 09:54:27 PCSK9: 14928 overall variant rows in PCSK9_results.tsv.gz
-+[info]  2026-11-11 09:54:29 ANGPTL3: 7680 overall variant rows in ANGPTL3_results.tsv.gz
-+[info]  2026-11-11 09:54:31 PPARA: 7200 overall variant rows in PPARA_results.tsv.gz
-+[info]  2026-11-11 09:54:31 chunk ukb_ANGPTL3_chr1_plink: 224 variant(s) read, 469835 samples
- [info]  2026-11-11 09:54:33 chunk ukb_CETP_chr16_plink: 95 variant(s) read, 469835 samples
- [info]  2026-11-11 09:54:34 chunk ukb_HMGCR_chr5_plink: 170 variant(s) read, 469835 samples
- [info]  2026-11-11 09:54:34 chunk ukb_NPC1L1_chr7_plink: 270 variant(s) read, 469835 samples
-@@ -26,10 +26,10 @@
- [info]  2026-11-11 09:54:35 chunk vep_chr11: 18 variant(s) read, 377567 samples
- [info]  2026-11-11 09:54:35 chunk vep_chr16: 0 variant(s) read, 377567 samples
- [info]  2026-11-11 09:54:35 chunk vep_chr19: 8 variant(s) read, 377567 samples
--[info]  2026-11-02 15:36:41 chunk vep_chr2: 179 variant(s) read, 377567 samples
-+[info]  2026-11-11 09:54:36 chunk vep_chr2: 178 variant(s) read, 377567 samples
-... 8 more line(s) omitted
-```
-stage `carriers`:
-```diff
-@@ -2,19 +2,19 @@
- [info]  2026-11-11 09:54:42 CETP: 469835 old samples, 469835 of them in the largest new chunk (469835 samples)
- [info]  2026-11-11 09:54:42 HMGCR: 432 variant column(s) in HMGCR_variant_extraction.tsv.gz, 170 in the new list
- [info]  2026-11-11 09:54:48 HMGCR: 469835 old samples, 469835 of them in the largest new chunk (469835 samples)
--[info]  2026-11-02 15:36:56 ANGPTL3: 320 variant column(s) in ANGPTL3_variant_extraction.tsv.gz, 90 in the new list
-+[info]  2026-11-11 09:54:48 NPC1L1: 1025 variant column(s) in NPC1L1_variant_extraction.tsv.gz, 267 in the new list
-+[info]  2026-11-11 09:55:03 NPC1L1: 469835 old samples, 469835 of them in the largest new chunk (469835 samples)
-+[info]  2026-11-11 09:55:03 PCSK9: 622 variant column(s) in PCSK9_variant_extraction.tsv.gz, 131 in the new list
-+[info]  2026-11-11 09:55:12 PCSK9: 469835 old samples, 469835 of them in the largest new chunk (469835 samples)
-+[info]  2026-11-11 09:55:12 ANGPTL3: 320 variant column(s) in ANGPTL3_variant_extraction.tsv.gz, 91 in the new list
- [info]  2026-11-11 09:55:16 ANGPTL3: 469835 old samples, 469835 of them in the largest new chunk (469835 samples)
- [info]  2026-11-11 09:55:16 PPARA: 300 variant column(s) in PPARA_variant_extraction.tsv.gz, 124 in the new list
- [info]  2026-11-11 09:55:20 PPARA: 469835 old samples, 469835 of them in the largest new chunk (469835 samples)
--[info]  2026-11-02 15:37:03 PCSK9: 622 variant column(s) in PCSK9_variant_extraction.tsv.gz, 131 in the new list
--[info]  2026-11-02 15:37:12 PCSK9: 469835 old samples, 469835 of them in the largest new chunk (469835 samples)
--[info]  2026-11-02 15:37:12 NPC1L1: 1025 variant column(s) in NPC1L1_variant_extraction.tsv.gz, 267 in the new list
--[info]  2026-11-02 15:37:25 NPC1L1: 469835 old samples, 469835 of them in the largest new chunk (469835 samples)
- [info]  2026-11-11 09:55:20 CETP: 95 variant(s), 0 with lost carriers; totals {'n_old_carriers': 504011, 'n_both': 504011, 'n_lost': 0, 'n_lost_non_carrier': 0, 'n_lost_missing': 0, 'n_lost_not_sampled': 0, 'n_lost_not_read': 0}
- [info]  2026-11-11 09:55:20 HMGCR: 170 variant(s), 0 with lost carriers; totals {'n_old_carriers': 406, 'n_both': 406, 'n_lost': 0, 'n_lost_non_carrier': 0, 'n_lost_missing': 0, 'n_lost_not_sampled': 0, 'n_lost_not_read': 0}
--[info]  2026-11-02 15:37:25 ANGPTL3: 90 variant(s), 0 with lost carriers; totals {'n_old_carriers': 1622, 'n_both': 1622, 'n_lost': 0, 'n_lost_non_carrier': 0, 'n_lost_missing': 0, 'n_lost_not_sampled': 0, 'n_lost_not_read': 0}
-+[info]  2026-11-11 09:55:20 NPC1L1: 267 variant(s), 0 with lost carriers; totals {'n_old_carriers': 2423, 'n_both': 2423, 'n_lost': 0, 'n_lost_non_carrier': 0, 'n_lost_missing': 0, 'n_lost_not_sampled': 0, 'n_lost_not_read': 0}
-+[info]  2026-11-11 09:55:20 PCSK9: 131 variant(s), 0 with lost carriers; totals {'n_old_carriers': 2491, 'n_both': 2491, 'n_lost': 0, 'n_lost_non_carrier': 0, 'n_lost_missing': 0, 'n_lost_not_sampled': 0, 'n_lost_not_read': 0}
-+[info]  2026-11-11 09:55:20 ANGPTL3: 91 variant(s), 0 with lost carriers; totals {'n_old_carriers': 1672, 'n_both': 1672, 'n_lost': 0, 'n_lost_non_carrier': 0, 'n_lost_missing': 0, 'n_lost_not_sampled': 0, 'n_lost_not_read': 0}
- [info]  2026-11-11 09:55:20 PPARA: 124 variant(s), 0 with lost carriers; totals {'n_old_carriers': 1208, 'n_both': 1208, 'n_lost': 0, 'n_lost_non_carrier': 0, 'n_lost_missing': 0, 'n_lost_not_sampled': 0, 'n_lost_not_read': 0}
--[info]  2026-11-02 15:37:25 PCSK9: 131 variant(s), 0 with lost carriers; totals {'n_old_carriers': 2491, 'n_both': 2491, 'n_lost': 0, 'n_lost_non_carrier': 0, 'n_lost_missing': 0, 'n_lost_not_sampled': 0, 'n_lost_not_read': 0}
--[info]  2026-11-02 15:37:25 NPC1L1: 267 variant(s), 0 with lost carriers; totals {'n_old_carriers': 2423, 'n_both': 2423, 'n_lost': 0, 'n_lost_non_carrier': 0, 'n_lost_missing': 0, 'n_lost_not_sampled': 0, 'n_lost_not_read': 0}
--[info]  2026-11-02 15:37:25 wrote 877 rows to validation/results/step10_vs_b/carriers.tsv.gz
--[info]  2026-11-02 15:37:25 wrote 0 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/validation/step10/lost_carriers.tsv.gz
-+[info]  2026-11-11 09:55:20 wrote 878 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/marvel_comparison/carriers.tsv.gz
-+[info]  2026-11-11 09:55:20 wrote 0 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/data/temp/marvel_comparison/lost_carriers.tsv.gz
-```
-stage `results`:
-```diff
-@@ -1,5 +1,5 @@
- [info]  2026-11-11 09:55:20 0 strata_ref reference row(s) dropped
--[info]  2026-11-02 15:37:27 128212 new overall variant rows in step10_variant_dos.results.tsv.gz
--[info]  2026-11-02 15:37:27 results adjusted: 5653 joined rows, 3598 same sign, 10 with |z_diff| > 2; 7 old only, 58446 new only
--[info]  2026-11-02 15:37:27 results unadjusted: 5660 joined rows, 3554 same sign, 10 with |z_diff| > 2; 0 old only, 58446 new only
--[info]  2026-11-02 15:37:29 wrote 128212 rows to validation/results/step10_vs_b/results.tsv.gz
-+[info]  2026-11-11 09:55:23 219312 new overall variant rows in lipid_variant_all.results.tsv.gz
-+[info]  2026-11-11 09:55:23 results adjusted: 10203 joined rows, 7117 same sign, 111 with |z_diff| > 2; 118 old only, 99120 new only
-+[info]  2026-11-11 09:55:23 results unadjusted: 10213 joined rows, 6842 same sign, 105 with |z_diff| > 2; 108 old only, 99120 new only
-+[info]  2026-11-11 09:55:26 wrote 219312 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/marvel_comparison/results.tsv.gz
-```
 
 Output:
 ```text
@@ -2014,2485 +1651,904 @@ Output:
 
 ## [30] merge_associations (`/home/mvanvugt/projects/lipid_adem/src/merge_associations.py`)
 - first run: 2026-09-22 15:24:19
-- last run: 2026-10-27 17:32:09
-- commit: `23ebede` (dirty)
+- last run: 2026-11-11 20:05:16
+- commit: `25d4593` (dirty)
 
 Output:
 ```text
-[stage] 2026-10-27 16:58:30 load_sumstats
-[info]  2026-10-27 16:58:32 summary-stats: 125 files, 595475 rows incl. one copy per outcome (0 missing)
-[info]  2026-10-27 16:58:39 MONDO_0011057 (all_cause_dementia) in Constants.EXCLUDED_EFO_IDS, skipped
-[info]  2026-10-27 16:58:39 MONDO_0011057 (vascular_dementia) in Constants.EXCLUDED_EFO_IDS, skipped
-[stage] 2026-10-27 16:58:39 marvel
-[info]  2026-10-27 16:58:41 marvel ukb apoa: 1899 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:41 marvel ukb apoa: 1092 rows -> 111 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:41 marvel ukb apoa: 970 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:41 marvel ukb apob: 1899 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:41 marvel ukb apob: 1092 rows -> 111 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:41 marvel ukb apob: 970 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:42 marvel ukb hdl_c: 1899 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:42 marvel ukb hdl_c: 1092 rows -> 111 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:42 marvel ukb hdl_c: 970 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:42 marvel ukb ldl_c: 1899 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:42 marvel ukb ldl_c: 1092 rows -> 111 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:42 marvel ukb ldl_c: 970 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:42 marvel ukb tg: 1899 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:42 marvel ukb tg: 1092 rows -> 111 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:42 marvel ukb tg: 970 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:42 marvel ukb all_cause_dementia: 1899 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:42 marvel ukb all_cause_dementia: 3 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:42 marvel ukb all_cause_dementia: 34 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:42 marvel ukb all_cause_dementia: 1079 rows -> 74 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:42 marvel ukb all_cause_dementia: 994 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:42 marvel ukb alzheimers_dementia: 1899 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:42 marvel ukb alzheimers_dementia: 3 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:42 marvel ukb alzheimers_dementia: 39 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:42 marvel ukb alzheimers_dementia: 1173 rows -> 69 variant rows, 22 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:42 marvel ukb alzheimers_dementia: 1082 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:42 marvel ukb vascular_dementia: 1899 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:42 marvel ukb vascular_dementia: 3 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:42 marvel ukb vascular_dementia: 39 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:42 marvel ukb vascular_dementia: 1074 rows -> 69 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:42 marvel ukb vascular_dementia: 994 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:42 marvel ukb frontotemporal_dementia: 1899 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:42 marvel ukb frontotemporal_dementia: 3 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:42 marvel ukb frontotemporal_dementia: 49 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:43 marvel ukb frontotemporal_dementia: 1064 rows -> 64 variant rows, 6 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:43 marvel ukb frontotemporal_dementia: 994 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:43 marvel ukb ascvd: 1899 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:43 marvel ukb ascvd: 3 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:43 marvel ukb ascvd: 11 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:43 marvel ukb ascvd: 1102 rows -> 97 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:43 marvel ukb ascvd: 994 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:43 marvel ukb apoa: 306 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:43 marvel ukb apoa: 797 rows -> 286 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:43 marvel ukb apoa: 500 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:43 marvel ukb apob: 306 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:43 marvel ukb apob: 797 rows -> 286 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:43 marvel ukb apob: 500 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:43 marvel ukb hdl_c: 306 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:43 marvel ukb hdl_c: 797 rows -> 286 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:43 marvel ukb hdl_c: 500 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:43 marvel ukb ldl_c: 306 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:43 marvel ukb ldl_c: 797 rows -> 286 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:43 marvel ukb ldl_c: 500 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:43 marvel ukb tg: 306 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:43 marvel ukb tg: 797 rows -> 286 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:43 marvel ukb tg: 500 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:44 marvel ukb all_cause_dementia: 306 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb all_cause_dementia: 239 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb all_cause_dementia: 41 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb all_cause_dementia: 2429 rows -> 15 variant rows, 6 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb all_cause_dementia: 2408 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:44 marvel ukb alzheimers_dementia: 306 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb alzheimers_dementia: 239 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb alzheimers_dementia: 50 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb alzheimers_dementia: 2519 rows -> 11 variant rows, 12 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb alzheimers_dementia: 2496 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:44 marvel ukb vascular_dementia: 306 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb vascular_dementia: 239 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb vascular_dementia: 56 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb vascular_dementia: 2414 rows -> 6 variant rows, 0 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb vascular_dementia: 2408 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:44 marvel ukb frontotemporal_dementia: 306 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb frontotemporal_dementia: 239 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb frontotemporal_dementia: 60 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb frontotemporal_dementia: 2410 rows -> 2 variant rows, 0 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb frontotemporal_dementia: 2408 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:44 marvel ukb ascvd: 306 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb ascvd: 239 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb ascvd: 32 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb ascvd: 2438 rows -> 19 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb ascvd: 2408 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:44 marvel ukb apoa: 1116 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb apoa: 1251 rows -> 200 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb apoa: 1040 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:44 marvel ukb apob: 1116 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb apob: 1251 rows -> 200 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:44 marvel ukb apob: 1040 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:45 marvel ukb hdl_c: 1116 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:45 marvel ukb hdl_c: 1251 rows -> 200 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:45 marvel ukb hdl_c: 1040 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:45 marvel ukb ldl_c: 1116 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:45 marvel ukb ldl_c: 1251 rows -> 200 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:45 marvel ukb ldl_c: 1040 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:45 marvel ukb tg: 1116 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:45 marvel ukb tg: 1251 rows -> 200 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:45 marvel ukb tg: 1040 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:45 marvel ukb all_cause_dementia: 1116 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:45 marvel ukb all_cause_dementia: 81 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:45 marvel ukb all_cause_dementia: 77 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:45 marvel ukb all_cause_dementia: 1741 rows -> 42 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:45 marvel ukb all_cause_dementia: 1688 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:45 marvel ukb alzheimers_dementia: 1116 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:45 marvel ukb alzheimers_dementia: 81 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:45 marvel ukb alzheimers_dementia: 88 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:45 marvel ukb alzheimers_dementia: 1829 rows -> 31 variant rows, 22 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:45 marvel ukb alzheimers_dementia: 1776 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:45 marvel ukb vascular_dementia: 1116 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:45 marvel ukb vascular_dementia: 81 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:45 marvel ukb vascular_dementia: 94 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:45 marvel ukb vascular_dementia: 1724 rows -> 25 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:45 marvel ukb vascular_dementia: 1688 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:45 marvel ukb frontotemporal_dementia: 1116 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:45 marvel ukb frontotemporal_dementia: 81 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:45 marvel ukb frontotemporal_dementia: 103 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:46 marvel ukb frontotemporal_dementia: 1715 rows -> 21 variant rows, 6 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:46 marvel ukb frontotemporal_dementia: 1688 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:46 marvel ukb ascvd: 1116 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:46 marvel ukb ascvd: 81 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:46 marvel ukb ascvd: 50 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:46 marvel ukb ascvd: 1768 rows -> 69 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:46 marvel ukb ascvd: 1688 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:46 marvel ukb apoa: 1485 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:46 marvel ukb apoa: 1226 rows -> 158 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:46 marvel ukb apoa: 1057 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:46 marvel ukb apob: 1485 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:46 marvel ukb apob: 1226 rows -> 158 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:46 marvel ukb apob: 1057 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:46 marvel ukb hdl_c: 1485 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:46 marvel ukb hdl_c: 1226 rows -> 158 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:46 marvel ukb hdl_c: 1057 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:46 marvel ukb ldl_c: 1485 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:46 marvel ukb ldl_c: 1226 rows -> 158 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:46 marvel ukb ldl_c: 1057 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:46 marvel ukb tg: 1485 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:46 marvel ukb tg: 1226 rows -> 158 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:46 marvel ukb tg: 1057 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:47 marvel ukb all_cause_dementia: 1485 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb all_cause_dementia: 38 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb all_cause_dementia: 65 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb all_cause_dementia: 1427 rows -> 56 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb all_cause_dementia: 1360 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:47 marvel ukb alzheimers_dementia: 1485 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb alzheimers_dementia: 38 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb alzheimers_dementia: 74 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb alzheimers_dementia: 1517 rows -> 49 variant rows, 20 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb alzheimers_dementia: 1448 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:47 marvel ukb vascular_dementia: 1485 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb vascular_dementia: 38 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb vascular_dementia: 74 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb vascular_dementia: 1418 rows -> 47 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb vascular_dementia: 1360 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:47 marvel ukb frontotemporal_dementia: 1485 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb frontotemporal_dementia: 38 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb frontotemporal_dementia: 91 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb frontotemporal_dementia: 1401 rows -> 41 variant rows, 0 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb frontotemporal_dementia: 1360 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:47 marvel ukb ascvd: 1485 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb ascvd: 38 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb ascvd: 30 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb ascvd: 1462 rows -> 90 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb ascvd: 1361 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:47 marvel ukb apoa: 819 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb apoa: 1212 rows -> 230 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:47 marvel ukb apoa: 971 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:48 marvel ukb apob: 819 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:48 marvel ukb apob: 1212 rows -> 230 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:48 marvel ukb apob: 971 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:48 marvel ukb hdl_c: 819 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:48 marvel ukb hdl_c: 1212 rows -> 230 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:48 marvel ukb hdl_c: 971 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:48 marvel ukb ldl_c: 819 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:48 marvel ukb ldl_c: 1212 rows -> 230 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:48 marvel ukb ldl_c: 971 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:48 marvel ukb tg: 819 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:48 marvel ukb tg: 1212 rows -> 230 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:48 marvel ukb tg: 971 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:48 marvel ukb all_cause_dementia: 819 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:48 marvel ukb all_cause_dementia: 123 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:48 marvel ukb all_cause_dementia: 99 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:48 marvel ukb all_cause_dementia: 1974 rows -> 11 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:48 marvel ukb all_cause_dementia: 1952 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:48 marvel ukb alzheimers_dementia: 819 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:48 marvel ukb alzheimers_dementia: 123 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:48 marvel ukb alzheimers_dementia: 104 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:48 marvel ukb alzheimers_dementia: 2068 rows -> 8 variant rows, 20 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:48 marvel ukb alzheimers_dementia: 2040 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:48 marvel ukb vascular_dementia: 819 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:48 marvel ukb vascular_dementia: 123 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:48 marvel ukb vascular_dementia: 111 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:48 marvel ukb vascular_dementia: 1962 rows -> 10 variant rows, 0 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:48 marvel ukb vascular_dementia: 1952 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:49 marvel ukb frontotemporal_dementia: 819 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:49 marvel ukb frontotemporal_dementia: 123 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:49 marvel ukb frontotemporal_dementia: 117 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:49 marvel ukb frontotemporal_dementia: 1956 rows -> 4 variant rows, 0 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:49 marvel ukb frontotemporal_dementia: 1952 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:49 marvel ukb ascvd: 819 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:49 marvel ukb ascvd: 123 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:49 marvel ukb ascvd: 68 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:49 marvel ukb ascvd: 2005 rows -> 41 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:49 marvel ukb ascvd: 1953 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:49 marvel ukb apoa: 1269 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:49 marvel ukb apoa: 1546 rows -> 181 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:49 marvel ukb apoa: 1354 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:49 marvel ukb apob: 1269 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:49 marvel ukb apob: 1546 rows -> 181 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:49 marvel ukb apob: 1354 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:49 marvel ukb hdl_c: 1269 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:49 marvel ukb hdl_c: 1546 rows -> 181 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:49 marvel ukb hdl_c: 1354 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:49 marvel ukb ldl_c: 1269 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:49 marvel ukb ldl_c: 1546 rows -> 181 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:49 marvel ukb ldl_c: 1354 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:50 marvel ukb tg: 1269 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb tg: 1546 rows -> 181 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb tg: 1354 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:50 marvel ukb all_cause_dementia: 1269 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb all_cause_dementia: 25 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb all_cause_dementia: 86 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb all_cause_dementia: 1635 rows -> 70 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb all_cause_dementia: 1554 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:50 marvel ukb alzheimers_dementia: 1269 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb alzheimers_dementia: 25 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb alzheimers_dementia: 94 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb alzheimers_dementia: 1726 rows -> 62 variant rows, 22 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb alzheimers_dementia: 1642 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:50 marvel ukb vascular_dementia: 1269 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb vascular_dementia: 25 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb vascular_dementia: 100 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb vascular_dementia: 1621 rows -> 57 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb vascular_dementia: 1553 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:50 marvel ukb frontotemporal_dementia: 1269 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb frontotemporal_dementia: 25 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb frontotemporal_dementia: 112 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb frontotemporal_dementia: 1609 rows -> 50 variant rows, 6 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb frontotemporal_dementia: 1553 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:50 marvel ukb ascvd: 1269 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb ascvd: 25 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb ascvd: 53 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb ascvd: 1668 rows -> 103 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb ascvd: 1554 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:50 marvel ukb apoa: 261 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb apoa: 754 rows -> 291 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:50 marvel ukb apoa: 452 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:51 marvel ukb apob: 261 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:51 marvel ukb apob: 754 rows -> 291 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:51 marvel ukb apob: 452 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:51 marvel ukb hdl_c: 261 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:51 marvel ukb hdl_c: 754 rows -> 291 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:51 marvel ukb hdl_c: 452 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:51 marvel ukb ldl_c: 261 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:51 marvel ukb ldl_c: 754 rows -> 291 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:51 marvel ukb ldl_c: 452 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:51 marvel ukb tg: 261 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:51 marvel ukb tg: 754 rows -> 291 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:51 marvel ukb tg: 452 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:51 marvel ukb all_cause_dementia: 261 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:51 marvel ukb all_cause_dementia: 250 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:51 marvel ukb all_cause_dementia: 39 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:51 marvel ukb all_cause_dementia: 2465 rows -> 11 variant rows, 6 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:51 marvel ukb all_cause_dementia: 2448 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:51 marvel ukb alzheimers_dementia: 261 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:51 marvel ukb alzheimers_dementia: 250 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:51 marvel ukb alzheimers_dementia: 48 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:51 marvel ukb alzheimers_dementia: 2555 rows -> 7 variant rows, 12 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:51 marvel ukb alzheimers_dementia: 2536 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:52 marvel ukb vascular_dementia: 261 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:52 marvel ukb vascular_dementia: 250 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:52 marvel ukb vascular_dementia: 51 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:52 marvel ukb vascular_dementia: 2453 rows -> 5 variant rows, 0 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:52 marvel ukb vascular_dementia: 2448 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:52 marvel ukb frontotemporal_dementia: 261 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:52 marvel ukb frontotemporal_dementia: 250 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:52 marvel ukb frontotemporal_dementia: 54 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:52 marvel ukb frontotemporal_dementia: 2450 rows -> 2 variant rows, 0 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:52 marvel ukb frontotemporal_dementia: 2448 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:52 marvel ukb ascvd: 261 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:52 marvel ukb ascvd: 250 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:52 marvel ukb ascvd: 31 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:52 marvel ukb ascvd: 2473 rows -> 14 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:52 marvel ukb ascvd: 2448 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:52 marvel ukb apoa: 846 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:52 marvel ukb apoa: 1337 rows -> 229 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:52 marvel ukb apoa: 1097 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:52 marvel ukb apob: 846 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:52 marvel ukb apob: 1337 rows -> 229 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:52 marvel ukb apob: 1097 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:52 marvel ukb hdl_c: 846 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:52 marvel ukb hdl_c: 1337 rows -> 229 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:52 marvel ukb hdl_c: 1097 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:52 marvel ukb ldl_c: 846 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:52 marvel ukb ldl_c: 1337 rows -> 229 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:52 marvel ukb ldl_c: 1097 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:53 marvel ukb tg: 846 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb tg: 1337 rows -> 229 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb tg: 1097 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:53 marvel ukb all_cause_dementia: 846 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb all_cause_dementia: 104 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb all_cause_dementia: 87 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb all_cause_dementia: 1978 rows -> 38 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb all_cause_dementia: 1929 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:53 marvel ukb alzheimers_dementia: 846 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb alzheimers_dementia: 104 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb alzheimers_dementia: 96 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb alzheimers_dementia: 2068 rows -> 29 variant rows, 22 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb alzheimers_dementia: 2017 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:53 marvel ukb vascular_dementia: 846 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb vascular_dementia: 104 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb vascular_dementia: 106 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb vascular_dementia: 1959 rows -> 20 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb vascular_dementia: 1928 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:53 marvel ukb frontotemporal_dementia: 846 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb frontotemporal_dementia: 104 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb frontotemporal_dementia: 114 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb frontotemporal_dementia: 1951 rows -> 17 variant rows, 6 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb frontotemporal_dementia: 1928 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:53 marvel ukb ascvd: 846 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb ascvd: 104 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb ascvd: 60 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb ascvd: 2005 rows -> 65 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:53 marvel ukb ascvd: 1929 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:53 marvel ukb apoa: 945 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:54 marvel ukb apoa: 1478 rows -> 218 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:54 marvel ukb apoa: 1249 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:54 marvel ukb apob: 945 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:54 marvel ukb apob: 1478 rows -> 218 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:54 marvel ukb apob: 1249 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:54 marvel ukb hdl_c: 945 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:54 marvel ukb hdl_c: 1478 rows -> 218 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:54 marvel ukb hdl_c: 1249 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:54 marvel ukb ldl_c: 945 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:54 marvel ukb ldl_c: 1478 rows -> 218 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:54 marvel ukb ldl_c: 1249 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:54 marvel ukb tg: 945 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:54 marvel ukb tg: 1478 rows -> 218 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:54 marvel ukb tg: 1249 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:54 marvel ukb all_cause_dementia: 945 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:54 marvel ukb all_cause_dementia: 74 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:54 marvel ukb all_cause_dementia: 96 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:54 marvel ukb all_cause_dementia: 1900 rows -> 49 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:54 marvel ukb all_cause_dementia: 1840 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:54 marvel ukb alzheimers_dementia: 945 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:54 marvel ukb alzheimers_dementia: 74 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:54 marvel ukb alzheimers_dementia: 109 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:54 marvel ukb alzheimers_dementia: 1986 rows -> 38 variant rows, 20 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:54 marvel ukb alzheimers_dementia: 1928 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:55 marvel ukb vascular_dementia: 945 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:55 marvel ukb vascular_dementia: 74 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:55 marvel ukb vascular_dementia: 104 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:55 marvel ukb vascular_dementia: 1892 rows -> 41 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:55 marvel ukb vascular_dementia: 1840 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:55 marvel ukb frontotemporal_dementia: 945 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:55 marvel ukb frontotemporal_dementia: 74 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:55 marvel ukb frontotemporal_dementia: 123 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:55 marvel ukb frontotemporal_dementia: 1873 rows -> 33 variant rows, 0 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:55 marvel ukb frontotemporal_dementia: 1840 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:55 marvel ukb ascvd: 945 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:55 marvel ukb ascvd: 74 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:55 marvel ukb ascvd: 54 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:55 marvel ukb ascvd: 1942 rows -> 90 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:55 marvel ukb ascvd: 1841 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:55 marvel ukb apoa: 648 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:55 marvel ukb apoa: 1247 rows -> 249 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:55 marvel ukb apoa: 987 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:55 marvel ukb apob: 648 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:55 marvel ukb apob: 1247 rows -> 249 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:55 marvel ukb apob: 987 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:55 marvel ukb hdl_c: 648 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:55 marvel ukb hdl_c: 1247 rows -> 249 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:55 marvel ukb hdl_c: 987 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:55 marvel ukb ldl_c: 648 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:55 marvel ukb ldl_c: 1247 rows -> 249 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:55 marvel ukb ldl_c: 987 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:56 marvel ukb tg: 648 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb tg: 1247 rows -> 249 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb tg: 987 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:56 marvel ukb all_cause_dementia: 648 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb all_cause_dementia: 140 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb all_cause_dementia: 102 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb all_cause_dementia: 2125 rows -> 11 variant rows, 10 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb all_cause_dementia: 2104 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:56 marvel ukb alzheimers_dementia: 648 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb alzheimers_dementia: 140 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb alzheimers_dementia: 126 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb alzheimers_dementia: 2200 rows -> 8 variant rows, 0 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb alzheimers_dementia: 2192 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:56 marvel ukb vascular_dementia: 648 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb vascular_dementia: 140 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb vascular_dementia: 116 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb vascular_dementia: 2111 rows -> 7 variant rows, 0 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb vascular_dementia: 2104 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:56 marvel ukb frontotemporal_dementia: 648 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb frontotemporal_dementia: 140 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb frontotemporal_dementia: 119 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb frontotemporal_dementia: 2108 rows -> 4 variant rows, 0 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb frontotemporal_dementia: 2104 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:58:56 marvel ukb ascvd: 648 rows with < 5 exposed dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb ascvd: 140 rows with SE < 1e-06 (degenerate fit) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb ascvd: 68 rows with SE > 30.0 (separation) dropped (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb ascvd: 2159 rows -> 43 variant rows, 11 gene-burden rows (ANGPTL3_results.tsv.gz)
-[info]  2026-10-27 16:58:56 marvel ukb ascvd: 2105 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:02 marvel ukb apoa: 3339 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:02 marvel ukb apoa: 2588 rows -> 208 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:02 marvel ukb apoa: 2368 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:02 marvel ukb apob: 3339 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:02 marvel ukb apob: 2588 rows -> 208 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:02 marvel ukb apob: 2368 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:02 marvel ukb hdl_c: 3339 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:02 marvel ukb hdl_c: 2588 rows -> 208 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:02 marvel ukb hdl_c: 2368 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:02 marvel ukb ldl_c: 3339 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:03 marvel ukb ldl_c: 2588 rows -> 208 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:03 marvel ukb ldl_c: 2368 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:03 marvel ukb tg: 3339 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:03 marvel ukb tg: 2588 rows -> 208 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:03 marvel ukb tg: 2368 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:03 marvel ukb all_cause_dementia: 3339 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:03 marvel ukb all_cause_dementia: 23 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:03 marvel ukb all_cause_dementia: 43 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:03 marvel ukb all_cause_dementia: 2706 rows -> 160 variant rows, 10 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:03 marvel ukb all_cause_dementia: 2536 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:03 marvel ukb alzheimers_dementia: 3339 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:03 marvel ukb alzheimers_dementia: 23 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:03 marvel ukb alzheimers_dementia: 67 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:03 marvel ukb alzheimers_dementia: 2790 rows -> 147 variant rows, 20 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:03 marvel ukb alzheimers_dementia: 2623 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:04 marvel ukb vascular_dementia: 3339 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:04 marvel ukb vascular_dementia: 23 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:04 marvel ukb vascular_dementia: 64 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:04 marvel ukb vascular_dementia: 2685 rows -> 142 variant rows, 10 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:04 marvel ukb vascular_dementia: 2533 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:04 marvel ukb frontotemporal_dementia: 3339 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:04 marvel ukb frontotemporal_dementia: 23 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:04 marvel ukb frontotemporal_dementia: 98 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:04 marvel ukb frontotemporal_dementia: 2651 rows -> 122 variant rows, 7 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:04 marvel ukb frontotemporal_dementia: 2522 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:04 marvel ukb ascvd: 3339 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:04 marvel ukb ascvd: 23 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:04 marvel ukb ascvd: 18 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:04 marvel ukb ascvd: 2731 rows -> 178 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:04 marvel ukb ascvd: 2541 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:04 marvel ukb apoa: 756 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:04 marvel ukb apoa: 1491 rows -> 420 variant rows, 10 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:04 marvel ukb apoa: 1061 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:05 marvel ukb apob: 756 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:05 marvel ukb apob: 1491 rows -> 420 variant rows, 10 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:05 marvel ukb apob: 1061 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:05 marvel ukb hdl_c: 756 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:05 marvel ukb hdl_c: 1491 rows -> 420 variant rows, 10 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:05 marvel ukb hdl_c: 1061 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:05 marvel ukb ldl_c: 756 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:05 marvel ukb ldl_c: 1491 rows -> 420 variant rows, 10 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:05 marvel ukb ldl_c: 1061 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:05 marvel ukb tg: 756 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:06 marvel ukb tg: 1491 rows -> 420 variant rows, 10 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:06 marvel ukb tg: 1061 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:06 marvel ukb all_cause_dementia: 756 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:06 marvel ukb all_cause_dementia: 483 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:06 marvel ukb all_cause_dementia: 55 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:06 marvel ukb all_cause_dementia: 4817 rows -> 45 variant rows, 7 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:06 marvel ukb all_cause_dementia: 4765 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:06 marvel ukb alzheimers_dementia: 774 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:06 marvel ukb alzheimers_dementia: 483 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:06 marvel ukb alzheimers_dementia: 66 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:06 marvel ukb alzheimers_dementia: 4896 rows -> 37 variant rows, 14 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:06 marvel ukb alzheimers_dementia: 4845 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:06 marvel ukb vascular_dementia: 756 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:06 marvel ukb vascular_dementia: 483 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:06 marvel ukb vascular_dementia: 80 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:06 marvel ukb vascular_dementia: 4792 rows -> 32 variant rows, 1 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:06 marvel ukb vascular_dementia: 4759 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:07 marvel ukb frontotemporal_dementia: 756 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:07 marvel ukb frontotemporal_dementia: 483 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:07 marvel ukb frontotemporal_dementia: 89 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:07 marvel ukb frontotemporal_dementia: 4783 rows -> 24 variant rows, 1 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:07 marvel ukb frontotemporal_dementia: 4758 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:07 marvel ukb ascvd: 756 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:07 marvel ukb ascvd: 483 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:07 marvel ukb ascvd: 52 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:07 marvel ukb ascvd: 4820 rows -> 45 variant rows, 7 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:07 marvel ukb ascvd: 4768 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:07 marvel ukb apoa: 2025 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:07 marvel ukb apoa: 2598 rows -> 320 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:07 marvel ukb apoa: 2266 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:08 marvel ukb apob: 2025 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:08 marvel ukb apob: 2598 rows -> 320 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:08 marvel ukb apob: 2266 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:08 marvel ukb hdl_c: 2025 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:08 marvel ukb hdl_c: 2598 rows -> 320 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:08 marvel ukb hdl_c: 2266 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:08 marvel ukb ldl_c: 2025 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:08 marvel ukb ldl_c: 2598 rows -> 320 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:08 marvel ukb ldl_c: 2266 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:08 marvel ukb tg: 2025 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:08 marvel ukb tg: 2598 rows -> 320 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:08 marvel ukb tg: 2266 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:09 marvel ukb all_cause_dementia: 2025 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:09 marvel ukb all_cause_dementia: 186 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:09 marvel ukb all_cause_dementia: 154 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:09 marvel ukb all_cause_dementia: 3746 rows -> 87 variant rows, 10 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:09 marvel ukb all_cause_dementia: 3649 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:09 marvel ukb alzheimers_dementia: 2025 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:09 marvel ukb alzheimers_dementia: 186 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:09 marvel ukb alzheimers_dementia: 165 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:09 marvel ukb alzheimers_dementia: 3843 rows -> 79 variant rows, 20 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:09 marvel ukb alzheimers_dementia: 3744 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:09 marvel ukb vascular_dementia: 2025 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:09 marvel ukb vascular_dementia: 186 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:09 marvel ukb vascular_dementia: 192 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:09 marvel ukb vascular_dementia: 3708 rows -> 64 variant rows, 1 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:09 marvel ukb vascular_dementia: 3643 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:09 marvel ukb frontotemporal_dementia: 2025 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:09 marvel ukb frontotemporal_dementia: 186 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:09 marvel ukb frontotemporal_dementia: 208 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:09 marvel ukb frontotemporal_dementia: 3692 rows -> 49 variant rows, 1 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:09 marvel ukb frontotemporal_dementia: 3642 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:10 marvel ukb ascvd: 2025 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:10 marvel ukb ascvd: 186 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:10 marvel ukb ascvd: 94 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:10 marvel ukb ascvd: 3806 rows -> 126 variant rows, 10 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:10 marvel ukb ascvd: 3670 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:10 marvel ukb apoa: 2799 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:10 marvel ukb apoa: 2792 rows -> 248 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:10 marvel ukb apoa: 2532 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:10 marvel ukb apob: 2799 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:10 marvel ukb apob: 2792 rows -> 248 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:10 marvel ukb apob: 2532 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:11 marvel ukb hdl_c: 2799 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:11 marvel ukb hdl_c: 2792 rows -> 248 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:11 marvel ukb hdl_c: 2532 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:11 marvel ukb ldl_c: 2799 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:11 marvel ukb ldl_c: 2792 rows -> 248 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:11 marvel ukb ldl_c: 2532 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:11 marvel ukb tg: 2799 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:11 marvel ukb tg: 2792 rows -> 248 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:11 marvel ukb tg: 2532 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:11 marvel ukb all_cause_dementia: 2799 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:11 marvel ukb all_cause_dementia: 65 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:11 marvel ukb all_cause_dementia: 105 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:11 marvel ukb all_cause_dementia: 3142 rows -> 128 variant rows, 10 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:11 marvel ukb all_cause_dementia: 3004 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:12 marvel ukb alzheimers_dementia: 2799 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:12 marvel ukb alzheimers_dementia: 65 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:12 marvel ukb alzheimers_dementia: 153 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:12 marvel ukb alzheimers_dementia: 3202 rows -> 110 variant rows, 2 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:12 marvel ukb alzheimers_dementia: 3090 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:12 marvel ukb vascular_dementia: 2799 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:12 marvel ukb vascular_dementia: 65 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:12 marvel ukb vascular_dementia: 125 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:12 marvel ukb vascular_dementia: 3122 rows -> 113 variant rows, 7 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:12 marvel ukb vascular_dementia: 3002 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:12 marvel ukb frontotemporal_dementia: 2799 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:12 marvel ukb frontotemporal_dementia: 65 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:12 marvel ukb frontotemporal_dementia: 149 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:12 marvel ukb frontotemporal_dementia: 3098 rows -> 99 variant rows, 7 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:12 marvel ukb frontotemporal_dementia: 2992 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:13 marvel ukb ascvd: 2799 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:13 marvel ukb ascvd: 65 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:13 marvel ukb ascvd: 58 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:13 marvel ukb ascvd: 3189 rows -> 161 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:13 marvel ukb ascvd: 3016 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:13 marvel ukb apoa: 1683 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:13 marvel ukb apoa: 2380 rows -> 348 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:13 marvel ukb apoa: 2020 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:13 marvel ukb apob: 1683 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:13 marvel ukb apob: 2380 rows -> 348 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:13 marvel ukb apob: 2020 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:13 marvel ukb hdl_c: 1683 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:14 marvel ukb hdl_c: 2380 rows -> 348 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:14 marvel ukb hdl_c: 2020 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:14 marvel ukb ldl_c: 1683 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:14 marvel ukb ldl_c: 2380 rows -> 348 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:14 marvel ukb ldl_c: 2020 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:14 marvel ukb tg: 1683 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:14 marvel ukb tg: 2380 rows -> 348 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:14 marvel ukb tg: 2020 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:14 marvel ukb all_cause_dementia: 1683 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:14 marvel ukb all_cause_dementia: 256 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:14 marvel ukb all_cause_dementia: 168 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:14 marvel ukb all_cause_dementia: 4004 rows -> 56 variant rows, 7 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:14 marvel ukb all_cause_dementia: 3941 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:15 marvel ukb alzheimers_dementia: 1683 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:15 marvel ukb alzheimers_dementia: 256 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:15 marvel ukb alzheimers_dementia: 198 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:15 marvel ukb alzheimers_dementia: 4082 rows -> 46 variant rows, 2 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:15 marvel ukb alzheimers_dementia: 4034 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:15 marvel ukb vascular_dementia: 1683 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:15 marvel ukb vascular_dementia: 256 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:15 marvel ukb vascular_dementia: 185 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:15 marvel ukb vascular_dementia: 3987 rows -> 42 variant rows, 7 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:15 marvel ukb vascular_dementia: 3938 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:15 marvel ukb frontotemporal_dementia: 1683 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:15 marvel ukb frontotemporal_dementia: 256 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:15 marvel ukb frontotemporal_dementia: 202 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:15 marvel ukb frontotemporal_dementia: 3970 rows -> 32 variant rows, 1 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:15 marvel ukb frontotemporal_dementia: 3937 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:15 marvel ukb ascvd: 1683 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:15 marvel ukb ascvd: 256 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:15 marvel ukb ascvd: 113 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:15 marvel ukb ascvd: 4059 rows -> 87 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:15 marvel ukb ascvd: 3960 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:16 marvel ukb apoa: 2169 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:16 marvel ukb apoa: 3326 rows -> 286 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:16 marvel ukb apoa: 3028 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:16 marvel ukb apob: 2169 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:16 marvel ukb apob: 3326 rows -> 286 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:16 marvel ukb apob: 3028 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:16 marvel ukb hdl_c: 2169 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:16 marvel ukb hdl_c: 3326 rows -> 286 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:16 marvel ukb hdl_c: 3028 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:17 marvel ukb ldl_c: 2169 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:17 marvel ukb ldl_c: 3326 rows -> 286 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:17 marvel ukb ldl_c: 3028 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:17 marvel ukb tg: 2169 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:17 marvel ukb tg: 3326 rows -> 286 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:17 marvel ukb tg: 3028 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:17 marvel ukb all_cause_dementia: 2169 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:17 marvel ukb all_cause_dementia: 77 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:17 marvel ukb all_cause_dementia: 161 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:17 marvel ukb all_cause_dementia: 3704 rows -> 129 variant rows, 10 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:17 marvel ukb all_cause_dementia: 3565 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:17 marvel ukb alzheimers_dementia: 2169 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:18 marvel ukb alzheimers_dementia: 77 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:18 marvel ukb alzheimers_dementia: 183 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:18 marvel ukb alzheimers_dementia: 3790 rows -> 117 variant rows, 20 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:18 marvel ukb alzheimers_dementia: 3653 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:18 marvel ukb vascular_dementia: 2169 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:18 marvel ukb vascular_dementia: 77 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:18 marvel ukb vascular_dementia: 183 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:18 marvel ukb vascular_dementia: 3682 rows -> 112 variant rows, 10 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:18 marvel ukb vascular_dementia: 3560 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:18 marvel ukb frontotemporal_dementia: 2169 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:18 marvel ukb frontotemporal_dementia: 77 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:18 marvel ukb frontotemporal_dementia: 209 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:18 marvel ukb frontotemporal_dementia: 3656 rows -> 96 variant rows, 7 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:18 marvel ukb frontotemporal_dementia: 3553 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:18 marvel ukb ascvd: 2169 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:18 marvel ukb ascvd: 77 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:18 marvel ukb ascvd: 80 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:18 marvel ukb ascvd: 3785 rows -> 175 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:18 marvel ukb ascvd: 3598 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:19 marvel ukb apoa: 684 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:19 marvel ukb apoa: 1363 rows -> 421 variant rows, 10 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:19 marvel ukb apoa: 932 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:19 marvel ukb apob: 684 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:19 marvel ukb apob: 1363 rows -> 421 variant rows, 10 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:19 marvel ukb apob: 932 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:19 marvel ukb hdl_c: 684 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:19 marvel ukb hdl_c: 1363 rows -> 421 variant rows, 10 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:19 marvel ukb hdl_c: 932 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:19 marvel ukb ldl_c: 684 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:20 marvel ukb ldl_c: 1363 rows -> 421 variant rows, 10 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:20 marvel ukb ldl_c: 932 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:20 marvel ukb tg: 684 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:20 marvel ukb tg: 1363 rows -> 421 variant rows, 10 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:20 marvel ukb tg: 932 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:20 marvel ukb all_cause_dementia: 684 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:20 marvel ukb all_cause_dementia: 508 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:20 marvel ukb all_cause_dementia: 53 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:20 marvel ukb all_cause_dementia: 4866 rows -> 31 variant rows, 7 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:20 marvel ukb all_cause_dementia: 4828 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:20 marvel ukb alzheimers_dementia: 702 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:20 marvel ukb alzheimers_dementia: 508 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:20 marvel ukb alzheimers_dementia: 63 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:20 marvel ukb alzheimers_dementia: 4946 rows -> 25 variant rows, 14 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:20 marvel ukb alzheimers_dementia: 4907 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:21 marvel ukb vascular_dementia: 684 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:21 marvel ukb vascular_dementia: 508 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:21 marvel ukb vascular_dementia: 73 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:21 marvel ukb vascular_dementia: 4846 rows -> 23 variant rows, 1 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:21 marvel ukb vascular_dementia: 4822 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:21 marvel ukb frontotemporal_dementia: 684 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:21 marvel ukb frontotemporal_dementia: 508 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:21 marvel ukb frontotemporal_dementia: 77 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:21 marvel ukb frontotemporal_dementia: 4842 rows -> 19 variant rows, 1 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:21 marvel ukb frontotemporal_dementia: 4822 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:21 marvel ukb ascvd: 684 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:21 marvel ukb ascvd: 508 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:21 marvel ukb ascvd: 47 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:21 marvel ukb ascvd: 4872 rows -> 33 variant rows, 7 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:21 marvel ukb ascvd: 4832 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:21 marvel ukb apoa: 1683 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:22 marvel ukb apoa: 2516 rows -> 350 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:22 marvel ukb apoa: 2154 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:22 marvel ukb apob: 1683 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:22 marvel ukb apob: 2516 rows -> 350 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:22 marvel ukb apob: 2154 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:22 marvel ukb hdl_c: 1683 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:22 marvel ukb hdl_c: 2516 rows -> 350 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:22 marvel ukb hdl_c: 2154 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:22 marvel ukb ldl_c: 1683 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:22 marvel ukb ldl_c: 2516 rows -> 350 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:22 marvel ukb ldl_c: 2154 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:23 marvel ukb tg: 1683 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:23 marvel ukb tg: 2516 rows -> 350 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:23 marvel ukb tg: 2154 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:23 marvel ukb all_cause_dementia: 1683 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:23 marvel ukb all_cause_dementia: 239 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:23 marvel ukb all_cause_dementia: 162 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:23 marvel ukb all_cause_dementia: 4027 rows -> 67 variant rows, 10 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:23 marvel ukb all_cause_dementia: 3950 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:23 marvel ukb alzheimers_dementia: 1683 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:23 marvel ukb alzheimers_dementia: 239 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:23 marvel ukb alzheimers_dementia: 179 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:23 marvel ukb alzheimers_dementia: 4118 rows -> 58 variant rows, 14 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:23 marvel ukb alzheimers_dementia: 4046 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:23 marvel ukb vascular_dementia: 1683 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:23 marvel ukb vascular_dementia: 239 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:23 marvel ukb vascular_dementia: 189 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:23 marvel ukb vascular_dementia: 4000 rows -> 53 variant rows, 1 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:23 marvel ukb vascular_dementia: 3946 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:24 marvel ukb frontotemporal_dementia: 1683 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:24 marvel ukb frontotemporal_dementia: 239 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:24 marvel ukb frontotemporal_dementia: 203 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:24 marvel ukb frontotemporal_dementia: 3986 rows -> 39 variant rows, 1 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:24 marvel ukb frontotemporal_dementia: 3946 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:24 marvel ukb ascvd: 1683 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:24 marvel ukb ascvd: 239 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:24 marvel ukb ascvd: 92 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:24 marvel ukb ascvd: 4097 rows -> 115 variant rows, 10 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:24 marvel ukb ascvd: 3972 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:24 marvel ukb apoa: 2043 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:24 marvel ukb apoa: 3116 rows -> 305 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:24 marvel ukb apoa: 2799 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:25 marvel ukb apob: 2043 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:25 marvel ukb apob: 3116 rows -> 305 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:25 marvel ukb apob: 2799 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:25 marvel ukb hdl_c: 2043 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:25 marvel ukb hdl_c: 3116 rows -> 305 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:25 marvel ukb hdl_c: 2799 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:25 marvel ukb ldl_c: 2043 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:25 marvel ukb ldl_c: 3116 rows -> 305 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:25 marvel ukb ldl_c: 2799 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:25 marvel ukb tg: 2043 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:25 marvel ukb tg: 3116 rows -> 305 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:26 marvel ukb tg: 2799 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:26 marvel ukb all_cause_dementia: 2043 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:26 marvel ukb all_cause_dementia: 119 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:26 marvel ukb all_cause_dementia: 178 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:26 marvel ukb all_cause_dementia: 3771 rows -> 102 variant rows, 10 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:26 marvel ukb all_cause_dementia: 3659 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:26 marvel ukb alzheimers_dementia: 2043 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:26 marvel ukb alzheimers_dementia: 119 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:26 marvel ukb alzheimers_dementia: 223 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:26 marvel ukb alzheimers_dementia: 3834 rows -> 86 variant rows, 2 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:26 marvel ukb alzheimers_dementia: 3746 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:26 marvel ukb vascular_dementia: 2043 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:26 marvel ukb vascular_dementia: 119 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:26 marvel ukb vascular_dementia: 202 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:26 marvel ukb vascular_dementia: 3747 rows -> 86 variant rows, 7 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:26 marvel ukb vascular_dementia: 3654 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:27 marvel ukb frontotemporal_dementia: 2043 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:27 marvel ukb frontotemporal_dementia: 119 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:27 marvel ukb frontotemporal_dementia: 216 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:27 marvel ukb frontotemporal_dementia: 3733 rows -> 78 variant rows, 7 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:27 marvel ukb frontotemporal_dementia: 3648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:27 marvel ukb ascvd: 2043 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:27 marvel ukb ascvd: 119 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:27 marvel ukb ascvd: 113 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:27 marvel ukb ascvd: 3836 rows -> 141 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:27 marvel ukb ascvd: 3683 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:27 marvel ukb apoa: 1386 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:27 marvel ukb apoa: 2229 rows -> 370 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:27 marvel ukb apoa: 1847 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:27 marvel ukb apob: 1386 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:27 marvel ukb apob: 2229 rows -> 370 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:27 marvel ukb apob: 1847 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:28 marvel ukb hdl_c: 1386 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:28 marvel ukb hdl_c: 2229 rows -> 370 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:28 marvel ukb hdl_c: 1847 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:28 marvel ukb ldl_c: 1386 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:28 marvel ukb ldl_c: 2229 rows -> 370 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:28 marvel ukb ldl_c: 1847 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:28 marvel ukb tg: 1386 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:28 marvel ukb tg: 2229 rows -> 370 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:28 marvel ukb tg: 1847 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:29 marvel ukb all_cause_dementia: 1386 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:29 marvel ukb all_cause_dementia: 312 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:29 marvel ukb all_cause_dementia: 157 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:29 marvel ukb all_cause_dementia: 4256 rows -> 45 variant rows, 7 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:29 marvel ukb all_cause_dementia: 4204 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:29 marvel ukb alzheimers_dementia: 1386 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:29 marvel ukb alzheimers_dementia: 312 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:29 marvel ukb alzheimers_dementia: 183 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:29 marvel ukb alzheimers_dementia: 4338 rows -> 38 variant rows, 2 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:29 marvel ukb alzheimers_dementia: 4298 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:29 marvel ukb vascular_dementia: 1386 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:29 marvel ukb vascular_dementia: 312 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:29 marvel ukb vascular_dementia: 169 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:29 marvel ukb vascular_dementia: 4244 rows -> 36 variant rows, 7 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:29 marvel ukb vascular_dementia: 4201 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:29 marvel ukb frontotemporal_dementia: 1386 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:29 marvel ukb frontotemporal_dementia: 312 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:29 marvel ukb frontotemporal_dementia: 180 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:29 marvel ukb frontotemporal_dementia: 4233 rows -> 31 variant rows, 1 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:29 marvel ukb frontotemporal_dementia: 4201 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:30 marvel ukb ascvd: 1386 rows with < 5 exposed dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:30 marvel ukb ascvd: 312 rows with SE < 1e-06 (degenerate fit) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:30 marvel ukb ascvd: 100 rows with SE > 30.0 (separation) dropped (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:30 marvel ukb ascvd: 4313 rows -> 76 variant rows, 12 gene-burden rows (CETP_results.tsv.gz)
-[info]  2026-10-27 16:59:30 marvel ukb ascvd: 4225 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:35 marvel ukb apoa: 4977 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:36 marvel ukb apoa: 1484 rows -> 116 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:36 marvel ukb apoa: 1357 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:36 marvel ukb apob: 4977 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:36 marvel ukb apob: 1484 rows -> 116 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:36 marvel ukb apob: 1357 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:36 marvel ukb hdl_c: 4977 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:36 marvel ukb hdl_c: 1484 rows -> 116 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:36 marvel ukb hdl_c: 1357 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:36 marvel ukb ldl_c: 4977 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:36 marvel ukb ldl_c: 1484 rows -> 116 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:36 marvel ukb ldl_c: 1357 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:37 marvel ukb tg: 4977 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:37 marvel ukb tg: 1484 rows -> 116 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:37 marvel ukb tg: 1357 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:37 marvel ukb all_cause_dementia: 4977 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:37 marvel ukb all_cause_dementia: 8 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:37 marvel ukb all_cause_dementia: 54 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:37 marvel ukb all_cause_dementia: 1486 rows -> 87 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:37 marvel ukb all_cause_dementia: 1390 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:37 marvel ukb alzheimers_dementia: 4977 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:37 marvel ukb alzheimers_dementia: 8 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:37 marvel ukb alzheimers_dementia: 59 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:37 marvel ukb alzheimers_dementia: 1580 rows -> 84 variant rows, 18 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:37 marvel ukb alzheimers_dementia: 1478 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:38 marvel ukb vascular_dementia: 4977 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:38 marvel ukb vascular_dementia: 8 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:38 marvel ukb vascular_dementia: 68 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:38 marvel ukb vascular_dementia: 1472 rows -> 79 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:38 marvel ukb vascular_dementia: 1384 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:38 marvel ukb frontotemporal_dementia: 4977 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:38 marvel ukb frontotemporal_dementia: 8 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:38 marvel ukb frontotemporal_dementia: 75 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:38 marvel ukb frontotemporal_dementia: 1465 rows -> 75 variant rows, 6 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:38 marvel ukb frontotemporal_dementia: 1384 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:38 marvel ukb ascvd: 4977 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:38 marvel ukb ascvd: 8 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:38 marvel ukb ascvd: 16 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:38 marvel ukb ascvd: 1524 rows -> 101 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:38 marvel ukb ascvd: 1412 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:38 marvel ukb apoa: 306 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:39 marvel ukb apoa: 2459 rows -> 398 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:39 marvel ukb apoa: 2050 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:39 marvel ukb apob: 306 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:39 marvel ukb apob: 2459 rows -> 398 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:39 marvel ukb apob: 2050 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:39 marvel ukb hdl_c: 306 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:39 marvel ukb hdl_c: 2459 rows -> 398 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:39 marvel ukb hdl_c: 2050 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:39 marvel ukb ldl_c: 306 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:39 marvel ukb ldl_c: 2459 rows -> 398 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:39 marvel ukb ldl_c: 2050 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:40 marvel ukb tg: 306 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:40 marvel ukb tg: 2459 rows -> 398 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:40 marvel ukb tg: 2050 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:40 marvel ukb all_cause_dementia: 306 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:40 marvel ukb all_cause_dementia: 470 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:40 marvel ukb all_cause_dementia: 161 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:40 marvel ukb all_cause_dementia: 5588 rows -> 25 variant rows, 6 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:40 marvel ukb all_cause_dementia: 5557 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:40 marvel ukb alzheimers_dementia: 306 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:40 marvel ukb alzheimers_dementia: 475 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:40 marvel ukb alzheimers_dementia: 185 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:40 marvel ukb alzheimers_dementia: 5658 rows -> 18 variant rows, 12 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:40 marvel ukb alzheimers_dementia: 5628 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:41 marvel ukb vascular_dementia: 306 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:41 marvel ukb vascular_dementia: 470 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:41 marvel ukb vascular_dementia: 215 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:41 marvel ukb vascular_dementia: 5534 rows -> 6 variant rows, 0 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:41 marvel ukb vascular_dementia: 5528 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:41 marvel ukb frontotemporal_dementia: 306 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:41 marvel ukb frontotemporal_dementia: 470 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:41 marvel ukb frontotemporal_dementia: 220 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:41 marvel ukb frontotemporal_dementia: 5529 rows -> 1 variant rows, 0 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:41 marvel ukb frontotemporal_dementia: 5528 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:41 marvel ukb ascvd: 306 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:41 marvel ukb ascvd: 470 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:41 marvel ukb ascvd: 154 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:41 marvel ukb ascvd: 5595 rows -> 32 variant rows, 6 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:41 marvel ukb ascvd: 5557 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:41 marvel ukb apoa: 2250 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:41 marvel ukb apoa: 3043 rows -> 283 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:41 marvel ukb apoa: 2749 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:42 marvel ukb apob: 2250 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:42 marvel ukb apob: 3043 rows -> 283 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:42 marvel ukb apob: 2749 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:42 marvel ukb hdl_c: 2250 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:42 marvel ukb hdl_c: 3043 rows -> 283 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:42 marvel ukb hdl_c: 2749 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:42 marvel ukb ldl_c: 2250 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:42 marvel ukb ldl_c: 3043 rows -> 283 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:42 marvel ukb ldl_c: 2749 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:43 marvel ukb tg: 2250 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:43 marvel ukb tg: 3043 rows -> 283 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:43 marvel ukb tg: 2749 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:43 marvel ukb all_cause_dementia: 2268 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:43 marvel ukb all_cause_dementia: 152 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:43 marvel ukb all_cause_dementia: 213 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:43 marvel ukb all_cause_dementia: 3892 rows -> 60 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:43 marvel ukb all_cause_dementia: 3823 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:43 marvel ukb alzheimers_dementia: 2286 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:43 marvel ukb alzheimers_dementia: 152 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:43 marvel ukb alzheimers_dementia: 242 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:43 marvel ukb alzheimers_dementia: 3944 rows -> 44 variant rows, 18 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:43 marvel ukb alzheimers_dementia: 3882 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:44 marvel ukb vascular_dementia: 2268 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:44 marvel ukb vascular_dementia: 152 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:44 marvel ukb vascular_dementia: 276 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:44 marvel ukb vascular_dementia: 3829 rows -> 30 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:44 marvel ukb vascular_dementia: 3790 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:44 marvel ukb frontotemporal_dementia: 2268 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:44 marvel ukb frontotemporal_dementia: 152 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:44 marvel ukb frontotemporal_dementia: 294 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:44 marvel ukb frontotemporal_dementia: 3811 rows -> 19 variant rows, 0 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:44 marvel ukb frontotemporal_dementia: 3792 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:44 marvel ukb ascvd: 2268 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:44 marvel ukb ascvd: 152 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:44 marvel ukb ascvd: 135 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:44 marvel ukb ascvd: 3970 rows -> 108 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:44 marvel ukb ascvd: 3853 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:45 marvel ukb apoa: 3627 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:45 marvel ukb apoa: 2482 rows -> 185 variant rows, 10 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:45 marvel ukb apoa: 2287 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:45 marvel ukb apob: 3627 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:45 marvel ukb apob: 2482 rows -> 185 variant rows, 10 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:45 marvel ukb apob: 2287 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:45 marvel ukb hdl_c: 3627 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:45 marvel ukb hdl_c: 2482 rows -> 185 variant rows, 10 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:45 marvel ukb hdl_c: 2287 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:45 marvel ukb ldl_c: 3627 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:45 marvel ukb ldl_c: 2482 rows -> 185 variant rows, 10 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:45 marvel ukb ldl_c: 2287 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:46 marvel ukb tg: 3627 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:46 marvel ukb tg: 2482 rows -> 185 variant rows, 10 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:46 marvel ukb tg: 2287 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:46 marvel ukb all_cause_dementia: 3627 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:46 marvel ukb all_cause_dementia: 52 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:46 marvel ukb all_cause_dementia: 172 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:46 marvel ukb all_cause_dementia: 2674 rows -> 61 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:46 marvel ukb all_cause_dementia: 2604 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:46 marvel ukb alzheimers_dementia: 3636 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:46 marvel ukb alzheimers_dementia: 52 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:46 marvel ukb alzheimers_dementia: 216 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:46 marvel ukb alzheimers_dementia: 2720 rows -> 50 variant rows, 0 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:46 marvel ukb alzheimers_dementia: 2670 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:47 marvel ukb vascular_dementia: 3627 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:47 marvel ukb vascular_dementia: 52 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:47 marvel ukb vascular_dementia: 209 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:47 marvel ukb vascular_dementia: 2637 rows -> 47 variant rows, 6 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:47 marvel ukb vascular_dementia: 2584 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:47 marvel ukb frontotemporal_dementia: 3627 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:47 marvel ukb frontotemporal_dementia: 52 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:47 marvel ukb frontotemporal_dementia: 214 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:47 marvel ukb frontotemporal_dementia: 2632 rows -> 42 variant rows, 6 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:47 marvel ukb frontotemporal_dementia: 2584 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:47 marvel ukb ascvd: 3627 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:47 marvel ukb ascvd: 52 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:47 marvel ukb ascvd: 74 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:47 marvel ukb ascvd: 2772 rows -> 105 variant rows, 10 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:47 marvel ukb ascvd: 2657 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:47 marvel ukb apoa: 1476 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:48 marvel ukb apoa: 3225 rows -> 330 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:48 marvel ukb apoa: 2886 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:48 marvel ukb apob: 1476 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:48 marvel ukb apob: 3225 rows -> 330 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:48 marvel ukb apob: 2886 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:48 marvel ukb hdl_c: 1476 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:48 marvel ukb hdl_c: 3225 rows -> 330 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:48 marvel ukb hdl_c: 2886 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:48 marvel ukb ldl_c: 1476 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:48 marvel ukb ldl_c: 3225 rows -> 330 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:48 marvel ukb ldl_c: 2886 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:49 marvel ukb tg: 1476 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:49 marvel ukb tg: 3225 rows -> 330 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:49 marvel ukb tg: 2886 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:49 marvel ukb all_cause_dementia: 1476 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:49 marvel ukb all_cause_dementia: 228 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:49 marvel ukb all_cause_dementia: 285 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:49 marvel ukb all_cause_dementia: 4536 rows -> 27 variant rows, 6 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:49 marvel ukb all_cause_dementia: 4503 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:49 marvel ukb alzheimers_dementia: 1494 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:49 marvel ukb alzheimers_dementia: 228 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:49 marvel ukb alzheimers_dementia: 326 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:49 marvel ukb alzheimers_dementia: 4576 rows -> 16 variant rows, 0 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:49 marvel ukb alzheimers_dementia: 4560 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:50 marvel ukb vascular_dementia: 1476 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:50 marvel ukb vascular_dementia: 228 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:50 marvel ukb vascular_dementia: 313 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:50 marvel ukb vascular_dementia: 4508 rows -> 12 variant rows, 0 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:50 marvel ukb vascular_dementia: 4496 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:50 marvel ukb frontotemporal_dementia: 1476 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:50 marvel ukb frontotemporal_dementia: 228 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:50 marvel ukb frontotemporal_dementia: 324 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:50 marvel ukb frontotemporal_dementia: 4497 rows -> 9 variant rows, 0 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:50 marvel ukb frontotemporal_dementia: 4488 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:50 marvel ukb ascvd: 1476 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:50 marvel ukb ascvd: 228 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:50 marvel ukb ascvd: 180 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:50 marvel ukb ascvd: 4641 rows -> 80 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:50 marvel ukb ascvd: 4552 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:51 marvel ukb apoa: 4113 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:51 marvel ukb apoa: 2140 rows -> 190 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:51 marvel ukb apoa: 1939 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:51 marvel ukb apob: 4113 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:51 marvel ukb apob: 2140 rows -> 190 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:51 marvel ukb apob: 1939 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:51 marvel ukb hdl_c: 4113 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:51 marvel ukb hdl_c: 2140 rows -> 190 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:51 marvel ukb hdl_c: 1939 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:51 marvel ukb ldl_c: 4113 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:51 marvel ukb ldl_c: 2140 rows -> 190 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:51 marvel ukb ldl_c: 1939 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:52 marvel ukb tg: 4113 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:52 marvel ukb tg: 2140 rows -> 190 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:52 marvel ukb tg: 1939 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:52 marvel ukb all_cause_dementia: 4113 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:52 marvel ukb all_cause_dementia: 34 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:52 marvel ukb all_cause_dementia: 133 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:52 marvel ukb all_cause_dementia: 2245 rows -> 78 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:52 marvel ukb all_cause_dementia: 2158 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:52 marvel ukb alzheimers_dementia: 4113 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:52 marvel ukb alzheimers_dementia: 34 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:52 marvel ukb alzheimers_dementia: 140 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:52 marvel ukb alzheimers_dementia: 2337 rows -> 73 variant rows, 18 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:52 marvel ukb alzheimers_dementia: 2246 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:53 marvel ukb vascular_dementia: 4113 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:53 marvel ukb vascular_dementia: 34 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:53 marvel ukb vascular_dementia: 155 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:53 marvel ukb vascular_dementia: 2223 rows -> 65 variant rows, 6 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:53 marvel ukb vascular_dementia: 2152 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:53 marvel ukb frontotemporal_dementia: 4113 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:53 marvel ukb frontotemporal_dementia: 34 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:53 marvel ukb frontotemporal_dementia: 162 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:53 marvel ukb frontotemporal_dementia: 2216 rows -> 58 variant rows, 6 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:53 marvel ukb frontotemporal_dementia: 2152 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:53 marvel ukb ascvd: 4113 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:53 marvel ukb ascvd: 34 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:53 marvel ukb ascvd: 60 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:53 marvel ukb ascvd: 2318 rows -> 117 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:53 marvel ukb ascvd: 2190 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:54 marvel ukb apoa: 252 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:54 marvel ukb apoa: 2417 rows -> 404 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:54 marvel ukb apoa: 2002 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:54 marvel ukb apob: 252 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:54 marvel ukb apob: 2417 rows -> 404 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:54 marvel ukb apob: 2002 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:54 marvel ukb hdl_c: 252 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:54 marvel ukb hdl_c: 2417 rows -> 404 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:54 marvel ukb hdl_c: 2002 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:54 marvel ukb ldl_c: 252 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:54 marvel ukb ldl_c: 2417 rows -> 404 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:54 marvel ukb ldl_c: 2002 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:55 marvel ukb tg: 252 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:55 marvel ukb tg: 2417 rows -> 404 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:55 marvel ukb tg: 2002 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:55 marvel ukb all_cause_dementia: 252 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:55 marvel ukb all_cause_dementia: 482 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:55 marvel ukb all_cause_dementia: 155 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:55 marvel ukb all_cause_dementia: 5636 rows -> 25 variant rows, 6 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:55 marvel ukb all_cause_dementia: 5605 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:55 marvel ukb alzheimers_dementia: 252 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:55 marvel ukb alzheimers_dementia: 487 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:55 marvel ukb alzheimers_dementia: 179 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:55 marvel ukb alzheimers_dementia: 5706 rows -> 18 variant rows, 12 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:55 marvel ukb alzheimers_dementia: 5676 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:56 marvel ukb vascular_dementia: 252 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:56 marvel ukb vascular_dementia: 482 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:56 marvel ukb vascular_dementia: 209 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:56 marvel ukb vascular_dementia: 5582 rows -> 6 variant rows, 0 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:56 marvel ukb vascular_dementia: 5576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:56 marvel ukb frontotemporal_dementia: 252 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:56 marvel ukb frontotemporal_dementia: 482 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:56 marvel ukb frontotemporal_dementia: 214 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:56 marvel ukb frontotemporal_dementia: 5577 rows -> 1 variant rows, 0 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:56 marvel ukb frontotemporal_dementia: 5576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:56 marvel ukb ascvd: 252 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:56 marvel ukb ascvd: 482 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:56 marvel ukb ascvd: 150 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:56 marvel ukb ascvd: 5641 rows -> 30 variant rows, 6 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:56 marvel ukb ascvd: 5605 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:57 marvel ukb apoa: 1746 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:57 marvel ukb apoa: 3315 rows -> 312 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:57 marvel ukb apoa: 2992 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:57 marvel ukb apob: 1746 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:57 marvel ukb apob: 3315 rows -> 312 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:57 marvel ukb apob: 2992 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:57 marvel ukb hdl_c: 1746 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:57 marvel ukb hdl_c: 3315 rows -> 312 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:57 marvel ukb hdl_c: 2992 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:57 marvel ukb ldl_c: 1746 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:58 marvel ukb ldl_c: 3315 rows -> 312 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:58 marvel ukb ldl_c: 2992 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:58 marvel ukb tg: 1746 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:58 marvel ukb tg: 3315 rows -> 312 variant rows, 11 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:58 marvel ukb tg: 2992 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:58 marvel ukb all_cause_dementia: 1764 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:58 marvel ukb all_cause_dementia: 181 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:58 marvel ukb all_cause_dementia: 246 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:58 marvel ukb all_cause_dementia: 4334 rows -> 53 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:58 marvel ukb all_cause_dementia: 4272 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:58 marvel ukb alzheimers_dementia: 1782 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:58 marvel ukb alzheimers_dementia: 181 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:58 marvel ukb alzheimers_dementia: 275 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:58 marvel ukb alzheimers_dementia: 4386 rows -> 37 variant rows, 18 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:58 marvel ukb alzheimers_dementia: 4331 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:59 marvel ukb vascular_dementia: 1764 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:59 marvel ukb vascular_dementia: 181 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:59 marvel ukb vascular_dementia: 314 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:59 marvel ukb vascular_dementia: 4266 rows -> 22 variant rows, 6 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:59 marvel ukb vascular_dementia: 4238 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:59 marvel ukb frontotemporal_dementia: 1764 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:59 marvel ukb frontotemporal_dementia: 181 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:59 marvel ukb frontotemporal_dementia: 327 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:59 marvel ukb frontotemporal_dementia: 4253 rows -> 13 variant rows, 0 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:59 marvel ukb frontotemporal_dementia: 4240 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 16:59:59 marvel ukb ascvd: 1764 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:59 marvel ukb ascvd: 181 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:59 marvel ukb ascvd: 162 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:59 marvel ukb ascvd: 4418 rows -> 99 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 16:59:59 marvel ukb ascvd: 4310 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:00 marvel ukb apoa: 2961 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:00 marvel ukb apoa: 2948 rows -> 243 variant rows, 10 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:00 marvel ukb apoa: 2695 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:00 marvel ukb apob: 2961 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:00 marvel ukb apob: 2948 rows -> 243 variant rows, 10 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:00 marvel ukb apob: 2695 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:00 marvel ukb hdl_c: 2961 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:00 marvel ukb hdl_c: 2948 rows -> 243 variant rows, 10 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:00 marvel ukb hdl_c: 2695 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:00 marvel ukb ldl_c: 2961 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:00 marvel ukb ldl_c: 2948 rows -> 243 variant rows, 10 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:00 marvel ukb ldl_c: 2695 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:01 marvel ukb tg: 2961 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:01 marvel ukb tg: 2948 rows -> 243 variant rows, 10 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:01 marvel ukb tg: 2695 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:01 marvel ukb all_cause_dementia: 2961 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:01 marvel ukb all_cause_dementia: 77 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:01 marvel ukb all_cause_dementia: 228 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:01 marvel ukb all_cause_dementia: 3259 rows -> 54 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:01 marvel ukb all_cause_dementia: 3196 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:01 marvel ukb alzheimers_dementia: 2970 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:01 marvel ukb alzheimers_dementia: 77 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:01 marvel ukb alzheimers_dementia: 271 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:01 marvel ukb alzheimers_dementia: 3306 rows -> 44 variant rows, 0 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:01 marvel ukb alzheimers_dementia: 3262 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:02 marvel ukb vascular_dementia: 2961 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:02 marvel ukb vascular_dementia: 77 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:02 marvel ukb vascular_dementia: 265 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:02 marvel ukb vascular_dementia: 3222 rows -> 40 variant rows, 6 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:02 marvel ukb vascular_dementia: 3176 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:02 marvel ukb frontotemporal_dementia: 2961 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:02 marvel ukb frontotemporal_dementia: 77 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:02 marvel ukb frontotemporal_dementia: 270 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:02 marvel ukb frontotemporal_dementia: 3217 rows -> 35 variant rows, 6 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:02 marvel ukb frontotemporal_dementia: 3176 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:02 marvel ukb ascvd: 2961 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:02 marvel ukb ascvd: 77 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:02 marvel ukb ascvd: 112 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:02 marvel ukb ascvd: 3375 rows -> 112 variant rows, 10 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:02 marvel ukb ascvd: 3253 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:03 marvel ukb apoa: 1260 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:03 marvel ukb apoa: 3249 rows -> 354 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:03 marvel ukb apoa: 2886 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:03 marvel ukb apob: 1260 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:03 marvel ukb apob: 3249 rows -> 354 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:03 marvel ukb apob: 2886 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:03 marvel ukb hdl_c: 1260 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:03 marvel ukb hdl_c: 3249 rows -> 354 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:03 marvel ukb hdl_c: 2886 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:03 marvel ukb ldl_c: 1260 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:03 marvel ukb ldl_c: 3249 rows -> 354 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:03 marvel ukb ldl_c: 2886 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:04 marvel ukb tg: 1260 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:04 marvel ukb tg: 3249 rows -> 354 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:04 marvel ukb tg: 2886 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:04 marvel ukb all_cause_dementia: 1260 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:04 marvel ukb all_cause_dementia: 252 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:04 marvel ukb all_cause_dementia: 287 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:04 marvel ukb all_cause_dementia: 4726 rows -> 25 variant rows, 6 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:04 marvel ukb all_cause_dementia: 4695 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:04 marvel ukb alzheimers_dementia: 1278 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:04 marvel ukb alzheimers_dementia: 252 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:04 marvel ukb alzheimers_dementia: 327 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:04 marvel ukb alzheimers_dementia: 4767 rows -> 15 variant rows, 0 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:04 marvel ukb alzheimers_dementia: 4752 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:05 marvel ukb vascular_dementia: 1260 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:05 marvel ukb vascular_dementia: 252 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:05 marvel ukb vascular_dementia: 315 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:05 marvel ukb vascular_dementia: 4698 rows -> 10 variant rows, 0 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:05 marvel ukb vascular_dementia: 4688 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:05 marvel ukb frontotemporal_dementia: 1260 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:05 marvel ukb frontotemporal_dementia: 252 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:05 marvel ukb frontotemporal_dementia: 326 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:05 marvel ukb frontotemporal_dementia: 4687 rows -> 7 variant rows, 0 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:05 marvel ukb frontotemporal_dementia: 4680 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:05 marvel ukb ascvd: 1260 rows with < 5 exposed dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:05 marvel ukb ascvd: 252 rows with SE < 1e-06 (degenerate fit) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:05 marvel ukb ascvd: 183 rows with SE > 30.0 (separation) dropped (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:05 marvel ukb ascvd: 4830 rows -> 77 variant rows, 9 gene-burden rows (HMGCR_results.tsv.gz)
-[info]  2026-10-27 17:00:05 marvel ukb ascvd: 4744 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:15 marvel ukb apoa: 7083 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:15 marvel ukb apoa: 3855 rows -> 386 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:15 marvel ukb apoa: 3460 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:15 marvel ukb apob: 7083 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:15 marvel ukb apob: 3855 rows -> 386 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:15 marvel ukb apob: 3460 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:15 marvel ukb hdl_c: 7083 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:16 marvel ukb hdl_c: 3855 rows -> 386 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:16 marvel ukb hdl_c: 3460 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:16 marvel ukb ldl_c: 7083 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:16 marvel ukb ldl_c: 3855 rows -> 386 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:16 marvel ukb ldl_c: 3460 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:16 marvel ukb tg: 7083 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:16 marvel ukb tg: 3855 rows -> 386 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:16 marvel ukb tg: 3460 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:17 marvel ukb all_cause_dementia: 7083 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:17 marvel ukb all_cause_dementia: 57 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:17 marvel ukb all_cause_dementia: 197 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:17 marvel ukb all_cause_dementia: 4057 rows -> 187 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:17 marvel ukb all_cause_dementia: 3861 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:17 marvel ukb alzheimers_dementia: 7083 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:17 marvel ukb alzheimers_dementia: 57 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:17 marvel ukb alzheimers_dementia: 227 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:17 marvel ukb alzheimers_dementia: 4108 rows -> 162 variant rows, 18 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:17 marvel ukb alzheimers_dementia: 3928 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:18 marvel ukb vascular_dementia: 7083 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:18 marvel ukb vascular_dementia: 57 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:18 marvel ukb vascular_dementia: 237 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:18 marvel ukb vascular_dementia: 4017 rows -> 151 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:18 marvel ukb vascular_dementia: 3857 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:18 marvel ukb frontotemporal_dementia: 7083 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:18 marvel ukb frontotemporal_dementia: 57 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:18 marvel ukb frontotemporal_dementia: 259 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:18 marvel ukb frontotemporal_dementia: 3995 rows -> 129 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:18 marvel ukb frontotemporal_dementia: 3857 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:19 marvel ukb ascvd: 7083 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:19 marvel ukb ascvd: 57 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:19 marvel ukb ascvd: 73 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:19 marvel ukb ascvd: 4181 rows -> 291 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:19 marvel ukb ascvd: 3881 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:19 marvel ukb apoa: 1359 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:19 marvel ukb apoa: 1771 rows -> 892 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:19 marvel ukb apoa: 870 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:20 marvel ukb apob: 1359 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:20 marvel ukb apob: 1771 rows -> 892 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:20 marvel ukb apob: 870 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:20 marvel ukb hdl_c: 1359 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:20 marvel ukb hdl_c: 1771 rows -> 892 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:20 marvel ukb hdl_c: 870 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:21 marvel ukb ldl_c: 1359 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:21 marvel ukb ldl_c: 1771 rows -> 892 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:21 marvel ukb ldl_c: 870 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:21 marvel ukb tg: 1359 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:21 marvel ukb tg: 1771 rows -> 892 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:21 marvel ukb tg: 870 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:22 marvel ukb all_cause_dementia: 1359 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:22 marvel ukb all_cause_dementia: 1033 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:22 marvel ukb all_cause_dementia: 37 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:22 marvel ukb all_cause_dementia: 8965 rows -> 36 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:22 marvel ukb all_cause_dementia: 8920 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:22 marvel ukb alzheimers_dementia: 1359 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:22 marvel ukb alzheimers_dementia: 1033 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:22 marvel ukb alzheimers_dementia: 47 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:22 marvel ukb alzheimers_dementia: 9036 rows -> 32 variant rows, 12 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:22 marvel ukb alzheimers_dementia: 8992 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:23 marvel ukb vascular_dementia: 1359 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:23 marvel ukb vascular_dementia: 1033 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:23 marvel ukb vascular_dementia: 59 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:23 marvel ukb vascular_dementia: 8943 rows -> 17 variant rows, 6 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:23 marvel ukb vascular_dementia: 8920 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:23 marvel ukb frontotemporal_dementia: 1359 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:23 marvel ukb frontotemporal_dementia: 1033 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:23 marvel ukb frontotemporal_dementia: 78 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:23 marvel ukb frontotemporal_dementia: 8924 rows -> 4 variant rows, 0 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:23 marvel ukb frontotemporal_dementia: 8920 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:23 marvel ukb ascvd: 1359 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:23 marvel ukb ascvd: 1033 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:23 marvel ukb ascvd: 29 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:24 marvel ukb ascvd: 8973 rows -> 43 variant rows, 6 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:24 marvel ukb ascvd: 8924 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:24 marvel ukb apoa: 4050 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:24 marvel ukb apoa: 2984 rows -> 652 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:24 marvel ukb apoa: 2323 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:24 marvel ukb apob: 4050 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:24 marvel ukb apob: 2984 rows -> 652 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:24 marvel ukb apob: 2323 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:25 marvel ukb hdl_c: 4050 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:25 marvel ukb hdl_c: 2984 rows -> 652 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:25 marvel ukb hdl_c: 2323 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:25 marvel ukb ldl_c: 4050 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:25 marvel ukb ldl_c: 2984 rows -> 652 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:25 marvel ukb ldl_c: 2323 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:26 marvel ukb tg: 4050 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:26 marvel ukb tg: 2984 rows -> 652 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:26 marvel ukb tg: 2323 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:26 marvel ukb all_cause_dementia: 4050 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:26 marvel ukb all_cause_dementia: 545 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:26 marvel ukb all_cause_dementia: 175 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:26 marvel ukb all_cause_dementia: 6624 rows -> 78 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:26 marvel ukb all_cause_dementia: 6537 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:27 marvel ukb alzheimers_dementia: 4050 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:27 marvel ukb alzheimers_dementia: 545 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:27 marvel ukb alzheimers_dementia: 184 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:27 marvel ukb alzheimers_dementia: 6696 rows -> 69 variant rows, 18 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:27 marvel ukb alzheimers_dementia: 6609 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:27 marvel ukb vascular_dementia: 4050 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:27 marvel ukb vascular_dementia: 545 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:27 marvel ukb vascular_dementia: 208 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:27 marvel ukb vascular_dementia: 6591 rows -> 48 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:27 marvel ukb vascular_dementia: 6534 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:28 marvel ukb frontotemporal_dementia: 4050 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:28 marvel ukb frontotemporal_dementia: 545 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:28 marvel ukb frontotemporal_dementia: 244 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:28 marvel ukb frontotemporal_dementia: 6555 rows -> 24 variant rows, 0 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:28 marvel ukb frontotemporal_dementia: 6531 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:28 marvel ukb ascvd: 4050 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:28 marvel ukb ascvd: 545 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:28 marvel ukb ascvd: 117 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:28 marvel ukb ascvd: 6682 rows -> 135 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:28 marvel ukb ascvd: 6538 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:29 marvel ukb apoa: 5643 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:29 marvel ukb apoa: 3719 rows -> 517 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:29 marvel ukb apoa: 3193 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:29 marvel ukb apob: 5643 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:29 marvel ukb apob: 3719 rows -> 517 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:29 marvel ukb apob: 3193 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:30 marvel ukb hdl_c: 5643 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:30 marvel ukb hdl_c: 3719 rows -> 517 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:30 marvel ukb hdl_c: 3193 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:30 marvel ukb ldl_c: 5643 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:30 marvel ukb ldl_c: 3719 rows -> 517 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:30 marvel ukb ldl_c: 3193 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:31 marvel ukb tg: 5643 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:31 marvel ukb tg: 3719 rows -> 517 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:31 marvel ukb tg: 3193 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:31 marvel ukb all_cause_dementia: 5643 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:31 marvel ukb all_cause_dementia: 254 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:31 marvel ukb all_cause_dementia: 230 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:31 marvel ukb all_cause_dementia: 5267 rows -> 138 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:31 marvel ukb all_cause_dementia: 5120 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:31 marvel ukb alzheimers_dementia: 5643 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:31 marvel ukb alzheimers_dementia: 254 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:31 marvel ukb alzheimers_dementia: 277 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:32 marvel ukb alzheimers_dementia: 5301 rows -> 111 variant rows, 0 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:32 marvel ukb alzheimers_dementia: 5190 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:32 marvel ukb vascular_dementia: 5643 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:32 marvel ukb vascular_dementia: 254 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:32 marvel ukb vascular_dementia: 268 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:32 marvel ukb vascular_dementia: 5229 rows -> 102 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:32 marvel ukb vascular_dementia: 5118 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:32 marvel ukb frontotemporal_dementia: 5643 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:32 marvel ukb frontotemporal_dementia: 254 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:32 marvel ukb frontotemporal_dementia: 281 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:32 marvel ukb frontotemporal_dementia: 5216 rows -> 89 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:32 marvel ukb frontotemporal_dementia: 5118 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:33 marvel ukb ascvd: 5643 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:33 marvel ukb ascvd: 254 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:33 marvel ukb ascvd: 104 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:33 marvel ukb ascvd: 5393 rows -> 241 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:33 marvel ukb ascvd: 5143 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:33 marvel ukb apoa: 3303 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:33 marvel ukb apoa: 2435 rows -> 724 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:33 marvel ukb apoa: 1702 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:34 marvel ukb apob: 3303 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:34 marvel ukb apob: 2435 rows -> 724 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:34 marvel ukb apob: 1702 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:34 marvel ukb hdl_c: 3303 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:34 marvel ukb hdl_c: 2435 rows -> 724 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:34 marvel ukb hdl_c: 1702 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:35 marvel ukb ldl_c: 3303 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:35 marvel ukb ldl_c: 2435 rows -> 724 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:35 marvel ukb ldl_c: 1702 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:35 marvel ukb tg: 3303 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:35 marvel ukb tg: 2435 rows -> 724 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:35 marvel ukb tg: 1702 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:36 marvel ukb all_cause_dementia: 3303 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:36 marvel ukb all_cause_dementia: 707 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:36 marvel ukb all_cause_dementia: 136 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:36 marvel ukb all_cause_dementia: 7248 rows -> 43 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:36 marvel ukb all_cause_dementia: 7196 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:36 marvel ukb alzheimers_dementia: 3303 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:36 marvel ukb alzheimers_dementia: 707 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:36 marvel ukb alzheimers_dementia: 160 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:36 marvel ukb alzheimers_dementia: 7305 rows -> 28 variant rows, 12 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:36 marvel ukb alzheimers_dementia: 7265 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:37 marvel ukb vascular_dementia: 3303 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:37 marvel ukb vascular_dementia: 707 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:37 marvel ukb vascular_dementia: 160 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:37 marvel ukb vascular_dementia: 7224 rows -> 25 variant rows, 6 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:37 marvel ukb vascular_dementia: 7193 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:37 marvel ukb frontotemporal_dementia: 3303 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:37 marvel ukb frontotemporal_dementia: 707 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:37 marvel ukb frontotemporal_dementia: 181 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:37 marvel ukb frontotemporal_dementia: 7203 rows -> 9 variant rows, 6 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:37 marvel ukb frontotemporal_dementia: 7188 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:37 marvel ukb ascvd: 3303 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:37 marvel ukb ascvd: 707 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:37 marvel ukb ascvd: 77 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:38 marvel ukb ascvd: 7307 rows -> 96 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:38 marvel ukb ascvd: 7202 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:38 marvel ukb apoa: 4950 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:38 marvel ukb apoa: 4372 rows -> 578 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:38 marvel ukb apoa: 3785 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:38 marvel ukb apob: 4950 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:39 marvel ukb apob: 4372 rows -> 578 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:39 marvel ukb apob: 3785 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:39 marvel ukb hdl_c: 4950 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:39 marvel ukb hdl_c: 4372 rows -> 578 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:39 marvel ukb hdl_c: 3785 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:39 marvel ukb ldl_c: 4950 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:40 marvel ukb ldl_c: 4372 rows -> 578 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:40 marvel ukb ldl_c: 3785 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:40 marvel ukb tg: 4950 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:40 marvel ukb tg: 4372 rows -> 578 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:40 marvel ukb tg: 3785 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:40 marvel ukb all_cause_dementia: 4950 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:40 marvel ukb all_cause_dementia: 259 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:40 marvel ukb all_cause_dementia: 280 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:41 marvel ukb all_cause_dementia: 5905 rows -> 142 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:41 marvel ukb all_cause_dementia: 5754 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:41 marvel ukb alzheimers_dementia: 4950 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:41 marvel ukb alzheimers_dementia: 259 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:41 marvel ukb alzheimers_dementia: 306 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:41 marvel ukb alzheimers_dementia: 5960 rows -> 121 variant rows, 18 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:41 marvel ukb alzheimers_dementia: 5821 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:41 marvel ukb vascular_dementia: 4950 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:41 marvel ukb vascular_dementia: 259 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:41 marvel ukb vascular_dementia: 314 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:42 marvel ukb vascular_dementia: 5871 rows -> 112 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:42 marvel ukb vascular_dementia: 5750 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:42 marvel ukb frontotemporal_dementia: 4950 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:42 marvel ukb frontotemporal_dementia: 259 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:42 marvel ukb frontotemporal_dementia: 333 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:42 marvel ukb frontotemporal_dementia: 5852 rows -> 93 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:42 marvel ukb frontotemporal_dementia: 5750 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:42 marvel ukb ascvd: 4950 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:42 marvel ukb ascvd: 259 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:42 marvel ukb ascvd: 154 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:42 marvel ukb ascvd: 6031 rows -> 252 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:42 marvel ukb ascvd: 5770 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:43 marvel ukb apoa: 1116 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:43 marvel ukb apoa: 1686 rows -> 919 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:43 marvel ukb apoa: 758 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:43 marvel ukb apob: 1116 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:43 marvel ukb apob: 1686 rows -> 919 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:43 marvel ukb apob: 758 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:44 marvel ukb hdl_c: 1116 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:44 marvel ukb hdl_c: 1686 rows -> 919 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:44 marvel ukb hdl_c: 758 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:44 marvel ukb ldl_c: 1116 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:44 marvel ukb ldl_c: 1686 rows -> 919 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:44 marvel ukb ldl_c: 758 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:45 marvel ukb tg: 1116 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:45 marvel ukb tg: 1686 rows -> 919 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:45 marvel ukb tg: 758 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:45 marvel ukb all_cause_dementia: 1116 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:45 marvel ukb all_cause_dementia: 1074 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:45 marvel ukb all_cause_dementia: 27 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:45 marvel ukb all_cause_dementia: 9177 rows -> 32 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:45 marvel ukb all_cause_dementia: 9136 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:46 marvel ukb alzheimers_dementia: 1116 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:46 marvel ukb alzheimers_dementia: 1074 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:46 marvel ukb alzheimers_dementia: 36 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:46 marvel ukb alzheimers_dementia: 9249 rows -> 29 variant rows, 12 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:46 marvel ukb alzheimers_dementia: 9208 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:46 marvel ukb vascular_dementia: 1116 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:46 marvel ukb vascular_dementia: 1074 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:46 marvel ukb vascular_dementia: 45 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:46 marvel ukb vascular_dementia: 9159 rows -> 17 variant rows, 6 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:46 marvel ukb vascular_dementia: 9136 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:47 marvel ukb frontotemporal_dementia: 1116 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:47 marvel ukb frontotemporal_dementia: 1074 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:47 marvel ukb frontotemporal_dementia: 64 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:47 marvel ukb frontotemporal_dementia: 9140 rows -> 4 variant rows, 0 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:47 marvel ukb frontotemporal_dementia: 9136 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:47 marvel ukb ascvd: 1116 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:47 marvel ukb ascvd: 1074 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:47 marvel ukb ascvd: 27 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:47 marvel ukb ascvd: 9177 rows -> 33 variant rows, 6 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:47 marvel ukb ascvd: 9138 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:48 marvel ukb apoa: 3294 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:48 marvel ukb apoa: 2908 rows -> 728 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:48 marvel ukb apoa: 2171 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:48 marvel ukb apob: 3294 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:48 marvel ukb apob: 2908 rows -> 728 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:48 marvel ukb apob: 2171 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:49 marvel ukb hdl_c: 3294 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:49 marvel ukb hdl_c: 2908 rows -> 728 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:49 marvel ukb hdl_c: 2171 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:49 marvel ukb ldl_c: 3294 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:49 marvel ukb ldl_c: 2908 rows -> 728 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:49 marvel ukb ldl_c: 2171 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:49 marvel ukb tg: 3294 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:49 marvel ukb tg: 2908 rows -> 728 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:49 marvel ukb tg: 2171 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:50 marvel ukb all_cause_dementia: 3294 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:50 marvel ukb all_cause_dementia: 649 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:50 marvel ukb all_cause_dementia: 165 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:50 marvel ukb all_cause_dementia: 7286 rows -> 68 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:50 marvel ukb all_cause_dementia: 7209 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:50 marvel ukb alzheimers_dementia: 3294 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:50 marvel ukb alzheimers_dementia: 649 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:50 marvel ukb alzheimers_dementia: 175 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:50 marvel ukb alzheimers_dementia: 7357 rows -> 58 variant rows, 18 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:50 marvel ukb alzheimers_dementia: 7281 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:51 marvel ukb vascular_dementia: 3294 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:51 marvel ukb vascular_dementia: 649 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:51 marvel ukb vascular_dementia: 198 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:51 marvel ukb vascular_dementia: 7253 rows -> 38 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:51 marvel ukb vascular_dementia: 7206 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:51 marvel ukb frontotemporal_dementia: 3294 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:51 marvel ukb frontotemporal_dementia: 649 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:51 marvel ukb frontotemporal_dementia: 229 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:51 marvel ukb frontotemporal_dementia: 7222 rows -> 19 variant rows, 0 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:51 marvel ukb frontotemporal_dementia: 7203 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:52 marvel ukb ascvd: 3294 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:52 marvel ukb ascvd: 649 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:52 marvel ukb ascvd: 120 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:52 marvel ukb ascvd: 7331 rows -> 112 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:52 marvel ukb ascvd: 7210 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:52 marvel ukb apoa: 4023 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:52 marvel ukb apoa: 3795 rows -> 669 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:52 marvel ukb apoa: 3117 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:53 marvel ukb apob: 4023 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:53 marvel ukb apob: 3795 rows -> 669 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:53 marvel ukb apob: 3117 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:53 marvel ukb hdl_c: 4023 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:53 marvel ukb hdl_c: 3795 rows -> 669 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:53 marvel ukb hdl_c: 3117 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:54 marvel ukb ldl_c: 4023 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:54 marvel ukb ldl_c: 3795 rows -> 669 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:54 marvel ukb ldl_c: 3117 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:54 marvel ukb tg: 4023 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:54 marvel ukb tg: 3795 rows -> 669 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:54 marvel ukb tg: 3117 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:55 marvel ukb all_cause_dementia: 4023 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:55 marvel ukb all_cause_dementia: 447 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:55 marvel ukb all_cause_dementia: 254 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:55 marvel ukb all_cause_dementia: 6670 rows -> 101 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:55 marvel ukb all_cause_dementia: 6560 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:55 marvel ukb alzheimers_dementia: 4023 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:55 marvel ukb alzheimers_dementia: 447 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:55 marvel ukb alzheimers_dementia: 298 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:55 marvel ukb alzheimers_dementia: 6707 rows -> 77 variant rows, 0 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:55 marvel ukb alzheimers_dementia: 6630 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:56 marvel ukb vascular_dementia: 4023 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:56 marvel ukb vascular_dementia: 447 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:56 marvel ukb vascular_dementia: 283 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:56 marvel ukb vascular_dementia: 6641 rows -> 74 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:56 marvel ukb vascular_dementia: 6558 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:56 marvel ukb frontotemporal_dementia: 4023 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:56 marvel ukb frontotemporal_dementia: 447 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:56 marvel ukb frontotemporal_dementia: 303 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:56 marvel ukb frontotemporal_dementia: 6621 rows -> 57 variant rows, 6 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:56 marvel ukb frontotemporal_dementia: 6558 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:57 marvel ukb ascvd: 4023 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:57 marvel ukb ascvd: 447 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:57 marvel ukb ascvd: 135 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:57 marvel ukb ascvd: 6789 rows -> 201 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:57 marvel ukb ascvd: 6579 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:57 marvel ukb apoa: 2664 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:57 marvel ukb apoa: 2410 rows -> 784 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:57 marvel ukb apoa: 1617 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:58 marvel ukb apob: 2664 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:58 marvel ukb apob: 2410 rows -> 784 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:58 marvel ukb apob: 1617 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:58 marvel ukb hdl_c: 2664 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:58 marvel ukb hdl_c: 2410 rows -> 784 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:58 marvel ukb hdl_c: 1617 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:59 marvel ukb ldl_c: 2664 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:59 marvel ukb ldl_c: 2410 rows -> 784 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:59 marvel ukb ldl_c: 1617 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:00:59 marvel ukb tg: 2664 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:59 marvel ukb tg: 2410 rows -> 784 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:00:59 marvel ukb tg: 1617 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:00 marvel ukb all_cause_dementia: 2664 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:01:00 marvel ukb all_cause_dementia: 790 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:01:00 marvel ukb all_cause_dementia: 131 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:01:00 marvel ukb all_cause_dementia: 7809 rows -> 36 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:01:00 marvel ukb all_cause_dementia: 7764 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:00 marvel ukb alzheimers_dementia: 2664 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:01:00 marvel ukb alzheimers_dementia: 790 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:01:00 marvel ukb alzheimers_dementia: 152 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:01:00 marvel ukb alzheimers_dementia: 7869 rows -> 24 variant rows, 12 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:01:00 marvel ukb alzheimers_dementia: 7833 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:00 marvel ukb vascular_dementia: 2664 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:01:00 marvel ukb vascular_dementia: 790 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:01:00 marvel ukb vascular_dementia: 151 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:01:01 marvel ukb vascular_dementia: 7789 rows -> 22 variant rows, 6 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:01:01 marvel ukb vascular_dementia: 7761 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:01 marvel ukb frontotemporal_dementia: 2664 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:01:01 marvel ukb frontotemporal_dementia: 790 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:01:01 marvel ukb frontotemporal_dementia: 161 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:01:01 marvel ukb frontotemporal_dementia: 7779 rows -> 9 variant rows, 6 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:01:01 marvel ukb frontotemporal_dementia: 7764 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:01 marvel ukb ascvd: 2664 rows with < 5 exposed dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:01:01 marvel ukb ascvd: 790 rows with SE < 1e-06 (degenerate fit) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:01:01 marvel ukb ascvd: 82 rows with SE > 30.0 (separation) dropped (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:01:01 marvel ukb ascvd: 7858 rows -> 81 variant rows, 9 gene-burden rows (NPC1L1_results.tsv.gz)
-[info]  2026-10-27 17:01:01 marvel ukb ascvd: 7768 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:09 marvel ukb apoa: 5994 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:09 marvel ukb apoa: 3143 rows -> 251 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:09 marvel ukb apoa: 2882 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:09 marvel ukb apob: 5994 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:09 marvel ukb apob: 3143 rows -> 251 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:09 marvel ukb apob: 2882 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:10 marvel ukb hdl_c: 5994 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:10 marvel ukb hdl_c: 3143 rows -> 251 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:10 marvel ukb hdl_c: 2882 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:10 marvel ukb ldl_c: 5994 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:10 marvel ukb ldl_c: 3143 rows -> 251 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:10 marvel ukb ldl_c: 2882 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:10 marvel ukb tg: 5994 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:11 marvel ukb tg: 3143 rows -> 251 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:11 marvel ukb tg: 2882 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:11 marvel ukb all_cause_dementia: 5994 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:11 marvel ukb all_cause_dementia: 47 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:11 marvel ukb all_cause_dementia: 160 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:11 marvel ukb all_cause_dementia: 3312 rows -> 113 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:11 marvel ukb all_cause_dementia: 3189 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:11 marvel ukb alzheimers_dementia: 5994 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:11 marvel ukb alzheimers_dementia: 47 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:11 marvel ukb alzheimers_dementia: 212 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:11 marvel ukb alzheimers_dementia: 3350 rows -> 87 variant rows, 20 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:11 marvel ukb alzheimers_dementia: 3243 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:12 marvel ukb vascular_dementia: 5994 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:12 marvel ukb vascular_dementia: 47 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:12 marvel ukb vascular_dementia: 238 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:12 marvel ukb vascular_dementia: 3234 rows -> 65 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:12 marvel ukb vascular_dementia: 3159 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:12 marvel ukb frontotemporal_dementia: 5994 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:12 marvel ukb frontotemporal_dementia: 47 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:12 marvel ukb frontotemporal_dementia: 250 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:12 marvel ukb frontotemporal_dementia: 3222 rows -> 57 variant rows, 7 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:12 marvel ukb frontotemporal_dementia: 3158 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:13 marvel ukb ascvd: 5994 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:13 marvel ukb ascvd: 47 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:13 marvel ukb ascvd: 98 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:13 marvel ukb ascvd: 3374 rows -> 176 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:13 marvel ukb ascvd: 3188 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:13 marvel ukb apoa: 1071 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:13 marvel ukb apoa: 1330 rows -> 546 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:13 marvel ukb apoa: 774 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:13 marvel ukb apob: 1071 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:13 marvel ukb apob: 1330 rows -> 546 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:13 marvel ukb apob: 774 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:14 marvel ukb hdl_c: 1071 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:14 marvel ukb hdl_c: 1330 rows -> 546 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:14 marvel ukb hdl_c: 774 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:14 marvel ukb ldl_c: 1071 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:14 marvel ukb ldl_c: 1330 rows -> 546 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:14 marvel ukb ldl_c: 774 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:14 marvel ukb tg: 1071 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:14 marvel ukb tg: 1330 rows -> 546 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:14 marvel ukb tg: 774 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:15 marvel ukb all_cause_dementia: 1071 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:15 marvel ukb all_cause_dementia: 889 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:15 marvel ukb all_cause_dementia: 21 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:15 marvel ukb all_cause_dementia: 7532 rows -> 14 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:15 marvel ukb all_cause_dementia: 7508 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:15 marvel ukb alzheimers_dementia: 1071 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:15 marvel ukb alzheimers_dementia: 889 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:15 marvel ukb alzheimers_dementia: 28 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:15 marvel ukb alzheimers_dementia: 7615 rows -> 10 variant rows, 20 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:15 marvel ukb alzheimers_dementia: 7585 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:16 marvel ukb vascular_dementia: 1071 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:16 marvel ukb vascular_dementia: 889 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:16 marvel ukb vascular_dementia: 36 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:16 marvel ukb vascular_dementia: 7517 rows -> 7 variant rows, 6 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:16 marvel ukb vascular_dementia: 7504 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:16 marvel ukb frontotemporal_dementia: 1071 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:16 marvel ukb frontotemporal_dementia: 889 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:16 marvel ukb frontotemporal_dementia: 47 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:16 marvel ukb frontotemporal_dementia: 7506 rows -> 3 variant rows, 0 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:16 marvel ukb frontotemporal_dementia: 7503 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:16 marvel ukb ascvd: 1071 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:16 marvel ukb ascvd: 889 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:16 marvel ukb ascvd: 9 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:16 marvel ukb ascvd: 7544 rows -> 16 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:16 marvel ukb ascvd: 7518 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:17 marvel ukb apoa: 3168 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:17 marvel ukb apoa: 2265 rows -> 390 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:17 marvel ukb apoa: 1865 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:17 marvel ukb apob: 3168 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:17 marvel ukb apob: 2265 rows -> 390 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:17 marvel ukb apob: 1865 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:17 marvel ukb hdl_c: 3168 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:18 marvel ukb hdl_c: 2265 rows -> 390 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:18 marvel ukb hdl_c: 1865 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:18 marvel ukb ldl_c: 3168 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:18 marvel ukb ldl_c: 2265 rows -> 390 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:18 marvel ukb ldl_c: 1865 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:18 marvel ukb tg: 3168 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:18 marvel ukb tg: 2265 rows -> 390 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:18 marvel ukb tg: 1865 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:19 marvel ukb all_cause_dementia: 3168 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:19 marvel ukb all_cause_dementia: 510 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:19 marvel ukb all_cause_dementia: 131 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:19 marvel ukb all_cause_dementia: 5704 rows -> 41 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:19 marvel ukb all_cause_dementia: 5653 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:19 marvel ukb alzheimers_dementia: 3168 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:19 marvel ukb alzheimers_dementia: 510 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:19 marvel ukb alzheimers_dementia: 153 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:19 marvel ukb alzheimers_dementia: 5772 rows -> 34 variant rows, 14 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:19 marvel ukb alzheimers_dementia: 5724 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:19 marvel ukb vascular_dementia: 3168 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:19 marvel ukb vascular_dementia: 510 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:19 marvel ukb vascular_dementia: 161 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:19 marvel ukb vascular_dementia: 5674 rows -> 22 variant rows, 7 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:19 marvel ukb vascular_dementia: 5645 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:20 marvel ukb frontotemporal_dementia: 3168 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:20 marvel ukb frontotemporal_dementia: 510 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:20 marvel ukb frontotemporal_dementia: 175 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:20 marvel ukb frontotemporal_dementia: 5660 rows -> 16 variant rows, 0 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:20 marvel ukb frontotemporal_dementia: 5644 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:20 marvel ukb ascvd: 3168 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:20 marvel ukb ascvd: 510 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:20 marvel ukb ascvd: 80 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:20 marvel ukb ascvd: 5755 rows -> 68 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:20 marvel ukb ascvd: 5677 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:21 marvel ukb apoa: 5166 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:21 marvel ukb apoa: 2699 rows -> 305 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:21 marvel ukb apoa: 2384 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:21 marvel ukb apob: 5166 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:21 marvel ukb apob: 2699 rows -> 305 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:21 marvel ukb apob: 2384 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:21 marvel ukb hdl_c: 5166 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:21 marvel ukb hdl_c: 2699 rows -> 305 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:21 marvel ukb hdl_c: 2384 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:22 marvel ukb ldl_c: 5166 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:22 marvel ukb ldl_c: 2699 rows -> 305 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:22 marvel ukb ldl_c: 2384 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:22 marvel ukb tg: 5166 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:22 marvel ukb tg: 2699 rows -> 305 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:22 marvel ukb tg: 2384 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:23 marvel ukb all_cause_dementia: 5166 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:23 marvel ukb all_cause_dementia: 206 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:23 marvel ukb all_cause_dementia: 181 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:23 marvel ukb all_cause_dementia: 3960 rows -> 52 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:23 marvel ukb all_cause_dementia: 3898 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:23 marvel ukb alzheimers_dementia: 5166 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:23 marvel ukb alzheimers_dementia: 206 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:23 marvel ukb alzheimers_dementia: 223 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:23 marvel ukb alzheimers_dementia: 4008 rows -> 30 variant rows, 18 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:23 marvel ukb alzheimers_dementia: 3960 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:23 marvel ukb vascular_dementia: 5166 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:23 marvel ukb vascular_dementia: 206 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:23 marvel ukb vascular_dementia: 230 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:23 marvel ukb vascular_dementia: 3911 rows -> 26 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:23 marvel ukb vascular_dementia: 3875 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:24 marvel ukb frontotemporal_dementia: 5166 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:24 marvel ukb frontotemporal_dementia: 206 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:24 marvel ukb frontotemporal_dementia: 233 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:24 marvel ukb frontotemporal_dementia: 3908 rows -> 22 variant rows, 6 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:24 marvel ukb frontotemporal_dementia: 3880 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:24 marvel ukb ascvd: 5166 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:24 marvel ukb ascvd: 206 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:24 marvel ukb ascvd: 88 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:24 marvel ukb ascvd: 4053 rows -> 129 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:24 marvel ukb ascvd: 3914 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:24 marvel ukb apoa: 2565 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:25 marvel ukb apoa: 1764 rows -> 426 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:25 marvel ukb apoa: 1328 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:25 marvel ukb apob: 2565 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:25 marvel ukb apob: 1764 rows -> 426 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:25 marvel ukb apob: 1328 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:25 marvel ukb hdl_c: 2565 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:25 marvel ukb hdl_c: 1764 rows -> 426 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:25 marvel ukb hdl_c: 1328 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:26 marvel ukb ldl_c: 2565 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:26 marvel ukb ldl_c: 1764 rows -> 426 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:26 marvel ukb ldl_c: 1328 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:26 marvel ukb tg: 2565 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:26 marvel ukb tg: 1764 rows -> 426 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:26 marvel ukb tg: 1328 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:26 marvel ukb all_cause_dementia: 2565 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:26 marvel ukb all_cause_dementia: 648 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:26 marvel ukb all_cause_dementia: 99 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:26 marvel ukb all_cause_dementia: 6201 rows -> 13 variant rows, 7 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:26 marvel ukb all_cause_dementia: 6181 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:27 marvel ukb alzheimers_dementia: 2565 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:27 marvel ukb alzheimers_dementia: 648 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:27 marvel ukb alzheimers_dementia: 105 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:27 marvel ukb alzheimers_dementia: 6285 rows -> 10 variant rows, 14 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:27 marvel ukb alzheimers_dementia: 6261 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:27 marvel ukb vascular_dementia: 2565 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:27 marvel ukb vascular_dementia: 648 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:27 marvel ukb vascular_dementia: 116 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:27 marvel ukb vascular_dementia: 6184 rows -> 7 variant rows, 1 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:27 marvel ukb vascular_dementia: 6176 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:28 marvel ukb frontotemporal_dementia: 2565 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:28 marvel ukb frontotemporal_dementia: 648 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:28 marvel ukb frontotemporal_dementia: 122 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:28 marvel ukb frontotemporal_dementia: 6178 rows -> 3 variant rows, 0 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:28 marvel ukb frontotemporal_dementia: 6175 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:28 marvel ukb ascvd: 2565 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:28 marvel ukb ascvd: 648 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:28 marvel ukb ascvd: 40 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:28 marvel ukb ascvd: 6260 rows -> 41 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:28 marvel ukb ascvd: 6209 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:28 marvel ukb apoa: 4104 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:28 marvel ukb apoa: 3209 rows -> 367 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:28 marvel ukb apoa: 2832 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:29 marvel ukb apob: 4104 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:29 marvel ukb apob: 3209 rows -> 367 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:29 marvel ukb apob: 2832 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:29 marvel ukb hdl_c: 4104 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:29 marvel ukb hdl_c: 3209 rows -> 367 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:29 marvel ukb hdl_c: 2832 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:30 marvel ukb ldl_c: 4104 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:30 marvel ukb ldl_c: 3209 rows -> 367 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:30 marvel ukb ldl_c: 2832 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:30 marvel ukb tg: 4104 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:30 marvel ukb tg: 3209 rows -> 367 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:30 marvel ukb tg: 2832 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:30 marvel ukb all_cause_dementia: 4104 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:30 marvel ukb all_cause_dementia: 275 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:30 marvel ukb all_cause_dementia: 198 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:30 marvel ukb all_cause_dementia: 4936 rows -> 79 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:30 marvel ukb all_cause_dementia: 4847 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:31 marvel ukb alzheimers_dementia: 4104 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:31 marvel ukb alzheimers_dementia: 275 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:31 marvel ukb alzheimers_dementia: 242 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:31 marvel ukb alzheimers_dementia: 4982 rows -> 58 variant rows, 20 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:31 marvel ukb alzheimers_dementia: 4904 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:31 marvel ukb vascular_dementia: 4104 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:31 marvel ukb vascular_dementia: 275 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:31 marvel ukb vascular_dementia: 261 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:31 marvel ukb vascular_dementia: 4873 rows -> 43 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:31 marvel ukb vascular_dementia: 4820 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:32 marvel ukb frontotemporal_dementia: 4104 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:32 marvel ukb frontotemporal_dementia: 275 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:32 marvel ukb frontotemporal_dementia: 271 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:32 marvel ukb frontotemporal_dementia: 4863 rows -> 37 variant rows, 6 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:32 marvel ukb frontotemporal_dementia: 4820 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:32 marvel ukb ascvd: 4104 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:32 marvel ukb ascvd: 275 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:32 marvel ukb ascvd: 138 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:32 marvel ukb ascvd: 4996 rows -> 136 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:32 marvel ukb ascvd: 4850 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:32 marvel ukb apoa: 801 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:32 marvel ukb apoa: 1256 rows -> 564 variant rows, 9 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:32 marvel ukb apoa: 683 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:33 marvel ukb apob: 801 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:33 marvel ukb apob: 1256 rows -> 564 variant rows, 9 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:33 marvel ukb apob: 683 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:33 marvel ukb hdl_c: 801 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:33 marvel ukb hdl_c: 1256 rows -> 564 variant rows, 9 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:33 marvel ukb hdl_c: 683 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:33 marvel ukb ldl_c: 801 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:34 marvel ukb ldl_c: 1256 rows -> 564 variant rows, 9 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:34 marvel ukb ldl_c: 683 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:34 marvel ukb tg: 801 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:34 marvel ukb tg: 1256 rows -> 564 variant rows, 9 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:34 marvel ukb tg: 683 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:34 marvel ukb all_cause_dementia: 801 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:34 marvel ukb all_cause_dementia: 932 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:34 marvel ukb all_cause_dementia: 20 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:34 marvel ukb all_cause_dementia: 7760 rows -> 7 variant rows, 9 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:34 marvel ukb all_cause_dementia: 7744 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:35 marvel ukb alzheimers_dementia: 810 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:35 marvel ukb alzheimers_dementia: 932 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:35 marvel ukb alzheimers_dementia: 22 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:35 marvel ukb alzheimers_dementia: 7839 rows -> 5 variant rows, 18 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:35 marvel ukb alzheimers_dementia: 7816 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:35 marvel ukb vascular_dementia: 801 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:35 marvel ukb vascular_dementia: 932 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:35 marvel ukb vascular_dementia: 25 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:35 marvel ukb vascular_dementia: 7755 rows -> 5 variant rows, 6 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:35 marvel ukb vascular_dementia: 7744 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:35 marvel ukb frontotemporal_dementia: 801 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:35 marvel ukb frontotemporal_dementia: 932 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:35 marvel ukb frontotemporal_dementia: 34 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:35 marvel ukb frontotemporal_dementia: 7746 rows -> 3 variant rows, 0 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:35 marvel ukb frontotemporal_dementia: 7743 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:36 marvel ukb ascvd: 801 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:36 marvel ukb ascvd: 932 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:36 marvel ukb ascvd: 5 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:36 marvel ukb ascvd: 7775 rows -> 9 variant rows, 9 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:36 marvel ukb ascvd: 7757 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:36 marvel ukb apoa: 2556 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:36 marvel ukb apoa: 2061 rows -> 440 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:36 marvel ukb apoa: 1611 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:37 marvel ukb apob: 2556 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:37 marvel ukb apob: 2061 rows -> 440 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:37 marvel ukb apob: 1611 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:37 marvel ukb hdl_c: 2556 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:37 marvel ukb hdl_c: 2061 rows -> 440 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:37 marvel ukb hdl_c: 1611 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:37 marvel ukb ldl_c: 2556 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:37 marvel ukb ldl_c: 2061 rows -> 440 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:37 marvel ukb ldl_c: 1611 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:38 marvel ukb tg: 2556 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:38 marvel ukb tg: 2061 rows -> 440 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:38 marvel ukb tg: 1611 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:38 marvel ukb all_cause_dementia: 2556 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:38 marvel ukb all_cause_dementia: 612 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:38 marvel ukb all_cause_dementia: 112 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:38 marvel ukb all_cause_dementia: 6233 rows -> 31 variant rows, 9 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:38 marvel ukb all_cause_dementia: 6193 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:39 marvel ukb alzheimers_dementia: 2556 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:39 marvel ukb alzheimers_dementia: 612 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:39 marvel ukb alzheimers_dementia: 127 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:39 marvel ukb alzheimers_dementia: 6308 rows -> 28 variant rows, 12 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:39 marvel ukb alzheimers_dementia: 6268 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:39 marvel ukb vascular_dementia: 2556 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:39 marvel ukb vascular_dementia: 612 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:39 marvel ukb vascular_dementia: 134 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:39 marvel ukb vascular_dementia: 6211 rows -> 17 variant rows, 6 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:39 marvel ukb vascular_dementia: 6188 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:39 marvel ukb frontotemporal_dementia: 2556 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:39 marvel ukb frontotemporal_dementia: 612 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:39 marvel ukb frontotemporal_dementia: 146 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:39 marvel ukb frontotemporal_dementia: 6199 rows -> 11 variant rows, 0 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:39 marvel ukb frontotemporal_dementia: 6188 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:40 marvel ukb ascvd: 2556 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:40 marvel ukb ascvd: 612 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:40 marvel ukb ascvd: 83 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:40 marvel ukb ascvd: 6262 rows -> 45 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:40 marvel ukb ascvd: 6207 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:40 marvel ukb apoa: 3600 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:40 marvel ukb apoa: 2505 rows -> 395 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:40 marvel ukb apoa: 2100 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:41 marvel ukb apob: 3600 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:41 marvel ukb apob: 2505 rows -> 395 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:41 marvel ukb apob: 2100 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:41 marvel ukb hdl_c: 3600 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:41 marvel ukb hdl_c: 2505 rows -> 395 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:41 marvel ukb hdl_c: 2100 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:41 marvel ukb ldl_c: 3600 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:41 marvel ukb ldl_c: 2505 rows -> 395 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:41 marvel ukb ldl_c: 2100 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:42 marvel ukb tg: 3600 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:42 marvel ukb tg: 2505 rows -> 395 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:42 marvel ukb tg: 2100 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:42 marvel ukb all_cause_dementia: 3600 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:42 marvel ukb all_cause_dementia: 426 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:42 marvel ukb all_cause_dementia: 172 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:42 marvel ukb all_cause_dementia: 5315 rows -> 32 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:42 marvel ukb all_cause_dementia: 5273 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:43 marvel ukb alzheimers_dementia: 3600 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:43 marvel ukb alzheimers_dementia: 426 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:43 marvel ukb alzheimers_dementia: 200 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:43 marvel ukb alzheimers_dementia: 5377 rows -> 18 variant rows, 18 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:43 marvel ukb alzheimers_dementia: 5341 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:43 marvel ukb vascular_dementia: 3600 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:43 marvel ukb vascular_dementia: 426 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:43 marvel ukb vascular_dementia: 212 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:43 marvel ukb vascular_dementia: 5275 rows -> 12 variant rows, 7 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:43 marvel ukb vascular_dementia: 5256 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:43 marvel ukb frontotemporal_dementia: 3600 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:43 marvel ukb frontotemporal_dementia: 426 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:43 marvel ukb frontotemporal_dementia: 209 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:43 marvel ukb frontotemporal_dementia: 5278 rows -> 11 variant rows, 6 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:43 marvel ukb frontotemporal_dementia: 5261 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:44 marvel ukb ascvd: 3600 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:44 marvel ukb ascvd: 426 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:44 marvel ukb ascvd: 90 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:44 marvel ukb ascvd: 5397 rows -> 96 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:44 marvel ukb ascvd: 5291 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:44 marvel ukb apoa: 2007 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:44 marvel ukb apoa: 1498 rows -> 469 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:44 marvel ukb apoa: 1019 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:45 marvel ukb apob: 2007 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:45 marvel ukb apob: 1498 rows -> 469 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:45 marvel ukb apob: 1019 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:45 marvel ukb hdl_c: 2007 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:45 marvel ukb hdl_c: 1498 rows -> 469 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:45 marvel ukb hdl_c: 1019 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:45 marvel ukb ldl_c: 2007 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:46 marvel ukb ldl_c: 1498 rows -> 469 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:46 marvel ukb ldl_c: 1019 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:46 marvel ukb tg: 2007 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:46 marvel ukb tg: 1498 rows -> 469 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:46 marvel ukb tg: 1019 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:46 marvel ukb all_cause_dementia: 2007 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:46 marvel ukb all_cause_dementia: 751 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:46 marvel ukb all_cause_dementia: 69 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:46 marvel ukb all_cause_dementia: 6686 rows -> 8 variant rows, 6 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:46 marvel ukb all_cause_dementia: 6672 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:47 marvel ukb alzheimers_dementia: 2007 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:47 marvel ukb alzheimers_dementia: 751 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:47 marvel ukb alzheimers_dementia: 76 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:47 marvel ukb alzheimers_dementia: 6769 rows -> 5 variant rows, 12 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:47 marvel ukb alzheimers_dementia: 6752 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:47 marvel ukb vascular_dementia: 2007 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:47 marvel ukb vascular_dementia: 751 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:47 marvel ukb vascular_dementia: 78 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:47 marvel ukb vascular_dementia: 6677 rows -> 5 variant rows, 0 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:47 marvel ukb vascular_dementia: 6672 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:47 marvel ukb frontotemporal_dementia: 2007 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:47 marvel ukb frontotemporal_dementia: 751 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:47 marvel ukb frontotemporal_dementia: 81 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:48 marvel ukb frontotemporal_dementia: 6674 rows -> 3 variant rows, 0 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:48 marvel ukb frontotemporal_dementia: 6671 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:48 marvel ukb ascvd: 2007 rows with < 5 exposed dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:48 marvel ukb ascvd: 751 rows with SE < 1e-06 (degenerate fit) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:48 marvel ukb ascvd: 25 rows with SE > 30.0 (separation) dropped (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:48 marvel ukb ascvd: 6730 rows -> 29 variant rows, 10 gene-burden rows (PCSK9_results.tsv.gz)
-[info]  2026-10-27 17:01:48 marvel ukb ascvd: 6691 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:51 marvel ukb apoa: 2196 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:51 marvel ukb apoa: 860 rows -> 92 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:51 marvel ukb apoa: 759 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:51 marvel ukb apob: 2196 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:51 marvel ukb apob: 860 rows -> 92 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:51 marvel ukb apob: 759 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:51 marvel ukb hdl_c: 2196 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:51 marvel ukb hdl_c: 860 rows -> 92 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:51 marvel ukb hdl_c: 759 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:51 marvel ukb ldl_c: 2196 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:51 marvel ukb ldl_c: 860 rows -> 92 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:51 marvel ukb ldl_c: 759 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:51 marvel ukb tg: 2196 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:51 marvel ukb tg: 860 rows -> 92 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:51 marvel ukb tg: 759 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:51 marvel ukb all_cause_dementia: 2196 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:51 marvel ukb all_cause_dementia: 14 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:51 marvel ukb all_cause_dementia: 35 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:51 marvel ukb all_cause_dementia: 923 rows -> 48 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:51 marvel ukb all_cause_dementia: 866 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:52 marvel ukb alzheimers_dementia: 2196 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb alzheimers_dementia: 14 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb alzheimers_dementia: 41 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb alzheimers_dementia: 998 rows -> 42 variant rows, 18 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb alzheimers_dementia: 938 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:52 marvel ukb vascular_dementia: 2196 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb vascular_dementia: 14 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb vascular_dementia: 47 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb vascular_dementia: 911 rows -> 36 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb vascular_dementia: 866 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:52 marvel ukb frontotemporal_dementia: 2196 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb frontotemporal_dementia: 14 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb frontotemporal_dementia: 62 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb frontotemporal_dementia: 896 rows -> 31 variant rows, 0 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb frontotemporal_dementia: 865 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:52 marvel ukb ascvd: 2196 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb ascvd: 14 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb ascvd: 17 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb ascvd: 941 rows -> 66 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb ascvd: 866 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:52 marvel ukb apoa: 261 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb apoa: 547 rows -> 276 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb apoa: 265 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:52 marvel ukb apob: 261 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb apob: 547 rows -> 276 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb apob: 265 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:52 marvel ukb hdl_c: 261 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb hdl_c: 547 rows -> 276 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:52 marvel ukb hdl_c: 265 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:53 marvel ukb ldl_c: 261 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb ldl_c: 547 rows -> 276 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb ldl_c: 265 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:53 marvel ukb tg: 261 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb tg: 547 rows -> 276 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb tg: 265 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:53 marvel ukb all_cause_dementia: 261 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb all_cause_dementia: 295 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb all_cause_dementia: 15 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb all_cause_dementia: 2597 rows -> 7 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb all_cause_dementia: 2584 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:53 marvel ukb alzheimers_dementia: 288 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb alzheimers_dementia: 295 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb alzheimers_dementia: 16 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb alzheimers_dementia: 2650 rows -> 6 variant rows, 12 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb alzheimers_dementia: 2632 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:53 marvel ukb vascular_dementia: 261 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb vascular_dementia: 295 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb vascular_dementia: 22 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb vascular_dementia: 2590 rows -> 3 variant rows, 3 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb vascular_dementia: 2584 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:53 marvel ukb frontotemporal_dementia: 261 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb frontotemporal_dementia: 295 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb frontotemporal_dementia: 26 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb frontotemporal_dementia: 2586 rows -> 2 variant rows, 0 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb frontotemporal_dementia: 2584 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:53 marvel ukb ascvd: 261 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb ascvd: 295 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:53 marvel ukb ascvd: 15 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:54 marvel ukb ascvd: 2597 rows -> 7 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:54 marvel ukb ascvd: 2584 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:54 marvel ukb apoa: 1098 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:54 marvel ukb apoa: 886 rows -> 191 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:54 marvel ukb apoa: 686 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:54 marvel ukb apob: 1098 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:54 marvel ukb apob: 886 rows -> 191 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:54 marvel ukb apob: 686 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:54 marvel ukb hdl_c: 1098 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:54 marvel ukb hdl_c: 886 rows -> 191 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:54 marvel ukb hdl_c: 686 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:54 marvel ukb ldl_c: 1098 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:54 marvel ukb ldl_c: 886 rows -> 191 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:54 marvel ukb ldl_c: 686 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:54 marvel ukb tg: 1098 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:54 marvel ukb tg: 886 rows -> 191 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:54 marvel ukb tg: 686 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:54 marvel ukb all_cause_dementia: 1098 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:54 marvel ukb all_cause_dementia: 148 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:54 marvel ukb all_cause_dementia: 52 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:54 marvel ukb all_cause_dementia: 1870 rows -> 18 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:54 marvel ukb all_cause_dementia: 1846 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:55 marvel ukb alzheimers_dementia: 1098 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:55 marvel ukb alzheimers_dementia: 148 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:55 marvel ukb alzheimers_dementia: 57 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:55 marvel ukb alzheimers_dementia: 1946 rows -> 16 variant rows, 12 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:55 marvel ukb alzheimers_dementia: 1918 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:55 marvel ukb vascular_dementia: 1098 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:55 marvel ukb vascular_dementia: 148 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:55 marvel ukb vascular_dementia: 56 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:55 marvel ukb vascular_dementia: 1866 rows -> 14 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:55 marvel ukb vascular_dementia: 1846 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:55 marvel ukb frontotemporal_dementia: 1098 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:55 marvel ukb frontotemporal_dementia: 148 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:55 marvel ukb frontotemporal_dementia: 73 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:55 marvel ukb frontotemporal_dementia: 1849 rows -> 9 variant rows, 0 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:55 marvel ukb frontotemporal_dementia: 1840 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:55 marvel ukb ascvd: 1098 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:55 marvel ukb ascvd: 148 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:55 marvel ukb ascvd: 35 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:55 marvel ukb ascvd: 1887 rows -> 30 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:55 marvel ukb ascvd: 1848 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:55 marvel ukb apoa: 1782 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:55 marvel ukb apoa: 938 rows -> 132 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:55 marvel ukb apoa: 797 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:55 marvel ukb apob: 1782 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:55 marvel ukb apob: 938 rows -> 132 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:55 marvel ukb apob: 797 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:55 marvel ukb hdl_c: 1782 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb hdl_c: 938 rows -> 132 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb hdl_c: 797 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:56 marvel ukb ldl_c: 1782 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb ldl_c: 938 rows -> 132 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb ldl_c: 797 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:56 marvel ukb tg: 1782 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb tg: 938 rows -> 132 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb tg: 797 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:56 marvel ukb all_cause_dementia: 1782 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb all_cause_dementia: 56 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb all_cause_dementia: 62 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb all_cause_dementia: 1268 rows -> 27 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb all_cause_dementia: 1232 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:56 marvel ukb alzheimers_dementia: 1782 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb alzheimers_dementia: 56 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb alzheimers_dementia: 73 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb alzheimers_dementia: 1338 rows -> 22 variant rows, 12 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb alzheimers_dementia: 1304 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:56 marvel ukb vascular_dementia: 1782 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb vascular_dementia: 56 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb vascular_dementia: 72 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb vascular_dementia: 1258 rows -> 20 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb vascular_dementia: 1232 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:56 marvel ukb frontotemporal_dementia: 1782 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb frontotemporal_dementia: 56 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb frontotemporal_dementia: 82 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb frontotemporal_dementia: 1248 rows -> 16 variant rows, 0 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:56 marvel ukb frontotemporal_dementia: 1232 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:57 marvel ukb ascvd: 1782 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:57 marvel ukb ascvd: 56 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:57 marvel ukb ascvd: 37 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:57 marvel ukb ascvd: 1293 rows -> 50 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:57 marvel ukb ascvd: 1234 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:57 marvel ukb apoa: 675 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:57 marvel ukb apoa: 749 rows -> 228 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:57 marvel ukb apoa: 512 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:57 marvel ukb apob: 675 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:57 marvel ukb apob: 749 rows -> 228 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:57 marvel ukb apob: 512 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:57 marvel ukb hdl_c: 675 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:57 marvel ukb hdl_c: 749 rows -> 228 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:57 marvel ukb hdl_c: 512 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:57 marvel ukb ldl_c: 675 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:57 marvel ukb ldl_c: 749 rows -> 228 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:57 marvel ukb ldl_c: 512 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:58 marvel ukb tg: 675 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb tg: 749 rows -> 228 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb tg: 512 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:58 marvel ukb all_cause_dementia: 675 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb all_cause_dementia: 218 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb all_cause_dementia: 45 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb all_cause_dementia: 2230 rows -> 8 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb all_cause_dementia: 2216 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:58 marvel ukb alzheimers_dementia: 675 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb alzheimers_dementia: 218 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb alzheimers_dementia: 64 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb alzheimers_dementia: 2292 rows -> 4 variant rows, 0 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb alzheimers_dementia: 2288 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:58 marvel ukb vascular_dementia: 675 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb vascular_dementia: 218 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb vascular_dementia: 57 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb vascular_dementia: 2218 rows -> 2 variant rows, 0 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb vascular_dementia: 2216 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:58 marvel ukb frontotemporal_dementia: 675 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb frontotemporal_dementia: 218 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb frontotemporal_dementia: 56 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb frontotemporal_dementia: 2219 rows -> 3 variant rows, 0 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb frontotemporal_dementia: 2216 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:58 marvel ukb ascvd: 675 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb ascvd: 218 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb ascvd: 26 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb ascvd: 2249 rows -> 18 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb ascvd: 2222 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:58 marvel ukb apoa: 1683 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb apoa: 1021 rows -> 142 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:58 marvel ukb apoa: 870 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:59 marvel ukb apob: 1683 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:59 marvel ukb apob: 1021 rows -> 142 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:59 marvel ukb apob: 870 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:59 marvel ukb hdl_c: 1683 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:59 marvel ukb hdl_c: 1021 rows -> 142 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:59 marvel ukb hdl_c: 870 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:59 marvel ukb ldl_c: 1683 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:59 marvel ukb ldl_c: 1021 rows -> 142 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:59 marvel ukb ldl_c: 870 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:59 marvel ukb tg: 1683 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:59 marvel ukb tg: 1021 rows -> 142 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:59 marvel ukb tg: 870 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:59 marvel ukb all_cause_dementia: 1683 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:59 marvel ukb all_cause_dementia: 58 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:59 marvel ukb all_cause_dementia: 58 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:59 marvel ukb all_cause_dementia: 1369 rows -> 35 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:59 marvel ukb all_cause_dementia: 1325 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:01:59 marvel ukb alzheimers_dementia: 1683 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:59 marvel ukb alzheimers_dementia: 58 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:59 marvel ukb alzheimers_dementia: 63 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:59 marvel ukb alzheimers_dementia: 1445 rows -> 30 variant rows, 18 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:01:59 marvel ukb alzheimers_dementia: 1397 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:00 marvel ukb vascular_dementia: 1683 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:00 marvel ukb vascular_dementia: 58 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:00 marvel ukb vascular_dementia: 67 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:00 marvel ukb vascular_dementia: 1360 rows -> 26 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:00 marvel ukb vascular_dementia: 1325 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:00 marvel ukb frontotemporal_dementia: 1683 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:00 marvel ukb frontotemporal_dementia: 58 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:00 marvel ukb frontotemporal_dementia: 86 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:00 marvel ukb frontotemporal_dementia: 1341 rows -> 20 variant rows, 0 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:00 marvel ukb frontotemporal_dementia: 1321 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:00 marvel ukb ascvd: 1683 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:00 marvel ukb ascvd: 58 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:00 marvel ukb ascvd: 41 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:00 marvel ukb ascvd: 1386 rows -> 52 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:00 marvel ukb ascvd: 1325 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:00 marvel ukb apoa: 207 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:00 marvel ukb apoa: 529 rows -> 282 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:00 marvel ukb apoa: 241 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:00 marvel ukb apob: 207 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:00 marvel ukb apob: 529 rows -> 282 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:00 marvel ukb apob: 241 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:00 marvel ukb hdl_c: 207 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:00 marvel ukb hdl_c: 529 rows -> 282 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:00 marvel ukb hdl_c: 241 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:00 marvel ukb ldl_c: 207 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:00 marvel ukb ldl_c: 529 rows -> 282 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:00 marvel ukb ldl_c: 241 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:01 marvel ukb tg: 207 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb tg: 529 rows -> 282 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb tg: 241 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:01 marvel ukb all_cause_dementia: 207 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb all_cause_dementia: 304 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb all_cause_dementia: 14 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb all_cause_dementia: 2643 rows -> 5 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb all_cause_dementia: 2632 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:01 marvel ukb alzheimers_dementia: 234 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb alzheimers_dementia: 304 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb alzheimers_dementia: 14 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb alzheimers_dementia: 2697 rows -> 5 variant rows, 12 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb alzheimers_dementia: 2680 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:01 marvel ukb vascular_dementia: 207 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb vascular_dementia: 304 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb vascular_dementia: 20 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb vascular_dementia: 2637 rows -> 2 variant rows, 3 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb vascular_dementia: 2632 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:01 marvel ukb frontotemporal_dementia: 207 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb frontotemporal_dementia: 304 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb frontotemporal_dementia: 23 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb frontotemporal_dementia: 2634 rows -> 2 variant rows, 0 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb frontotemporal_dementia: 2632 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:01 marvel ukb ascvd: 207 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb ascvd: 304 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb ascvd: 14 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb ascvd: 2643 rows -> 5 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:01 marvel ukb ascvd: 2632 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:02 marvel ukb apoa: 801 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:02 marvel ukb apoa: 967 rows -> 220 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:02 marvel ukb apoa: 738 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:02 marvel ukb apob: 801 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:02 marvel ukb apob: 967 rows -> 220 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:02 marvel ukb apob: 738 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:02 marvel ukb hdl_c: 801 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:02 marvel ukb hdl_c: 967 rows -> 220 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:02 marvel ukb hdl_c: 738 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:02 marvel ukb ldl_c: 801 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:02 marvel ukb ldl_c: 967 rows -> 220 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:02 marvel ukb ldl_c: 738 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:02 marvel ukb tg: 801 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:02 marvel ukb tg: 967 rows -> 220 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:02 marvel ukb tg: 738 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:02 marvel ukb all_cause_dementia: 801 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:02 marvel ukb all_cause_dementia: 175 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:02 marvel ukb all_cause_dementia: 59 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:02 marvel ukb all_cause_dementia: 2133 rows -> 17 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:02 marvel ukb all_cause_dementia: 2110 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:02 marvel ukb alzheimers_dementia: 801 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:02 marvel ukb alzheimers_dementia: 175 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:02 marvel ukb alzheimers_dementia: 64 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:03 marvel ukb alzheimers_dementia: 2209 rows -> 15 variant rows, 12 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:03 marvel ukb alzheimers_dementia: 2182 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:03 marvel ukb vascular_dementia: 801 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:03 marvel ukb vascular_dementia: 175 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:03 marvel ukb vascular_dementia: 63 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:03 marvel ukb vascular_dementia: 2129 rows -> 13 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:03 marvel ukb vascular_dementia: 2110 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:03 marvel ukb frontotemporal_dementia: 801 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:03 marvel ukb frontotemporal_dementia: 175 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:03 marvel ukb frontotemporal_dementia: 80 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:03 marvel ukb frontotemporal_dementia: 2112 rows -> 8 variant rows, 0 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:03 marvel ukb frontotemporal_dementia: 2104 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:03 marvel ukb ascvd: 801 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:03 marvel ukb ascvd: 175 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:03 marvel ukb ascvd: 46 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:03 marvel ukb ascvd: 2146 rows -> 25 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:03 marvel ukb ascvd: 2112 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:03 marvel ukb apoa: 1386 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:03 marvel ukb apoa: 958 rows -> 172 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:03 marvel ukb apoa: 777 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:03 marvel ukb apob: 1386 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:03 marvel ukb apob: 958 rows -> 172 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:03 marvel ukb apob: 777 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:03 marvel ukb hdl_c: 1386 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:03 marvel ukb hdl_c: 958 rows -> 172 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:03 marvel ukb hdl_c: 777 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:04 marvel ukb ldl_c: 1386 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:04 marvel ukb ldl_c: 958 rows -> 172 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:04 marvel ukb ldl_c: 777 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:04 marvel ukb tg: 1386 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:04 marvel ukb tg: 958 rows -> 172 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:04 marvel ukb tg: 777 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:04 marvel ukb all_cause_dementia: 1386 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:04 marvel ukb all_cause_dementia: 103 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:04 marvel ukb all_cause_dementia: 72 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:04 marvel ukb all_cause_dementia: 1607 rows -> 14 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:04 marvel ukb all_cause_dementia: 1584 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:04 marvel ukb alzheimers_dementia: 1386 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:04 marvel ukb alzheimers_dementia: 103 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:04 marvel ukb alzheimers_dementia: 81 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:04 marvel ukb alzheimers_dementia: 1679 rows -> 11 variant rows, 12 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:04 marvel ukb alzheimers_dementia: 1656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:04 marvel ukb vascular_dementia: 1386 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:04 marvel ukb vascular_dementia: 103 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:04 marvel ukb vascular_dementia: 80 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:04 marvel ukb vascular_dementia: 1599 rows -> 9 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:04 marvel ukb vascular_dementia: 1584 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:04 marvel ukb frontotemporal_dementia: 1386 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:04 marvel ukb frontotemporal_dementia: 103 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:04 marvel ukb frontotemporal_dementia: 88 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:04 marvel ukb frontotemporal_dementia: 1591 rows -> 7 variant rows, 0 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:04 marvel ukb frontotemporal_dementia: 1584 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:05 marvel ukb ascvd: 1386 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:05 marvel ukb ascvd: 103 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:05 marvel ukb ascvd: 47 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:05 marvel ukb ascvd: 1632 rows -> 34 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:05 marvel ukb ascvd: 1589 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:05 marvel ukb apoa: 549 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:05 marvel ukb apoa: 683 rows -> 242 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:05 marvel ukb apoa: 432 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:05 marvel ukb apob: 549 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:05 marvel ukb apob: 683 rows -> 242 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:05 marvel ukb apob: 432 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:05 marvel ukb hdl_c: 549 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:05 marvel ukb hdl_c: 683 rows -> 242 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:05 marvel ukb hdl_c: 432 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:05 marvel ukb ldl_c: 549 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:05 marvel ukb ldl_c: 683 rows -> 242 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:05 marvel ukb ldl_c: 432 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:05 marvel ukb tg: 549 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:05 marvel ukb tg: 683 rows -> 242 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:05 marvel ukb tg: 432 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:05 marvel ukb all_cause_dementia: 549 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:05 marvel ukb all_cause_dementia: 242 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:05 marvel ukb all_cause_dementia: 36 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:05 marvel ukb all_cause_dementia: 2341 rows -> 7 variant rows, 6 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:05 marvel ukb all_cause_dementia: 2328 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:06 marvel ukb alzheimers_dementia: 549 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:06 marvel ukb alzheimers_dementia: 242 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:06 marvel ukb alzheimers_dementia: 55 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:06 marvel ukb alzheimers_dementia: 2403 rows -> 3 variant rows, 0 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:06 marvel ukb alzheimers_dementia: 2400 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:06 marvel ukb vascular_dementia: 549 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:06 marvel ukb vascular_dementia: 242 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:06 marvel ukb vascular_dementia: 47 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:06 marvel ukb vascular_dementia: 2330 rows -> 2 variant rows, 0 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:06 marvel ukb vascular_dementia: 2328 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:06 marvel ukb frontotemporal_dementia: 549 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:06 marvel ukb frontotemporal_dementia: 242 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:06 marvel ukb frontotemporal_dementia: 46 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:06 marvel ukb frontotemporal_dementia: 2331 rows -> 3 variant rows, 0 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:06 marvel ukb frontotemporal_dementia: 2328 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[info]  2026-10-27 17:02:06 marvel ukb ascvd: 549 rows with < 5 exposed dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:06 marvel ukb ascvd: 242 rows with SE < 1e-06 (degenerate fit) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:06 marvel ukb ascvd: 19 rows with SE > 30.0 (separation) dropped (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:06 marvel ukb ascvd: 2358 rows -> 15 variant rows, 9 gene-burden rows (PPARA_results.tsv.gz)
-[info]  2026-10-27 17:02:06 marvel ukb ascvd: 2334 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
-[stage] 2026-10-27 17:02:07 fetch_curated
-[info]  2026-10-27 17:03:28 MONDO_0005252 (exact): 892 fetched; in region: CETP=2 PCSK9=1
-[info]  2026-10-27 17:03:29 MONDO_0005099 (exact): 15 fetched; in region: none
-[info]  2026-10-27 17:03:33 MONDO_0013792 (exact): 42 fetched; in region: none
-[info]  2026-10-27 17:03:38 MONDO_0005394 (exact): 41 fetched; in region: none
-[info]  2026-10-27 17:04:11 MONDO_0005098 (exact): 327 fetched; in region: CETP=1
-[info]  2026-10-27 17:04:39 EFO_0003913 (exact): 320 fetched; in region: PCSK9=2 APOB=6
-[info]  2026-10-27 17:04:41 MONDO_0004781 (exact): 17 fetched; in region: none
-[info]  2026-10-27 17:04:46 MONDO_0005267 (exact): 55 fetched; in region: none
-[info]  2026-10-27 17:12:47 MONDO_0005010 (exact): 3913 fetched; in region: CETP=9 HMGCR=2 PCSK9=21 APOB=3
-[info]  2026-10-27 17:12:58 EFO_0004269 (exact): 102 fetched; in region: none
-[info]  2026-10-27 17:13:00 EFO_0009492 (exact): 8 fetched; in region: none
-[info]  2026-10-27 17:13:01 EFO_0009493 (exact): 3 fetched; in region: none
-[info]  2026-10-27 17:30:05 MONDO_0004975 (with child traits): 7125 fetched; in region: APOB=1
-[info]  2026-10-27 17:30:25 MONDO_0004648 (with child traits): 120 fetched; in region: none
-[info]  2026-10-27 17:30:37 EFO_0006799 (with child traits): 40 fetched; in region: none
-[info]  2026-10-27 17:30:45 EFO_0011057 (with child traits): 26 fetched; in region: none
-[info]  2026-10-27 17:30:47 EFO ids with 0 curated associations: 4
-[stage] 2026-10-27 17:30:47 gene_burden
-[info]  2026-10-27 17:30:47 Open Targets disease ids: 29 (from 20 outcome ids)
-[info]  2026-10-27 17:30:48 curated MAF: numeric=58 not_reported=28
-[info]  2026-10-27 17:30:48 curated: 54 rows dropped from studies excluded for cohort overlap
-[info]  2026-10-27 17:30:48 gene-burden rows: none (8 genes with 0)
-[info]  2026-10-27 17:30:53 ancestry: 0 rows of studies not in the discovery log labelled NR
-[info]  2026-10-27 17:30:53 ancestry: curated EAS=21
-[info]  2026-10-27 17:30:53 ancestry: curated EUR=26
-[info]  2026-10-27 17:30:53 ancestry: curated MULTI=21
-[info]  2026-10-27 17:30:53 ancestry: curated NR=18
-[info]  2026-10-27 17:30:53 ancestry: gene-burden EUR=2661
-[info]  2026-10-27 17:30:53 ancestry: gene-burden MULTI=2718
-[info]  2026-10-27 17:30:53 ancestry: summary-stats AFR=159854
-[info]  2026-10-27 17:30:53 ancestry: summary-stats AMR=73617
-[info]  2026-10-27 17:30:53 ancestry: summary-stats CSA=43677
-[info]  2026-10-27 17:30:53 ancestry: summary-stats EAS=45135
-[info]  2026-10-27 17:30:53 ancestry: summary-stats EUR=203384
-[info]  2026-10-27 17:30:53 ancestry: summary-stats MULTI=184989
-[info]  2026-10-27 17:30:53 ancestry: summary-stats NR=5898
-[stage] 2026-10-27 17:30:54 effect_scale
-[info]  2026-10-27 17:30:56 wrote 216 studies to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/study_effect_scale.tsv.gz
-[info]  2026-10-27 17:30:56 study effect scale: linear=52, log_or=112, unknown=52
-[stage] 2026-10-27 17:30:56 normalise
-[info]  2026-10-27 17:30:58 normalisation: summary-stats rows unchanged=673290 no_sequence=40564 ref_mismatch=2699 normalised=1
-[info]  2026-10-27 17:30:58 normalisation: curated rows effect_only=86
-[stage] 2026-10-27 17:30:58 ensembl_check
-[info]  2026-10-27 17:30:58 CETP: 16262 Ensembl variants in 16:56951980-56993663 (0 windows fetched, rest cached)
-[info]  2026-10-27 17:30:58 HMGCR: 13932 Ensembl variants in 5:75332606-75370339 (0 windows fetched, rest cached)
-[info]  2026-10-27 17:30:59 NPC1L1: 17649 Ensembl variants in 7:44503450-44551259 (0 windows fetched, rest cached)
-[info]  2026-10-27 17:30:59 PCSK9: 16676 Ensembl variants in 1:55029838-55073581 (0 windows fetched, rest cached)
-[info]  2026-10-27 17:30:59 ANGPTL3: 9469 Ensembl variants in 1:62587567-62614814 (0 windows fetched, rest cached)
-[info]  2026-10-27 17:30:59 PPARA: 21414 Ensembl variants in 22:46188384-46245377 (0 windows fetched, rest cached)
-[info]  2026-10-27 17:31:00 APOA1: 11180 Ensembl variants in 11:116824677-116852065 (0 windows fetched, rest cached)
-[info]  2026-10-27 17:31:00 APOB: 26572 Ensembl variants in 2:20991305-21054075 (0 windows fetched, rest cached)
-[info]  2026-10-27 17:31:02 Ensembl check: 23697 unique variant rows checked, 0 rsids fetched via the variation endpoint
-[info]  2026-10-27 17:31:04 summary-stats rows: alleles match=530816 flipped=135502 not_found=31938 mismatch=17830 strand_flip=468; rsid same=523657 no_source_rsid=116612 rsid_only=41315 different=3032
-[info]  2026-10-27 17:31:04 curated rows: alleles match=33 flipped=28 effect_unknown=25; rsid same=86
-[info]  2026-10-27 17:31:05 duplicate variants flagged: 766 rows
-[stage] 2026-10-27 17:31:05 write
-[info]  2026-10-27 17:32:08 wrote 722019 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/merged_associations.tsv.gz
+[stage] 2026-11-11 19:26:31 load_sumstats
+[info]  2026-11-11 19:26:32 summary-stats: 125 files, 595475 rows incl. one copy per outcome (0 missing)
+[info]  2026-11-11 19:26:39 MONDO_0011057 (all_cause_dementia) in Gwas.EXCLUDED_EFO_IDS, skipped
+[info]  2026-11-11 19:26:39 MONDO_0011057 (vascular_dementia) in Gwas.EXCLUDED_EFO_IDS, skipped
+[stage] 2026-11-11 19:26:39 marvel
+[info]  2026-11-11 19:26:40 marvel ukb ascvd: 7056 rows with < 5 exposed dropped (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:40 marvel ukb ascvd: 61 rows with SE > 30.0 (separation) dropped (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:40 marvel ukb ascvd: 10301 rows -> 8293 variant rows, 0 gene-burden rows (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:40 marvel ukb ascvd: 2008 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:40 marvel ukb all_cause_dementia: 7056 rows with < 5 exposed dropped (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:40 marvel ukb all_cause_dementia: 156 rows with SE > 30.0 (separation) dropped (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:40 marvel ukb all_cause_dementia: 10206 rows -> 8198 variant rows, 0 gene-burden rows (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:40 marvel ukb all_cause_dementia: 2008 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:40 marvel ukb alzheimers_dementia: 7056 rows with < 5 exposed dropped (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:40 marvel ukb alzheimers_dementia: 194 rows with SE > 30.0 (separation) dropped (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:40 marvel ukb alzheimers_dementia: 10168 rows -> 8160 variant rows, 0 gene-burden rows (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:40 marvel ukb alzheimers_dementia: 2008 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:40 marvel ukb vascular_dementia: 7056 rows with < 5 exposed dropped (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:40 marvel ukb vascular_dementia: 217 rows with SE > 30.0 (separation) dropped (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:40 marvel ukb vascular_dementia: 10145 rows -> 8137 variant rows, 0 gene-burden rows (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:40 marvel ukb vascular_dementia: 2008 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:40 marvel ukb frontotemporal_dementia: 7056 rows with < 5 exposed dropped (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:40 marvel ukb frontotemporal_dementia: 239 rows with SE > 30.0 (separation) dropped (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:40 marvel ukb frontotemporal_dementia: 10123 rows -> 8115 variant rows, 0 gene-burden rows (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:40 marvel ukb frontotemporal_dementia: 2008 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:41 marvel ukb apoa: 6498 rows with < 5 exposed dropped (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:41 marvel ukb apoa: 10208 rows -> 8416 variant rows, 0 gene-burden rows (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:41 marvel ukb apoa: 1792 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:41 marvel ukb apob: 6669 rows with < 5 exposed dropped (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:41 marvel ukb apob: 10237 rows -> 8397 variant rows, 0 gene-burden rows (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:41 marvel ukb apob: 1840 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:41 marvel ukb hdl_c: 6498 rows with < 5 exposed dropped (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:41 marvel ukb hdl_c: 10216 rows -> 8416 variant rows, 0 gene-burden rows (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:41 marvel ukb hdl_c: 1800 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:41 marvel ukb ldl_c: 6903 rows with < 5 exposed dropped (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:41 marvel ukb ldl_c: 10291 rows -> 8371 variant rows, 0 gene-burden rows (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:41 marvel ukb ldl_c: 1920 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:41 marvel ukb tg: 6894 rows with < 5 exposed dropped (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:41 marvel ukb tg: 10292 rows -> 8372 variant rows, 0 gene-burden rows (lipid_variant_all_results.tsv.gz)
+[info]  2026-11-11 19:26:41 marvel ukb tg: 1920 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:44 marvel ukb ascvd: 756 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:44 marvel ukb ascvd: 5 rows with SE > 30.0 (separation) dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:44 marvel ukb ascvd: 9217 rows -> 9049 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:44 marvel ukb ascvd: 168 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:44 marvel ukb all_cause_dementia: 756 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:44 marvel ukb all_cause_dementia: 7 rows with SE > 30.0 (separation) dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:44 marvel ukb all_cause_dementia: 9215 rows -> 9047 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:44 marvel ukb all_cause_dementia: 168 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:44 marvel ukb alzheimers_dementia: 756 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:44 marvel ukb alzheimers_dementia: 10 rows with SE > 30.0 (separation) dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:45 marvel ukb alzheimers_dementia: 9212 rows -> 9044 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:45 marvel ukb alzheimers_dementia: 168 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:45 marvel ukb vascular_dementia: 756 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:45 marvel ukb vascular_dementia: 16 rows with SE > 30.0 (separation) dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:45 marvel ukb vascular_dementia: 9206 rows -> 9038 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:45 marvel ukb vascular_dementia: 168 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:45 marvel ukb frontotemporal_dementia: 756 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:45 marvel ukb frontotemporal_dementia: 18 rows with SE > 30.0 (separation) dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:45 marvel ukb frontotemporal_dementia: 9204 rows -> 9036 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:45 marvel ukb frontotemporal_dementia: 168 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:45 marvel ukb apoa: 738 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:45 marvel ukb apoa: 9208 rows -> 9056 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:45 marvel ukb apoa: 152 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:46 marvel ukb apob: 738 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:46 marvel ukb apob: 9224 rows -> 9056 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:46 marvel ukb apob: 168 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:46 marvel ukb hdl_c: 738 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:46 marvel ukb hdl_c: 9208 rows -> 9056 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:46 marvel ukb hdl_c: 152 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:46 marvel ukb ldl_c: 747 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:46 marvel ukb ldl_c: 9223 rows -> 9055 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:46 marvel ukb ldl_c: 168 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:47 marvel ukb tg: 747 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:47 marvel ukb tg: 9223 rows -> 9055 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:47 marvel ukb tg: 168 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:47 marvel ukb ascvd: 3402 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:47 marvel ukb ascvd: 16 rows with SE > 30.0 (separation) dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:47 marvel ukb ascvd: 9488 rows -> 8744 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:47 marvel ukb ascvd: 744 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:47 marvel ukb all_cause_dementia: 3402 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:47 marvel ukb all_cause_dementia: 48 rows with SE > 30.0 (separation) dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:47 marvel ukb all_cause_dementia: 9456 rows -> 8712 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:47 marvel ukb all_cause_dementia: 744 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:47 marvel ukb alzheimers_dementia: 3402 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:47 marvel ukb alzheimers_dementia: 63 rows with SE > 30.0 (separation) dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:48 marvel ukb alzheimers_dementia: 9441 rows -> 8697 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:48 marvel ukb alzheimers_dementia: 744 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:48 marvel ukb vascular_dementia: 3402 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:48 marvel ukb vascular_dementia: 75 rows with SE > 30.0 (separation) dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:48 marvel ukb vascular_dementia: 9429 rows -> 8685 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:48 marvel ukb vascular_dementia: 744 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:48 marvel ukb frontotemporal_dementia: 3402 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:48 marvel ukb frontotemporal_dementia: 89 rows with SE > 30.0 (separation) dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:48 marvel ukb frontotemporal_dementia: 9415 rows -> 8671 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:48 marvel ukb frontotemporal_dementia: 744 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:48 marvel ukb apoa: 3168 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:48 marvel ukb apoa: 9426 rows -> 8786 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:48 marvel ukb apoa: 640 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:49 marvel ukb apob: 3186 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:49 marvel ukb apob: 9488 rows -> 8784 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:49 marvel ukb apob: 704 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:49 marvel ukb hdl_c: 3168 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:49 marvel ukb hdl_c: 9426 rows -> 8786 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:49 marvel ukb hdl_c: 640 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:49 marvel ukb ldl_c: 3294 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:49 marvel ukb ldl_c: 9484 rows -> 8772 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:49 marvel ukb ldl_c: 712 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:50 marvel ukb tg: 3285 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:50 marvel ukb tg: 9493 rows -> 8773 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:50 marvel ukb tg: 720 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:50 marvel ukb ascvd: 5643 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:50 marvel ukb ascvd: 43 rows with SE > 30.0 (separation) dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:50 marvel ukb ascvd: 9852 rows -> 8468 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:50 marvel ukb ascvd: 1384 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:50 marvel ukb all_cause_dementia: 5643 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:50 marvel ukb all_cause_dementia: 122 rows with SE > 30.0 (separation) dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:50 marvel ukb all_cause_dementia: 9773 rows -> 8389 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:50 marvel ukb all_cause_dementia: 1384 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:50 marvel ukb alzheimers_dementia: 5643 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:50 marvel ukb alzheimers_dementia: 154 rows with SE > 30.0 (separation) dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:50 marvel ukb alzheimers_dementia: 9741 rows -> 8357 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:50 marvel ukb alzheimers_dementia: 1384 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:51 marvel ukb vascular_dementia: 5643 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:51 marvel ukb vascular_dementia: 155 rows with SE > 30.0 (separation) dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:51 marvel ukb vascular_dementia: 9740 rows -> 8356 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:51 marvel ukb vascular_dementia: 1384 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:51 marvel ukb frontotemporal_dementia: 5643 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:51 marvel ukb frontotemporal_dementia: 165 rows with SE > 30.0 (separation) dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:51 marvel ukb frontotemporal_dementia: 9730 rows -> 8346 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:51 marvel ukb frontotemporal_dementia: 1384 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:51 marvel ukb apoa: 5175 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:51 marvel ukb apoa: 9835 rows -> 8563 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:51 marvel ukb apoa: 1272 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:52 marvel ukb apob: 5292 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:52 marvel ukb apob: 9862 rows -> 8550 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:52 marvel ukb apob: 1312 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:52 marvel ukb hdl_c: 5166 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:52 marvel ukb hdl_c: 9860 rows -> 8564 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:52 marvel ukb hdl_c: 1296 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:52 marvel ukb ldl_c: 5544 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:52 marvel ukb ldl_c: 9850 rows -> 8522 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:52 marvel ukb ldl_c: 1328 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:52 marvel ukb tg: 5526 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:53 marvel ukb tg: 9860 rows -> 8524 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:53 marvel ukb tg: 1336 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:53 marvel ukb ascvd: 2529 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:53 marvel ukb ascvd: 8 rows with SE > 30.0 (separation) dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:53 marvel ukb ascvd: 9313 rows -> 8849 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:53 marvel ukb ascvd: 464 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:53 marvel ukb all_cause_dementia: 2529 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:53 marvel ukb all_cause_dementia: 42 rows with SE > 30.0 (separation) dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:53 marvel ukb all_cause_dementia: 9279 rows -> 8815 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:53 marvel ukb all_cause_dementia: 464 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:53 marvel ukb alzheimers_dementia: 2529 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:53 marvel ukb alzheimers_dementia: 48 rows with SE > 30.0 (separation) dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:53 marvel ukb alzheimers_dementia: 9273 rows -> 8809 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:53 marvel ukb alzheimers_dementia: 464 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:54 marvel ukb vascular_dementia: 2529 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:54 marvel ukb vascular_dementia: 53 rows with SE > 30.0 (separation) dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:54 marvel ukb vascular_dementia: 9268 rows -> 8804 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:54 marvel ukb vascular_dementia: 464 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:54 marvel ukb frontotemporal_dementia: 2529 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:54 marvel ukb frontotemporal_dementia: 54 rows with SE > 30.0 (separation) dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:54 marvel ukb frontotemporal_dementia: 9267 rows -> 8803 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:54 marvel ukb frontotemporal_dementia: 464 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:54 marvel ukb apoa: 2295 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:54 marvel ukb apoa: 9307 rows -> 8883 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:54 marvel ukb apoa: 424 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:55 marvel ukb apob: 2304 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:55 marvel ukb apob: 9330 rows -> 8882 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:55 marvel ukb apob: 448 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:55 marvel ukb hdl_c: 2304 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:55 marvel ukb hdl_c: 9306 rows -> 8882 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:55 marvel ukb hdl_c: 424 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:55 marvel ukb ldl_c: 2439 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:55 marvel ukb ldl_c: 9323 rows -> 8867 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:55 marvel ukb ldl_c: 456 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:55 marvel ukb tg: 2439 rows with < 5 exposed dropped (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:56 marvel ukb tg: 9323 rows -> 8867 variant rows, 0 gene-burden rows (lipid_variant_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:26:56 marvel ukb tg: 456 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:59 marvel ukb ascvd: 5445 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:26:59 marvel ukb ascvd: 46 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:26:59 marvel ukb ascvd: 10167 rows -> 8487 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:26:59 marvel ukb ascvd: 1680 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:26:59 marvel ukb all_cause_dementia: 5445 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:26:59 marvel ukb all_cause_dementia: 135 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:26:59 marvel ukb all_cause_dementia: 10078 rows -> 8398 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:26:59 marvel ukb all_cause_dementia: 1680 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:00 marvel ukb alzheimers_dementia: 5445 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:00 marvel ukb alzheimers_dementia: 163 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:00 marvel ukb alzheimers_dementia: 10050 rows -> 8370 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:00 marvel ukb alzheimers_dementia: 1680 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:00 marvel ukb vascular_dementia: 5445 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:00 marvel ukb vascular_dementia: 182 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:00 marvel ukb vascular_dementia: 10031 rows -> 8351 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:00 marvel ukb vascular_dementia: 1680 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:00 marvel ukb frontotemporal_dementia: 5445 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:00 marvel ukb frontotemporal_dementia: 199 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:00 marvel ukb frontotemporal_dementia: 10014 rows -> 8334 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:00 marvel ukb frontotemporal_dementia: 1680 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:00 marvel ukb apoa: 5058 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:01 marvel ukb apoa: 10120 rows -> 8576 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:01 marvel ukb apoa: 1544 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:01 marvel ukb apob: 5094 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:01 marvel ukb apob: 10116 rows -> 8572 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:01 marvel ukb apob: 1544 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:01 marvel ukb hdl_c: 5058 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:01 marvel ukb hdl_c: 10128 rows -> 8576 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:01 marvel ukb hdl_c: 1552 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:02 marvel ukb ldl_c: 5337 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:02 marvel ukb ldl_c: 10169 rows -> 8545 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:02 marvel ukb ldl_c: 1624 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:02 marvel ukb tg: 5328 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:02 marvel ukb tg: 10170 rows -> 8546 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:02 marvel ukb tg: 1624 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:02 marvel ukb ascvd: 684 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:02 marvel ukb ascvd: 4 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:02 marvel ukb ascvd: 9186 rows -> 9058 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:02 marvel ukb ascvd: 128 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:03 marvel ukb all_cause_dementia: 684 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:03 marvel ukb all_cause_dementia: 8 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:03 marvel ukb all_cause_dementia: 9182 rows -> 9054 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:03 marvel ukb all_cause_dementia: 128 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:03 marvel ukb alzheimers_dementia: 684 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:03 marvel ukb alzheimers_dementia: 10 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:03 marvel ukb alzheimers_dementia: 9180 rows -> 9052 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:03 marvel ukb alzheimers_dementia: 128 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:03 marvel ukb vascular_dementia: 684 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:03 marvel ukb vascular_dementia: 11 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:03 marvel ukb vascular_dementia: 9179 rows -> 9051 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:03 marvel ukb vascular_dementia: 128 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:04 marvel ukb frontotemporal_dementia: 684 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:04 marvel ukb frontotemporal_dementia: 13 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:04 marvel ukb frontotemporal_dementia: 9177 rows -> 9049 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:04 marvel ukb frontotemporal_dementia: 128 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:04 marvel ukb apoa: 675 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:04 marvel ukb apoa: 9175 rows -> 9063 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:04 marvel ukb apoa: 112 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:04 marvel ukb apob: 666 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:04 marvel ukb apob: 9192 rows -> 9064 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:04 marvel ukb apob: 128 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:05 marvel ukb hdl_c: 675 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:05 marvel ukb hdl_c: 9175 rows -> 9063 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:05 marvel ukb hdl_c: 112 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:05 marvel ukb ldl_c: 675 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:05 marvel ukb ldl_c: 9191 rows -> 9063 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:05 marvel ukb ldl_c: 128 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:05 marvel ukb tg: 675 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:05 marvel ukb tg: 9191 rows -> 9063 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:05 marvel ukb tg: 128 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:06 marvel ukb ascvd: 2817 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:06 marvel ukb ascvd: 12 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:06 marvel ukb ascvd: 9397 rows -> 8813 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:06 marvel ukb ascvd: 584 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:06 marvel ukb all_cause_dementia: 2817 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:06 marvel ukb all_cause_dementia: 36 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:06 marvel ukb all_cause_dementia: 9373 rows -> 8789 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:06 marvel ukb all_cause_dementia: 584 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:06 marvel ukb alzheimers_dementia: 2817 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:06 marvel ukb alzheimers_dementia: 47 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:06 marvel ukb alzheimers_dementia: 9362 rows -> 8778 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:06 marvel ukb alzheimers_dementia: 584 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:07 marvel ukb vascular_dementia: 2817 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:07 marvel ukb vascular_dementia: 57 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:07 marvel ukb vascular_dementia: 9352 rows -> 8768 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:07 marvel ukb vascular_dementia: 584 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:07 marvel ukb frontotemporal_dementia: 2817 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:07 marvel ukb frontotemporal_dementia: 69 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:07 marvel ukb frontotemporal_dementia: 9340 rows -> 8756 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:07 marvel ukb frontotemporal_dementia: 584 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:07 marvel ukb apoa: 2637 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:08 marvel ukb apoa: 9357 rows -> 8845 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:08 marvel ukb apoa: 512 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:08 marvel ukb apob: 2637 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:08 marvel ukb apob: 9397 rows -> 8845 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:08 marvel ukb apob: 552 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:08 marvel ukb hdl_c: 2637 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:08 marvel ukb hdl_c: 9357 rows -> 8845 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:08 marvel ukb hdl_c: 512 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:08 marvel ukb ldl_c: 2745 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:09 marvel ukb ldl_c: 9393 rows -> 8833 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:09 marvel ukb ldl_c: 560 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:09 marvel ukb tg: 2736 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:09 marvel ukb tg: 9402 rows -> 8834 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:09 marvel ukb tg: 568 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:09 marvel ukb ascvd: 4428 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:09 marvel ukb ascvd: 34 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:09 marvel ukb ascvd: 9764 rows -> 8612 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:09 marvel ukb ascvd: 1152 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:09 marvel ukb all_cause_dementia: 4428 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:09 marvel ukb all_cause_dementia: 103 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:10 marvel ukb all_cause_dementia: 9695 rows -> 8543 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:10 marvel ukb all_cause_dementia: 1152 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:10 marvel ukb alzheimers_dementia: 4428 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:10 marvel ukb alzheimers_dementia: 128 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:10 marvel ukb alzheimers_dementia: 9670 rows -> 8518 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:10 marvel ukb alzheimers_dementia: 1152 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:10 marvel ukb vascular_dementia: 4428 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:10 marvel ukb vascular_dementia: 128 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:10 marvel ukb vascular_dementia: 9670 rows -> 8518 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:10 marvel ukb vascular_dementia: 1152 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:11 marvel ukb frontotemporal_dementia: 4428 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:11 marvel ukb frontotemporal_dementia: 136 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:11 marvel ukb frontotemporal_dementia: 9662 rows -> 8510 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:11 marvel ukb frontotemporal_dementia: 1152 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:11 marvel ukb apoa: 4068 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:11 marvel ukb apoa: 9750 rows -> 8686 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:11 marvel ukb apoa: 1064 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:11 marvel ukb apob: 4077 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:11 marvel ukb apob: 9789 rows -> 8685 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:11 marvel ukb apob: 1104 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:12 marvel ukb hdl_c: 4077 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:12 marvel ukb hdl_c: 9765 rows -> 8685 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:12 marvel ukb hdl_c: 1080 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:12 marvel ukb ldl_c: 4338 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:12 marvel ukb ldl_c: 9776 rows -> 8656 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:12 marvel ukb ldl_c: 1120 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:12 marvel ukb tg: 4320 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:12 marvel ukb tg: 9786 rows -> 8658 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:12 marvel ukb tg: 1128 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:13 marvel ukb ascvd: 1998 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:13 marvel ukb ascvd: 7 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:13 marvel ukb ascvd: 9309 rows -> 8909 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:13 marvel ukb ascvd: 400 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:13 marvel ukb all_cause_dementia: 1998 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:13 marvel ukb all_cause_dementia: 37 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:13 marvel ukb all_cause_dementia: 9279 rows -> 8879 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:13 marvel ukb all_cause_dementia: 400 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:13 marvel ukb alzheimers_dementia: 1998 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:13 marvel ukb alzheimers_dementia: 43 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:13 marvel ukb alzheimers_dementia: 9273 rows -> 8873 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:13 marvel ukb alzheimers_dementia: 400 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:14 marvel ukb vascular_dementia: 1998 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:14 marvel ukb vascular_dementia: 46 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:14 marvel ukb vascular_dementia: 9270 rows -> 8870 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:14 marvel ukb vascular_dementia: 400 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:14 marvel ukb frontotemporal_dementia: 1998 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:14 marvel ukb frontotemporal_dementia: 46 rows with SE > 30.0 (separation) dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:14 marvel ukb frontotemporal_dementia: 9270 rows -> 8870 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:14 marvel ukb frontotemporal_dementia: 400 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:14 marvel ukb apoa: 1863 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:14 marvel ukb apoa: 9291 rows -> 8931 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:14 marvel ukb apoa: 360 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:15 marvel ukb apob: 1818 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:15 marvel ukb apob: 9320 rows -> 8936 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:15 marvel ukb apob: 384 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:15 marvel ukb hdl_c: 1872 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:15 marvel ukb hdl_c: 9290 rows -> 8930 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:15 marvel ukb hdl_c: 360 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:15 marvel ukb ldl_c: 1953 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:15 marvel ukb ldl_c: 9313 rows -> 8921 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:15 marvel ukb ldl_c: 392 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb tg: 1953 rows with < 5 exposed dropped (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb tg: 9313 rows -> 8921 variant rows, 0 gene-burden rows (lipid_variant_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb tg: 392 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 lipid_burden_all_apoe_results.tsv.gz: 7880 strata_ref reference row(s) dropped
+[info]  2026-11-11 19:27:16 marvel ukb all_cause_dementia: 14 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb all_cause_dementia: 724 rows -> 0 variant rows, 68 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb all_cause_dementia: 656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb all_cause_dementia: 45 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb all_cause_dementia: 10 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb all_cause_dementia: 563 rows -> 0 variant rows, 67 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb all_cause_dementia: 496 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb all_cause_dementia: 36 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb all_cause_dementia: 13 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb all_cause_dementia: 689 rows -> 0 variant rows, 65 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb all_cause_dementia: 624 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb all_cause_dementia: 9 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb all_cause_dementia: 13 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb all_cause_dementia: 716 rows -> 0 variant rows, 68 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb all_cause_dementia: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb all_cause_dementia: 90 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb all_cause_dementia: 18 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb all_cause_dementia: 630 rows -> 0 variant rows, 54 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb all_cause_dementia: 576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb alzheimers_dementia: 14 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb alzheimers_dementia: 724 rows -> 0 variant rows, 68 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb alzheimers_dementia: 656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb alzheimers_dementia: 45 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb alzheimers_dementia: 13 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb alzheimers_dementia: 560 rows -> 0 variant rows, 64 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb alzheimers_dementia: 496 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb alzheimers_dementia: 36 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb alzheimers_dementia: 16 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb alzheimers_dementia: 686 rows -> 0 variant rows, 62 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb alzheimers_dementia: 624 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb alzheimers_dementia: 9 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb alzheimers_dementia: 45 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb alzheimers_dementia: 684 rows -> 0 variant rows, 36 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb alzheimers_dementia: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb alzheimers_dementia: 90 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb alzheimers_dementia: 40 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb alzheimers_dementia: 608 rows -> 0 variant rows, 32 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb alzheimers_dementia: 576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb vascular_dementia: 16 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb vascular_dementia: 722 rows -> 0 variant rows, 66 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb vascular_dementia: 656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb vascular_dementia: 45 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb vascular_dementia: 42 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb vascular_dementia: 531 rows -> 0 variant rows, 35 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb vascular_dementia: 496 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb vascular_dementia: 36 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb vascular_dementia: 29 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb vascular_dementia: 673 rows -> 0 variant rows, 49 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb vascular_dementia: 624 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb vascular_dementia: 9 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb vascular_dementia: 26 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb vascular_dementia: 703 rows -> 0 variant rows, 55 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb vascular_dementia: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb vascular_dementia: 90 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb vascular_dementia: 52 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb vascular_dementia: 596 rows -> 0 variant rows, 20 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb vascular_dementia: 576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb frontotemporal_dementia: 41 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb frontotemporal_dementia: 697 rows -> 0 variant rows, 41 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb frontotemporal_dementia: 656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb frontotemporal_dementia: 45 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb frontotemporal_dementia: 61 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb frontotemporal_dementia: 512 rows -> 0 variant rows, 16 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb frontotemporal_dementia: 496 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb frontotemporal_dementia: 36 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb frontotemporal_dementia: 71 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb frontotemporal_dementia: 631 rows -> 0 variant rows, 7 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb frontotemporal_dementia: 624 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb frontotemporal_dementia: 9 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb frontotemporal_dementia: 47 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb frontotemporal_dementia: 682 rows -> 0 variant rows, 34 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb frontotemporal_dementia: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb frontotemporal_dementia: 90 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb frontotemporal_dementia: 65 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb frontotemporal_dementia: 583 rows -> 0 variant rows, 7 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb frontotemporal_dementia: 576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb ascvd: 738 rows -> 0 variant rows, 82 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb ascvd: 656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb ascvd: 45 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb ascvd: 8 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb ascvd: 565 rows -> 0 variant rows, 69 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb ascvd: 496 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb ascvd: 36 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb ascvd: 6 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb ascvd: 696 rows -> 0 variant rows, 72 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb ascvd: 624 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb ascvd: 9 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb ascvd: 729 rows -> 0 variant rows, 81 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb ascvd: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:16 marvel ukb ascvd: 90 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:16 marvel ukb ascvd: 2 rows with SE > 30.0 (separation) dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb ascvd: 646 rows -> 0 variant rows, 70 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb ascvd: 576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb apoa: 738 rows -> 0 variant rows, 82 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb apoa: 656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb apoa: 45 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb apoa: 573 rows -> 0 variant rows, 77 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb apoa: 496 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb apoa: 54 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb apoa: 668 rows -> 0 variant rows, 76 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb apoa: 592 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb apoa: 9 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb apoa: 729 rows -> 0 variant rows, 81 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb apoa: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb apoa: 90 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb apoa: 648 rows -> 0 variant rows, 72 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb apoa: 576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb apob: 738 rows -> 0 variant rows, 82 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb apob: 656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb apob: 45 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb apob: 573 rows -> 0 variant rows, 77 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb apob: 496 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb apob: 18 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb apob: 704 rows -> 0 variant rows, 80 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb apob: 624 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb apob: 9 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb apob: 729 rows -> 0 variant rows, 81 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb apob: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb apob: 90 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb apob: 648 rows -> 0 variant rows, 72 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb apob: 576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb hdl_c: 738 rows -> 0 variant rows, 82 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb hdl_c: 656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb hdl_c: 45 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb hdl_c: 573 rows -> 0 variant rows, 77 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb hdl_c: 496 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb hdl_c: 54 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb hdl_c: 668 rows -> 0 variant rows, 76 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb hdl_c: 592 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb hdl_c: 9 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb hdl_c: 729 rows -> 0 variant rows, 81 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb hdl_c: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb hdl_c: 90 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb hdl_c: 648 rows -> 0 variant rows, 72 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb hdl_c: 576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb ldl_c: 738 rows -> 0 variant rows, 82 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb ldl_c: 656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb ldl_c: 45 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb ldl_c: 573 rows -> 0 variant rows, 77 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb ldl_c: 496 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb ldl_c: 18 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb ldl_c: 704 rows -> 0 variant rows, 80 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb ldl_c: 624 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb ldl_c: 9 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb ldl_c: 729 rows -> 0 variant rows, 81 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb ldl_c: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb ldl_c: 90 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb ldl_c: 648 rows -> 0 variant rows, 72 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb ldl_c: 576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb tg: 738 rows -> 0 variant rows, 82 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb tg: 656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb tg: 45 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb tg: 573 rows -> 0 variant rows, 77 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb tg: 496 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb tg: 18 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb tg: 704 rows -> 0 variant rows, 80 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb tg: 624 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb tg: 9 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb tg: 729 rows -> 0 variant rows, 81 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb tg: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb tg: 90 rows with < 5 exposed dropped (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb tg: 648 rows -> 0 variant rows, 72 gene-burden rows (lipid_burden_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb tg: 576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 lipid_burden_eur_results.tsv.gz: 7880 strata_ref reference row(s) dropped
+[info]  2026-11-11 19:27:17 marvel ukb all_cause_dementia: 14 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb all_cause_dementia: 724 rows -> 0 variant rows, 68 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb all_cause_dementia: 656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb all_cause_dementia: 54 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb all_cause_dementia: 10 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb all_cause_dementia: 554 rows -> 0 variant rows, 66 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb all_cause_dementia: 488 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb all_cause_dementia: 36 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb all_cause_dementia: 14 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb all_cause_dementia: 688 rows -> 0 variant rows, 64 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb all_cause_dementia: 624 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb all_cause_dementia: 9 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb all_cause_dementia: 13 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb all_cause_dementia: 716 rows -> 0 variant rows, 68 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb all_cause_dementia: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb all_cause_dementia: 90 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb all_cause_dementia: 20 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb all_cause_dementia: 628 rows -> 0 variant rows, 52 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:17 marvel ukb all_cause_dementia: 576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:17 marvel ukb alzheimers_dementia: 14 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb alzheimers_dementia: 724 rows -> 0 variant rows, 68 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb alzheimers_dementia: 656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb alzheimers_dementia: 54 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb alzheimers_dementia: 13 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb alzheimers_dementia: 551 rows -> 0 variant rows, 63 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb alzheimers_dementia: 488 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb alzheimers_dementia: 36 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb alzheimers_dementia: 20 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb alzheimers_dementia: 682 rows -> 0 variant rows, 58 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb alzheimers_dementia: 624 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb alzheimers_dementia: 9 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb alzheimers_dementia: 45 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb alzheimers_dementia: 684 rows -> 0 variant rows, 36 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb alzheimers_dementia: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb alzheimers_dementia: 90 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb alzheimers_dementia: 51 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb alzheimers_dementia: 597 rows -> 0 variant rows, 21 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb alzheimers_dementia: 576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb vascular_dementia: 19 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb vascular_dementia: 719 rows -> 0 variant rows, 63 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb vascular_dementia: 656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb vascular_dementia: 54 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb vascular_dementia: 41 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb vascular_dementia: 523 rows -> 0 variant rows, 35 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb vascular_dementia: 488 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb vascular_dementia: 36 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb vascular_dementia: 33 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb vascular_dementia: 669 rows -> 0 variant rows, 45 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb vascular_dementia: 624 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb vascular_dementia: 9 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb vascular_dementia: 29 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb vascular_dementia: 700 rows -> 0 variant rows, 52 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb vascular_dementia: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb vascular_dementia: 90 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb vascular_dementia: 53 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb vascular_dementia: 595 rows -> 0 variant rows, 19 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb vascular_dementia: 576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb frontotemporal_dementia: 42 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb frontotemporal_dementia: 696 rows -> 0 variant rows, 40 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb frontotemporal_dementia: 656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb frontotemporal_dementia: 54 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb frontotemporal_dementia: 60 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb frontotemporal_dementia: 504 rows -> 0 variant rows, 16 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb frontotemporal_dementia: 488 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb frontotemporal_dementia: 36 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb frontotemporal_dementia: 71 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb frontotemporal_dementia: 631 rows -> 0 variant rows, 7 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb frontotemporal_dementia: 624 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb frontotemporal_dementia: 9 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb frontotemporal_dementia: 50 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb frontotemporal_dementia: 679 rows -> 0 variant rows, 31 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb frontotemporal_dementia: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb frontotemporal_dementia: 90 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb frontotemporal_dementia: 65 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb frontotemporal_dementia: 583 rows -> 0 variant rows, 7 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb frontotemporal_dementia: 576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb ascvd: 738 rows -> 0 variant rows, 82 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ascvd: 656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb ascvd: 54 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ascvd: 8 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ascvd: 556 rows -> 0 variant rows, 68 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ascvd: 488 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb ascvd: 36 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ascvd: 6 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ascvd: 696 rows -> 0 variant rows, 72 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ascvd: 624 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb ascvd: 9 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ascvd: 729 rows -> 0 variant rows, 81 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ascvd: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb ascvd: 90 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ascvd: 2 rows with SE > 30.0 (separation) dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ascvd: 646 rows -> 0 variant rows, 70 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ascvd: 576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb apoa: 738 rows -> 0 variant rows, 82 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb apoa: 656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb apoa: 54 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb apoa: 564 rows -> 0 variant rows, 76 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb apoa: 488 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb apoa: 54 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb apoa: 668 rows -> 0 variant rows, 76 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb apoa: 592 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb apoa: 9 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb apoa: 729 rows -> 0 variant rows, 81 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb apoa: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb apoa: 90 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb apoa: 648 rows -> 0 variant rows, 72 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb apoa: 576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb apob: 738 rows -> 0 variant rows, 82 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb apob: 656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb apob: 54 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb apob: 564 rows -> 0 variant rows, 76 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb apob: 488 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb apob: 18 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb apob: 704 rows -> 0 variant rows, 80 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb apob: 624 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb apob: 9 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb apob: 729 rows -> 0 variant rows, 81 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb apob: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb apob: 90 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb apob: 648 rows -> 0 variant rows, 72 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb apob: 576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb hdl_c: 738 rows -> 0 variant rows, 82 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb hdl_c: 656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb hdl_c: 54 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb hdl_c: 564 rows -> 0 variant rows, 76 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb hdl_c: 488 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb hdl_c: 54 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb hdl_c: 668 rows -> 0 variant rows, 76 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb hdl_c: 592 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb hdl_c: 9 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb hdl_c: 729 rows -> 0 variant rows, 81 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb hdl_c: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb hdl_c: 90 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb hdl_c: 648 rows -> 0 variant rows, 72 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb hdl_c: 576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb ldl_c: 738 rows -> 0 variant rows, 82 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ldl_c: 656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb ldl_c: 54 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ldl_c: 564 rows -> 0 variant rows, 76 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ldl_c: 488 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb ldl_c: 18 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ldl_c: 704 rows -> 0 variant rows, 80 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ldl_c: 624 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb ldl_c: 9 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ldl_c: 729 rows -> 0 variant rows, 81 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ldl_c: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:18 marvel ukb ldl_c: 90 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ldl_c: 648 rows -> 0 variant rows, 72 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:18 marvel ukb ldl_c: 576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:19 marvel ukb tg: 738 rows -> 0 variant rows, 82 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb tg: 656 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:19 marvel ukb tg: 54 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb tg: 564 rows -> 0 variant rows, 76 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb tg: 488 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:19 marvel ukb tg: 18 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb tg: 704 rows -> 0 variant rows, 80 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb tg: 624 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:19 marvel ukb tg: 9 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb tg: 729 rows -> 0 variant rows, 81 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb tg: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:19 marvel ukb tg: 90 rows with < 5 exposed dropped (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb tg: 648 rows -> 0 variant rows, 72 gene-burden rows (lipid_burden_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb tg: 576 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:19 lipid_burden_fb_all_apoe_results.tsv.gz: 780 strata_ref reference row(s) dropped
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 14 rows with SE > 30.0 (separation) dropped (lipid_burden_fb_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 715 rows -> 0 variant rows, 67 gene-burden rows (lipid_burden_fb_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 45 rows with < 5 exposed dropped (lipid_burden_fb_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 13 rows with SE > 30.0 (separation) dropped (lipid_burden_fb_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 551 rows -> 0 variant rows, 63 gene-burden rows (lipid_burden_fb_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 488 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 36 rows with < 5 exposed dropped (lipid_burden_fb_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 16 rows with SE > 30.0 (separation) dropped (lipid_burden_fb_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 677 rows -> 0 variant rows, 61 gene-burden rows (lipid_burden_fb_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 616 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 9 rows with < 5 exposed dropped (lipid_burden_fb_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 45 rows with SE > 30.0 (separation) dropped (lipid_burden_fb_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 675 rows -> 0 variant rows, 35 gene-burden rows (lipid_burden_fb_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 640 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 90 rows with < 5 exposed dropped (lipid_burden_fb_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 40 rows with SE > 30.0 (separation) dropped (lipid_burden_fb_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 599 rows -> 0 variant rows, 31 gene-burden rows (lipid_burden_fb_all_apoe_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 568 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:19 lipid_burden_fb_eur_results.tsv.gz: 780 strata_ref reference row(s) dropped
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 14 rows with SE > 30.0 (separation) dropped (lipid_burden_fb_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 715 rows -> 0 variant rows, 67 gene-burden rows (lipid_burden_fb_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 648 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 54 rows with < 5 exposed dropped (lipid_burden_fb_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 13 rows with SE > 30.0 (separation) dropped (lipid_burden_fb_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 542 rows -> 0 variant rows, 62 gene-burden rows (lipid_burden_fb_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 480 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 36 rows with < 5 exposed dropped (lipid_burden_fb_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 20 rows with SE > 30.0 (separation) dropped (lipid_burden_fb_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 673 rows -> 0 variant rows, 57 gene-burden rows (lipid_burden_fb_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 616 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 9 rows with < 5 exposed dropped (lipid_burden_fb_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 45 rows with SE > 30.0 (separation) dropped (lipid_burden_fb_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 675 rows -> 0 variant rows, 35 gene-burden rows (lipid_burden_fb_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 640 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 90 rows with < 5 exposed dropped (lipid_burden_fb_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 51 rows with SE > 30.0 (separation) dropped (lipid_burden_fb_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 588 rows -> 0 variant rows, 20 gene-burden rows (lipid_burden_fb_eur_results.tsv.gz)
+[info]  2026-11-11 19:27:19 marvel ukb alzheimers_dementia: 568 exposures (intercept, covariates) neither a variant in a gene region nor a gene (mask) in gene_list.txt, dropped
+[stage] 2026-11-11 19:27:19 fetch_curated
+[info]  2026-11-11 19:28:47 MONDO_0005252 (exact): 892 fetched; in region: CETP=2 PCSK9=1
+[info]  2026-11-11 19:28:48 MONDO_0005099 (exact): 15 fetched; in region: none
+[info]  2026-11-11 19:28:53 MONDO_0013792 (exact): 42 fetched; in region: none
+[info]  2026-11-11 19:28:57 MONDO_0005394 (exact): 41 fetched; in region: none
+[info]  2026-11-11 19:29:21 MONDO_0005098 (exact): 327 fetched; in region: CETP=1
+[info]  2026-11-11 19:29:42 EFO_0003913 (exact): 320 fetched; in region: PCSK9=2 APOB=6
+[info]  2026-11-11 19:29:44 MONDO_0004781 (exact): 17 fetched; in region: none
+[info]  2026-11-11 19:29:49 MONDO_0005267 (exact): 55 fetched; in region: none
+[info]  2026-11-11 19:35:22 MONDO_0005010 (exact): 3913 fetched; in region: CETP=9 HMGCR=2 PCSK9=21 APOB=3
+[info]  2026-11-11 19:35:30 EFO_0004269 (exact): 102 fetched; in region: none
+[info]  2026-11-11 19:35:31 EFO_0009492 (exact): 8 fetched; in region: none
+[info]  2026-11-11 19:35:32 EFO_0009493 (exact): 3 fetched; in region: none
+[warn]  2026-11-11 19:52:01 GWAS Catalog associations MONDO_0004975: ConnectionError, retry 1/3 in 30s
+[info]  2026-11-11 20:02:54 MONDO_0004975 (with child traits): 7149 fetched; in region: APOB=1
+[info]  2026-11-11 20:03:03 MONDO_0004648 (with child traits): 117 fetched; in region: none
+[info]  2026-11-11 20:03:07 EFO_0006799 (with child traits): 40 fetched; in region: none
+[info]  2026-11-11 20:03:09 EFO_0011057 (with child traits): 26 fetched; in region: none
+[info]  2026-11-11 20:03:10 EFO ids with 0 curated associations: 4
+[stage] 2026-11-11 20:03:10 gene_burden
+[info]  2026-11-11 20:03:10 Open Targets disease ids: 29 (from 20 outcome ids)
+[info]  2026-11-11 20:03:11 curated MAF: numeric=58 not_reported=28
+[info]  2026-11-11 20:03:11 curated: 54 rows dropped from studies excluded for cohort overlap
+[info]  2026-11-11 20:03:11 gene-burden rows: none (8 genes with 0)
+[info]  2026-11-11 20:03:15 ancestry: 0 rows of studies not in the discovery log labelled NR
+[info]  2026-11-11 20:03:16 ancestry: curated EAS=21
+[info]  2026-11-11 20:03:16 ancestry: curated EUR=26
+[info]  2026-11-11 20:03:16 ancestry: curated MULTI=21
+[info]  2026-11-11 20:03:16 ancestry: curated NR=18
+[info]  2026-11-11 20:03:16 ancestry: gene-burden EUR=3440
+[info]  2026-11-11 20:03:16 ancestry: gene-burden MULTI=3497
+[info]  2026-11-11 20:03:16 ancestry: summary-stats AFR=159854
+[info]  2026-11-11 20:03:16 ancestry: summary-stats AMR=73617
+[info]  2026-11-11 20:03:16 ancestry: summary-stats CSA=43677
+[info]  2026-11-11 20:03:16 ancestry: summary-stats EAS=45135
+[info]  2026-11-11 20:03:16 ancestry: summary-stats EUR=578357
+[info]  2026-11-11 20:03:16 ancestry: summary-stats MULTI=561366
+[info]  2026-11-11 20:03:16 ancestry: summary-stats NR=5898
+[stage] 2026-11-11 20:03:16 effect_scale
+[info]  2026-11-11 20:03:19 wrote 216 studies to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/study_effect_scale.tsv.gz
+[info]  2026-11-11 20:03:20 study effect scale: linear=52, log_or=112, unknown=52
+[stage] 2026-11-11 20:03:20 normalise
+[info]  2026-11-11 20:03:24 normalisation: summary-stats rows unchanged=1424640 no_sequence=40564 ref_mismatch=2699 normalised=1
+[info]  2026-11-11 20:03:24 normalisation: curated rows effect_only=86
+[stage] 2026-11-11 20:03:25 ensembl_check
+[info]  2026-11-11 20:03:25 CETP: 16262 Ensembl variants in 16:56951980-56993663 (0 windows fetched, rest cached)
+[info]  2026-11-11 20:03:25 HMGCR: 13932 Ensembl variants in 5:75332606-75370339 (0 windows fetched, rest cached)
+[info]  2026-11-11 20:03:25 NPC1L1: 17649 Ensembl variants in 7:44503450-44551259 (0 windows fetched, rest cached)
+[info]  2026-11-11 20:03:25 PCSK9: 16676 Ensembl variants in 1:55029838-55073581 (0 windows fetched, rest cached)
+[info]  2026-11-11 20:03:26 ANGPTL3: 9469 Ensembl variants in 1:62587567-62614814 (0 windows fetched, rest cached)
+[info]  2026-11-11 20:03:26 PPARA: 21414 Ensembl variants in 22:46188384-46245377 (0 windows fetched, rest cached)
+[info]  2026-11-11 20:03:26 APOA1: 11180 Ensembl variants in 11:116824677-116852065 (0 windows fetched, rest cached)
+[info]  2026-11-11 20:03:26 APOB: 26572 Ensembl variants in 2:20991305-21054075 (0 windows fetched, rest cached)
+[info]  2026-11-11 20:03:29 Ensembl check: 29714 unique variant rows checked, 0 rsids fetched via the variation endpoint
+[info]  2026-11-11 20:03:33 summary-stats rows: alleles match=564740 not_found=553524 mismatch=213266 flipped=135906 strand_flip=468; rsid same=523657 no_source_rsid=346376 rsid_only=41315 different=3032
+[info]  2026-11-11 20:03:33 curated rows: alleles match=33 flipped=28 effect_unknown=25; rsid same=86
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_all_cause_dementia: 88% of 8398 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_all_cause_dementia_e22_e32: 87% of 8879 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_all_cause_dementia_e33: 88% of 8543 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_all_cause_dementia_e43: 87% of 8789 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_all_cause_dementia_e44: 86% of 9054 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_alzheimers_dementia: 88% of 8370 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_alzheimers_dementia_e22_e32: 87% of 8873 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_alzheimers_dementia_e33: 88% of 8518 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_alzheimers_dementia_e43: 87% of 8778 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_alzheimers_dementia_e44: 86% of 9052 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_apoa: 87% of 8576 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_apoa_e22_e32: 87% of 8931 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_apoa_e33: 87% of 8686 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_apoa_e43: 87% of 8845 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_apoa_e44: 86% of 9063 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_apob: 87% of 8572 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_apob_e22_e32: 87% of 8936 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_apob_e33: 87% of 8685 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_apob_e43: 87% of 8845 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_apob_e44: 86% of 9064 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_ascvd: 87% of 8487 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_ascvd_e22_e32: 87% of 8909 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_ascvd_e33: 87% of 8612 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_ascvd_e43: 87% of 8813 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_ascvd_e44: 86% of 9058 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_frontotemporal_dementia: 89% of 8334 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_frontotemporal_dementia_e22_e32: 87% of 8870 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_frontotemporal_dementia_e33: 88% of 8510 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_frontotemporal_dementia_e43: 88% of 8756 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_frontotemporal_dementia_e44: 86% of 9049 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_hdl_c: 87% of 8576 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_hdl_c_e22_e32: 87% of 8930 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_hdl_c_e33: 87% of 8685 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_hdl_c_e43: 87% of 8845 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_hdl_c_e44: 86% of 9063 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_ldl_c: 87% of 8545 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_ldl_c_e22_e32: 87% of 8921 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_ldl_c_e33: 87% of 8656 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_ldl_c_e43: 87% of 8833 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_ldl_c_e44: 86% of 9063 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_tg: 87% of 8546 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_tg_e22_e32: 87% of 8921 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_tg_e33: 87% of 8658 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_tg_e43: 87% of 8834 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_tg_e44: 86% of 9063 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_vascular_dementia: 88% of 8351 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_vascular_dementia_e22_e32: 87% of 8870 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_vascular_dementia_e33: 88% of 8518 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_vascular_dementia_e43: 87% of 8768 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_EUR_vascular_dementia_e44: 86% of 9051 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_all_cause_dementia: 89% of 8198 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_all_cause_dementia_e22_e32: 88% of 8815 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_all_cause_dementia_e33: 89% of 8389 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_all_cause_dementia_e43: 88% of 8712 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_all_cause_dementia_e44: 86% of 9047 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_alzheimers_dementia: 89% of 8160 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_alzheimers_dementia_e22_e32: 88% of 8809 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_alzheimers_dementia_e33: 89% of 8357 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_alzheimers_dementia_e43: 88% of 8697 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_alzheimers_dementia_e44: 86% of 9044 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_apoa: 88% of 8416 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_apoa_e22_e32: 87% of 8883 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_apoa_e33: 88% of 8563 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_apoa_e43: 87% of 8786 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_apoa_e44: 86% of 9056 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_apob: 88% of 8397 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_apob_e22_e32: 87% of 8882 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_apob_e33: 88% of 8550 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_apob_e43: 87% of 8784 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_apob_e44: 86% of 9056 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_ascvd: 88% of 8293 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_ascvd_e22_e32: 87% of 8849 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_ascvd_e33: 88% of 8468 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_ascvd_e43: 87% of 8744 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_ascvd_e44: 86% of 9049 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_frontotemporal_dementia: 90% of 8115 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_frontotemporal_dementia_e22_e32: 88% of 8803 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_frontotemporal_dementia_e33: 89% of 8346 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_frontotemporal_dementia_e43: 88% of 8671 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_frontotemporal_dementia_e44: 86% of 9036 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_hdl_c: 88% of 8416 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_hdl_c_e22_e32: 87% of 8882 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_hdl_c_e33: 88% of 8564 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_hdl_c_e43: 87% of 8786 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_hdl_c_e44: 86% of 9056 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_ldl_c: 88% of 8371 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_ldl_c_e22_e32: 87% of 8867 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_ldl_c_e33: 88% of 8522 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_ldl_c_e43: 87% of 8772 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_ldl_c_e44: 86% of 9055 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_tg: 88% of 8372 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_tg_e22_e32: 87% of 8867 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_tg_e33: 88% of 8524 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_tg_e43: 87% of 8773 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_tg_e44: 86% of 9055 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_vascular_dementia: 90% of 8137 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_vascular_dementia_e22_e32: 88% of 8804 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_vascular_dementia_e33: 89% of 8356 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_vascular_dementia_e43: 88% of 8685 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[warn]  2026-11-11 20:03:33 summary-stats marvel_ukb_MULTI_vascular_dementia_e44: 86% of 9038 rows not_found/mismatch in Ensembl (GRCh37 file?)
+[info]  2026-11-11 20:03:37 duplicate variants flagged: 766 rows
+[stage] 2026-11-11 20:03:37 write
+[info]  2026-11-11 20:05:15 wrote 1474927 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/merged_associations.tsv.gz
 
 ```
 
 ## [30] merge_associations_job
 - first run: 2026-09-30 11:30:47
-- last run: 2026-10-27 17:32:10
-- commit: `23ebede` (dirty)
+- last run: 2026-11-11 20:05:17
+- commit: `25d4593` (dirty)
 
 Output:
 ```text
-[info]  2026-10-27 16:58:26 using root directory: /home/mvanvugt/projects/lipid_adem
+[info]  2026-11-11 19:26:27 using root directory: /home/mvanvugt/projects/lipid_adem
 
 ```
 
@@ -4506,73 +2562,73 @@ Output:
 2026-10-06 17:09:48,842 - INFO - Wrote 313818 rows to /Users/marionvanvugt/Documents/work.nosync/projects/lipid_adem/data/raw/clinvar_variants.tsv
 ```
 
-## [40] match_variants (`/home/mvanvugt/projects/lipid_adem/src/match_variants.py`)
+## [40] match_variants (`src/match_variants.py`)
 - first run: 2026-10-01 09:59:12
-- last run: 2026-10-27 17:38:08
-- commit: `23ebede` (dirty)
+- last run: 2026-11-11 21:58:01
+- commit: `25d4593` (dirty)
 
 Output:
 ```text
-[stage] 2026-10-27 17:37:37 load_variant_lists
-[info]  2026-10-27 17:37:37 /gpfs/home6/mvanvugt/projects/lipid_adem/data/processed/lipid_variants.tsv: 9227 rows
-[info]  2026-10-27 17:37:37 0 duplicate rows removed
-[info]  2026-10-27 17:37:37 ANGPTL3 AM: 493 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 ANGPTL3 ClinVar: 12 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 ANGPTL3 PTV: 56 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 APOA1 ClinVar: 33 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 APOA1 PTV: 15 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 APOB ClinVar: 236 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 APOB PTV: 172 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 APOE ClinVar: 20 rows, 0 without alleles, 20 outside gene region
-[info]  2026-10-27 17:37:37 CETP AM: 439 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 CETP ClinVar: 10 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 CETP GoF: 1 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 CETP PTV: 58 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 CETP SelectedGoF: 3 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 HMGCR AM: 2623 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 HMGCR ClinVar: 7 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 HMGCR PTV: 39 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 NPC1L1 AM: 2507 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 NPC1L1 PTV: 96 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 PCSK9 AM: 737 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 PCSK9 ClinVar: 18 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 PCSK9 GoF: 18 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 PCSK9 PTV: 68 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 PPARA AM: 1543 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 PPARA PTV: 23 rows, 0 without alleles, 0 outside gene region
-[info]  2026-10-27 17:37:37 normalisation: variant-list rows unchanged=9207 no_sequence=20
-[stage] 2026-10-27 17:37:37 load_gwas
-[info]  2026-10-27 17:37:58 /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/merged_associations.tsv.gz: 722019 rows, 716640 variant-level (summary-stats, curated)
-[info]  2026-10-27 17:37:59 wrote 5379 marvel gene-burden rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/matched_burden.tsv.gz
-[info]  2026-10-27 17:38:02 curated: 25 rows without chrom/pos or effect allele, cannot be matched
-[stage] 2026-10-27 17:38:03 match
-[info]  2026-10-27 17:38:04 ANGPTL3 AM: 493 variants, 37 matched, GWAS rows: summary-stats=1531
-[info]  2026-10-27 17:38:04 ANGPTL3 ClinVar: 12 variants, 6 matched, GWAS rows: summary-stats=383
-[info]  2026-10-27 17:38:04 ANGPTL3 PTV: 56 variants, 54 matched, GWAS rows: summary-stats=2229
-[info]  2026-10-27 17:38:04 APOA1 ClinVar: 33 variants, 0 matched, GWAS rows: none
-[info]  2026-10-27 17:38:04 APOA1 PTV: 15 variants, 0 matched, GWAS rows: none
-[info]  2026-10-27 17:38:04 APOB ClinVar: 236 variants, 3 matched, GWAS rows: summary-stats=137
-[info]  2026-10-27 17:38:04 APOB PTV: 172 variants, 0 matched, GWAS rows: none
-[info]  2026-10-27 17:38:04 APOE ClinVar: 20 variants, 1 matched, GWAS rows: summary-stats=16
-[info]  2026-10-27 17:38:04 CETP AM: 439 variants, 34 matched, GWAS rows: summary-stats=1291
-[info]  2026-10-27 17:38:04 CETP ClinVar: 10 variants, 6 matched, GWAS rows: summary-stats=275
-[info]  2026-10-27 17:38:04 CETP GoF: 1 variants, 1 matched, GWAS rows: summary-stats=306
-[info]  2026-10-27 17:38:04 CETP PTV: 58 variants, 58 matched, GWAS rows: summary-stats=2554
-[info]  2026-10-27 17:38:04 CETP SelectedGoF: 3 variants, 3 matched, GWAS rows: summary-stats=971
-[info]  2026-10-27 17:38:04 HMGCR AM: 2623 variants, 131 matched, GWAS rows: summary-stats=4749
-[info]  2026-10-27 17:38:04 HMGCR ClinVar: 7 variants, 4 matched, GWAS rows: summary-stats=127
-[info]  2026-10-27 17:38:04 HMGCR PTV: 39 variants, 39 matched, GWAS rows: summary-stats=1409
-[info]  2026-10-27 17:38:04 NPC1L1 AM: 2507 variants, 178 matched, GWAS rows: summary-stats=6671
-[info]  2026-10-27 17:38:04 NPC1L1 PTV: 96 variants, 93 matched, GWAS rows: summary-stats=3453
-[info]  2026-10-27 17:38:04 PCSK9 AM: 737 variants, 49 matched, GWAS rows: summary-stats=1770
-[info]  2026-10-27 17:38:04 PCSK9 ClinVar: 18 variants, 4 matched, GWAS rows: summary-stats=219
-[info]  2026-10-27 17:38:04 PCSK9 GoF: 18 variants, 12 matched, GWAS rows: summary-stats=955
-[info]  2026-10-27 17:38:04 PCSK9 PTV: 68 variants, 68 matched, GWAS rows: summary-stats=2574
-[info]  2026-10-27 17:38:04 PPARA AM: 1543 variants, 102 matched, GWAS rows: summary-stats=3665
-[info]  2026-10-27 17:38:04 PPARA PTV: 23 variants, 22 matched, GWAS rows: summary-stats=719
-[warn]  2026-10-27 17:38:04 a1 vs Ensembl ref: 20225 matched SNV rows checked, 140 where a1 is not the Ensembl ref (e.g. 1:62604235:GG:G, 5:75355116:GG:GGG, 1:55052661:TGAC:TGACTGAC)
-[stage] 2026-10-27 17:38:04 write
-[info]  2026-10-27 17:38:08 wrote 36004 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/matched_variants.tsv.gz
+[stage] 2026-11-11 21:54:17 load_variant_lists
+[info]  2026-11-11 21:54:17 /gpfs/home6/mvanvugt/projects/lipid_adem/data/processed/lipid_variants.tsv: 9227 rows
+[info]  2026-11-11 21:54:17 0 duplicate rows removed
+[info]  2026-11-11 21:54:17 ANGPTL3 AM: 493 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 ANGPTL3 ClinVar: 12 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 ANGPTL3 PTV: 56 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 APOA1 ClinVar: 33 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 APOA1 PTV: 15 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 APOB ClinVar: 236 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 APOB PTV: 172 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 APOE ClinVar: 20 rows, 0 without alleles, 20 outside gene region
+[info]  2026-11-11 21:54:17 CETP AM: 439 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 CETP ClinVar: 10 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 CETP GoF: 1 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 CETP PTV: 58 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 CETP SelectedGoF: 3 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 HMGCR AM: 2623 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 HMGCR ClinVar: 7 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 HMGCR PTV: 39 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 NPC1L1 AM: 2507 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 NPC1L1 PTV: 96 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 PCSK9 AM: 737 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 PCSK9 ClinVar: 18 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 PCSK9 GoF: 18 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 PCSK9 PTV: 68 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 PPARA AM: 1543 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 PPARA PTV: 23 rows, 0 without alleles, 0 outside gene region
+[info]  2026-11-11 21:54:17 normalisation: variant-list rows unchanged=9207 no_sequence=20
+[stage] 2026-11-11 21:54:17 load_gwas
+[info]  2026-11-11 21:55:35 /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/merged_associations.tsv.gz: 1474927 rows, 1467990 variant-level (summary-stats, curated)
+[info]  2026-11-11 21:55:37 wrote 6937 marvel gene-burden rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/matched_burden.tsv.gz
+[info]  2026-11-11 21:55:49 curated: 25 rows without chrom/pos or effect allele, cannot be matched
+[stage] 2026-11-11 21:56:22 match
+[info]  2026-11-11 21:56:58 ANGPTL3 AM: 493 variants, 493 matched, GWAS rows: summary-stats=48081
+[info]  2026-11-11 21:56:58 ANGPTL3 ClinVar: 12 variants, 12 matched, GWAS rows: summary-stats=989
+[info]  2026-11-11 21:56:59 ANGPTL3 PTV: 56 variants, 56 matched, GWAS rows: summary-stats=3371
+[info]  2026-11-11 21:56:59 APOA1 ClinVar: 33 variants, 33 matched, GWAS rows: summary-stats=3360
+[info]  2026-11-11 21:56:59 APOA1 PTV: 15 variants, 15 matched, GWAS rows: summary-stats=1136
+[info]  2026-11-11 21:56:59 APOB ClinVar: 236 variants, 236 matched, GWAS rows: summary-stats=22235
+[info]  2026-11-11 21:56:59 APOB PTV: 172 variants, 172 matched, GWAS rows: summary-stats=11716
+[info]  2026-11-11 21:57:00 APOE ClinVar: 20 variants, 1 matched, GWAS rows: summary-stats=16
+[info]  2026-11-11 21:57:00 CETP AM: 439 variants, 439 matched, GWAS rows: summary-stats=42610
+[info]  2026-11-11 21:57:00 CETP ClinVar: 10 variants, 10 matched, GWAS rows: summary-stats=823
+[info]  2026-11-11 21:57:00 CETP GoF: 1 variants, 1 matched, GWAS rows: summary-stats=306
+[info]  2026-11-11 21:57:00 CETP PTV: 58 variants, 58 matched, GWAS rows: summary-stats=3671
+[info]  2026-11-11 21:57:00 CETP SelectedGoF: 3 variants, 3 matched, GWAS rows: summary-stats=971
+[info]  2026-11-11 21:57:02 HMGCR AM: 2623 variants, 2623 matched, GWAS rows: summary-stats=257449
+[info]  2026-11-11 21:57:02 HMGCR ClinVar: 7 variants, 7 matched, GWAS rows: summary-stats=510
+[info]  2026-11-11 21:57:02 HMGCR PTV: 39 variants, 39 matched, GWAS rows: summary-stats=2337
+[info]  2026-11-11 21:57:03 NPC1L1 AM: 2507 variants, 2507 matched, GWAS rows: summary-stats=244485
+[info]  2026-11-11 21:57:03 NPC1L1 PTV: 96 variants, 96 matched, GWAS rows: summary-stats=5983
+[info]  2026-11-11 21:57:03 PCSK9 AM: 737 variants, 737 matched, GWAS rows: summary-stats=71723
+[info]  2026-11-11 21:57:03 PCSK9 ClinVar: 18 variants, 18 matched, GWAS rows: summary-stats=1726
+[info]  2026-11-11 21:57:04 PCSK9 GoF: 18 variants, 18 matched, GWAS rows: summary-stats=1702
+[info]  2026-11-11 21:57:04 PCSK9 PTV: 68 variants, 68 matched, GWAS rows: summary-stats=4309
+[info]  2026-11-11 21:57:04 PPARA AM: 1543 variants, 1543 matched, GWAS rows: summary-stats=150271
+[info]  2026-11-11 21:57:05 PPARA PTV: 23 variants, 23 matched, GWAS rows: summary-stats=1360
+[warn]  2026-11-11 21:57:06 a1 vs Ensembl ref: 303510 matched SNV rows checked, 7860 where a1 is not the Ensembl ref (e.g. 1:62598754:AA:A, 1:62598776:-:ATGGATTTGAAAAAT, 1:62604076:-:AAGAAAAGTTTTAAAAATCTGTGAGT)
+[stage] 2026-11-11 21:57:06 write
+[info]  2026-11-11 21:58:01 wrote 881140 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/matched_variants.tsv.gz
 
 ```
 
@@ -4614,320 +2670,494 @@ Output:
 
 ## [50] meta_analysis (`/home/mvanvugt/projects/lipid_adem/src/meta_analysis.py --ancestry MULTI --variant-sources SelectedGoF --stratified --label selected_gof_multi --no-gene-burden --require-expected-scale`)
 - first run: 2026-10-01 10:26:24
-- last run: 2026-10-27 17:38:36
-- commit: `23ebede` (dirty)
+- last run: 2026-11-11 22:32:19
+- commit: `25d4593` (dirty)
+
+Δ vs previous run (was `25d4593` (dirty)):
+```diff
+@@ -1 +1 @@
+-[info]  2026-11-11 22:30:56 ancestry EUR, pooled by variant_site, outcome, ancestry_group
++[info]  2026-11-11 22:31:37 ancestry MULTI, pooled by variant_site, outcome, ancestry_group
+```
+stage `load_matched`:
+```diff
+@@ -1,3 +1,4 @@
+ [info]  2026-11-11 22:31:57 /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/matched_variants.tsv.gz: 881140 rows, 9139 variants
+ [info]  2026-11-11 22:31:57 16 rows of excluded gene(s) APOE dropped
+-[info]  2026-11-11 22:31:23 441944 of 881124 rows are EUR (all: AFR=465, AMR=194, CSA=1370, EAS=204, EUR=441944, MULTI=436923, NR=24)
++[info]  2026-11-11 22:32:04 881124 of 881124 rows kept (MULTI pools every ancestry) (all: AFR=465, AMR=194, CSA=1370, EAS=204, EUR=441944, MULTI=436923, NR=24)
++[info]  2026-11-11 22:32:05 MULTI: 881124 rows pooled across ancestries (AFR=465, AMR=194, CSA=1370, EAS=204, EUR=441944, MULTI=436923, NR=24), relabelled MULTI; a study reported both per ancestry and combined is counted twice unless --studies excludes one
+```
+stage `effect_scale`:
+```diff
+@@ -25,21 +25,78 @@
+ [warn]  2026-11-11 22:32:05 marvel_ukb_EUR_tg_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
+ [warn]  2026-11-11 22:32:05 marvel_ukb_EUR_tg_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
+ [warn]  2026-11-11 22:32:05 marvel_ukb_EUR_tg_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apoa: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apoa_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apoa_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apoa_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apoa_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apob: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apob_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apob_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apob_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apob_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_hdl_c: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_hdl_c_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_hdl_c_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_hdl_c_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_hdl_c_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_ldl_c: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_ldl_c_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_ldl_c_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_ldl_c_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_ldl_c_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_tg: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_tg_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_tg_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_tg_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_tg_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
+ [warn]  2026-11-11 22:32:05 GCST002245: effect scale unknown, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 GCST005195: effect scale unknown, not log-OR; kept (--require-log-or drops)
+ [warn]  2026-11-11 22:32:05 GCST90014122: effect scale unknown, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 GCST90014123: effect scale unknown, not log-OR; kept (--require-log-or drops)
+ [warn]  2026-11-11 22:32:05 GCST90475198: effect scale unknown, not log-OR; kept (--require-log-or drops)
+ [warn]  2026-11-11 22:32:05 GCST90475199: effect scale unknown, not log-OR; kept (--require-log-or drops)
+ [warn]  2026-11-11 22:32:05 GCST90475933: effect scale unknown, not log-OR; kept (--require-log-or drops)
+ [warn]  2026-11-11 22:32:05 GCST90475987: effect scale unknown, not log-OR; kept (--require-log-or drops)
+ [warn]  2026-11-11 22:32:05 GCST90476370: effect scale unknown, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 GCST90476592: effect scale unknown, not log-OR; kept (--require-log-or drops)
++[warn]  2026-11-11 22:32:05 GCST90476593: effect scale unknown, not log-OR; kept (--require-log-or drops)
+... 79 more line(s) omitted
+```
+stage `prepare_effects`:
+```diff
+@@ -1,2 +1,2 @@
+-[info]  2026-11-11 22:31:29 438020 rows dropped: no beta or odds ratio
+-[info]  2026-11-11 22:31:29 3592 usable rows, 0 with SE derived from p
++[info]  2026-11-11 22:32:14 870565 rows dropped: no beta or odds ratio
++[info]  2026-11-11 22:32:15 9372 usable rows, 0 with SE derived from p
+```
+stage `orient`:
+```diff
+@@ -1,7 +1,8 @@
+-[info]  2026-11-11 22:31:29 202 variants oriented as a2
+-[info]  2026-11-11 22:31:29 12 variants oriented as a2_gof_flipped
++[info]  2026-11-11 22:32:15 257 variants oriented as a2
++[info]  2026-11-11 22:32:15 13 variants oriented as a2_gof_flipped
+ [info]  2026-11-11 22:32:15 APOA1, PPARA: flipped to the therapeutic direction (drugs raise gene function)
+-[info]  2026-11-11 22:31:29 22 ClinVar variants with direction lowering
++[info]  2026-11-11 22:32:15 26 ClinVar variants with direction lowering
+ [info]  2026-11-11 22:32:15 2 ClinVar variants with direction conflicting
++[info]  2026-11-11 22:32:15 1 ClinVar variants with direction raising
+ [info]  2026-11-11 22:32:15 1 ClinVar variants with direction altered
+-[info]  2026-11-11 22:31:29 variant_list_source in SelectedGoF: 219 of 3592 rows kept
++[info]  2026-11-11 22:32:15 variant_list_source in SelectedGoF: 587 of 9372 rows kept
+```
+stage `apoe_strata`:
+```diff
+@@ -49,6 +49,56 @@
+ [info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_vascular_dementia, stratum e33: 1 studies
+ [info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_vascular_dementia, stratum e43: 1 studies
+ [info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_vascular_dementia, stratum e44: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_all_cause_dementia, stratum all: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_all_cause_dementia, stratum e22_e32: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_all_cause_dementia, stratum e33: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_all_cause_dementia, stratum e43: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_all_cause_dementia, stratum e44: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_alzheimers_dementia, stratum all: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e22_e32: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e33: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e43: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e44: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apoa, stratum all: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apoa, stratum e22_e32: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apoa, stratum e33: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apoa, stratum e43: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apoa, stratum e44: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apob, stratum all: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apob, stratum e22_e32: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apob, stratum e33: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apob, stratum e43: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apob, stratum e44: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ascvd, stratum all: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ascvd, stratum e22_e32: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ascvd, stratum e33: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ascvd, stratum e43: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ascvd, stratum e44: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum all: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e22_e32: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e33: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e43: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e44: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_hdl_c, stratum all: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_hdl_c, stratum e22_e32: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_hdl_c, stratum e33: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_hdl_c, stratum e43: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_hdl_c, stratum e44: 1 studies
++[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ldl_c, stratum all: 1 studies
+... 17 more line(s) omitted
+```
+stage `pooled_run`:
+```diff
+@@ -8,4 +8,14 @@
+ [info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_EUR_ldl_c: unstratified run, strata left out
+ [info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_EUR_tg: unstratified run, strata left out
+ [info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_EUR_vascular_dementia: unstratified run, strata left out
++[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_all_cause_dementia: unstratified run, strata left out
++[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_alzheimers_dementia: unstratified run, strata left out
++[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_apoa: unstratified run, strata left out
++[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_apob: unstratified run, strata left out
++[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_ascvd: unstratified run, strata left out
++[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_frontotemporal_dementia: unstratified run, strata left out
++[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_hdl_c: unstratified run, strata left out
++[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_ldl_c: unstratified run, strata left out
++[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_tg: unstratified run, strata left out
++[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_vascular_dementia: unstratified run, strata left out
+ [info]  2026-11-11 22:32:15 pooled run, study group thomassen: IVW of the strata
+```
+stage `meta_analyse`:
+```diff
+@@ -1,6 +1,6 @@
+-[info]  2026-11-11 22:31:30 51 groups, 24 pooling more than one estimate
+-[info]  2026-11-11 22:31:30 99 groups, 0 pooling more than one estimate
++[info]  2026-11-11 22:32:16 51 groups, 48 pooling more than one estimate
++[info]  2026-11-11 22:32:17 347 groups, 0 pooling more than one estimate
+ [info]  2026-11-11 22:32:17 no gene burden (--no-gene-burden)
+-[info]  2026-11-11 22:31:31 120 groups, 12 pooling more than one estimate
+-[info]  2026-11-11 22:31:31 132 groups, 0 pooling more than one estimate
++[info]  2026-11-11 22:32:18 120 groups, 120 pooling more than one estimate
++[info]  2026-11-11 22:32:18 252 groups, 0 pooling more than one estimate
+ [info]  2026-11-11 22:32:18 no gene burden (--no-gene-burden)
+```
+stage `write`:
+```diff
+@@ -1,2 +1,2 @@
+-[info]  2026-11-11 22:31:30 wrote 150 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/meta_EUR_selected_gof_eur.tsv.gz
+-[info]  2026-11-11 22:31:31 wrote 252 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/meta_EUR_selected_gof_eur_apoe_strata.tsv.gz
++[info]  2026-11-11 22:32:17 wrote 398 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/meta_MULTI_selected_gof_multi.tsv.gz
++[info]  2026-11-11 22:32:18 wrote 372 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/meta_MULTI_selected_gof_multi_apoe_strata.tsv.gz
+```
+stage `apoe_strata_run`:
+```diff
+@@ -1 +1 @@
+-[info]  2026-11-11 22:31:30 132 rows from APOE strata: pooled per stratum
++[info]  2026-11-11 22:32:17 252 rows from APOE strata: pooled per stratum
+```
 
 Output:
 ```text
-[info]  2026-10-27 17:38:32 ancestry MULTI, pooled by variant_site, outcome, ancestry_group
-[stage] 2026-10-27 17:38:32 load_matched
-[info]  2026-10-27 17:38:33 /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/matched_variants.tsv.gz: 36004 rows, 889 variants
-[info]  2026-10-27 17:38:33 16 rows of excluded gene(s) APOE dropped
-[info]  2026-10-27 17:38:33 35988 of 35988 rows kept (MULTI pools every ancestry) (all: AFR=465, AMR=194, CSA=1370, EAS=204, EUR=17837, MULTI=15894, NR=24)
-[info]  2026-10-27 17:38:33 MULTI: 35988 rows pooled across ancestries (AFR=465, AMR=194, CSA=1370, EAS=204, EUR=17837, MULTI=15894, NR=24), relabelled MULTI; a study reported both per ancestry and combined is counted twice unless --studies excludes one
-[stage] 2026-10-27 17:38:33 effect_scale
-[warn]  2026-10-27 17:38:33 GCST90276157: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90276158: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_apoa: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_apoa_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_apoa_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_apoa_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_apoa_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_apob: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_apob_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_apob_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_apob_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_apob_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_hdl_c: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_hdl_c_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_hdl_c_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_hdl_c_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_hdl_c_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_ldl_c: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_ldl_c_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_ldl_c_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_ldl_c_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_ldl_c_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_tg: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_tg_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_tg_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_tg_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_EUR_tg_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_apoa: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_apoa_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_apoa_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_apoa_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_apoa_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_apob: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_apob_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_apob_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_apob_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_apob_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_hdl_c: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_hdl_c_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_hdl_c_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_hdl_c_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_hdl_c_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_ldl_c: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_ldl_c_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_ldl_c_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_ldl_c_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_ldl_c_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_tg: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_tg_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_tg_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_tg_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 marvel_ukb_MULTI_tg_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST002245: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST005195: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90014122: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90014123: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90475198: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90475199: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90475933: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90475987: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90476370: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90476592: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90476593: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90476594: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90476595: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90476621: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90476622: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90476623: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90477866: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90477867: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90477928: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90477929: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90477937: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90477938: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90477939: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90477941: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90477942: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90477943: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90477944: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90477958: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90477959: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90477976: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90477977: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90477978: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90479542: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90479543: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90480131: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90480173: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90480174: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90480187: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90480188: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90480191: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90480807: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90481154: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[warn]  2026-10-27 17:38:33 GCST90481158: effect scale unknown, not log-OR; kept (--require-log-or drops)
-[info]  2026-10-27 17:38:33 GCST002245: 8 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST005195: 12 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90014122: 12 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90014123: 12 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90276157: 4 rows on scale linear, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90276158: 8 rows on scale linear, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90475198: 30 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90475199: 30 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90475933: 30 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90475987: 30 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90476370: 10 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90476592: 27 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90476593: 45 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90476594: 27 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90476595: 45 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90476621: 27 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90476622: 45 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90476623: 30 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90477866: 27 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90477867: 45 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90477928: 6 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90477929: 45 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90477937: 27 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90477938: 45 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90477939: 30 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90477941: 45 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90477942: 30 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90477943: 27 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90477944: 45 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90477958: 30 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90477959: 20 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90477976: 30 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90477977: 45 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90477978: 30 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90479542: 27 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90479543: 27 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90480131: 27 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90480173: 12 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90480174: 27 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90480187: 12 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90480188: 12 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90480191: 12 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90480807: 18 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90481154: 27 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 GCST90481158: 27 rows on scale unknown, not the expected one for their outcome; dropped
-[info]  2026-10-27 17:38:33 --require-expected-scale: 1187 of 35988 rows of 45 studies dropped
-[stage] 2026-10-27 17:38:33 prepare_effects
-[info]  2026-10-27 17:38:33 18780 rows dropped: no beta or odds ratio
-[info]  2026-10-27 17:38:33 16021 usable rows, 0 with SE derived from p
-[stage] 2026-10-27 17:38:33 resolve_ambiguous
-[stage] 2026-10-27 17:38:33 orient
-[info]  2026-10-27 17:38:33 511 variants oriented as a2
-[info]  2026-10-27 17:38:33 13 variants oriented as a2_gof_flipped
-[info]  2026-10-27 17:38:33 PPARA: flipped to the therapeutic direction (drugs raise gene function)
-[info]  2026-10-27 17:38:33 10 ClinVar variants with direction lowering
-[info]  2026-10-27 17:38:33 2 ClinVar variants with direction conflicting
-[info]  2026-10-27 17:38:33 1 ClinVar variants with direction raising
-[info]  2026-10-27 17:38:33 1 ClinVar variants with direction unknown
-[info]  2026-10-27 17:38:33 variant_list_source in SelectedGoF: 587 of 16021 rows kept
-[stage] 2026-10-27 17:38:33 apoe_strata
-[info]  2026-10-27 17:38:33 /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/apoe_strata.tsv: 104 studies with an APOE stratum entry
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_all_cause_dementia, stratum all: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_all_cause_dementia, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_all_cause_dementia, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_all_cause_dementia, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_all_cause_dementia, stratum e44: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_alzheimers_dementia, stratum all: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_alzheimers_dementia, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_alzheimers_dementia, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_alzheimers_dementia, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_alzheimers_dementia, stratum e44: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_apoa, stratum all: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_apoa, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_apoa, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_apoa, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_apoa, stratum e44: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_apob, stratum all: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_apob, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_apob, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_apob, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_apob, stratum e44: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_ascvd, stratum all: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_ascvd, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_ascvd, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_ascvd, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_ascvd, stratum e44: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_frontotemporal_dementia, stratum all: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_frontotemporal_dementia, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_frontotemporal_dementia, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_frontotemporal_dementia, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_frontotemporal_dementia, stratum e44: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_hdl_c, stratum all: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_hdl_c, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_hdl_c, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_hdl_c, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_hdl_c, stratum e44: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_ldl_c, stratum all: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_ldl_c, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_ldl_c, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_ldl_c, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_ldl_c, stratum e44: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_tg, stratum all: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_tg, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_tg, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_tg, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_tg, stratum e44: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_vascular_dementia, stratum all: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_vascular_dementia, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_vascular_dementia, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_vascular_dementia, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_EUR_vascular_dementia, stratum e44: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_all_cause_dementia, stratum all: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_all_cause_dementia, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_all_cause_dementia, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_all_cause_dementia, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_all_cause_dementia, stratum e44: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_alzheimers_dementia, stratum all: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e44: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_apoa, stratum all: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_apoa, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_apoa, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_apoa, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_apoa, stratum e44: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_apob, stratum all: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_apob, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_apob, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_apob, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_apob, stratum e44: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_ascvd, stratum all: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_ascvd, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_ascvd, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_ascvd, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_ascvd, stratum e44: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum all: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e44: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_hdl_c, stratum all: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_hdl_c, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_hdl_c, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_hdl_c, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_hdl_c, stratum e44: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_ldl_c, stratum all: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_ldl_c, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_ldl_c, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_ldl_c, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_ldl_c, stratum e44: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_tg, stratum all: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_tg, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_tg, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_tg, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_tg, stratum e44: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_vascular_dementia, stratum all: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_vascular_dementia, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_vascular_dementia, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_vascular_dementia, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group marvel_ukb_MULTI_vascular_dementia, stratum e44: 1 studies
-[info]  2026-10-27 17:38:33 study group thomassen, stratum e22_e32: 1 studies
-[info]  2026-10-27 17:38:33 study group thomassen, stratum e33: 1 studies
-[info]  2026-10-27 17:38:33 study group thomassen, stratum e43: 1 studies
-[info]  2026-10-27 17:38:33 study group thomassen, stratum e44: 1 studies
-[stage] 2026-10-27 17:38:33 pooled_run
-[info]  2026-10-27 17:38:33 pooled run, study group marvel_ukb_EUR_all_cause_dementia: unstratified run, strata left out
-[info]  2026-10-27 17:38:33 pooled run, study group marvel_ukb_EUR_alzheimers_dementia: unstratified run, strata left out
-[info]  2026-10-27 17:38:33 pooled run, study group marvel_ukb_EUR_apoa: unstratified run, strata left out
-[info]  2026-10-27 17:38:33 pooled run, study group marvel_ukb_EUR_apob: unstratified run, strata left out
-[info]  2026-10-27 17:38:33 pooled run, study group marvel_ukb_EUR_ascvd: unstratified run, strata left out
-[info]  2026-10-27 17:38:33 pooled run, study group marvel_ukb_EUR_frontotemporal_dementia: unstratified run, strata left out
-[info]  2026-10-27 17:38:33 pooled run, study group marvel_ukb_EUR_hdl_c: unstratified run, strata left out
-[info]  2026-10-27 17:38:33 pooled run, study group marvel_ukb_EUR_ldl_c: unstratified run, strata left out
-[info]  2026-10-27 17:38:33 pooled run, study group marvel_ukb_EUR_tg: unstratified run, strata left out
-[info]  2026-10-27 17:38:33 pooled run, study group marvel_ukb_EUR_vascular_dementia: unstratified run, strata left out
-[info]  2026-10-27 17:38:33 pooled run, study group marvel_ukb_MULTI_all_cause_dementia: unstratified run, strata left out
-[info]  2026-10-27 17:38:33 pooled run, study group marvel_ukb_MULTI_alzheimers_dementia: unstratified run, strata left out
-[info]  2026-10-27 17:38:33 pooled run, study group marvel_ukb_MULTI_apoa: unstratified run, strata left out
-[info]  2026-10-27 17:38:33 pooled run, study group marvel_ukb_MULTI_apob: unstratified run, strata left out
-[info]  2026-10-27 17:38:33 pooled run, study group marvel_ukb_MULTI_ascvd: unstratified run, strata left out
-[info]  2026-10-27 17:38:33 pooled run, study group marvel_ukb_MULTI_frontotemporal_dementia: unstratified run, strata left out
-[info]  2026-10-27 17:38:33 pooled run, study group marvel_ukb_MULTI_hdl_c: unstratified run, strata left out
-[info]  2026-10-27 17:38:33 pooled run, study group marvel_ukb_MULTI_ldl_c: unstratified run, strata left out
-[info]  2026-10-27 17:38:33 pooled run, study group marvel_ukb_MULTI_tg: unstratified run, strata left out
-[info]  2026-10-27 17:38:33 pooled run, study group marvel_ukb_MULTI_vascular_dementia: unstratified run, strata left out
-[info]  2026-10-27 17:38:33 pooled run, study group thomassen: IVW of the strata
-[stage] 2026-10-27 17:38:33 dedupe
-[info]  2026-10-27 17:38:33 0 duplicate rows removed
-[info]  2026-10-27 17:38:33 0 estimates removed as copies of another study
-[stage] 2026-10-27 17:38:33 meta_analyse
-[info]  2026-10-27 17:38:34 51 groups, 48 pooling more than one estimate
-[info]  2026-10-27 17:38:35 347 groups, 0 pooling more than one estimate
-[info]  2026-10-27 17:38:35 no gene burden (--no-gene-burden)
-[stage] 2026-10-27 17:38:35 write
-[info]  2026-10-27 17:38:35 wrote 398 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/meta_MULTI_selected_gof_multi.tsv.gz
-[stage] 2026-10-27 17:38:35 apoe_strata_run
-[info]  2026-10-27 17:38:35 252 rows from APOE strata: pooled per stratum
-[stage] 2026-10-27 17:38:35 dedupe
-[info]  2026-10-27 17:38:35 0 duplicate rows removed
-[info]  2026-10-27 17:38:35 0 estimates removed as copies of another study
-[stage] 2026-10-27 17:38:35 meta_analyse
-[info]  2026-10-27 17:38:36 120 groups, 120 pooling more than one estimate
-[info]  2026-10-27 17:38:36 252 groups, 0 pooling more than one estimate
-[info]  2026-10-27 17:38:36 no gene burden (--no-gene-burden)
-[stage] 2026-10-27 17:38:36 write
-[info]  2026-10-27 17:38:36 wrote 372 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/meta_MULTI_selected_gof_multi_apoe_strata.tsv.gz
+[info]  2026-11-11 22:31:37 ancestry MULTI, pooled by variant_site, outcome, ancestry_group
+[stage] 2026-11-11 22:31:37 load_matched
+[info]  2026-11-11 22:31:57 /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/matched_variants.tsv.gz: 881140 rows, 9139 variants
+[info]  2026-11-11 22:31:57 16 rows of excluded gene(s) APOE dropped
+[info]  2026-11-11 22:32:04 881124 of 881124 rows kept (MULTI pools every ancestry) (all: AFR=465, AMR=194, CSA=1370, EAS=204, EUR=441944, MULTI=436923, NR=24)
+[info]  2026-11-11 22:32:05 MULTI: 881124 rows pooled across ancestries (AFR=465, AMR=194, CSA=1370, EAS=204, EUR=441944, MULTI=436923, NR=24), relabelled MULTI; a study reported both per ancestry and combined is counted twice unless --studies excludes one
+[stage] 2026-11-11 22:32:05 effect_scale
+[warn]  2026-11-11 22:32:05 GCST90276157: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90276158: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_apoa: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_apoa_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_apoa_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_apoa_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_apoa_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_apob: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_apob_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_apob_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_apob_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_apob_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_hdl_c: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_hdl_c_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_hdl_c_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_hdl_c_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_hdl_c_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_ldl_c: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_ldl_c_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_ldl_c_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_ldl_c_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_ldl_c_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_tg: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_tg_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_tg_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_tg_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_EUR_tg_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apoa: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apoa_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apoa_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apoa_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apoa_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apob: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apob_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apob_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apob_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apob_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_hdl_c: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_hdl_c_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_hdl_c_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_hdl_c_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_hdl_c_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_ldl_c: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_ldl_c_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_ldl_c_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_ldl_c_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_ldl_c_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_tg: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_tg_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_tg_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_tg_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_tg_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST002245: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST005195: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90014122: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90014123: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90475198: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90475199: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90475933: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90475987: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90476370: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90476592: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90476593: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90476594: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90476595: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90476621: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90476622: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90476623: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90477866: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90477867: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90477928: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90477929: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90477937: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90477938: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90477939: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90477941: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90477942: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90477943: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90477944: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90477958: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90477959: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90477976: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90477977: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90477978: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90479542: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90479543: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90480131: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90480173: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90480174: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90480187: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90480188: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90480191: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90480807: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90481154: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[warn]  2026-11-11 22:32:05 GCST90481158: effect scale unknown, not log-OR; kept (--require-log-or drops)
+[info]  2026-11-11 22:32:05 GCST002245: 8 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST005195: 12 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90014122: 12 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90014123: 12 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90276157: 4 rows on scale linear, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90276158: 8 rows on scale linear, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90475198: 30 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90475199: 30 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90475933: 30 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90475987: 30 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90476370: 10 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90476592: 27 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90476593: 45 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90476594: 27 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90476595: 45 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90476621: 27 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90476622: 45 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90476623: 30 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90477866: 27 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90477867: 45 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90477928: 6 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90477929: 45 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90477937: 27 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90477938: 45 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90477939: 30 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90477941: 45 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90477942: 30 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90477943: 27 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90477944: 45 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90477958: 30 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90477959: 20 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90477976: 30 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90477977: 45 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90477978: 30 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90479542: 27 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90479543: 27 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90480131: 27 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90480173: 12 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90480174: 27 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90480187: 12 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90480188: 12 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90480191: 12 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90480807: 18 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90481154: 27 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 GCST90481158: 27 rows on scale unknown, not the expected one for their outcome; dropped
+[info]  2026-11-11 22:32:05 --require-expected-scale: 1187 of 881124 rows of 45 studies dropped
+[stage] 2026-11-11 22:32:11 prepare_effects
+[info]  2026-11-11 22:32:14 870565 rows dropped: no beta or odds ratio
+[info]  2026-11-11 22:32:15 9372 usable rows, 0 with SE derived from p
+[stage] 2026-11-11 22:32:15 resolve_ambiguous
+[stage] 2026-11-11 22:32:15 orient
+[info]  2026-11-11 22:32:15 257 variants oriented as a2
+[info]  2026-11-11 22:32:15 13 variants oriented as a2_gof_flipped
+[info]  2026-11-11 22:32:15 APOA1, PPARA: flipped to the therapeutic direction (drugs raise gene function)
+[info]  2026-11-11 22:32:15 26 ClinVar variants with direction lowering
+[info]  2026-11-11 22:32:15 2 ClinVar variants with direction conflicting
+[info]  2026-11-11 22:32:15 1 ClinVar variants with direction raising
+[info]  2026-11-11 22:32:15 1 ClinVar variants with direction altered
+[info]  2026-11-11 22:32:15 variant_list_source in SelectedGoF: 587 of 9372 rows kept
+[stage] 2026-11-11 22:32:15 apoe_strata
+[info]  2026-11-11 22:32:15 /gpfs/home6/mvanvugt/projects/lipid_adem/data/raw/apoe_strata.tsv: 104 studies with an APOE stratum entry
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_all_cause_dementia, stratum all: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_all_cause_dementia, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_all_cause_dementia, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_all_cause_dementia, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_all_cause_dementia, stratum e44: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_alzheimers_dementia, stratum all: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_alzheimers_dementia, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_alzheimers_dementia, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_alzheimers_dementia, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_alzheimers_dementia, stratum e44: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_apoa, stratum all: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_apoa, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_apoa, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_apoa, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_apoa, stratum e44: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_apob, stratum all: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_apob, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_apob, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_apob, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_apob, stratum e44: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_ascvd, stratum all: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_ascvd, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_ascvd, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_ascvd, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_ascvd, stratum e44: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_frontotemporal_dementia, stratum all: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_frontotemporal_dementia, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_frontotemporal_dementia, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_frontotemporal_dementia, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_frontotemporal_dementia, stratum e44: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_hdl_c, stratum all: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_hdl_c, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_hdl_c, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_hdl_c, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_hdl_c, stratum e44: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_ldl_c, stratum all: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_ldl_c, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_ldl_c, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_ldl_c, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_ldl_c, stratum e44: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_tg, stratum all: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_tg, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_tg, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_tg, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_tg, stratum e44: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_vascular_dementia, stratum all: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_vascular_dementia, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_vascular_dementia, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_vascular_dementia, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_vascular_dementia, stratum e44: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_all_cause_dementia, stratum all: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_all_cause_dementia, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_all_cause_dementia, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_all_cause_dementia, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_all_cause_dementia, stratum e44: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_alzheimers_dementia, stratum all: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e44: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apoa, stratum all: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apoa, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apoa, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apoa, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apoa, stratum e44: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apob, stratum all: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apob, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apob, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apob, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apob, stratum e44: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ascvd, stratum all: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ascvd, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ascvd, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ascvd, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ascvd, stratum e44: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum all: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e44: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_hdl_c, stratum all: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_hdl_c, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_hdl_c, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_hdl_c, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_hdl_c, stratum e44: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ldl_c, stratum all: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ldl_c, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ldl_c, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ldl_c, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ldl_c, stratum e44: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_tg, stratum all: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_tg, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_tg, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_tg, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_tg, stratum e44: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_vascular_dementia, stratum all: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_vascular_dementia, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_vascular_dementia, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_vascular_dementia, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_vascular_dementia, stratum e44: 1 studies
+[info]  2026-11-11 22:32:15 study group thomassen, stratum e22_e32: 1 studies
+[info]  2026-11-11 22:32:15 study group thomassen, stratum e33: 1 studies
+[info]  2026-11-11 22:32:15 study group thomassen, stratum e43: 1 studies
+[info]  2026-11-11 22:32:15 study group thomassen, stratum e44: 1 studies
+[stage] 2026-11-11 22:32:15 pooled_run
+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_EUR_all_cause_dementia: unstratified run, strata left out
+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_EUR_alzheimers_dementia: unstratified run, strata left out
+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_EUR_apoa: unstratified run, strata left out
+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_EUR_apob: unstratified run, strata left out
+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_EUR_ascvd: unstratified run, strata left out
+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_EUR_frontotemporal_dementia: unstratified run, strata left out
+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_EUR_hdl_c: unstratified run, strata left out
+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_EUR_ldl_c: unstratified run, strata left out
+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_EUR_tg: unstratified run, strata left out
+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_EUR_vascular_dementia: unstratified run, strata left out
+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_all_cause_dementia: unstratified run, strata left out
+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_alzheimers_dementia: unstratified run, strata left out
+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_apoa: unstratified run, strata left out
+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_apob: unstratified run, strata left out
+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_ascvd: unstratified run, strata left out
+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_frontotemporal_dementia: unstratified run, strata left out
+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_hdl_c: unstratified run, strata left out
+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_ldl_c: unstratified run, strata left out
+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_tg: unstratified run, strata left out
+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_vascular_dementia: unstratified run, strata left out
+[info]  2026-11-11 22:32:15 pooled run, study group thomassen: IVW of the strata
+[stage] 2026-11-11 22:32:15 dedupe
+[info]  2026-11-11 22:32:15 0 duplicate rows removed
+[info]  2026-11-11 22:32:15 0 estimates removed as copies of another study
+[stage] 2026-11-11 22:32:15 meta_analyse
+[info]  2026-11-11 22:32:16 51 groups, 48 pooling more than one estimate
+[info]  2026-11-11 22:32:17 347 groups, 0 pooling more than one estimate
+[info]  2026-11-11 22:32:17 no gene burden (--no-gene-burden)
+[stage] 2026-11-11 22:32:17 write
+[info]  2026-11-11 22:32:17 wrote 398 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/meta_MULTI_selected_gof_multi.tsv.gz
+[stage] 2026-11-11 22:32:17 apoe_strata_run
+[info]  2026-11-11 22:32:17 252 rows from APOE strata: pooled per stratum
+[stage] 2026-11-11 22:32:17 dedupe
+[info]  2026-11-11 22:32:17 0 duplicate rows removed
+[info]  2026-11-11 22:32:17 0 estimates removed as copies of another study
+[stage] 2026-11-11 22:32:17 meta_analyse
+[info]  2026-11-11 22:32:18 120 groups, 120 pooling more than one estimate
+[info]  2026-11-11 22:32:18 252 groups, 0 pooling more than one estimate
+[info]  2026-11-11 22:32:18 no gene burden (--no-gene-burden)
+[stage] 2026-11-11 22:32:18 write
+[info]  2026-11-11 22:32:18 wrote 372 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/meta_MULTI_selected_gof_multi_apoe_strata.tsv.gz
 
 ```
 
