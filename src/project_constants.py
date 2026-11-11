@@ -34,9 +34,6 @@ class Paths:
     ENSEMBL_CACHE: Path = DATA_TEMP / "ensembl_cache"
     # must match `log_dir` in config/filter_task.cnf
     FILTER_TASK_LOGS: Path = HERE / "src" / "logs" / "filter_task_logs"
-    ## burden directories
-    BURDEN_CONFIG: Path = HERE / "config" / "marvel_burden"
-    BURDEN_OUT: Path = HERE / "results" / "marvel_burden"
     # MARVELous chunks, burden, per-variant extract/associate outputs
     MARVEL_RUN: Path = DATA_TEMP / "marvel"
     # APOE diplotype associate outputs (`marvel_runs.tsv` stage associate)
@@ -322,8 +319,6 @@ class Marvel:
     }
     # dosage above this is a carrier (config/marvel_config.toml)
     CARRIER_THR: float = 0.5
-    # rows per chunk when streaming an old wide carriers file
-    OLD_CARRIERS_CHUNK_ROWS: int = 50_000
 
 
 class Burden:
@@ -361,17 +356,20 @@ class Burden:
         "GCST90861029",
         "GCST90861030",
     )
-    # above this carrier fraction a column counts the other allele
-    SWAP_FRAC: float = 0.5
-    # default `--max-maf`: 0.5 keeps every listed site
-    MAX_MAF: float = 0.5
-    # covariate models of the burden cnfs (`Marvel.MODEL_MAP` keys)
+    # covariate models of the marvel TOMLs (`Marvel.MODEL_MAP` keys)
     MODELS: dict[str, tuple[str, ...]] = {
         "model_1": (),
         "model_3": ("Sex", "PC1", "PC2", "PC3", "PC4", "PC5", "PC6"),
     }
     # UKB subsets of the burden runs (create_config.py names)
     SUBSETS: tuple[str, ...] = ("all_apoe", "eur")
+    # `MarvelRun.RUNS_ANALYSIS` of the main burden runs (`_fb`:
+    # + `FALLBACK_SUFFIX`)
+    ANALYSIS: str = "burden"
+    # runs summarised by `burden_exposure.py --summary` (all samples)
+    SUMMARY_SUBSET: str = "all_apoe"
+    # rows per chunk when the summary reads an exposure table
+    SUMMARY_CHUNK_ROWS: int = 5_000_000
 
 
 class Apoe:
@@ -1148,6 +1146,10 @@ class MarvelRun:
     CARRIERS_SUFFIX: str = ".carriers.tsv.gz"
     VARIANTS_SUFFIX: str = ".variants.tsv.gz"
     SAMPLES_SUFFIX: str = ".samples.tsv.gz"
+    # aggregate long exposure table: `ID`, category, exposure
+    EXPOSURES_SUFFIX: str = ".exposures.tsv.gz"
+    AGG_CATEGORY: str = "category"
+    AGG_EXPOSURE: str = "exposure"
     SENTINEL_SUFFIX: str = ".SUCCESS"
     RESULTS_SUFFIX: str = ".results.tsv.gz"
     # chunk carriers (long, sparse) and samples
@@ -1303,59 +1305,27 @@ class FileNames:
     # own UKB/AoU association results (marvel), one row per file/outcome
     UKB_PHENO: Path = Paths.DATA_PROC / "lipids_full_pheno.tsv.gz"
     MARVEL_RESULTS: Path = Paths.DATA_RAW / "marvel_results.tsv"
-    # pyjasub job array for the per-gene marvel runs (one cnf per gene,
-    # written by src/create_config.py)
-    MARVEL_TASKS: Path = Paths.DATA_RAW / "marvel_tasks.tsv"
     # new marvel runs, one row per TOML (create_config.py)
     MARVEL_RUNS: Path = Paths.DATA_RAW / "marvel_runs.tsv"
     # `LIPID_VARIANTS` minus `Const.EXCLUDED_GENES`: the per-variant
     # list of new marvel (create_config.py; sites only)
     MARVEL_VARIANTS: Path = Paths.DATA_TEMP / "lipid_variants_marvel.tsv.gz"
-    # per-variant marvel run of the `SELECTED_VARIANTS` only (until the
-    # next full per-variant run); its rows replace the store's
-    # (`marvel_results_table.py --replace`)
-    MARVEL_SELECTED_TASKS: Path = Paths.DATA_RAW / "marvel_selected_tasks.tsv"
-    # UKB carrier burden (burden_exposure.py): per gene the 0/1 exposure
-    # file (`{suffix}` "" or `Burden.FALLBACK_SUFFIX`), the
-    # sites/carriers summary and the old marvel (10039b6) job array
-    BURDEN_EXPOSURE_TEMPLATE: str = str(
-        Paths.DATA_TEMP / "{gene}_burden_exposure{suffix}.tsv.gz"
-    )
+    # UKB carrier burden (burden_exposure.py --summary): per mask the
+    # listed and read sites and the carriers of the burden runs
     BURDEN_EXPOSURE_SUMMARY: Path = (
         Paths.OUTPUT / "burden_exposure_summary.tsv.gz"
     )
-    # the same masks as a long variant list for new marvel (one row per
-    # site and mask, category `VariantListColumns.MASK`; `{suffix}` as
-    # `BURDEN_EXPOSURE_TEMPLATE`; sites only, committed)
+    # burden masks as a long variant list for new marvel (one row per
+    # site and mask, category `VariantListColumns.MASK`; `{suffix}` ""
+    # or `Burden.FALLBACK_SUFFIX`; sites only, committed)
     BURDEN_MASK_VARIANTS_TEMPLATE: str = str(
         Paths.DATA_PROC / "lipid_mask_variants{suffix}.tsv.gz"
     )
-    MARVEL_BURDEN_TASKS: Path = Paths.DATA_RAW / "marvel_burden_tasks.tsv"
-    # marvel run of APOE diplotype -> outcomes: its own job array, so its
-    # results never enter marvel_results.tsv as variants
-    MARVEL_APOE_TASKS: Path = Paths.DATA_RAW / "marvel_apoe_tasks.tsv"
-    # marvel exposure file of that run (apoe_exposure.py): ID column plus
+    # marvel exposure file of the apoe runs (apoe_exposure.py): ID column plus
     # one 0/1 carrier column per APOE diplotype
     APOE_EXPOSURE: Path = Paths.DATA_PROC / "apoe_diplotype.tsv.gz"
-    # per-gene store of all marvel results (in `Paths.MARVEL_STORE`)
-    MARVEL_STORE_TEMPLATE: str = "{gene}_results.tsv.gz"
     # new marvel: copy of one run's results (`marvel_runs.tsv` prefix)
     MARVEL_RUN_STORE_TEMPLATE: str = "{prefix}_results.tsv.gz"
-    # loose per-variant marvel result files in a gene's outdir
-    MARVEL_LOOSE_GLOB: str = "*_results.tsv.gz"
-    # tar of an outdir's loose files (`marvel_results_table.py --archive`)
-    MARVEL_ARCHIVE_TEMPLATE: str = "per_variant_results_{stamp}.tar"
-    # old per-gene wide carriers files (`f.eid` + one column per variant),
-    # as in marvel_tasks.tsv; copied from Myriad for compare_marvel_runs.py
-    OLD_CARRIERS_TEMPLATE: str = str(
-        Paths.DATA_TEMP / "{gene}_variant_extraction.tsv.gz"
-    )
-    # `output.prefix` of the 0.5.1 test run in `Paths.MARVEL_RUN`
-    # (config/marvel_config.toml; unused since the migration)
-    MARVEL_BURDEN_PREFIX: str = "lipid_vep_plink_marvel_test"
-    # per-variant all-samples run of `MARVEL_RUNS` (create_config.py), the
-    # one compare_marvel_runs.py checks against the old per-gene stores
-    MARVEL_VARIANT_PREFIX: str = "lipid_variant_all"
     # curated study accession -> study group and APOE stratum
     APOE_STRATA: Path = Paths.DATA_RAW / "apoe_strata.tsv"
     # curated outcome x study exclusions, applied before the recency cap

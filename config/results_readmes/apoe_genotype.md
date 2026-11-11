@@ -4,7 +4,7 @@ UKB marvel association of each APOE diplotype (carriers vs all other diplotypes)
 
 ## Script and command
 
-- `src/apoe_exposure.py`, then marvel (`config/marvel_apoe_task.cnf`, `data/raw/marvel_apoe_tasks.tsv`), then `src/apoe_genotype_forest.py`. All in the APOE DIPLOTYPE section of `src/lipid_adem.sh`.
+- `src/apoe_exposure.py`, then marvelous associate (`config/marvel/apoe_<subset>.toml`, rows `apoe` of `data/raw/marvel_runs.tsv`, both from `src/create_config.py`), then `src/apoe_genotype_forest.py`. All in the APOE DIPLOTYPE section of `src/lipid_adem.sh`.
 
 ## Inputs
 
