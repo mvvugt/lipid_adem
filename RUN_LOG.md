@@ -1393,34 +1393,6 @@ Output:
 
 ```
 
-## [10] var-annot (`/home/mvanvugt/mambaforge/envs/var_annot/bin/var-annot run --config /home/mvanvugt/software/var_annot/fn5_reruns/configs/lip_ac_rescue.toml`)
-- first run: 2026-11-11 14:21:25
-- last run: 2026-11-11 22:14:20
-- commit: `25d4593` (dirty)
-
-Output:
-```text
-[info]  2026-11-11 22:14:18 config: /home/mvanvugt/software/var_annot/fn5_reruns/configs/lip_ac_rescue.toml
-[info]  2026-11-11 22:14:18 Reading ClinVar export /home/mvanvugt/projects/lipid_adem/data/raw/clinvar_variants.tsv
-[info]  2026-11-11 22:14:20 ClinVar: 313818 rows read, 14606 kept after classification and condition filters
-[info]  2026-11-11 22:14:20 ClinVar APOB: 3 rows dropped (blank_assembly)
-[info]  2026-11-11 22:14:20 ClinVar: review stars from ac_review_status
-[info]  2026-11-11 22:14:20 ClinVar ANGPTL3: 23 rows dropped (no_vcf_coordinates)
-[info]  2026-11-11 22:14:20 ClinVar APOA1: 24 rows dropped (no_vcf_coordinates)
-[info]  2026-11-11 22:14:20 ClinVar APOB: 22 rows dropped (no_vcf_coordinates)
-[info]  2026-11-11 22:14:20 ClinVar APOE: 5 rows dropped (no_vcf_coordinates)
-[info]  2026-11-11 22:14:20 ClinVar CETP: 21 rows dropped (no_vcf_coordinates)
-[info]  2026-11-11 22:14:20 ClinVar HMGCR: 6 rows dropped (no_vcf_coordinates)
-[info]  2026-11-11 22:14:20 ClinVar NPC1L1: 24 rows dropped (no_vcf_coordinates)
-[info]  2026-11-11 22:14:20 ClinVar PCSK9: 13 rows dropped (no_vcf_coordinates)
-[info]  2026-11-11 22:14:20 ClinVar PPARA: 82 rows dropped (no_vcf_coordinates)
-[warn]  2026-11-11 22:14:20 ClinVar: 80 kept rows are 'Conflicting classifications of pathogenicity' overall with a 0-star condition record (rcv_review_status); min_review_stars uses ac_review_status in ac mode (1 star for Conflicting), so use classification_column = "rcv_classification" with min_review_stars = 1 to drop them
-[info]  2026-11-11 22:14:20 ClinVar: 2136 rows, 391 unique variants
-[info]  2026-11-11 22:14:20 normalisation: unchanged=2136
-[info]  2026-11-11 22:14:20 Wrote 2136 rows to /home/mvanvugt/projects/lipid_adem/data/processed/fn5_reruns/lip_ac_rescue.tsv.gz
-
-```
-
 ## [20] filter_gwas_cat (`/home/mvanvugt/projects/lipid_adem/src/filter_gwas_cat.py --tasks-file /home/mvanvugt/projects/lipid_adem/data/temp/tasks.tsv --task-id 116 --step 1`)
 - first run: 2026-09-21 22:58:26
 - last run: 2026-10-27 13:37:06
@@ -1477,6 +1449,105 @@ Output:
 [info]  2026-10-27 13:37:03 step=1
 [info]  2026-10-27 13:37:03 task 116: rows 116-116
 [info]  2026-10-27 13:37:06 rows 116-116 of 125, 8 gene regions
+```
+
+## [20] var-annot (`/home/mvanvugt/mambaforge/envs/var_annot/bin/var-annot run --config /home/mvanvugt/projects/lipid_adem/config/var_annot.toml --force`)
+- first run: 2026-11-11 14:21:25
+- last run: 2026-11-11 22:48:06
+- commit: `b030d0d` (dirty)
+
+Δ vs previous run (was `25d4593` (dirty)):
+```diff
+@@ -1,6 +1,6 @@
+-[info]  2026-11-11 22:14:18 config: /home/mvanvugt/software/var_annot/fn5_reruns/configs/lip_ac_rescue.toml
++[info]  2026-11-11 22:47:59 config: /home/mvanvugt/projects/lipid_adem/config/var_annot.toml
+ [info]  2026-11-11 22:47:59 Reading ClinVar export /home/mvanvugt/projects/lipid_adem/data/raw/clinvar_variants.tsv
+-[info]  2026-11-11 22:14:20 ClinVar: 313818 rows read, 14606 kept after classification and condition filters
++[info]  2026-11-11 22:48:01 ClinVar: 313818 rows read, 9922 kept after classification and condition filters
+ [info]  2026-11-11 22:48:01 ClinVar APOB: 3 rows dropped (blank_assembly)
+ [info]  2026-11-11 22:48:01 ClinVar: review stars from ac_review_status
+ [info]  2026-11-11 22:48:01 ClinVar ANGPTL3: 23 rows dropped (no_vcf_coordinates)
+@@ -12,7 +12,33 @@
+ [info]  2026-11-11 22:48:01 ClinVar NPC1L1: 24 rows dropped (no_vcf_coordinates)
+ [info]  2026-11-11 22:48:01 ClinVar PCSK9: 13 rows dropped (no_vcf_coordinates)
+ [info]  2026-11-11 22:48:01 ClinVar PPARA: 82 rows dropped (no_vcf_coordinates)
+-[warn]  2026-11-11 22:14:20 ClinVar: 80 kept rows are 'Conflicting classifications of pathogenicity' overall with a 0-star condition record (rcv_review_status); min_review_stars uses ac_review_status in ac mode (1 star for Conflicting), so use classification_column = "rcv_classification" with min_review_stars = 1 to drop them
+-[info]  2026-11-11 22:14:20 ClinVar: 2136 rows, 391 unique variants
+-[info]  2026-11-11 22:14:20 normalisation: unchanged=2136
+-[info]  2026-11-11 22:14:20 Wrote 2136 rows to /home/mvanvugt/projects/lipid_adem/data/processed/fn5_reruns/lip_ac_rescue.tsv.gz
++[info]  2026-11-11 22:48:01 ClinVar: 1680 rows, 336 unique variants
++[info]  2026-11-11 22:48:01 Reading VEP TSV /home/mvanvugt/projects/lipid_adem/data/temp/vep_lipid_gene_csq.tsv.gz
++[info]  2026-11-11 22:48:01 VEP: 79163 variant x transcript rows read
++[info]  2026-11-11 22:48:01 VEP: 16068 rows pass transcript rule canonical
++[info]  2026-11-11 22:48:01 VEP set PTV: 527 rows
++[info]  2026-11-11 22:48:01 Reading AlphaMissense /projects/0/aus20644/data/resources/annotations/AlphaMissense_hg38.sorted.tsv.bgz
++[info]  2026-11-11 22:48:01 AM CETP: 439 sites kept (UniProt P11597)
++[info]  2026-11-11 22:48:01 AM HMGCR: 2623 sites kept (UniProt P04035)
++[info]  2026-11-11 22:48:02 AM NPC1L1: 2507 sites kept (UniProt Q9UHC9)
++[info]  2026-11-11 22:48:02 AM PCSK9: 737 sites kept (UniProt Q8NBP7)
++[info]  2026-11-11 22:48:02 AM ANGPTL3: 493 sites kept (UniProt Q9Y5C1)
++[info]  2026-11-11 22:48:02 AM PPARA: 1543 sites kept (UniProt Q07869)
++[info]  2026-11-11 22:48:02 AM APOA1: 536 sites kept (UniProt P02647)
++[info]  2026-11-11 22:48:02 AM APOB: 2952 sites kept (UniProt P04114)
++[info]  2026-11-11 22:48:02 AM: 11830 rows (likely_pathogenic)
++[info]  2026-11-11 22:48:02 Reading GoFcards /projects/0/aus20644/data/resources/annotations/gofcards_hg38.tsv.bgz
++[info]  2026-11-11 22:48:02 GoF CETP: 1 reports
++[info]  2026-11-11 22:48:02 GoF HMGCR: 0 reports
++[info]  2026-11-11 22:48:02 GoF NPC1L1: 0 reports
++[info]  2026-11-11 22:48:02 GoF PCSK9: 46 reports
++[info]  2026-11-11 22:48:02 GoF ANGPTL3: 0 reports
++[info]  2026-11-11 22:48:02 GoF PPARA: 0 reports
++[info]  2026-11-11 22:48:02 GoF APOA1: 1 reports
+... 7 more line(s) omitted
+```
+
+Output:
+```text
+[info]  2026-11-11 22:47:59 config: /home/mvanvugt/projects/lipid_adem/config/var_annot.toml
+[info]  2026-11-11 22:47:59 Reading ClinVar export /home/mvanvugt/projects/lipid_adem/data/raw/clinvar_variants.tsv
+[info]  2026-11-11 22:48:01 ClinVar: 313818 rows read, 9922 kept after classification and condition filters
+[info]  2026-11-11 22:48:01 ClinVar APOB: 3 rows dropped (blank_assembly)
+[info]  2026-11-11 22:48:01 ClinVar: review stars from ac_review_status
+[info]  2026-11-11 22:48:01 ClinVar ANGPTL3: 23 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 22:48:01 ClinVar APOA1: 24 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 22:48:01 ClinVar APOB: 22 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 22:48:01 ClinVar APOE: 5 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 22:48:01 ClinVar CETP: 21 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 22:48:01 ClinVar HMGCR: 6 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 22:48:01 ClinVar NPC1L1: 24 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 22:48:01 ClinVar PCSK9: 13 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 22:48:01 ClinVar PPARA: 82 rows dropped (no_vcf_coordinates)
+[info]  2026-11-11 22:48:01 ClinVar: 1680 rows, 336 unique variants
+[info]  2026-11-11 22:48:01 Reading VEP TSV /home/mvanvugt/projects/lipid_adem/data/temp/vep_lipid_gene_csq.tsv.gz
+[info]  2026-11-11 22:48:01 VEP: 79163 variant x transcript rows read
+[info]  2026-11-11 22:48:01 VEP: 16068 rows pass transcript rule canonical
+[info]  2026-11-11 22:48:01 VEP set PTV: 527 rows
+[info]  2026-11-11 22:48:01 Reading AlphaMissense /projects/0/aus20644/data/resources/annotations/AlphaMissense_hg38.sorted.tsv.bgz
+[info]  2026-11-11 22:48:01 AM CETP: 439 sites kept (UniProt P11597)
+[info]  2026-11-11 22:48:01 AM HMGCR: 2623 sites kept (UniProt P04035)
+[info]  2026-11-11 22:48:02 AM NPC1L1: 2507 sites kept (UniProt Q9UHC9)
+[info]  2026-11-11 22:48:02 AM PCSK9: 737 sites kept (UniProt Q8NBP7)
+[info]  2026-11-11 22:48:02 AM ANGPTL3: 493 sites kept (UniProt Q9Y5C1)
+[info]  2026-11-11 22:48:02 AM PPARA: 1543 sites kept (UniProt Q07869)
+[info]  2026-11-11 22:48:02 AM APOA1: 536 sites kept (UniProt P02647)
+[info]  2026-11-11 22:48:02 AM APOB: 2952 sites kept (UniProt P04114)
+[info]  2026-11-11 22:48:02 AM: 11830 rows (likely_pathogenic)
+[info]  2026-11-11 22:48:02 Reading GoFcards /projects/0/aus20644/data/resources/annotations/gofcards_hg38.tsv.bgz
+[info]  2026-11-11 22:48:02 GoF CETP: 1 reports
+[info]  2026-11-11 22:48:02 GoF HMGCR: 0 reports
+[info]  2026-11-11 22:48:02 GoF NPC1L1: 0 reports
+[info]  2026-11-11 22:48:02 GoF PCSK9: 46 reports
+[info]  2026-11-11 22:48:02 GoF ANGPTL3: 0 reports
+[info]  2026-11-11 22:48:02 GoF PPARA: 0 reports
+[info]  2026-11-11 22:48:02 GoF APOA1: 1 reports
+[info]  2026-11-11 22:48:02 GoF APOB: 0 reports
+[info]  2026-11-11 22:48:02 GoF: 48 rows
+[info]  2026-11-11 22:48:03 normalisation: unchanged=1680
+[info]  2026-11-11 22:48:03 normalisation: normalised=18 unchanged=509
+[info]  2026-11-11 22:48:05 normalisation: unchanged=11830
+[info]  2026-11-11 22:48:05 normalisation: unchanged=48
+[info]  2026-11-11 22:48:05 Wrote 14085 rows to /home/mvanvugt/projects/lipid_adem/data/processed/lipid_annotated_variants.tsv.gz
+
 ```
 
 ## [22] burden_exposure (`/home/mvanvugt/projects/lipid_adem/src/burden_exposure.py --summary`)
@@ -2672,180 +2743,6 @@ Output:
 - first run: 2026-10-01 10:26:24
 - last run: 2026-11-11 22:32:19
 - commit: `25d4593` (dirty)
-
-Δ vs previous run (was `25d4593` (dirty)):
-```diff
-@@ -1 +1 @@
--[info]  2026-11-11 22:30:56 ancestry EUR, pooled by variant_site, outcome, ancestry_group
-+[info]  2026-11-11 22:31:37 ancestry MULTI, pooled by variant_site, outcome, ancestry_group
-```
-stage `load_matched`:
-```diff
-@@ -1,3 +1,4 @@
- [info]  2026-11-11 22:31:57 /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/matched_variants.tsv.gz: 881140 rows, 9139 variants
- [info]  2026-11-11 22:31:57 16 rows of excluded gene(s) APOE dropped
--[info]  2026-11-11 22:31:23 441944 of 881124 rows are EUR (all: AFR=465, AMR=194, CSA=1370, EAS=204, EUR=441944, MULTI=436923, NR=24)
-+[info]  2026-11-11 22:32:04 881124 of 881124 rows kept (MULTI pools every ancestry) (all: AFR=465, AMR=194, CSA=1370, EAS=204, EUR=441944, MULTI=436923, NR=24)
-+[info]  2026-11-11 22:32:05 MULTI: 881124 rows pooled across ancestries (AFR=465, AMR=194, CSA=1370, EAS=204, EUR=441944, MULTI=436923, NR=24), relabelled MULTI; a study reported both per ancestry and combined is counted twice unless --studies excludes one
-```
-stage `effect_scale`:
-```diff
-@@ -25,21 +25,78 @@
- [warn]  2026-11-11 22:32:05 marvel_ukb_EUR_tg_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
- [warn]  2026-11-11 22:32:05 marvel_ukb_EUR_tg_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
- [warn]  2026-11-11 22:32:05 marvel_ukb_EUR_tg_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apoa: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apoa_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apoa_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apoa_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apoa_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apob: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apob_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apob_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apob_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_apob_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_hdl_c: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_hdl_c_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_hdl_c_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_hdl_c_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_hdl_c_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_ldl_c: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_ldl_c_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_ldl_c_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_ldl_c_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_ldl_c_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_tg: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_tg_e22_e32: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_tg_e33: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_tg_e43: effect scale linear, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 marvel_ukb_MULTI_tg_e44: effect scale linear, not log-OR; kept (--require-log-or drops)
- [warn]  2026-11-11 22:32:05 GCST002245: effect scale unknown, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 GCST005195: effect scale unknown, not log-OR; kept (--require-log-or drops)
- [warn]  2026-11-11 22:32:05 GCST90014122: effect scale unknown, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 GCST90014123: effect scale unknown, not log-OR; kept (--require-log-or drops)
- [warn]  2026-11-11 22:32:05 GCST90475198: effect scale unknown, not log-OR; kept (--require-log-or drops)
- [warn]  2026-11-11 22:32:05 GCST90475199: effect scale unknown, not log-OR; kept (--require-log-or drops)
- [warn]  2026-11-11 22:32:05 GCST90475933: effect scale unknown, not log-OR; kept (--require-log-or drops)
- [warn]  2026-11-11 22:32:05 GCST90475987: effect scale unknown, not log-OR; kept (--require-log-or drops)
- [warn]  2026-11-11 22:32:05 GCST90476370: effect scale unknown, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 GCST90476592: effect scale unknown, not log-OR; kept (--require-log-or drops)
-+[warn]  2026-11-11 22:32:05 GCST90476593: effect scale unknown, not log-OR; kept (--require-log-or drops)
-... 79 more line(s) omitted
-```
-stage `prepare_effects`:
-```diff
-@@ -1,2 +1,2 @@
--[info]  2026-11-11 22:31:29 438020 rows dropped: no beta or odds ratio
--[info]  2026-11-11 22:31:29 3592 usable rows, 0 with SE derived from p
-+[info]  2026-11-11 22:32:14 870565 rows dropped: no beta or odds ratio
-+[info]  2026-11-11 22:32:15 9372 usable rows, 0 with SE derived from p
-```
-stage `orient`:
-```diff
-@@ -1,7 +1,8 @@
--[info]  2026-11-11 22:31:29 202 variants oriented as a2
--[info]  2026-11-11 22:31:29 12 variants oriented as a2_gof_flipped
-+[info]  2026-11-11 22:32:15 257 variants oriented as a2
-+[info]  2026-11-11 22:32:15 13 variants oriented as a2_gof_flipped
- [info]  2026-11-11 22:32:15 APOA1, PPARA: flipped to the therapeutic direction (drugs raise gene function)
--[info]  2026-11-11 22:31:29 22 ClinVar variants with direction lowering
-+[info]  2026-11-11 22:32:15 26 ClinVar variants with direction lowering
- [info]  2026-11-11 22:32:15 2 ClinVar variants with direction conflicting
-+[info]  2026-11-11 22:32:15 1 ClinVar variants with direction raising
- [info]  2026-11-11 22:32:15 1 ClinVar variants with direction altered
--[info]  2026-11-11 22:31:29 variant_list_source in SelectedGoF: 219 of 3592 rows kept
-+[info]  2026-11-11 22:32:15 variant_list_source in SelectedGoF: 587 of 9372 rows kept
-```
-stage `apoe_strata`:
-```diff
-@@ -49,6 +49,56 @@
- [info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_vascular_dementia, stratum e33: 1 studies
- [info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_vascular_dementia, stratum e43: 1 studies
- [info]  2026-11-11 22:32:15 study group marvel_ukb_EUR_vascular_dementia, stratum e44: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_all_cause_dementia, stratum all: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_all_cause_dementia, stratum e22_e32: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_all_cause_dementia, stratum e33: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_all_cause_dementia, stratum e43: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_all_cause_dementia, stratum e44: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_alzheimers_dementia, stratum all: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e22_e32: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e33: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e43: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_alzheimers_dementia, stratum e44: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apoa, stratum all: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apoa, stratum e22_e32: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apoa, stratum e33: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apoa, stratum e43: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apoa, stratum e44: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apob, stratum all: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apob, stratum e22_e32: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apob, stratum e33: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apob, stratum e43: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_apob, stratum e44: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ascvd, stratum all: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ascvd, stratum e22_e32: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ascvd, stratum e33: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ascvd, stratum e43: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ascvd, stratum e44: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum all: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e22_e32: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e33: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e43: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_frontotemporal_dementia, stratum e44: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_hdl_c, stratum all: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_hdl_c, stratum e22_e32: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_hdl_c, stratum e33: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_hdl_c, stratum e43: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_hdl_c, stratum e44: 1 studies
-+[info]  2026-11-11 22:32:15 study group marvel_ukb_MULTI_ldl_c, stratum all: 1 studies
-... 17 more line(s) omitted
-```
-stage `pooled_run`:
-```diff
-@@ -8,4 +8,14 @@
- [info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_EUR_ldl_c: unstratified run, strata left out
- [info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_EUR_tg: unstratified run, strata left out
- [info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_EUR_vascular_dementia: unstratified run, strata left out
-+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_all_cause_dementia: unstratified run, strata left out
-+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_alzheimers_dementia: unstratified run, strata left out
-+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_apoa: unstratified run, strata left out
-+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_apob: unstratified run, strata left out
-+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_ascvd: unstratified run, strata left out
-+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_frontotemporal_dementia: unstratified run, strata left out
-+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_hdl_c: unstratified run, strata left out
-+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_ldl_c: unstratified run, strata left out
-+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_tg: unstratified run, strata left out
-+[info]  2026-11-11 22:32:15 pooled run, study group marvel_ukb_MULTI_vascular_dementia: unstratified run, strata left out
- [info]  2026-11-11 22:32:15 pooled run, study group thomassen: IVW of the strata
-```
-stage `meta_analyse`:
-```diff
-@@ -1,6 +1,6 @@
--[info]  2026-11-11 22:31:30 51 groups, 24 pooling more than one estimate
--[info]  2026-11-11 22:31:30 99 groups, 0 pooling more than one estimate
-+[info]  2026-11-11 22:32:16 51 groups, 48 pooling more than one estimate
-+[info]  2026-11-11 22:32:17 347 groups, 0 pooling more than one estimate
- [info]  2026-11-11 22:32:17 no gene burden (--no-gene-burden)
--[info]  2026-11-11 22:31:31 120 groups, 12 pooling more than one estimate
--[info]  2026-11-11 22:31:31 132 groups, 0 pooling more than one estimate
-+[info]  2026-11-11 22:32:18 120 groups, 120 pooling more than one estimate
-+[info]  2026-11-11 22:32:18 252 groups, 0 pooling more than one estimate
- [info]  2026-11-11 22:32:18 no gene burden (--no-gene-burden)
-```
-stage `write`:
-```diff
-@@ -1,2 +1,2 @@
--[info]  2026-11-11 22:31:30 wrote 150 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/meta_EUR_selected_gof_eur.tsv.gz
--[info]  2026-11-11 22:31:31 wrote 252 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/meta_EUR_selected_gof_eur_apoe_strata.tsv.gz
-+[info]  2026-11-11 22:32:17 wrote 398 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/meta_MULTI_selected_gof_multi.tsv.gz
-+[info]  2026-11-11 22:32:18 wrote 372 rows to /gpfs/home6/mvanvugt/projects/lipid_adem/results/output/meta_MULTI_selected_gof_multi_apoe_strata.tsv.gz
-```
-stage `apoe_strata_run`:
-```diff
-@@ -1 +1 @@
--[info]  2026-11-11 22:31:30 132 rows from APOE strata: pooled per stratum
-+[info]  2026-11-11 22:32:17 252 rows from APOE strata: pooled per stratum
-```
 
 Output:
 ```text
