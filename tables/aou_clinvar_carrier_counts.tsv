@@ -1,0 +1,8 @@
+category	gene	sources	n_variants	n_people	mean	median	min	q1	q3	iqr	max
+ANGPTL3_clinvar	ANGPTL3	clinvar	12	1066	1.0056285178236397	1.0	1.0	1.0	1.0	0.0	2.0
+APOA1_clinvar	APOA1	clinvar	33	49	1.0	1.0	1.0	1.0	1.0	0.0	1.0
+APOB_clinvar	APOB	clinvar	236	802	1.0	1.0	1.0	1.0	1.0	0.0	1.0
+APOE_clinvar	APOE	clinvar	20	263	1.0	1.0	1.0	1.0	1.0	0.0	1.0
+CETP_clinvar	CETP	clinvar	10	90	1.0	1.0	1.0	1.0	1.0	0.0	1.0
+HMGCR_clinvar	HMGCR	clinvar	7	20	1.0	1.0	1.0	1.0	1.0	0.0	1.0
+PCSK9_clinvar	PCSK9	clinvar	18	35	1.0	1.0	1.0	1.0	1.0	0.0	1.0
