@@ -200,6 +200,25 @@ run_mamba biomed-api "${ROOT}"/src/combine_variants.py
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # CARRIER EXTRACTION
 
+### All of Us
+
+# TODO create variables for AoU workspace etc
+# obtain carriers
+aou-tools carriers
+
+# aggregate
+aou-tools aggregate \
+	-i ~/repos/lipid_adem/data/processed/lipid_annotated_variants.tsv.gz  \
+	-o ~/workspace/dataproc-staging-arrhythmia/lqts/run1                  \
+	--ref-col a1 --alt-col a2 --label column                              \
+	--combine loftee,alphamissense -v
+
+zcat ~/workspace/dataproc-staging-arrhythmarvel/lqts/run1.lipids.aggregate_summary.tsv.gz | \
+	awk 'NR==1 || $5 >20 {print}' | grep -e source -e am -e ptv |                       \
+	grep -v clinvar > "$PROJECT}"/tables/aou_ptv_am_carrier_counts.tsv
+
+### UK Biobank
+
 # TODO RAP extraction not implemented: plan in docs/rap_carrier_extraction.md
 
 # list full-sample vcf-files for some genes; exclude one of the chr1 genes
